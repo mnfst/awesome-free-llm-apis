@@ -51,4 +51,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 - "Limits undocumented" means the provider doesn't publish their rate limits.
 - All endpoints are OpenAI SDK-compatible unless noted.
 - Each link points to the provider's API key page.
-- [^1]: Free tier not available in the EEA, UK, or Switzerland ([available regions](https://ai.google.dev/gemini-api/docs/available-regions)).
+- [^1]: Free tier not available in the EU, UK, or Switzerland ([available regions](https://ai.google.dev/gemini-api/docs/available-regions)).
