@@ -31,6 +31,7 @@ APIs run by the companies that train or fine-tune the models themselves.
 
 Third-party platforms that host open-weight models from various sources.
 
+- [AIHubMix](https://console.aihubmix.com/token) 🇺🇸 - GPT-4o, Gemini 3.1 Flash, GLM-5 +17 more. 5 RPM, 500 RPD.
 - [Cerebras](https://cloud.cerebras.ai/) 🇺🇸 - Llama 3.3 70B, Qwen3 235B, GPT-OSS-120B +3 more. 30 RPM, 14,400 RPD.
 - [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸 - Llama 3.3 70B, Qwen QwQ 32B +47 more. 10K neurons/day.
 - [GitHub Models](https://github.com/marketplace/models) 🇺🇸 - GPT-4o, Llama 3.3 70B, DeepSeek-R1 +more. 10-15 RPM, 50-150 RPD.

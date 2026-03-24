@@ -2,6 +2,43 @@
 
 Third-party platforms that host open-weight models from various sources.
 
+## AIHubMix
+
+**Models:** GPT-4o, Gemini 3.1 Flash, GLM-5 +17 more
+**Limits:** 5 RPM, 500 RPD
+
+### Get your API key
+
+1. Go to [AIHubMix Console](https://console.aihubmix.com/token).
+2. Create an account or sign in.
+3. Click "Create Token."
+4. Copy the token.
+
+### Usage example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_AIHUBMIX_API_KEY",
+    base_url="https://aihubmix.com/v1/"
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o-free",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)
+```
+
+### Environment variable
+
+```bash
+export AIHUBMIX_API_KEY="your-key-here"
+```
+
+---
+
 ## GitHub Models
 
 **Models:** GPT-4o, Llama 3.3 70B, DeepSeek-R1 +more
