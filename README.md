@@ -33,6 +33,7 @@ Third-party platforms that host open-weight models from various sources.
 
 - [Cerebras](https://cloud.cerebras.ai/) 🇺🇸 - Llama 3.3 70B, Qwen3 235B, GPT-OSS-120B +3 more. 30 RPM, 14,400 RPD.
 - [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸 - Llama 3.3 70B, Qwen QwQ 32B +47 more. 10K neurons/day.
+- [ContextWire](https://contextwire.dev/docs.html) 🇺🇸 - Search API for AI agents with 105 engines, 22 profiles, MCP server. 1K queries/mo free ([docs](https://contextwire.dev/docs.html)).
 - [GitHub Models](https://github.com/marketplace/models) 🇺🇸 - GPT-4o, Llama 3.3 70B, DeepSeek-R1 +more. 10-15 RPM, 50-150 RPD.
 - [Groq](https://console.groq.com/keys) 🇺🇸 - Llama 3.3 70B, Llama 4 Scout, Kimi K2 +17 more. 30 RPM, 1K RPD (14,400 for Llama 3.1 8B). [^3]
 - [Hugging Face](https://huggingface.co/settings/tokens) 🇺🇸 - Llama 3.3 70B, Qwen2.5 72B, Mistral 7B +many more. $0.10/mo in free credits.
