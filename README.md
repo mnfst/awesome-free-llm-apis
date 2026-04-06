@@ -41,6 +41,7 @@ Third-party platforms that host open-weight models from various sources.
 - [NVIDIA NIM](https://build.nvidia.com/explore/discover) 🇺🇸 - Llama 3.3 70B, Mistral Large, Qwen3 235B +more. 40 RPM.
 - [Ollama Cloud](https://ollama.com/settings/keys) 🇺🇸 - DeepSeek-V3.2, Qwen3.5, Kimi-K2.5 +17 more. 1 concurrent model, light usage. [^2]
 - [OpenRouter](https://openrouter.ai/keys) 🇺🇸 - DeepSeek R1, Llama 3.3 70B, GPT-OSS-120B +29 more. 20 RPM, 50 RPD (1K with $10+ in purchased credits). [^4]
+- [OpenNode](https://onc.mom) 🌐 - GPT-4o, Claude 3.5 Haiku, Gemini 2.5 Flash +2 more. Free 10 ONC credits on signup (~$1). Decentralized GPU compute marketplace.
 - [SiliconFlow](https://cloud.siliconflow.cn/account/ak) 🇨🇳 - Qwen3-8B, DeepSeek-R1-Distill-Qwen-7B, GLM-4.1V-9B-Thinking +10 more. 1K RPM, 50K TPM.
 
 ## Contributing
