@@ -26,6 +26,7 @@ APIs run by the companies that train or fine-tune the models themselves.
 - [Google Gemini](https://aistudio.google.com/app/apikey) 🇺🇸 - Gemini 2.5 Pro, Flash, Flash-Lite +4 more. 5-15 RPM, 100-1K RPD. [^1]
 - [Mistral AI](https://console.mistral.ai/api-keys) 🇪🇺 - Mistral Large 3, Small 3.1, Ministral 8B +3 more. 1 req/s, 1B tok/mo.
 - [Zhipu AI](https://open.bigmodel.cn/usercenter/apikeys) 🇨🇳 - GLM-4.7-Flash, GLM-4.5-Flash, GLM-4.6V-Flash. Limits undocumented.
+- [guardian-agent-prompts](https://github.com/milkomida77/guardian-agent-prompts) - 49 production-tested AI agent system prompts for multi-agent orchestration, model-agnostic and compatible with any LLM API. MIT licensed.
 
 ## Inference providers
 
