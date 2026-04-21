@@ -280,6 +280,17 @@ Base URL: `https://api.siliconflow.cn/v1`
 | deepseek-ai/DeepSeek-OCR | — | 8K | Vision (OCR) | 1,000 RPM, 50K TPM |
 | + embedding/speech models | Varies | Varies | Embeddings, Speech | 1,000 RPM, 50K TPM |
 
+### [Inception Labs](https://platform.inceptionlabs.ai/) 🇺🇸
+
+Free tier with 10M tokens. No credit card required.
+
+Base URL: `https://api.inceptionlabs.ai/v1`
+
+| Model Name | Context | Max Output | Modality | Rate Limit |
+|---|---|---|---|---|
+| Mercury 2 | 128K | — | Text | 100 RPM, 100K input TPM, 10K output TPM |
+| Mercury Edit 2 | 32K | — | Text | 100 RPM, 100K input TPM, 10K output TPM |
+
 ## Contributing
 
 Know a free tier that's missing? [Open a PR](contributing.md). Include the provider, endpoint, rate limits (link to their docs), and a few notable models. Trial credits and time-limited promos don't count.
