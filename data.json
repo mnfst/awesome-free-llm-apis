@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-20",
+  "lastUpdated": "2026-04-24",
   "providers": [
     {
       "name": "Cohere",
@@ -1072,6 +1072,34 @@
           "rateLimit": "1,000 RPM, 50K TPM"
         }
       ]
+    },
+    {
+      "name": "Inception Labs",
+      "category": "inference_provider",
+      "country": "US",
+      "flag": "\ud83c\uddfa\ud83c\uddf8",
+      "url": "https://platform.inceptionlabs.ai/dashboard/api-keys",
+      "baseUrl": "https://api.inceptionlabs.ai/v1",
+      "description": "Free tier with 10M tokens. No credit card required.",
+      "footnoteRef": 7,
+      "models": [
+        {
+          "id": "mercury-2",
+          "name": "Mercury 2",
+          "context": "128K",
+          "maxOutput": "\u2014",
+          "modality": "Text",
+          "rateLimit": "100 RPM, 100K input TPM, 10K output TPM"
+        },
+        {
+          "id": "mercury-edit-2",
+          "name": "Mercury Edit 2",
+          "context": "32K",
+          "maxOutput": "\u2014",
+          "modality": "Text",
+          "rateLimit": "100 RPM, 100K input TPM, 10K output TPM"
+        }
+      ]
     }
   ],
   "footnotes": [
@@ -1098,6 +1126,10 @@
     {
       "id": 6,
       "text": "API-Inference is free for registered users. Current published limits are 2,000 requests/day per user (total across models), with per-model daily quotas dynamically adjusted and capped at 500; concurrency is also dynamically rate-limited. Requires Alibaba Cloud account binding and real-name verification ([limits](https://modelscope.cn/docs/model-service/API-Inference/limits), [intro](https://modelscope.cn/docs/model-service/API-Inference/intro))."
+    },
+    {
+    "id": 7,
+    "text": "Every new account includes 10 million free tokens. No credit card required. Rate limits: 100 RPM, 100,000 input TPM, 10,000 output TPM. [Docs](https://docs.inceptionlabs.ai/get-started/get-started)"
     }
   ],
   "glossary": [
