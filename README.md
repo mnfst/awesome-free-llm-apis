@@ -16,6 +16,18 @@
 
 ## Contents
 
+## OpenClaw Monitor
+
+| | |
+|---|---|
+| **Project** | [flik2002/openclaw-monitor](https://github.com/flik2002/openclaw-monitor) |
+| **Description** | Real-time AI agent monitoring dashboard — tracks Gateway status, sessions, token usage & trends |
+| **Stars** | ⭐ 1.3k+ |
+
+![Dashboard](https://raw.githubusercontent.com/flik2002/openclaw-monitor/main/Openclaw%20Monitor.jpg)
+
+
+
 - [Provider APIs](#provider-apis)
 - [Inference providers](#inference-providers)
 - [Glossary](#glossary)
