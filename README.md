@@ -41,6 +41,9 @@ Base URL: `https://api.cohere.com/v2`
 
 ### [Google Gemini](https://aistudio.google.com/app/apikey) 🇺🇸
 
+* [Ano](https://ano.chat) - A collaborative shell with built-in AI integration (Claude Code) and custom CLI/MCP automations designed for elite devs.
+
+
 Free tier unavailable in EU/UK/Switzerland. Free-tier prompts may be used by Google to improve products. [^1]
 
 Base URL: `https://generativelanguage.googleapis.com/v1beta`
