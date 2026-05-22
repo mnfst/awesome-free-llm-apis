@@ -302,6 +302,12 @@ Base URL: `https://api.siliconflow.cn/v1`
 | deepseek-ai/DeepSeek-OCR                | —       | 8K           | Vision (OCR)       | 1,000 RPM, 50K TPM |
 | + embedding/speech models               | Varies  | Varies       | Embeddings, Speech | 1,000 RPM, 50K TPM |
 
+## Model Catalogs
+
+### [AI Models Catalog](https://github.com/i-need-token/ai-models) 🌐
+
+Structured catalog of 4,587+ AI models across 95 providers. Includes 81 free models with tool calling, reasoning, and vision capabilities. Compare pricing, context windows, and capabilities across all providers. Interactive catalog: https://i-need-token.github.io/ai-models/
+
 ## Glossary
 
 | Abbreviation | Meaning             |
