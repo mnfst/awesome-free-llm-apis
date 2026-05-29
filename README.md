@@ -21,7 +21,7 @@
 - [Glossary](#glossary)
 
 ## Provider APIs
-
+- [A3M Router](https://github.com/Das-rebel/a3m-router) - #1 LLM routing benchmark & cheapest router with memory. 47+ providers, parallel execution, ensemble voting. ([RouterArena #1](https://github.com/RouteWorks/RouterArena/pull/113))
 APIs run by the companies that train or fine-tune the models themselves.
 
 ### [AI21 Labs](https://studio.ai21.com/account/api-key) 🇮🇱
