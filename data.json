@@ -712,7 +712,7 @@
       "flag": "🇺🇸",
       "url": "https://kilo.ai",
       "baseUrl": "https://api.kilo.ai/api/gateway",
-      "description": "Free models with no credit card required. `kilo-auto/free` auto-router routes to minimax/minimax-m2.5:free (80%) and stepfun/step-3.5-flash:free (20%).",
+      "description": "Free models with no credit card required. `kilo-auto/free` auto-router routes to minimax/minimax-m3:free (80%) and stepfun/step-3.5-flash:free (20%).",
       "footnoteRef": 5,
       "models": [
         {
@@ -724,11 +724,11 @@
           "rateLimit": "~200 req/hr"
         },
         {
-          "id": "minimax/minimax-m2.5:free",
-          "name": "minimax/minimax-m2.5:free",
-          "context": "196K",
-          "maxOutput": "8K",
-          "modality": "Text",
+          "id": "minimax/minimax-m3:free",
+          "name": "minimax/minimax-m3:free",
+          "context": "512K",
+          "maxOutput": "128K",
+          "modality": "Text + Image",
           "rateLimit": "~200 req/hr"
         },
         {
@@ -1072,6 +1072,14 @@
           "rateLimit": "~40 RPM"
         },
         {
+          "id": "minimax/minimax-m3",
+          "name": "minimax/minimax-m3",
+          "context": "512K",
+          "maxOutput": "128K",
+          "modality": "Text + Image",
+          "rateLimit": "~40 RPM"
+        },
+        {
           "id": "minimax/minimax-m2.7",
           "name": "minimax/minimax-m2.7",
           "context": "128K",
@@ -1248,11 +1256,11 @@
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
-          "id": "minimax/minimax-m2.5:free",
-          "name": "minimax/minimax-m2.5:free",
-          "context": "196K",
-          "maxOutput": "8K",
-          "modality": "Text",
+          "id": "minimax/minimax-m3:free",
+          "name": "minimax/minimax-m3:free",
+          "context": "512K",
+          "maxOutput": "128K",
+          "modality": "Text + Image",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
@@ -1501,7 +1509,7 @@
     },
     {
       "id": 5,
-      "text": "Kilo Code free model list may change over time. nvidia/nemotron-3-super-120b-a12b:free is for trial use only — prompts are logged by NVIDIA. Auto-router `kilo-auto/free` routes to minimax/minimax-m2.5:free (80%) and stepfun/step-3.5-flash:free (20%)."
+      "text": "Kilo Code free model list may change over time. nvidia/nemotron-3-super-120b-a12b:free is for trial use only — prompts are logged by NVIDIA. Auto-router `kilo-auto/free` routes to minimax/minimax-m3:free (80%) and stepfun/step-3.5-flash:free (20%)."
     },
     {
       "id": 6,
