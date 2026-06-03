@@ -232,14 +232,14 @@ Base URL: `https://router.huggingface.co/v1`
 
 ### [Kilo Code](https://kilo.ai) 🇺🇸
 
-Free models with no credit card required. `kilo-auto/free` auto-router routes to minimax/minimax-m2.5:free (80%) and stepfun/step-3.5-flash:free (20%). [^5]
+Free models with no credit card required. `kilo-auto/free` auto-router routes to minimax/minimax-m3:free (80%) and stepfun/step-3.5-flash:free (20%). [^5]
 
 Base URL: `https://api.kilo.ai/api/gateway`
 
 | Model Name                               | Context | Max Output | Modality         | Rate Limit  |
 | ---------------------------------------- | ------- | ---------- | ---------------- | ----------- |
 | `x-ai/grok-code-fast-1:free`             | 256K    | —          | Text (code)      | ~200 req/hr |
-| `minimax/minimax-m2.5:free`              | 196K    | 8K         | Text             | ~200 req/hr |
+| `minimax/minimax-m3:free`                | 512K    | 128K       | Text + Image     | ~200 req/hr |
 | `bytedance-seed/dola-seed-2.0-pro:free`  | —       | —          | Text             | ~200 req/hr |
 | `nvidia/nemotron-3-super-120b-a12b:free` | 262K    | 32K        | Text             | ~200 req/hr |
 | `arcee-ai/trinity-large-thinking:free`   | —       | —          | Text (reasoning) | ~200 req/hr |
@@ -320,6 +320,7 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 | `google/gemma-4-31b`                      | 128K    | 8K         | Text                                   | ~40 RPM    |
 | `mistralai/mistral-large-2-instruct`      | 128K    | 4K         | Text                                   | ~40 RPM    |
 | `nvidia/nemotron-nano-2-vl`               | 128K    | 8K         | Vision + Text + Video                  | ~40 RPM    |
+| `minimax/minimax-m3`                      | 512K    | 128K       | Text + Image                           | ~40 RPM    |
 | `minimax/minimax-m2.7`                    | 128K    | 8K         | Text                                   | ~40 RPM    |
 | + 90 more models                          | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | ~40 RPM    |
 
@@ -357,7 +358,7 @@ Base URL: `https://openrouter.ai/api/v1`
 | `google/gemma-4-31b-it:free`             | 256K    | ~8K        | Multimodal       | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-super-120b-a12b:free` | 1M      | ~32K       | Text             | 20 RPM, 50 RPD |
 | `openai/gpt-oss-120b:free`               | 131K    | 131K       | Text             | 20 RPM, 50 RPD |
-| `minimax/minimax-m2.5:free`              | 196K    | 8K         | Text             | 20 RPM, 50 RPD |
+| `minimax/minimax-m3:free`                | 512K    | 128K       | Text + Image     | 20 RPM, 50 RPD |
 | `mistralai/devstral-2512:free`           | 256K    | ~32K       | Text             | 20 RPM, 50 RPD |
 | + ~16 more free models                   | Varies  | Varies     | Text / Image     | 20 RPM, 50 RPD |
 
@@ -411,7 +412,7 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^2]: Groq rate limits vary by model. Llama 4 Maverick is limited to 500 RPD. Most other models get 14,400 RPD ([rate limits](https://console.groq.com/docs/rate-limits)).
 [^3]: Ollama Cloud measures usage by GPU time, not tokens or requests. Free tier described as "light usage" with session limits resetting every 5 hours and weekly limits every 7 days. Pro (50x more) and Max (250x more) plans available. Not OpenAI SDK-compatible; uses the Ollama API.
 [^4]: Free models default to 50 RPD per model. A one-time purchase of $10+ in credits unlocks 1,000 RPD for free models. OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-models-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training.
-[^5]: Kilo Code free model list may change over time. nvidia/nemotron-3-super-120b-a12b:free is for trial use only — prompts are logged by NVIDIA. Auto-router `kilo-auto/free` routes to minimax/minimax-m2.5:free (80%) and stepfun/step-3.5-flash:free (20%).
+[^5]: Kilo Code free model list may change over time. nvidia/nemotron-3-super-120b-a12b:free is for trial use only — prompts are logged by NVIDIA. Auto-router `kilo-auto/free` routes to minimax/minimax-m3:free (80%) and stepfun/step-3.5-flash:free (20%).
 [^6]: API-Inference is free for registered users. Current published limits are 2,000 requests/day per user (total across models), with per-model daily quotas dynamically adjusted and capped at 500; concurrency is also dynamically rate-limited. Requires Alibaba Cloud account binding and real-name verification ([limits](https://modelscope.cn/docs/model-service/API-Inference/limits), [intro](https://modelscope.cn/docs/model-service/API-Inference/intro)).
 [^7]: OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required — click "Get your free token" on the OVHcloud AI Endpoints site. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers.
 [^8]: Free quota is signup-only with 90-day expiration and only granted in the Singapore / International region. Alibaba Cloud account requires phone/email verification but no credit card. After exhaustion, pay-as-you-go applies. Use the international endpoint `dashscope-intl.aliyuncs.com`; the China region (`dashscope.aliyuncs.com`) requires real-name verification.
