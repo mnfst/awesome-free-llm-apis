@@ -158,6 +158,21 @@ Base URL: `https://api.cerebras.ai/v1`
 | llama-4-scout-17b-16e-instruct | 128K (8K on free) | 8K         | Text + Vision | 30 RPM, 14,400 RPD, 1M TPD |
 | zai-glm-4.7                    | 128K (8K on free) | 8K         | Text          | 10 RPM, 100 RPD, 1M TPD    |
 
+### [CoderPlan](https://coderplan.ai) 🇨🇳
+
+¥10 (~$1.50) free trial credit for new users, no credit card required. OpenAI-compatible API gateway providing access to Claude, GPT, Gemini, DeepSeek, Grok, and more. Pay-per-use at competitive rates after credit is used. **Note: Trial credit expires — not a permanent free tier.**
+
+Base URL: `https://api.coderplan.ai/v1`
+
+| Model Name                   | Context | Max Output | Modality         | Rate Limit   |
+| ---------------------------- | ------- | ---------- | ---------------- | ------------ |
+| claude-sonnet-4-20250514     | 200K    | 64K        | Text             | Credit-based |
+| gpt-4o                       | 128K    | 16K        | Text             | Credit-based |
+| gemini-2.5-pro               | 1M      | 64K        | Text             | Credit-based |
+| deepseek-r1                  | 128K    | 64K        | Text (reasoning) | Credit-based |
+| grok-3                       | 128K    | 16K        | Text             | Credit-based |
+| + 50+ more models            | Varies  | Varies     | Text             | Credit-based |
+
 ### [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸
 
 10,000 Neurons/day free. 50+ models available on free tier.

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-20",
+  "lastUpdated": "2026-06-06",
   "providers": [
     {
       "name": "AI21 Labs",
@@ -366,6 +366,58 @@
           "maxOutput": "8K",
           "modality": "Text",
           "rateLimit": "10 RPM, 100 RPD, 1M TPD"
+        }
+      ]
+    },
+    {
+      "name": "CoderPlan",
+      "category": "inference_provider",
+      "country": "CN",
+      "flag": "🇨🇳",
+      "url": "https://coderplan.ai",
+      "baseUrl": "https://api.coderplan.ai/v1",
+      "description": "¥10 (~$1.50) free trial credit for new users, no credit card required. OpenAI-compatible API gateway providing access to Claude, GPT, Gemini, DeepSeek, Grok, and more. Pay-per-use at competitive rates after credit is used. Note: Trial credit expires — not a permanent free tier.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "claude-sonnet-4-20250514",
+          "name": "claude-sonnet-4-20250514",
+          "context": "200K",
+          "maxOutput": "64K",
+          "modality": "Text",
+          "rateLimit": "Credit-based"
+        },
+        {
+          "id": "gpt-4o",
+          "name": "gpt-4o",
+          "context": "128K",
+          "maxOutput": "16K",
+          "modality": "Text",
+          "rateLimit": "Credit-based"
+        },
+        {
+          "id": "gemini-2.5-pro",
+          "name": "gemini-2.5-pro",
+          "context": "1M",
+          "maxOutput": "64K",
+          "modality": "Text",
+          "rateLimit": "Credit-based"
+        },
+        {
+          "id": "deepseek-r1",
+          "name": "deepseek-r1",
+          "context": "128K",
+          "maxOutput": "64K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "Credit-based"
+        },
+        {
+          "id": "grok-3",
+          "name": "grok-3",
+          "context": "128K",
+          "maxOutput": "16K",
+          "modality": "Text",
+          "rateLimit": "Credit-based"
         }
       ]
     },
