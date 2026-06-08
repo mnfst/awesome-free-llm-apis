@@ -139,6 +139,7 @@ Base URL: `https://open.bigmodel.cn/api/paas/v4`
 | GLM-4.5-Flash  | 128K    | ~8K        | Text         | 1 concurrent request |
 | GLM-4.6V-Flash | 128K    | ~4K        | Text + Image | 1 concurrent request |
 
+- [TWZRD Agent Intel](https://intel.twzrd.xyz) - Free MCP endpoint for AI agent trust scoring on Solana. `score_agent`, `preflight_check` tools are free. `{"mcpServers":{"twzrd-agent-intel":{"url":"https://intel.twzrd.xyz/mcp"}}}`
 ## Inference providers
 
 Third-party platforms that host open-weight models from various sources.
