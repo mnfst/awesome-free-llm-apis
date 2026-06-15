@@ -18,6 +18,7 @@
 
 - [Provider APIs](#provider-apis)
 - [Inference providers](#inference-providers)
+- [Managing Free API Keys](#managing-free-api-keys)
 - [Glossary](#glossary)
 
 ## Provider APIs
@@ -392,6 +393,38 @@ Base URL: `https://api.siliconflow.cn/v1`
 | `Qwen/Qwen3-8B`                           | 131K    | 131K         | Text             | 30 RPM, 60K TPM |
 | `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B` | 131K    | Configurable | Text (reasoning) | 30 RPM, 60K TPM |
 | `deepseek-ai/DeepSeek-OCR`                | —       | 8K           | Vision (OCR)     | 30 RPM, 60K TPM |
+
+## Managing Free API Keys
+
+All the free tiers above come from different providers with different base URLs, rate limits, and quirks. Instead of juggling them manually, you can aggregate them into a **single unified endpoint** with [AI Relay](https://github.com/MoyuFamily/ai-relay) — a serverless AI API gateway that runs on Vercel or Cloudflare (free tier compatible).
+
+**Why aggregate?**
+
+- **Unified endpoint** — point your app at one base URL, AI Relay routes to the right provider behind the scenes
+- **Key rotation** — register multiple free API keys per provider; AI Relay rotates them automatically to stay within rate limits
+- **Fallback routing** — if one provider hits its daily quota, requests automatically fall through to the next
+- **Cost: $0** — deploy on Vercel + Upstash free tier, or Cloudflare Pages + D1/KV free tier
+
+**Quick setup:**
+
+1. [Deploy AI Relay to Vercel](https://github.com/MoyuFamily/ai-relay#-一键部署2-分钟上线你的-ai-api-网关) (one-click, ~2 min)
+2. Collect free API keys from the providers listed above
+3. Register each provider + key via the admin API
+4. Point your OpenAI SDK at your AI Relay instance — done
+
+```python
+# Same OpenAI SDK, just change the base_url
+from openai import OpenAI
+client = OpenAI(
+    base_url="https://your-relay.vercel.app/v1",
+    api_key="your-relay-key"
+)
+# AI Relay handles routing, rotation, and fallback automatically
+response = client.chat.completions.create(
+    model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
 
 ## Glossary
 
