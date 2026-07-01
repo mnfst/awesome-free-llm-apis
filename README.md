@@ -17,6 +17,7 @@
 ## Contents
 
 - [Provider APIs](#provider-apis)
+- [AI Token Hub](https://aitoken-hub.github.io/aitoken-hub/) - Access 200+ AI models through a single API key, including DeepSeek, Qwen, Llama. OpenAI-compatible format with pay-as-you-go pricing.
 - [Inference providers](#inference-providers)
 - [Glossary](#glossary)
 
