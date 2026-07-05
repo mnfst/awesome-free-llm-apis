@@ -4,7 +4,7 @@ Third-party platforms that host open-weight models from various sources.
 
 ## GitHub Models
 
-**Models:** GPT-4o, Llama 3.3 70B, DeepSeek-R1 +more
+**Models:** GPT-5, GPT-4.1, GPT-4o, Llama 4, DeepSeek-R1 +more
 **Limits:** 10-15 RPM, 50-150 RPD
 
 ### Get your API key
@@ -265,8 +265,8 @@ export KLUSTER_API_KEY="your-key-here"
 
 ## OpenRouter
 
-**Models:** DeepSeek R1, Llama 3.3 70B, GPT-OSS-120B +29 more
-**Limits:** 20 RPM, 50 RPD
+**Models:** 24 free text/router entries, including Qwen3 Coder, GPT-OSS, Nemotron, Llama, Gemma, Hermes
+**Limits:** 20 RPM, 200 RPD
 
 ### Get your API key
 
@@ -286,7 +286,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="deepseek/deepseek-r1:free",
+    model="openrouter/free",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 print(response.choices[0].message.content)

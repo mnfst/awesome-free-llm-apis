@@ -14,8 +14,8 @@ Ask the user what matters most, then recommend accordingly:
 | Priority | Best picks |
 |---|---|
 | Highest rate limits | Groq (30 RPM, 14.4K RPD), Cerebras (30 RPM, 14.4K RPD) |
-| Largest model selection | Cloudflare Workers AI (49+ models), OpenRouter (32+ models) |
-| Strongest proprietary models | Google Gemini (Gemini 2.5 Pro), GitHub Models (GPT-4o) |
+| Largest model selection | Cloudflare Workers AI (49+ models), OpenRouter (24 free text/router entries) |
+| Strongest proprietary models | Google Gemini (Gemini 2.5 Pro), GitHub Models (35 text-generation models, including GPT-4o/GPT-5) |
 | Fastest inference | Groq, Cerebras (both optimized for speed) |
 | Highest token budget | Mistral AI (1B tokens/month) |
 | European provider | Mistral AI (EU), LLM7.io (UK) |

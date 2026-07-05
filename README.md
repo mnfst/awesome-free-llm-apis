@@ -124,23 +124,47 @@ Base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
 
 ### [GitHub Models](https://github.com/marketplace/models) 🇺🇸
 
-Free prototyping for all GitHub users. 45+ models. Per-request limits (8K in / 4K out).
+Free prototyping for all GitHub users. 35 text-generation models from the official catalog. Per-request limits apply.
 
 Base URL: `https://models.github.ai/inference`
 
-| Model Name                | Context | Max Output | Modality         | Rate Limit      |
-| ------------------------- | ------- | ---------- | ---------------- | --------------- |
-| gpt-5                     | 200K    | 32K        | Text             | 10 RPM, 50 RPD  |
-| gpt-4.1                   | 1M      | 32K        | Text             | 10 RPM, 50 RPD  |
-| gpt-4.1-mini              | 1M      | 32K        | Text             | 15 RPM, 150 RPD |
-| gpt-4o                    | 128K    | 16K        | Text + Vision    | 10 RPM, 50 RPD  |
-| o4-mini                   | 200K    | 100K       | Text (reasoning) | 10 RPM, 50 RPD  |
-| Llama-4-Scout-17B-16E     | 512K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
-| Llama-4-Maverick-17B-128E | 256K    | ~4K        | Text + Vision    | 10 RPM, 50 RPD  |
-| Meta-Llama-3.3-70B        | 131K    | ~4K        | Text             | 15 RPM, 150 RPD |
-| DeepSeek-R1               | 64K     | 8K         | Text (reasoning) | 15 RPM, 150 RPD |
-| Mistral-Small-3.1         | 128K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
-| + 35 more models          | Varies  | Varies     | Text / Image     | Varies by tier  |
+| Model Name                                    | Context | Max Output | Modality              | Rate Limit      |
+| --------------------------------------------- | ------- | ---------- | --------------------- | --------------- |
+| `cohere/cohere-command-a`                     | ~131K   | ~4K        | Text                  | 15 RPM, 150 RPD |
+| `deepseek/deepseek-r1`                        | 128K    | ~4K        | Text                  | Custom tier     |
+| `deepseek/deepseek-r1-0528`                   | 128K    | ~4K        | Text                  | Custom tier     |
+| `deepseek/deepseek-v3-0324`                   | 128K    | ~4K        | Text                  | 10 RPM, 50 RPD  |
+| `meta/llama-3.2-11b-vision-instruct`          | 128K    | ~4K        | Text + Vision + Audio | 15 RPM, 150 RPD |
+| `meta/llama-3.2-90b-vision-instruct`          | 128K    | ~4K        | Text + Vision + Audio | 10 RPM, 50 RPD  |
+| `meta/llama-3.3-70b-instruct`                 | 128K    | ~4K        | Text                  | 10 RPM, 50 RPD  |
+| `meta/llama-4-maverick-17b-128e-instruct-fp8` | 1M      | ~4K        | Text + Vision         | 10 RPM, 50 RPD  |
+| `meta/llama-4-scout-17b-16e-instruct`         | 10M     | ~4K        | Text + Vision         | 10 RPM, 50 RPD  |
+| `meta/meta-llama-3.1-405b-instruct`           | ~131K   | ~4K        | Text                  | 10 RPM, 50 RPD  |
+| `meta/meta-llama-3.1-8b-instruct`             | ~131K   | ~4K        | Text                  | 15 RPM, 150 RPD |
+| `microsoft/phi-4`                             | ~16K    | ~16K       | Text                  | 15 RPM, 150 RPD |
+| `microsoft/phi-4-mini-instruct`               | 128K    | ~4K        | Text                  | 15 RPM, 150 RPD |
+| `microsoft/phi-4-mini-reasoning`              | 128K    | ~4K        | Text                  | 15 RPM, 150 RPD |
+| `microsoft/phi-4-multimodal-instruct`         | 128K    | ~4K        | Text + Audio + Vision | 15 RPM, 150 RPD |
+| `microsoft/phi-4-reasoning`                   | ~33K    | ~4K        | Text                  | 15 RPM, 150 RPD |
+| `mistral-ai/codestral-2501`                   | 256K    | ~4K        | Text                  | 15 RPM, 150 RPD |
+| `mistral-ai/ministral-3b`                     | ~131K   | ~4K        | Text                  | 15 RPM, 150 RPD |
+| `mistral-ai/mistral-medium-2505`              | 128K    | ~4K        | Text + Vision         | 15 RPM, 150 RPD |
+| `mistral-ai/mistral-small-2503`               | 128K    | ~4K        | Text + Vision         | 15 RPM, 150 RPD |
+| `openai/gpt-4.1`                              | 1M      | ~33K       | Text + Vision         | 10 RPM, 50 RPD  |
+| `openai/gpt-4.1-mini`                         | 1M      | ~33K       | Text + Vision         | 15 RPM, 150 RPD |
+| `openai/gpt-4.1-nano`                         | 1M      | ~33K       | Text + Vision         | 15 RPM, 150 RPD |
+| `openai/gpt-4o`                               | ~131K   | ~16K       | Text + Vision + Audio | 10 RPM, 50 RPD  |
+| `openai/gpt-4o-mini`                          | ~131K   | ~4K        | Text + Vision + Audio | 15 RPM, 150 RPD |
+| `openai/gpt-5`                                | 200K    | 100K       | Text + Vision         | Custom tier     |
+| `openai/gpt-5-chat`                           | 200K    | 100K       | Text + Vision         | Custom tier     |
+| `openai/gpt-5-mini`                           | 200K    | 100K       | Text + Vision         | Custom tier     |
+| `openai/gpt-5-nano`                           | 200K    | 100K       | Text + Vision         | Custom tier     |
+| `openai/o1`                                   | 200K    | 100K       | Text + Vision         | Custom tier     |
+| `openai/o1-mini`                              | 128K    | ~66K       | Text                  | Custom tier     |
+| `openai/o1-preview`                           | 128K    | ~33K       | Text                  | Custom tier     |
+| `openai/o3`                                   | 200K    | 100K       | Text + Vision         | Custom tier     |
+| `openai/o3-mini`                              | 200K    | 100K       | Text                  | Custom tier     |
+| `openai/o4-mini`                              | 200K    | 100K       | Text + Vision         | Custom tier     |
 
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
@@ -251,23 +275,36 @@ Base URL: `https://api.ollama.com`
 
 ### [OpenRouter](https://openrouter.ai/keys) 🇺🇸
 
-~22 free models (marked with `:free` suffix). OpenAI SDK-compatible. [^4]
+24 free text models/router entries (marked with `:free` suffix plus `openrouter/free`). OpenAI SDK-compatible. [^4]
 
 Base URL: `https://openrouter.ai/api/v1`
 
-| Model Name                                  | Context | Max Output | Modality     | Rate Limit      |
-| ------------------------------------------- | ------- | ---------- | ------------ | --------------- |
-| `qwen/qwen3-coder:free`                     | 1M      | 262K       | Text (code)  | 20 RPM, 200 RPD |
-| `nvidia/nemotron-3-ultra-550b-a55b:free`    | 1M      | 65K        | Text         | 20 RPM, 200 RPD |
-| `nvidia/nemotron-3-super-120b-a12b:free`    | 1M      | 262K       | Text         | 20 RPM, 200 RPD |
-| `openai/gpt-oss-120b:free`                  | 131K    | 131K       | Text         | 20 RPM, 200 RPD |
-| `openai/gpt-oss-20b:free`                   | 131K    | 8K         | Text         | 20 RPM, 200 RPD |
-| `meta-llama/llama-3.3-70b-instruct:free`    | 131K    | ~16K       | Text         | 20 RPM, 200 RPD |
-| `nousresearch/hermes-3-llama-3.1-405b:free` | 131K    | ~16K       | Text         | 20 RPM, 200 RPD |
-| `google/gemma-4-31b-it:free`                | 262K    | 32K        | Multimodal   | 20 RPM, 200 RPD |
-| `poolside/laguna-m.1:free`                  | 262K    | 32K        | Text         | 20 RPM, 200 RPD |
-| `qwen/qwen3-next-80b-a3b-instruct:free`     | 262K    | ~32K       | Text         | 20 RPM, 200 RPD |
-| + ~12 more free models                      | Varies  | Varies     | Text / Image | 20 RPM, 200 RPD |
+| Model Name                                                      | Context | Max Output | Modality                     | Rate Limit                |
+| --------------------------------------------------------------- | ------- | ---------- | ---------------------------- | ------------------------- |
+| `cognitivecomputations/dolphin-mistral-24b-venice-edition:free` | ~33K    | —          | Text                         | 20 RPM, 200 RPD           |
+| `cohere/north-mini-code:free`                                   | 256K    | 64K        | Text                         | 20 RPM, 200 RPD           |
+| `google/gemma-4-26b-a4b-it:free`                                | ~262K   | ~33K       | Text + Image + Video         | 20 RPM, 200 RPD           |
+| `google/gemma-4-31b-it:free`                                    | ~262K   | ~8K        | Text + Image + Video         | 20 RPM, 200 RPD           |
+| `liquid/lfm-2.5-1.2b-instruct:free`                             | ~33K    | —          | Text                         | 20 RPM, 200 RPD           |
+| `liquid/lfm-2.5-1.2b-thinking:free`                             | ~33K    | —          | Text                         | 20 RPM, 200 RPD           |
+| `meta-llama/llama-3.2-3b-instruct:free`                         | ~131K   | —          | Text                         | 20 RPM, 200 RPD           |
+| `meta-llama/llama-3.3-70b-instruct:free`                        | ~131K   | —          | Text                         | 20 RPM, 200 RPD           |
+| `nousresearch/hermes-3-llama-3.1-405b:free`                     | ~131K   | —          | Text                         | 20 RPM, 200 RPD           |
+| `nvidia/nemotron-3-nano-30b-a3b:free`                           | 256K    | —          | Text                         | 20 RPM, 200 RPD           |
+| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free`            | 256K    | ~66K       | Text + Image + Audio + Video | 20 RPM, 200 RPD           |
+| `nvidia/nemotron-3-super-120b-a12b:free`                        | 1M      | ~262K      | Text                         | 20 RPM, 200 RPD           |
+| `nvidia/nemotron-3-ultra-550b-a55b:free`                        | 1M      | ~66K       | Text                         | 20 RPM, 200 RPD           |
+| `nvidia/nemotron-3.5-content-safety:free`                       | 128K    | ~8K        | Text + Image                 | 20 RPM, 200 RPD           |
+| `nvidia/nemotron-nano-12b-v2-vl:free`                           | 128K    | 128K       | Text + Image + Video         | 20 RPM, 200 RPD           |
+| `nvidia/nemotron-nano-9b-v2:free`                               | 128K    | —          | Text                         | 20 RPM, 200 RPD           |
+| `openai/gpt-oss-120b:free`                                      | ~131K   | ~131K      | Text                         | 20 RPM, 200 RPD           |
+| `openai/gpt-oss-20b:free`                                       | ~131K   | ~33K       | Text                         | 20 RPM, 200 RPD           |
+| `poolside/laguna-m.1:free`                                      | ~262K   | ~33K       | Text                         | 20 RPM, 200 RPD           |
+| `poolside/laguna-xs-2.1:free`                                   | ~262K   | ~33K       | Text                         | 20 RPM, 200 RPD           |
+| `poolside/laguna-xs.2:free`                                     | ~262K   | ~33K       | Text                         | 20 RPM, 200 RPD           |
+| `qwen/qwen3-coder:free`                                         | 1M      | 262K       | Text                         | 20 RPM, 200 RPD           |
+| `qwen/qwen3-next-80b-a3b-instruct:free`                         | ~262K   | —          | Text                         | 20 RPM, 200 RPD           |
+| `openrouter/free`                                               | 200K    | Varies     | Text + Image                 | Routes across free models |
 
 ### [OVHcloud AI Endpoints](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/) 🇫🇷
 

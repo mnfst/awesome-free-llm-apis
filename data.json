@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-15",
+  "lastUpdated": "2026-07-05",
   "providers": [
     {
       "name": "Aion Labs",
@@ -340,96 +340,288 @@
       "flag": "🇺🇸",
       "url": "https://github.com/marketplace/models",
       "baseUrl": "https://models.github.ai/inference",
-      "description": "Free prototyping for all GitHub users. 45+ models. Per-request limits (8K in / 4K out).",
+      "description": "Free prototyping for all GitHub users. 35 text-generation models from the official catalog. Per-request limits apply.",
       "footnoteRef": null,
       "models": [
         {
-          "id": "openai/gpt-5",
-          "name": "gpt-5",
-          "context": "200K",
-          "maxOutput": "32K",
+          "id": "cohere/cohere-command-a",
+          "name": "cohere/cohere-command-a",
+          "context": "~131K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "deepseek/deepseek-r1",
+          "name": "deepseek/deepseek-r1",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "deepseek/deepseek-r1-0528",
+          "name": "deepseek/deepseek-r1-0528",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "deepseek/deepseek-v3-0324",
+          "name": "deepseek/deepseek-v3-0324",
+          "context": "128K",
+          "maxOutput": "~4K",
           "modality": "Text",
           "rateLimit": "10 RPM, 50 RPD"
         },
         {
-          "id": "openai/gpt-4.1",
-          "name": "gpt-4.1",
-          "context": "1M",
-          "maxOutput": "32K",
+          "id": "meta/llama-3.2-11b-vision-instruct",
+          "name": "meta/llama-3.2-11b-vision-instruct",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision + Audio",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "meta/llama-3.2-90b-vision-instruct",
+          "name": "meta/llama-3.2-90b-vision-instruct",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision + Audio",
+          "rateLimit": "10 RPM, 50 RPD"
+        },
+        {
+          "id": "meta/llama-3.3-70b-instruct",
+          "name": "meta/llama-3.3-70b-instruct",
+          "context": "128K",
+          "maxOutput": "~4K",
           "modality": "Text",
+          "rateLimit": "10 RPM, 50 RPD"
+        },
+        {
+          "id": "meta/llama-4-maverick-17b-128e-instruct-fp8",
+          "name": "meta/llama-4-maverick-17b-128e-instruct-fp8",
+          "context": "1M",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision",
+          "rateLimit": "10 RPM, 50 RPD"
+        },
+        {
+          "id": "meta/llama-4-scout-17b-16e-instruct",
+          "name": "meta/llama-4-scout-17b-16e-instruct",
+          "context": "10M",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision",
+          "rateLimit": "10 RPM, 50 RPD"
+        },
+        {
+          "id": "meta/meta-llama-3.1-405b-instruct",
+          "name": "meta/meta-llama-3.1-405b-instruct",
+          "context": "~131K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "10 RPM, 50 RPD"
+        },
+        {
+          "id": "meta/meta-llama-3.1-8b-instruct",
+          "name": "meta/meta-llama-3.1-8b-instruct",
+          "context": "~131K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "microsoft/phi-4",
+          "name": "microsoft/phi-4",
+          "context": "~16K",
+          "maxOutput": "~16K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "microsoft/phi-4-mini-instruct",
+          "name": "microsoft/phi-4-mini-instruct",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "microsoft/phi-4-mini-reasoning",
+          "name": "microsoft/phi-4-mini-reasoning",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "microsoft/phi-4-multimodal-instruct",
+          "name": "microsoft/phi-4-multimodal-instruct",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text + Audio + Vision",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "microsoft/phi-4-reasoning",
+          "name": "microsoft/phi-4-reasoning",
+          "context": "~33K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "mistral-ai/codestral-2501",
+          "name": "mistral-ai/codestral-2501",
+          "context": "256K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "mistral-ai/ministral-3b",
+          "name": "mistral-ai/ministral-3b",
+          "context": "~131K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "mistral-ai/mistral-medium-2505",
+          "name": "mistral-ai/mistral-medium-2505",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "mistral-ai/mistral-small-2503",
+          "name": "mistral-ai/mistral-small-2503",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "openai/gpt-4.1",
+          "name": "openai/gpt-4.1",
+          "context": "1M",
+          "maxOutput": "~33K",
+          "modality": "Text + Vision",
           "rateLimit": "10 RPM, 50 RPD"
         },
         {
           "id": "openai/gpt-4.1-mini",
-          "name": "gpt-4.1-mini",
+          "name": "openai/gpt-4.1-mini",
           "context": "1M",
-          "maxOutput": "32K",
-          "modality": "Text",
+          "maxOutput": "~33K",
+          "modality": "Text + Vision",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "openai/gpt-4.1-nano",
+          "name": "openai/gpt-4.1-nano",
+          "context": "1M",
+          "maxOutput": "~33K",
+          "modality": "Text + Vision",
           "rateLimit": "15 RPM, 150 RPD"
         },
         {
           "id": "openai/gpt-4o",
-          "name": "gpt-4o",
-          "context": "128K",
-          "maxOutput": "16K",
-          "modality": "Text + Vision",
+          "name": "openai/gpt-4o",
+          "context": "~131K",
+          "maxOutput": "~16K",
+          "modality": "Text + Vision + Audio",
           "rateLimit": "10 RPM, 50 RPD"
+        },
+        {
+          "id": "openai/gpt-4o-mini",
+          "name": "openai/gpt-4o-mini",
+          "context": "~131K",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision + Audio",
+          "rateLimit": "15 RPM, 150 RPD"
+        },
+        {
+          "id": "openai/gpt-5",
+          "name": "openai/gpt-5",
+          "context": "200K",
+          "maxOutput": "100K",
+          "modality": "Text + Vision",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/gpt-5-chat",
+          "name": "openai/gpt-5-chat",
+          "context": "200K",
+          "maxOutput": "100K",
+          "modality": "Text + Vision",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/gpt-5-mini",
+          "name": "openai/gpt-5-mini",
+          "context": "200K",
+          "maxOutput": "100K",
+          "modality": "Text + Vision",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/gpt-5-nano",
+          "name": "openai/gpt-5-nano",
+          "context": "200K",
+          "maxOutput": "100K",
+          "modality": "Text + Vision",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/o1",
+          "name": "openai/o1",
+          "context": "200K",
+          "maxOutput": "100K",
+          "modality": "Text + Vision",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/o1-mini",
+          "name": "openai/o1-mini",
+          "context": "128K",
+          "maxOutput": "~66K",
+          "modality": "Text",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/o1-preview",
+          "name": "openai/o1-preview",
+          "context": "128K",
+          "maxOutput": "~33K",
+          "modality": "Text",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/o3",
+          "name": "openai/o3",
+          "context": "200K",
+          "maxOutput": "100K",
+          "modality": "Text + Vision",
+          "rateLimit": "Custom tier"
+        },
+        {
+          "id": "openai/o3-mini",
+          "name": "openai/o3-mini",
+          "context": "200K",
+          "maxOutput": "100K",
+          "modality": "Text",
+          "rateLimit": "Custom tier"
         },
         {
           "id": "openai/o4-mini",
-          "name": "o4-mini",
+          "name": "openai/o4-mini",
           "context": "200K",
           "maxOutput": "100K",
-          "modality": "Text (reasoning)",
-          "rateLimit": "10 RPM, 50 RPD"
-        },
-        {
-          "id": "meta/Llama-4-Scout-17B-16E",
-          "name": "Llama-4-Scout-17B-16E",
-          "context": "512K",
-          "maxOutput": "~4K",
           "modality": "Text + Vision",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": "meta/Llama-4-Maverick-17B-128E",
-          "name": "Llama-4-Maverick-17B-128E",
-          "context": "256K",
-          "maxOutput": "~4K",
-          "modality": "Text + Vision",
-          "rateLimit": "10 RPM, 50 RPD"
-        },
-        {
-          "id": "meta/Meta-Llama-3.3-70B",
-          "name": "Meta-Llama-3.3-70B",
-          "context": "131K",
-          "maxOutput": "~4K",
-          "modality": "Text",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": "deepseek/DeepSeek-R1",
-          "name": "DeepSeek-R1",
-          "context": "64K",
-          "maxOutput": "8K",
-          "modality": "Text (reasoning)",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": "mistralai/Mistral-Small-3.1",
-          "name": "Mistral-Small-3.1",
-          "context": "128K",
-          "maxOutput": "~4K",
-          "modality": "Text + Vision",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": null,
-          "name": "+ 35 more models",
-          "context": "Varies",
-          "maxOutput": "Varies",
-          "modality": "Text / Image",
-          "rateLimit": "Varies by tier"
+          "rateLimit": "Custom tier"
         }
       ]
     },
@@ -876,96 +1068,200 @@
       "flag": "🇺🇸",
       "url": "https://openrouter.ai/keys",
       "baseUrl": "https://openrouter.ai/api/v1",
-      "description": "~22 free models (marked with `:free` suffix). OpenAI SDK-compatible.",
+      "description": "24 free text models/router entries (marked with `:free` suffix plus `openrouter/free`). OpenAI SDK-compatible.",
       "footnoteRef": 4,
       "models": [
         {
-          "id": "qwen/qwen3-coder:free",
-          "name": "qwen/qwen3-coder:free",
-          "context": "1M",
-          "maxOutput": "262K",
-          "modality": "Text (code)",
-          "rateLimit": "20 RPM, 200 RPD"
-        },
-        {
-          "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
-          "name": "nvidia/nemotron-3-ultra-550b-a55b:free",
-          "context": "1M",
-          "maxOutput": "65K",
+          "id": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+          "name": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+          "context": "~33K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
-          "id": "nvidia/nemotron-3-super-120b-a12b:free",
-          "name": "nvidia/nemotron-3-super-120b-a12b:free",
-          "context": "1M",
-          "maxOutput": "262K",
+          "id": "cohere/north-mini-code:free",
+          "name": "cohere/north-mini-code:free",
+          "context": "256K",
+          "maxOutput": "64K",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
-          "id": "openai/gpt-oss-120b:free",
-          "name": "openai/gpt-oss-120b:free",
-          "context": "131K",
-          "maxOutput": "131K",
+          "id": "google/gemma-4-26b-a4b-it:free",
+          "name": "google/gemma-4-26b-a4b-it:free",
+          "context": "~262K",
+          "maxOutput": "~33K",
+          "modality": "Text + Image + Video",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "google/gemma-4-31b-it:free",
+          "name": "google/gemma-4-31b-it:free",
+          "context": "~262K",
+          "maxOutput": "~8K",
+          "modality": "Text + Image + Video",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "liquid/lfm-2.5-1.2b-instruct:free",
+          "name": "liquid/lfm-2.5-1.2b-instruct:free",
+          "context": "~33K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
-          "id": "openai/gpt-oss-20b:free",
-          "name": "openai/gpt-oss-20b:free",
-          "context": "131K",
-          "maxOutput": "8K",
+          "id": "liquid/lfm-2.5-1.2b-thinking:free",
+          "name": "liquid/lfm-2.5-1.2b-thinking:free",
+          "context": "~33K",
+          "maxOutput": "—",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "meta-llama/llama-3.2-3b-instruct:free",
+          "name": "meta-llama/llama-3.2-3b-instruct:free",
+          "context": "~131K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
           "id": "meta-llama/llama-3.3-70b-instruct:free",
           "name": "meta-llama/llama-3.3-70b-instruct:free",
-          "context": "131K",
-          "maxOutput": "~16K",
+          "context": "~131K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
           "id": "nousresearch/hermes-3-llama-3.1-405b:free",
           "name": "nousresearch/hermes-3-llama-3.1-405b:free",
-          "context": "131K",
-          "maxOutput": "~16K",
+          "context": "~131K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
-          "id": "google/gemma-4-31b-it:free",
-          "name": "google/gemma-4-31b-it:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Multimodal",
+          "id": "nvidia/nemotron-3-nano-30b-a3b:free",
+          "name": "nvidia/nemotron-3-nano-30b-a3b:free",
+          "context": "256K",
+          "maxOutput": "—",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "name": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "context": "256K",
+          "maxOutput": "~66K",
+          "modality": "Text + Image + Audio + Video",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "nvidia/nemotron-3-super-120b-a12b:free",
+          "name": "nvidia/nemotron-3-super-120b-a12b:free",
+          "context": "1M",
+          "maxOutput": "~262K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "name": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "context": "1M",
+          "maxOutput": "~66K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "nvidia/nemotron-3.5-content-safety:free",
+          "name": "nvidia/nemotron-3.5-content-safety:free",
+          "context": "128K",
+          "maxOutput": "~8K",
+          "modality": "Text + Image",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "nvidia/nemotron-nano-12b-v2-vl:free",
+          "name": "nvidia/nemotron-nano-12b-v2-vl:free",
+          "context": "128K",
+          "maxOutput": "128K",
+          "modality": "Text + Image + Video",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "nvidia/nemotron-nano-9b-v2:free",
+          "name": "nvidia/nemotron-nano-9b-v2:free",
+          "context": "128K",
+          "maxOutput": "—",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "openai/gpt-oss-120b:free",
+          "name": "openai/gpt-oss-120b:free",
+          "context": "~131K",
+          "maxOutput": "~131K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "openai/gpt-oss-20b:free",
+          "name": "openai/gpt-oss-20b:free",
+          "context": "~131K",
+          "maxOutput": "~33K",
+          "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
           "id": "poolside/laguna-m.1:free",
           "name": "poolside/laguna-m.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
+          "context": "~262K",
+          "maxOutput": "~33K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "poolside/laguna-xs-2.1:free",
+          "name": "poolside/laguna-xs-2.1:free",
+          "context": "~262K",
+          "maxOutput": "~33K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "poolside/laguna-xs.2:free",
+          "name": "poolside/laguna-xs.2:free",
+          "context": "~262K",
+          "maxOutput": "~33K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 200 RPD"
+        },
+        {
+          "id": "qwen/qwen3-coder:free",
+          "name": "qwen/qwen3-coder:free",
+          "context": "1M",
+          "maxOutput": "262K",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
           "id": "qwen/qwen3-next-80b-a3b-instruct:free",
           "name": "qwen/qwen3-next-80b-a3b-instruct:free",
-          "context": "262K",
-          "maxOutput": "~32K",
+          "context": "~262K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "20 RPM, 200 RPD"
         },
         {
-          "id": null,
-          "name": "+ ~12 more free models",
-          "context": "Varies",
+          "id": "openrouter/free",
+          "name": "openrouter/free",
+          "context": "200K",
           "maxOutput": "Varies",
-          "modality": "Text / Image",
-          "rateLimit": "20 RPM, 200 RPD"
+          "modality": "Text + Image",
+          "rateLimit": "Routes across free models"
         }
       ]
     },
