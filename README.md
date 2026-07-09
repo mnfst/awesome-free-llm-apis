@@ -317,6 +317,21 @@ Base URL: `https://api.siliconflow.cn/v1`
 | `Qwen/Qwen3-8B`                           | 131K    | 131K         | Text             | 30 RPM, 60K TPM |
 | `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B` | 131K    | Configurable | Text (reasoning) | 30 RPM, 60K TPM |
 
+### [GoldBean](https://github.com/wuzenghai616-lang/goldbean) 🌐
+
+Free tier with 20 credits/day (no credit card, no API key). MCP-native — use any MCP client. Paid calls at \$0.01–\$0.03 via x402 USDC on Base, PayPal, or Alipay.
+
+Base URL: `https://goldbean-api.xyz/sse` (MCP over SSE)
+
+| Model Name              | Context | Max Output | Modality                    | Rate Limit        |
+| ----------------------- | ------- | ---------- | --------------------------- | ----------------- |
+| ERNIE-4.5-Turbo         | 128K    | 4K         | Text                        | 20 calls/day free |
+| ERNIE-Speed             | 128K    | 4K         | Text                        | 20 calls/day free |
+| DeepSeek-V3 (via Baidu) | 128K    | 8K         | Text                        | 20 calls/day free |
+| Qwen3-32B (via Baidu)   | 131K    | 8K         | Text                        | 20 calls/day free |
+
+> **Note**: GoldBean is an MCP Server, not an OpenAI-compatible API. 21 of its 47 endpoints (including LLM chat, OCR, and text analysis) are permanently free. Install: `npx goldbean-mcp`.
+
 ## Glossary
 
 | Abbreviation | Meaning             |
