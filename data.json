@@ -1172,6 +1172,66 @@
           "rateLimit": "30 RPM, 60K TPM"
         }
       ]
+    },
+    {
+      "name": "UnoRouter",
+      "category": "inference_provider",
+      "country": "DE",
+      "flag": "🇩🇪",
+      "url": "https://unorouter.com/token",
+      "baseUrl": "https://api.unorouter.com/v1",
+      "description": "Permanent free tier, no credit card (Discord or GitHub sign-in). 190+ models carry a `:free` suffix, roughly 1 request per minute per model per user; the cap returns HTTP 429 with a Retry-After header, so rotating between free models is the intended pattern. Output capped at 8K on free models. Open source stack ([free tier details](https://unorouter.com/en/blog/free-models-aggregated)).",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "deepseek-v4-flash:free",
+          "name": "deepseek-v4-flash:free",
+          "context": "1M",
+          "maxOutput": "8K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "1 RPM/model"
+        },
+        {
+          "id": "deepseek-v4-pro:free",
+          "name": "deepseek-v4-pro:free",
+          "context": "1M",
+          "maxOutput": "8K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "1 RPM/model"
+        },
+        {
+          "id": "glm-5.2:free",
+          "name": "glm-5.2:free",
+          "context": "1M",
+          "maxOutput": "8K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "1 RPM/model"
+        },
+        {
+          "id": "qwen3.5-397b-a17b:free",
+          "name": "qwen3.5-397b-a17b:free",
+          "context": "262K",
+          "maxOutput": "8K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "1 RPM/model"
+        },
+        {
+          "id": "nemotron-3-ultra-550b-a55b:free",
+          "name": "nemotron-3-ultra-550b-a55b:free",
+          "context": "1M",
+          "maxOutput": "8K",
+          "modality": "Text",
+          "rateLimit": "1 RPM/model"
+        },
+        {
+          "id": "step-3.7-flash:free",
+          "name": "step-3.7-flash:free",
+          "context": "128K",
+          "maxOutput": "8K",
+          "modality": "Text",
+          "rateLimit": "1 RPM/model"
+        }
+      ]
     }
   ],
   "footnotes": [

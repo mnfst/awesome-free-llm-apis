@@ -317,6 +317,21 @@ Base URL: `https://api.siliconflow.cn/v1`
 | `Qwen/Qwen3-8B`                           | 131K    | 131K         | Text             | 30 RPM, 60K TPM |
 | `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B` | 131K    | Configurable | Text (reasoning) | 30 RPM, 60K TPM |
 
+### [UnoRouter](https://unorouter.com/token) 🇩🇪
+
+Permanent free tier, no credit card (Discord or GitHub sign-in). 190+ models carry a `:free` suffix, roughly 1 request per minute per model per user; the cap returns HTTP 429 with a Retry-After header, so rotating between free models is the intended pattern. Output capped at 8K on free models. Open source stack ([free tier details](https://unorouter.com/en/blog/free-models-aggregated)).
+
+Base URL: `https://api.unorouter.com/v1`
+
+| Model Name                        | Context | Max Output | Modality         | Rate Limit  |
+| --------------------------------- | ------- | ---------- | ---------------- | ----------- |
+| `deepseek-v4-flash:free`          | 1M      | 8K         | Text (reasoning) | 1 RPM/model |
+| `deepseek-v4-pro:free`            | 1M      | 8K         | Text (reasoning) | 1 RPM/model |
+| `glm-5.2:free`                    | 1M      | 8K         | Text (reasoning) | 1 RPM/model |
+| `qwen3.5-397b-a17b:free`          | 262K    | 8K         | Text (reasoning) | 1 RPM/model |
+| `nemotron-3-ultra-550b-a55b:free` | 1M      | 8K         | Text             | 1 RPM/model |
+| `step-3.7-flash:free`             | 128K    | 8K         | Text             | 1 RPM/model |
+
 ## Glossary
 
 | Abbreviation | Meaning             |
