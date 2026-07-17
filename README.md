@@ -56,12 +56,11 @@ Free tier unavailable in EU/UK/Switzerland. Free-tier prompts may be used by Goo
 
 Base URL: `https://generativelanguage.googleapis.com/v1beta`
 
-| Model Name            | Context | Max Output | Modality                     | Rate Limit        |
-| --------------------- | ------- | ---------- | ---------------------------- | ----------------- |
-| Gemini 3.5 Flash      | 1M      | 64K        | Text + Image + Audio + Video | 15 RPM, 1,500 RPD |
-| Gemini 3.1 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 30 RPM, 1,500 RPD |
-| Gemini 2.5 Flash      | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 1,500 RPD |
-| Gemini 2.5 Pro        | 2M      | 65K        | Text + Image + Audio + Video | 5 RPM, 50 RPD     |
+| Model Name            | Context | Max Output | Modality                     | Rate Limit |
+| --------------------- | ------- | ---------- | ---------------------------- | ---------- |
+| Gemini 3.5 Flash      | 1M      | 65K        | Text + Image + Audio + Video | 20 RPD     |
+| Gemini 3.1 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 500 RPD    |
+| Gemma 4 31B           | 128K    | 8K         | Text                         | 14.4K RPD  |
 
 ### [Mistral AI](https://console.mistral.ai/api-keys) 🇫🇷
 
