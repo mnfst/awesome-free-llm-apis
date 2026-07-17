@@ -157,7 +157,7 @@ Base URL: `https://api.groq.com/openai/v1`
 
 ### [Hugging Face](https://huggingface.co/settings/tokens) 🇺🇸
 
-100K monthly Inference Provider credits for free users. Routes to Fireworks, Together, Hyperbolic, Nebius, Novita, DeepInfra and others. Thousands of models.
+$0.10 in monthly Inference Provider credits for free users. Routes to Fireworks, Together, Hyperbolic, Nebius, Novita, DeepInfra and others. Thousands of models.
 
 Base URL: `https://router.huggingface.co/v1`
 
