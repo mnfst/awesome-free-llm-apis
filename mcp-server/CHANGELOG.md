@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.0.7 – Semantic Log Compaction, Strict Vision Bypass + Testing Hardening (July 2026)
+
+### 🚀 Highlights
+
+- **Semantic Log & JSON Compaction**: Implemented a Jaccard-similarity-based compactor in context gathering middleware for large `.log` and `.json` files. Anchors the first 5 lines (head) and last 5 lines (tail), grouping intermediate lines/JSON blocks and collapsing identical or highly-similar entries using a Jaccard threshold (configured via `LOG_COMPACTION_THRESHOLD`).
+- **Code Block Preservation**: Enhanced Jaccard calculations to explicitly bypass and preserve code elements like `jsCode` and `pythonCode` fields inside nested workflow JSON files.
+- **Strict Vision Task Debugger Bypass**: Resolved issues where prompts with error keywords routed to vision models triggered debugger diagnostics, strictly restricting the injection of local PowerShell/Bash diagnostics to non-vision tasks.
+- **Dynamic Search Limit Adjustments**: Bumped the search match limit to `50` for `.log`/`.json` files (from a default of `10`) to guarantee compaction logic is triggered.
+- **Search Robustness**: Appended `-H` to `rg` and `--with-filename` to `grep` calls inside the search executor to ensure stable filename path-splitting on both Windows and POSIX environments.
+- **Robust Integration Test Suite**: Created `tests/log-compaction.test.ts` covering unstructured logs, metrics JSON, and nested n8n workflow pipeline JSON (with code preservation validation), alongside new tests for the vision debugger bypass in `tests/tools.test.ts`.
+
+### Next Updates
+
+- `browser_action` tool to be integrated with `use_free_llm` for browser automation tasks, leveraging `chrome-devtools-mcp` for headless browser control. Github scraping should be used to extract relevant information from repositories, and the tool should be able to handle dynamic content loading and pagination.
+
+---
+
 ## v1.0.6 – Vision, Skill Loading, Privacy Hardening + Provider/Routing Updates (May 2026)
 
 ### 🚀 Highlights
@@ -32,7 +49,13 @@
 - Dashboard refactors to include tool call history and conversation history in a single view with filtering and search capabilities.
 - Assess migration to stream mode for supported providers to reduce latency and token wastage on long responses.
 - Reassess our architecture and apply fixes if required to make the system more robust and resilient to failures and also to make it more scalable and maintainable.
+- Integrate a new TaskType 'cyber' to handle cyber security related tasks and also to be able to use the tools and models available in the `cyber_plan.md` to handle cyber security related tasks and also to be able to use the tools and models available in the `cyber_plan.md` to handle cyber security related tasks. (But tight keyword matching should be used to avoid false positives and also to avoid routing non-cyber tasks to the cyber models and tools.)
+- Github repo scanning in middleware(if github urls are present) using githubusercontent and github api(Similar to the one implemented in `skill_loader`) to understand the working of the repo and also to be able to identify the dependencies between files and also to be able to identify the function calls across multiple files in a project and also to be able to identify the variable/dataflow across multiple files in a project.
+- For cyber tools available in github we can maintain global wiki and update it based on sucess rate.
+- Intelligent context extraction needs to corellate variable/dataflow or function calls across files and also to be able to identify the dependencies between. (eg. `jsCode` and `pythonCode` in n8n workflow json files [Our context extraction should know that it is a JavaScript code snippet that is a part of a workflow], or function calls across multiple files in a project,github actions workflow etc.)
 - LLM Wikiv2 full integration with `use_free_llm` and also other tools.
+- Wiki maintenance and update mechanism to be added to the middleware to keep the wiki up to date with the latest changes in the project and also to be able to add and apply entanglement to the wiki as required.
+- Secuity persona based on 
 
 ---
 

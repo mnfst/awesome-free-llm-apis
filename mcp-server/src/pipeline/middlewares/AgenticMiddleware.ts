@@ -863,7 +863,8 @@ async function executeSingleSubtask(
                 keywords: [...new Set(['mcp', 'memory', 'filesystem', ...userKeywords])],
                 memory: (context as any).memoryContext,
                 workspace: (context as any).grepContext,
-                isSubtask: true
+                isSubtask: true,
+                workspaceRoot: workspaceRoot
             });
 
             // Assemble quantum-weighted prior execution trail
@@ -1240,7 +1241,8 @@ export class AgenticMiddleware implements Middleware {
                         keywords: isAgenticExplicitlyRequested ? ['agentic', 'orchestration', ...userKeywords] : userKeywords,
                         memory: (context as any).memoryContext,
                         workspace: (context as any).grepContext,
-                        isSubtask: false
+                        isSubtask: false,
+                        workspaceRoot: workspaceRoot
                     });
                     const sysMsg = context.request.messages.find(m => m.role === 'system');
                     if (sysMsg) {
