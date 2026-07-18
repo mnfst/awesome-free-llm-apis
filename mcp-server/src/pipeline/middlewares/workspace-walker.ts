@@ -111,7 +111,8 @@ export class WorkspaceWalker {
                     const ext = path.extname(entry.name).toLowerCase();
                     
                     // Simple extension filter (still useful to prune binaries quickly)
-                    if (EXCLUDE_EXTENSIONS.includes(ext)) continue;
+                    const isPinnedExt = keywords.some(kw => entry.name.toLowerCase() === kw.toLowerCase());
+                    if (!isPinnedExt && EXCLUDE_EXTENSIONS.includes(ext)) continue;
 
                     const relativePath = path.relative(root, fullPath);
                     let score = this.calculateScore(entry.name, relativePath, ext, keywords, isTheoretical);

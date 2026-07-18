@@ -639,32 +639,47 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     const userContent = userMessage ? (typeof userMessage.content === 'string' ? userMessage.content : JSON.stringify(userMessage.content)) : '';
     const persona = detectPersona(userContent, workspaceRoot);
 
-    if (persona === 'debugger') {
+    if (context.taskType !== TaskType.Vision && persona === 'debugger') {
       const isWindows = os.platform() === 'win32';
       const queryLower = userContent.toLowerCase();
+
+      // Parse referenced files from the prompt
+      const mdFiles = userContent.match(/\b[\w\-./\\]+\.md\b/gi) || [];
+      const jsonFiles = userContent.match(/\b[\w\-./\\]+\.json\b/gi) || [];
+      const logFiles = userContent.match(/\b[\w\-./\\]+\.(log|txt)\b/gi) || [];
+      
+      const targetMd = mdFiles[0] ? path.basename(mdFiles[0]) : 'file.md';
+      const targetJson = jsonFiles[0] ? path.basename(jsonFiles[0]) : 'file.json';
+      const targetLog = logFiles[0] ? path.basename(logFiles[0]) : 'large_file.bin';
+
       const tips: string[] = [];
+
+      // Exclusive category filtering
+      const hasMdMention = mdFiles.length > 0;
+      const hasJsonMention = jsonFiles.length > 0;
+      const hasLogMention = logFiles.length > 0;
 
       // 1. Search category
       const wantsSearch = /\b(search|find|grep|rg|read|line|section|heading|match|code)\b/i.test(queryLower);
-      if (wantsSearch || tips.length === 0) {
+      if (wantsSearch && (!hasJsonMention && !hasLogMention)) {
         if (isWindows) {
           tips.push(
             '### 🪟 Document/Source Code Search (Windows PowerShell)',
             '```powershell',
-            'Get-Content file.md | Select-String "^#{1,6}\\s"                      # Get headings',
-            'Get-Content file.md | Select-Object -Skip 41 -First 33                # Read lines 42-75',
-            'Get-Content file.md | Select-String \'\\*\\*.*\\*\\*\'                        # Find bold text',
+            `Get-Content ${targetMd} | Select-String "^#{1,6}\\s"                      # Get headings`,
+            `Get-Content ${targetMd} | Select-Object -Skip 41 -First 33                # Read lines 42-75`,
+            `Get-Content ${targetMd} | Select-String '\\*\\*.*\\*\\*'                        # Find bold text`,
             '```'
           );
         } else {
           tips.push(
             '### 📄 Document/Source Code Search (Unix/Bash)',
             '```bash',
-            'grep -nE "^#{1,6}\\s" file.md               # Get all headings with line numbers',
-            'grep -n "^## Target Section" file.md        # Find exact heading line',
-            'sed -n "42,75p" file.md                    # Read specific lines 42-75 only',
-            'grep -nE "\\*\\*.*\\*\\*" file.md              # Extract bold/highlighted text',
-            'grep -nE "^\\s*\\|" file.md                  # Extract markdown table rows',
+            `grep -nE "^#{1,6}\\s" ${targetMd}               # Get all headings with line numbers`,
+            `grep -n "^## Target Section" ${targetMd}        # Find exact heading line`,
+            `sed -n "42,75p" ${targetMd}                    # Read specific lines 42-75 only`,
+            `grep -nE "\\*\\*.*\\*\\*" ${targetMd}              # Extract bold/highlighted text`,
+            `grep -nE "^\\s*\\|" ${targetMd}                  # Extract markdown table rows`,
             '```'
           );
         }
@@ -672,43 +687,43 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
 
       // 2. JSON / Tool Output Extraction category
       const wantsJson = /\b(json|result|error|output|field|extract|parse|jq|format|api)\b/i.test(queryLower);
-      if (wantsJson) {
+      if (wantsJson && (!hasMdMention && !hasLogMention)) {
         if (isWindows) {
           tips.push(
             '### 📊 JSON / Tool Output Extraction (Windows PowerShell)',
             '```powershell',
-            '(Get-Content file.json | ConvertFrom-Json).key.subkey                  # Raw value',
-            '(Get-Content file.json | ConvertFrom-Json) | Where-Object { $_.type -eq "error" } | Select-Object -ExpandProperty message # Filter + extract',
+            `(Get-Content ${targetJson} | ConvertFrom-Json).key.subkey                  # Raw value`,
+            `(Get-Content ${targetJson} | ConvertFrom-Json) | Where-Object { $_.type -eq "error" } | Select-Object -ExpandProperty message # Filter + extract`,
             '```'
           );
         } else {
           tips.push(
             '### 📊 JSON / Tool Output Extraction (Unix/Bash)',
             '```bash',
-            'jq -r \'.key.subkey\' file.json              # Raw value, no quotes',
-            'jq \'.[] | select(.type=="error") | .message\' file.json  # Filter + extract',
-            'grep -oE \'"error":"[^"]+"\' file.json       # Regex extract error fields only',
+            `jq -r '.key.subkey' ${targetJson}              # Raw value, no quotes`,
+            `jq '.[] | select(.type=="error") | .message' ${targetJson}  # Filter + extract`,
+            `grep -oE '"error":"[^"]+"' ${targetJson}       # Regex extract error fields only`,
             '```'
           );
         }
       }
 
       // 3. Binary & Large File Safety category
-      const wantsBinary = /\b(binary|large|file|token|limit|config|key|secret|strings)\b/i.test(queryLower);
-      if (wantsBinary) {
+      const wantsBinary = /\b(binary|large|file|token|limit|config|key|secret|strings|log)\b/i.test(queryLower);
+      if (wantsBinary && (!hasMdMention && !hasJsonMention)) {
         if (isWindows) {
           tips.push(
             '### 🛡️ Binary & Large File Safety (Windows PowerShell)',
             '```powershell',
-            'Select-String -Path large_file.bin -Pattern \'config\',\'key\',\'token\'  # Safe search',
+            `Select-String -Path ${targetLog} -Pattern 'config','key','token'  # Safe search`,
             '```'
           );
         } else {
           tips.push(
             '### 🛡️ Binary & Large File Safety (Unix/Bash)',
             '```bash',
-            'strings large_file.bin | grep -i "config\\|key\\|token"  # Safe text extraction',
-            'file unknown_file                          # Identify type before reading',
+            `strings ${targetLog} | grep -i "config\\|key\\|token"  # Safe text extraction`,
+            `file ${targetLog}                          # Identify type before reading`,
             '```'
           );
         }
