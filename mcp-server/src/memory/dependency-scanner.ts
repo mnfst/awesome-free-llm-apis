@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { extractEmbeddedSnippets } from './embedded-snippet-scanner.js';
+import { extractEmbeddedSnippets, extractDefinedSymbols } from './embedded-snippet-scanner.js';
 
 export interface Node {
     id: string;
@@ -18,6 +18,12 @@ export interface Edge {
     source: string;
     target: string;
     type: 'imports' | 'references' | 'links' | 'invokes';
+    /**
+     * 'low' marks edges inferred without a literal import/require to anchor on (e.g.
+     * calls between sibling embedded snippets, matched purely by symbol name within
+     * the same parent file). Absent means the normal import-anchored precision applies.
+     */
+    confidence?: 'low';
 }
 
 export class RepositoryGraph {
@@ -42,16 +48,16 @@ export class RepositoryGraph {
         return Array.from(this.nodes.values());
     }
 
-    addEdge(source: string, target: string, type: 'imports' | 'references' | 'links' | 'invokes') {
+    addEdge(source: string, target: string, type: 'imports' | 'references' | 'links' | 'invokes', options?: { confidence?: 'low' }) {
         const normSource = this.normalizeNodeId(source);
         const normTarget = this.normalizeNodeId(target);
-        
+
         // Prevent duplicate edges
         const exists = this.edges.some(
             e => e.source === normSource && e.target === normTarget && e.type === type
         );
         if (!exists) {
-            this.edges.push({ source: normSource, target: normTarget, type });
+            this.edges.push({ source: normSource, target: normTarget, type, ...(options?.confidence ? { confidence: options.confidence } : {}) });
         }
     }
 
@@ -174,6 +180,8 @@ export class WorkspaceDependencyScanner {
     private workspaceFiles: Set<string> = new Set();
     /** Populated during scanFile() for JS/TS/Python files, reused by the invokes-edge pass to avoid re-reading files. */
     private fileContentCache: Map<string, string> = new Map();
+    /** Populated during scanFile() for embedded snippets (snippetId -> code), reused by the snippet-family invokes pass. */
+    private snippetContentCache: Map<string, string> = new Map();
 
     constructor(workspaceRoot: string) {
         this.workspaceRoot = workspaceRoot;
@@ -232,13 +240,19 @@ export class WorkspaceDependencyScanner {
         }
         for (const snippet of snippets) {
             const snippetId = `${fileRelPath}#${snippet.fieldPath}`;
+            // "exports" here means "top-level symbols this snippet defines" (see
+            // extractDefinedSymbols) — snippet bodies are evaluated scripts, not
+            // modules, so a real `export` scan would almost always come back empty.
+            const exports = extractDefinedSymbols(snippet.code, snippet.language);
             graph.addNode(snippetId, 'code', {
                 language: snippet.language,
                 embeddedIn: fileRelPath,
                 parentContext: snippet.parentContext,
                 size: snippet.code.length,
+                exports,
             });
             graph.addEdge(fileRelPath, snippetId, 'references');
+            this.snippetContentCache.set(snippetId, snippet.code);
         }
     }
 
@@ -486,6 +500,7 @@ export class WorkspaceDependencyScanner {
         // Collect all files in workspace first
         this.workspaceFiles.clear();
         this.fileContentCache.clear();
+        this.snippetContentCache.clear();
         await this.collectWorkspaceFiles(this.workspaceRoot);
 
         for (const file of this.workspaceFiles) {
@@ -494,6 +509,7 @@ export class WorkspaceDependencyScanner {
         }
 
         this.addInvokesEdges(graph);
+        this.addSnippetInvokesEdges(graph);
     }
 
     /**
@@ -535,6 +551,62 @@ export class WorkspaceDependencyScanner {
                 for (const defFile of definingFiles) {
                     if (defFile !== relativePath && importedFiles.has(defFile)) {
                         graph.addEdge(relativePath, defFile, 'invokes');
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Same idea as addInvokesEdges(), but for embedded snippets (n8n Code nodes, CI
+     * `run:` blocks). These have no import statements to anchor precision on, so
+     * instead of a 1-hop-neighbor restriction, edges are scoped to the same "family"
+     * — snippets embedded in the same parent config file — and tagged low-confidence
+     * since a name match alone is weaker evidence than a literal import.
+     */
+    private addSnippetInvokesEdges(graph: RepositoryGraph) {
+        if (this.snippetContentCache.size === 0) return;
+
+        const familyMembers = new Map<string, string[]>();
+        for (const node of graph.getAllNodes()) {
+            const embeddedIn = node.metadata?.embeddedIn;
+            if (embeddedIn && this.snippetContentCache.has(node.id)) {
+                if (!familyMembers.has(embeddedIn)) familyMembers.set(embeddedIn, []);
+                familyMembers.get(embeddedIn)!.push(node.id);
+            }
+        }
+
+        const callSiteRegex = /\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g;
+
+        for (const members of familyMembers.values()) {
+            if (members.length < 2) continue;
+
+            const exportedSymbolToMembers = new Map<string, string[]>();
+            for (const id of members) {
+                const exports: string[] = graph.getNode(id)?.metadata?.exports || [];
+                for (const sym of exports) {
+                    if (!exportedSymbolToMembers.has(sym)) exportedSymbolToMembers.set(sym, []);
+                    exportedSymbolToMembers.get(sym)!.push(id);
+                }
+            }
+            if (exportedSymbolToMembers.size === 0) continue;
+
+            for (const callerId of members) {
+                const content = this.snippetContentCache.get(callerId)!;
+                const seen = new Set<string>();
+                let match;
+                while ((match = callSiteRegex.exec(content)) !== null) {
+                    const symbol = match[1];
+                    if (CALL_SITE_KEYWORD_EXCLUSIONS.has(symbol) || seen.has(symbol)) continue;
+                    seen.add(symbol);
+
+                    const definers = exportedSymbolToMembers.get(symbol);
+                    if (!definers) continue;
+
+                    for (const defId of definers) {
+                        if (defId !== callerId) {
+                            graph.addEdge(callerId, defId, 'invokes', { confidence: 'low' });
+                        }
                     }
                 }
             }

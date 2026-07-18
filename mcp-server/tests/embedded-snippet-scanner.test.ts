@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractEmbeddedSnippets } from '../src/memory/embedded-snippet-scanner.js';
+import { extractEmbeddedSnippets, extractDefinedSymbols, normalizeLanguageString } from '../src/memory/embedded-snippet-scanner.js';
 
 describe('extractEmbeddedSnippets', () => {
     it('extracts jsCode and pythonCode fields from nested n8n workflow JSON', () => {
@@ -98,5 +98,94 @@ jobs:
         expect(snippets.length).toBe(1);
         expect(snippets[0].language).toBe('bash');
         expect(snippets[0].code).toBe('echo "hi"');
+    });
+
+    it('prefers an explicit sibling `language` field over the field-name default', () => {
+        // A generic `code` field defaults to javascript by field name alone, but a
+        // sibling `language: python` on the same node should win.
+        const workflow = JSON.stringify({
+            nodes: [
+                {
+                    name: 'Custom Step',
+                    type: 'n8n-nodes-base.code',
+                    parameters: {
+                        language: 'python',
+                        code: 'def handler(items):\n    return items'
+                    }
+                }
+            ]
+        });
+
+        const snippets = extractEmbeddedSnippets(workflow, '.json');
+        expect(snippets.length).toBe(1);
+        expect(snippets[0].language).toBe('python');
+    });
+
+    it('sibling language wins even when it disagrees with the field name itself', () => {
+        // Contrived but real-world-possible: a `jsCode` field whose sibling `language`
+        // says otherwise should defer to the explicit signal, not the field name.
+        const workflow = JSON.stringify({
+            nodes: [{ name: 'Mislabeled', parameters: { language: 'python', jsCode: 'def f():\n    pass' } }]
+        });
+
+        const snippets = extractEmbeddedSnippets(workflow, '.json');
+        expect(snippets[0].language).toBe('python');
+    });
+
+    it('falls back to the field-name table when no sibling language field is present', () => {
+        const workflow = JSON.stringify({
+            nodes: [{ name: 'Plain', parameters: { jsCode: 'return 1;' } }]
+        });
+        const snippets = extractEmbeddedSnippets(workflow, '.json');
+        expect(snippets[0].language).toBe('javascript');
+    });
+});
+
+describe('normalizeLanguageString', () => {
+    it('maps common aliases to their canonical language', () => {
+        expect(normalizeLanguageString('JavaScript')).toBe('javascript');
+        expect(normalizeLanguageString('js')).toBe('javascript');
+        expect(normalizeLanguageString('TypeScript')).toBe('typescript');
+        expect(normalizeLanguageString('py')).toBe('python');
+        expect(normalizeLanguageString('pwsh')).toBe('shell');
+        expect(normalizeLanguageString('sh')).toBe('bash');
+    });
+
+    it('returns undefined for unknown or non-string values', () => {
+        expect(normalizeLanguageString('cobol')).toBeUndefined();
+        expect(normalizeLanguageString(42)).toBeUndefined();
+        expect(normalizeLanguageString(undefined)).toBeUndefined();
+    });
+});
+
+describe('extractDefinedSymbols', () => {
+    it('extracts function/class/arrow-const declarations from a JS script body without export keywords', () => {
+        const code = `
+function doubleValue(x) { return x * 2; }
+const helper = (a, b) => a + b;
+class Widget {}
+return items.map(i => doubleValue(i.json.value));
+`;
+        const symbols = extractDefinedSymbols(code, 'javascript');
+        expect(symbols).toContain('doubleValue');
+        expect(symbols).toContain('helper');
+        expect(symbols).toContain('Widget');
+    });
+
+    it('extracts def/class declarations from a Python script body', () => {
+        const code = `
+def transform(item):
+    return item * 2
+
+class Handler:
+    pass
+`;
+        const symbols = extractDefinedSymbols(code, 'python');
+        expect(symbols).toContain('transform');
+        expect(symbols).toContain('Handler');
+    });
+
+    it('returns an empty array for shell/bash (no definition correlation attempted)', () => {
+        expect(extractDefinedSymbols('function greet() { echo hi; }', 'bash')).toEqual([]);
     });
 });

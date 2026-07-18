@@ -1,4 +1,4 @@
-export type EmbeddedLanguage = 'javascript' | 'python' | 'shell' | 'bash';
+export type EmbeddedLanguage = 'javascript' | 'typescript' | 'python' | 'shell' | 'bash';
 
 export interface EmbeddedSnippet {
   fieldPath: string;
@@ -10,14 +10,32 @@ export interface EmbeddedSnippet {
 /**
  * Field-name -> language table for known embedded-code fields (e.g. n8n workflow
  * export JSON). Shared with context-gatherer.ts's compaction guard so both stay
- * in sync on what counts as "real code" worth preserving.
+ * in sync on what counts as "real code" worth preserving. This is a fallback —
+ * an explicit sibling `language`/`lang` field (see normalizeLanguageString) wins
+ * when present, since the field name alone can be wrong (e.g. a generic `code`
+ * field whose actual language is declared elsewhere on the same object).
  */
 export const FIELD_LANGUAGE_MAP: Record<string, EmbeddedLanguage> = {
   jsCode: 'javascript',
+  tsCode: 'typescript',
   functionCode: 'javascript',
   code: 'javascript',
   pythonCode: 'python',
 };
+
+const LANGUAGE_STRING_ALIASES: Record<string, EmbeddedLanguage> = {
+  javascript: 'javascript', js: 'javascript', node: 'javascript', nodejs: 'javascript',
+  typescript: 'typescript', ts: 'typescript',
+  python: 'python', python3: 'python', py: 'python',
+  bash: 'bash', sh: 'bash',
+  shell: 'shell', powershell: 'shell', pwsh: 'shell',
+};
+
+/** Normalizes an arbitrary sibling-field string (e.g. n8n's `parameters.language`) to a known language. */
+export function normalizeLanguageString(raw: unknown): EmbeddedLanguage | undefined {
+  if (typeof raw !== 'string') return undefined;
+  return LANGUAGE_STRING_ALIASES[raw.trim().toLowerCase()];
+}
 
 const MAX_JSON_WALK_DEPTH = 6;
 
@@ -38,12 +56,14 @@ function extractJsonSnippets(content: string): EmbeddedSnippet[] {
       ? node.name
       : (typeof node.type === 'string' ? node.type : siblingContext);
 
+    const siblingLanguage = normalizeLanguageString(node.language) ?? normalizeLanguageString(node.lang);
+
     for (const [key, value] of Object.entries(node)) {
       const childPath = jsonPath ? `${jsonPath}.${key}` : key;
       if (typeof value === 'string' && FIELD_LANGUAGE_MAP[key]) {
         snippets.push({
           fieldPath: childPath,
-          language: FIELD_LANGUAGE_MAP[key],
+          language: siblingLanguage ?? FIELD_LANGUAGE_MAP[key],
           code: value,
           parentContext: nodeContext,
         });
@@ -158,4 +178,40 @@ function extractYamlRunSnippets(content: string): EmbeddedSnippet[] {
 export function extractEmbeddedSnippets(content: string, ext: '.json' | '.yml' | '.yaml'): EmbeddedSnippet[] {
   if (ext === '.json') return extractJsonSnippets(content);
   return extractYamlRunSnippets(content);
+}
+
+/**
+ * Extracts top-level function/class definitions from a snippet body. Deliberately NOT
+ * the same as a module `export` scan (dependency-scanner's generateSemanticProfile):
+ * embedded snippets (n8n Code nodes, CI `run:` blocks) are script bodies evaluated
+ * directly, not ES/Python modules, so they almost never use the `export` keyword.
+ * This is what actually lets us correlate calls between sibling snippets.
+ */
+export function extractDefinedSymbols(code: string, language: EmbeddedLanguage): string[] {
+  const symbols = new Set<string>();
+
+  if (language === 'javascript' || language === 'typescript') {
+    const patterns = [
+      /\bfunction\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g,
+      /\b(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g,
+      /\bclass\s+([A-Za-z_$][A-Za-z0-9_$]*)/g,
+    ];
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(code)) !== null) symbols.add(match[1]);
+    }
+  } else if (language === 'python') {
+    const patterns = [
+      /\bdef\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
+      /\bclass\s+([A-Za-z_][A-Za-z0-9_]*)/g,
+    ];
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(code)) !== null) symbols.add(match[1]);
+    }
+  }
+  // shell/bash: cross-step function calls rarely mean anything (each `run:` step is
+  // typically its own shell invocation), so we don't attempt definition extraction.
+
+  return Array.from(symbols);
 }
