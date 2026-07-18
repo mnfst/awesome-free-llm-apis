@@ -378,6 +378,20 @@ export class WorkspaceContextMiddleware implements Middleware {
             }
         }
 
+        // 1b. Fire-and-forget, condition-gated wiki maintenance. Runs after the
+        // pre-emptive indexing pass above has already refreshed repo_graph.json, so it
+        // diffs against a current graph without a second full workspace scan. Never
+        // awaited — must not add latency to the response.
+        if (isAgentic && context.workspaceRoot && !(context.request as any).skipIndexing) {
+            const workspaceRoot = context.workspaceRoot;
+            const wsHash = context.wsHash;
+            setImmediate(() => {
+                import('../../memory/wiki-maintainer.js')
+                    .then(({ runWikiMaintenance }) => runWikiMaintenance(workspaceRoot, wsHash))
+                    .catch(err => console.error(`[WorkspaceContextMiddleware] Wiki maintenance failed: ${err}`));
+            });
+        }
+
         // 2. Gather Grep Context (TF-IDF style) and Directory Structure
         let grepResults: string[] = [];
         let dirTree = '';

@@ -55,7 +55,8 @@
 - Intelligent context extraction needs to corellate variable/dataflow or function calls across files and also to be able to identify the dependencies between. (eg. `jsCode` and `pythonCode` in n8n workflow json files [Our context extraction should know that it is a JavaScript code snippet that is a part of a workflow], or function calls across multiple files in a project,github actions workflow etc.)
 - LLM Wikiv2 full integration with `use_free_llm` and also other tools.
 - Wiki maintenance and update mechanism to be added to the middleware to keep the wiki up to date with the latest changes in the project and also to be able to add and apply entanglement to the wiki as required.
-- Secuity persona based on 
+- Wiki rendering with link clicking and also to be able to add and apply entanglement to the wiki as required.
+- Conversation mechanism for all tools to be displayed in the dashboard with filtering and search capabilities.
 
 ---
 
