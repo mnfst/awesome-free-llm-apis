@@ -8,7 +8,9 @@ import { getIntelligentSystemPrompt } from './prompts.js';
 import { ContextGatherer } from './context-gatherer.js';
 import { WorkspaceIndexer } from '../../memory/indexer.js';
 import { getMessageContent, prependToMessageContent, appendToMessageContent } from '../../utils/MessageUtils.js';
-import { GithubRepoScanner } from '../../utils/GithubRepoScanner.js';
+import { GithubRepoScanner, GLOBAL_CYBER_WIKI_NS } from '../../utils/GithubRepoScanner.js';
+import { CYBER_TERMS_REGEX } from '../../utils/TaskClassifier.js';
+import { taskTypeToPersona } from '../../utils/PersonaMapper.js';
 
 const workspaceScanner = new WorkspaceScanner(process.cwd());
 
@@ -278,7 +280,23 @@ export class WorkspaceContextMiddleware implements Middleware {
                     if (commandUsages.length > 0) {
                         githubContext += `\n### Command Usages in Repo:\n${commandUsages.join('\n')}\n`;
                     }
-                    
+
+                    // Cyber tools global wiki: persist discovered GitHub security tools into a
+                    // shared, cross-workspace wiki namespace so knowledge isn't siloed per project.
+                    if (CYBER_TERMS_REGEX.test(cleanPrompt)) {
+                        try {
+                            const summary = usageDocs || extractProjectDescription(readme) || `GitHub repository ${owner}/${repo}.`;
+                            await memoryManager.getWiki(GLOBAL_CYBER_WIKI_NS).write(
+                                `${owner}/${repo}`,
+                                summary,
+                                ['cyber', 'github-tool', repo.toLowerCase()],
+                                [url]
+                            );
+                        } catch (err) {
+                            console.error(`[WorkspaceContextMiddleware] Cyber wiki write failed: ${err}`);
+                        }
+                    }
+
                     if (userMessage) {
                         appendToMessageContent(userMessage, githubContext);
                         userContent = getMessageContent(userMessage);
@@ -429,6 +447,28 @@ export class WorkspaceContextMiddleware implements Middleware {
         }
     }
 
+        // 3b. Wiki Lookup - surface previously-learned, confidence-scored knowledge
+        let wikiContext: string | undefined;
+        let wikiPagesUsed: string[] = [];
+        if (userContent) {
+            try {
+                const persona = taskTypeToPersona(context.taskType);
+                const wikiNamespace = context.wsHash || context.sessionId;
+                const wiki = memoryManager.getWiki(wikiNamespace || 'global');
+                const pages = await wiki.search(userContent, persona);
+                if (pages.length > 0) {
+                    const topPages = pages.slice(0, 3);
+                    wikiPagesUsed = topPages.map(p => p.title);
+                    wikiContext = topPages
+                        .map(p => `### ${p.title}\n${p.content.slice(0, 500)}`)
+                        .join('\n\n');
+                }
+            } catch (err) {
+                console.error(`[WorkspaceContextMiddleware] Wiki lookup failed: ${err}`);
+            }
+        }
+        (context as any).wikiPagesUsed = wikiPagesUsed;
+
         // 4. Grounding Gate check
         let groundingGate = '';
         if (context.workspaceRoot) {
@@ -464,6 +504,9 @@ export class WorkspaceContextMiddleware implements Middleware {
                 currentLen += snippet.length + 1; // +1 for newline
             }
             workspaceContextStr += `\nRelevant File Snippets:\n${prioritizedSnippets.join('\n')}\n`;
+        }
+        if (wikiContext) {
+            workspaceContextStr += `\n<wiki_context_isolation_gate>\n## 📚 WIKI KNOWLEDGE\n${wikiContext}\n</wiki_context_isolation_gate>\n`;
         }
         (context as any).grepContext = workspaceContextStr || undefined;
 

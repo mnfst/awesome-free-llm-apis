@@ -2,6 +2,8 @@ import type { Message } from '../providers/types.js';
 import { TaskType } from '../pipeline/middleware.js';
 import { getMessageContent } from './MessageUtils.js';
 
+export const CYBER_TERMS_REGEX = /\b(ctf|exploit|pentest|pwn|cve|fuzzing|reverse-engineering|buffer-overflow|binary-analysis|wireshark|metasploit|port-scan|nmap|malware|phishing|secure-coding|owasp|sast|dast)\b/i;
+
 export class TaskClassifier {
     private static readonly keywordTaskMap: Record<string, TaskType> = {
         'code': TaskType.Coding, 'coding': TaskType.Coding, 'debug': TaskType.Coding, 'implement': TaskType.Coding,
@@ -53,8 +55,7 @@ export class TaskClassifier {
         const rawLastMsg = getMessageContent(messages[messages.length - 1]);
         const lastMsg = TaskClassifier.getOriginalUserContent(rawLastMsg).toLowerCase();
 
-        const cyberTerms = /\b(ctf|exploit|pentest|pwn|cve|fuzzing|reverse-engineering|buffer-overflow|binary-analysis|wireshark|metasploit|port-scan|nmap|malware|phishing|secure-coding|owasp|sast|dast)\b/i;
-        if (cyberTerms.test(lastMsg)) {
+        if (CYBER_TERMS_REGEX.test(lastMsg)) {
             return TaskType.Cyber;
         }
 

@@ -1,5 +1,11 @@
 import fetch from 'node-fetch';
 
+/** Fixed namespace shared across all workspaces for the cyber-tools wiki (see CHANGELOG "global wiki" item). */
+export const GLOBAL_CYBER_WIKI_NS = 'global-cyber-tools';
+
+/** Known security-tool binaries used to gate cyber-tool discovery/reinforcement. */
+export const CYBER_TOOL_NAMES = ['nmap', 'sqlmap', 'hydra', 'gobuster', 'nikto', 'hashcat', 'john', 'metasploit', 'wireshark', 'burpsuite'];
+
 export class GithubRepoScanner {
   /**
    * Parses a Github URL to extract the owner and repository name.

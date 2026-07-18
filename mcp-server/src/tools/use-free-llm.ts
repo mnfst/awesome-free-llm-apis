@@ -754,6 +754,38 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
         finalChoice.content += debugTips;
       }
     }
+
+    // Wikiv2 write side: persist durable knowledge from agentic sessions and reinforce/penalize
+    // the wiki pages that were surfaced into context this turn based on the outcome.
+    if (agentic) {
+      try {
+        const { memoryManager } = await import('../memory/index.js');
+        const { GLOBAL_CYBER_WIKI_NS } = await import('../utils/GithubRepoScanner.js');
+        const isCyber = context.taskType === TaskType.Cyber;
+        const wiki = memoryManager.getWiki(isCyber ? GLOBAL_CYBER_WIKI_NS : (context.wsHash || context.sessionId || 'global'));
+        const failureLanguage = /\b(didn't work|did not work|failed to|failure|error occurred|unsuccessful|not working)\b/i;
+        const isFailure = failureLanguage.test(finalChoice.content);
+
+        const wikiPagesUsed: string[] = (finalContext as any).wikiPagesUsed || [];
+        for (const title of wikiPagesUsed) {
+          if (isFailure) {
+            await wiki.recordFailure(title, 'Follow-up response indicated the referenced knowledge did not work.');
+          } else {
+            await wiki.reinforce(title);
+          }
+        }
+
+        const WIKI_WORTHY_PATTERNS = [/decided to/i, /chose\s+.*\s+over\s+.*/i, /we\s+use\s+.*\s+because/i, /decision:/i, /solution:/i, /root cause:/i, /fixed by/i];
+        if (!isFailure && WIKI_WORTHY_PATTERNS.some(p => p.test(finalChoice.content))) {
+          const title = userContent.split(/\s+/).slice(0, 8).join(' ').trim() || `Session ${new Date().toISOString()}`;
+          await wiki.write(title, finalChoice.content, isCyber ? ['cyber'] : [], []);
+        }
+
+        await GlobalWikiManager.flushToWiki(wiki);
+      } catch (err) {
+        console.error(`[useFreeLLM] Wiki write failed: ${err}`);
+      }
+    }
   }
 
   return finalContext.response;
@@ -827,6 +859,8 @@ export async function executeServerToolCall(call: ParsedToolCall, workspaceRoot?
       result = await validateProvider(args.providerId);
     } else if (tool === 'load_skill_prompt') {
       result = await loadSkillPrompt({ skill: args.skill, type: 'load' });
+    } else if (tool === 'wiki_search' || tool === 'wiki_write') {
+      result = await manageMemory({ action: tool, ...args } as any);
     } else {
       throw new Error(`Unsupported tool call: ${tool}`);
     }

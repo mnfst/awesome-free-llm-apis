@@ -22,7 +22,8 @@ const PERSONA_TAGS: Record<string, string[]> = {
   seo: ['seo', 'marketing', 'campaign', 'strategy', 'keyword'],
   student: ['study', 'explain', 'textbook', 'learning'],
   planner: ['plan', 'roadmap', 'milestone', 'task', 'phase'],
-  debugger: ['debug', 'error', 'exception', 'stacktrace', 'leak', 'crash', 'issue', 'ts', 'schema', 'venv', 'node_modules', 'variables']
+  debugger: ['debug', 'error', 'exception', 'stacktrace', 'leak', 'crash', 'issue', 'ts', 'schema', 'venv', 'node_modules', 'variables'],
+  cyber: ['cyber', 'security', 'exploit', 'cve', 'pentest', 'nmap', 'owasp', 'ctf', 'vulnerability', 'malware']
 };
 
 const DECISION_PATTERNS = [
@@ -260,6 +261,22 @@ export class WikiMemory {
     }
 
     return this.writePage(title, content, tags, links, confidence, adr_ref);
+  }
+
+  async reinforce(title: string, delta = 0.15): Promise<WikiPage | null> {
+    const existing = await this.read(title);
+    if (!existing) return null;
+    const confidence = Math.min(1.0, existing.confidence + delta);
+    return this.writePage(title, existing.content, existing.tags, existing.links, confidence, existing.adr_ref);
+  }
+
+  async recordFailure(title: string, reason: string, delta = 0.15): Promise<WikiPage | null> {
+    const existing = await this.read(title);
+    if (!existing) return null;
+    const confidence = Math.max(0, existing.confidence - delta);
+    const failureNote = `\n\n> ⚠️ Failure recorded (${new Date().toISOString().split('T')[0]}): ${reason}`;
+    const content = existing.content.includes(failureNote.trim()) ? existing.content : existing.content + failureNote;
+    return this.writePage(title, content, existing.tags, existing.links, confidence, existing.adr_ref);
   }
 
   private async enforcePageLimit(): Promise<void> {

@@ -16,6 +16,22 @@ vi.mock('../src/tools/use-free-llm.js', () => ({
   useFreeLLM: vi.fn(),
 }));
 
+// Prevent the wiki pre-read/post-write hooks from touching the real ~/.free-llm-mcp/wiki directory.
+vi.mock('../src/memory/index.js', () => ({
+  memoryManager: {
+    getWiki: vi.fn().mockReturnValue({
+      search: vi.fn().mockResolvedValue([]),
+      write: vi.fn().mockResolvedValue({}),
+    })
+  }
+}));
+
+vi.mock('../src/cache/workspace.js', () => ({
+  WorkspaceScanner: class {
+    getWorkspaceHash = vi.fn().mockResolvedValue('test-hash');
+  }
+}));
+
 describe('execute_skill', () => {
   beforeEach(() => {
     vi.restoreAllMocks();

@@ -81,6 +81,16 @@ describe('WikiMemory (Phase B)', () => {
         expect(researcherResults[0].title).toBe('Research Study');
     });
 
+    it('search() weights the cyber persona toward security-tagged pages', async () => {
+        const wiki = new WikiMemory(wsHash, testDir);
+        await wiki.write('nmap', 'Network scanning tool.', ['cyber', 'github-tool']);
+        await wiki.write('generic-utils', 'Unrelated general utility library.', ['code']);
+
+        const cyberResults = await wiki.search('tool', 'cyber');
+        expect(cyberResults.length).toBeGreaterThan(0);
+        expect(cyberResults[0].title).toBe('nmap');
+    });
+
     it('resolveLink() returns 3-line summary, not full page', async () => {
         const wiki = new WikiMemory(wsHash, testDir);
         
@@ -144,6 +154,55 @@ Some other details.`;
         await expect(
             wiki.write('Huge Page', hugeContent)
         ).rejects.toThrow(/exceeds/i);
+    });
+
+    it('reinforce() bumps confidence and promotes tier at the 0.8 boundary', async () => {
+        const wiki = new WikiMemory(wsHash, testDir);
+        await wiki.write('Retry Backoff', 'Exponential backoff prevents thundering herd.');
+        let page = await wiki.read('Retry Backoff');
+        expect(page?.confidence).toBe(0.5);
+        expect(page?.tier).toBe('episodic');
+
+        page = await wiki.reinforce('Retry Backoff');
+        expect(page?.confidence).toBeCloseTo(0.65);
+
+        page = await wiki.reinforce('Retry Backoff');
+        page = await wiki.reinforce('Retry Backoff');
+        expect(page?.confidence).toBeGreaterThanOrEqual(0.8);
+        expect(page?.tier).toBe('semantic');
+    });
+
+    it('reinforce() caps confidence at 1.0 and is a no-op for missing pages', async () => {
+        const wiki = new WikiMemory(wsHash, testDir);
+        await wiki.write('Cache Layer', 'LRU cache in front of provider calls.');
+        for (let i = 0; i < 10; i++) {
+            await wiki.reinforce('Cache Layer');
+        }
+        const page = await wiki.read('Cache Layer');
+        expect(page?.confidence).toBe(1.0);
+
+        const missing = await wiki.reinforce('Nonexistent Page');
+        expect(missing).toBeNull();
+    });
+
+    it('recordFailure() lowers confidence, floors at 0, and appends a failure note', async () => {
+        const wiki = new WikiMemory(wsHash, testDir);
+        await wiki.write('Flaky Provider', 'Provider X occasionally times out.');
+        await wiki.reinforce('Flaky Provider'); // 0.65
+
+        const page = await wiki.recordFailure('Flaky Provider', 'Timed out again on retry.');
+        expect(page?.confidence).toBeCloseTo(0.5);
+        expect(page?.content).toContain('Failure recorded');
+        expect(page?.content).toContain('Timed out again on retry.');
+
+        let floored;
+        for (let i = 0; i < 10; i++) {
+            floored = await wiki.recordFailure('Flaky Provider', 'Still failing.');
+        }
+        expect(floored?.confidence).toBe(0);
+
+        const missing = await wiki.recordFailure('Nonexistent Page', 'n/a');
+        expect(missing).toBeNull();
     });
 
     it('wiki capped at 500 pages, oldest low-confidence page evicted', async () => {

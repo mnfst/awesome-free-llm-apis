@@ -6,6 +6,10 @@ import fs from 'fs/promises';
 import { DiffScanner } from './diff-scanner.js';
 import crypto from 'crypto';
 import { LRUCache } from 'lru-cache';
+import { FIELD_LANGUAGE_MAP } from '../../memory/embedded-snippet-scanner.js';
+
+const EMBEDDED_CODE_FIELD_MARKERS = Object.keys(FIELD_LANGUAGE_MAP).map(field => `"${field}"`);
+const containsEmbeddedCodeField = (s: string): boolean => EMBEDDED_CODE_FIELD_MARKERS.some(marker => s.includes(marker));
 
 /**
  * Robust spawn wrapper for cross-platform command execution.
@@ -386,8 +390,8 @@ export class ContextGatherer {
 
                         // Helper Jaccard similarity function with word-digit normalization
                         const calculateJaccard = (s1: string, s2: string): number => {
-                            // Preserve code snippet attributes by avoiding collapse
-                            if (s1.includes('"jsCode"') || s1.includes('"pythonCode"') || s2.includes('"jsCode"') || s2.includes('"pythonCode"')) {
+                            // Preserve embedded code snippet fields (e.g. n8n jsCode/pythonCode) by avoiding collapse
+                            if (containsEmbeddedCodeField(s1) || containsEmbeddedCodeField(s2)) {
                                 return 0;
                             }
                             const norm1 = s1.replace(/[a-zA-Z0-9]*\d+[a-zA-Z0-9]*/g, '#');
