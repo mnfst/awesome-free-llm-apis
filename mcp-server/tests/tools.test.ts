@@ -4,6 +4,7 @@ import { runCodeMode } from '../src/tools/code-mode.js';
 import { useFreeLLM } from '../src/tools/use-free-llm.js';
 import { ProviderRegistry } from '../src/providers/registry.js';
 import { getSharedResponseCache } from '../src/pipeline/instances.js';
+import { TaskType } from '../src/pipeline/middleware.js';
 
 // Mock debounce to be immediate
 vi.mock('../src/utils/debounce.js', () => ({
@@ -140,5 +141,34 @@ describe('use_free_llm input validation', () => {
     } else {
       expect(content).toContain('jq');
     }
+  });
+
+  it('does NOT append CLI diagnostics for vision tasks even under debugger persona', async () => {
+    vi.stubEnv('GROQ_API_KEY', 'test-key-long-enough');
+    (ProviderRegistry as unknown as { instance: undefined }).instance = undefined;
+
+    const mockResponse = {
+      id: 'vision-debug-test-id',
+      object: 'chat.completion',
+      created: Date.now(),
+      model: 'llama-3.3-70b-versatile',
+      choices: [{ index: 0, message: { role: 'assistant' as const, content: 'Base response' }, finish_reason: 'stop' }],
+    };
+
+    const registry = ProviderRegistry.getInstance();
+    const groq = registry.getProvider('groq');
+    if (!groq) return;
+
+    vi.spyOn(groq, 'chat').mockResolvedValue(mockResponse);
+
+    const result = await useFreeLLM({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: 'fix TypeError JSON error in my project for vision' }],
+      workspace_root: process.cwd(),
+      taskType: TaskType.Vision
+    } as any);
+
+    const content = result.choices[0].message.content || '';
+    expect(content).not.toContain('Token-Efficient CLI Diagnostics');
   });
 });
