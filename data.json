@@ -160,7 +160,7 @@
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
-          "id": "mistral-large-2411",
+          "id": "mistral-large-2512",
           "name": "Mistral Large 3",
           "context": "256K",
           "maxOutput": "256K",
@@ -184,10 +184,10 @@
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
-          "id": "pixtral-large-2411",
-          "name": "Pixtral Large",
-          "context": "128K",
-          "maxOutput": "128K",
+          "id": "ministral-14b-2512",
+          "name": "Ministral 3 14B",
+          "context": "256K",
+          "maxOutput": "256K",
           "modality": "Text + Image",
           "rateLimit": "~1 RPS, 500K TPM"
         }
@@ -496,32 +496,8 @@
       "footnoteRef": null,
       "models": [
         {
-          "id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+          "id": "meta-llama/Llama-3.1-8B-Instruct",
           "name": "Meta-Llama-3.1-8B-Instruct",
-          "context": "128K",
-          "maxOutput": "~4K",
-          "modality": "Text",
-          "rateLimit": "Credit-metered"
-        },
-        {
-          "id": "mistralai/Mistral-7B-Instruct-v0.3",
-          "name": "Mistral-7B-Instruct-v0.3",
-          "context": "32K",
-          "maxOutput": "~4K",
-          "modality": "Text",
-          "rateLimit": "Credit-metered"
-        },
-        {
-          "id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-          "name": "Mixtral-8x7B-Instruct-v0.1",
-          "context": "32K",
-          "maxOutput": "~4K",
-          "modality": "Text",
-          "rateLimit": "Credit-metered"
-        },
-        {
-          "id": "microsoft/Phi-3.5-mini-instruct",
-          "name": "Phi-3.5-mini-instruct",
           "context": "128K",
           "maxOutput": "~4K",
           "modality": "Text",
@@ -530,6 +506,30 @@
         {
           "id": "Qwen/Qwen2.5-7B-Instruct",
           "name": "Qwen2.5-7B-Instruct",
+          "context": "131K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "Credit-metered"
+        },
+        {
+          "id": "google/gemma-3-4b-it",
+          "name": "gemma-3-4b-it",
+          "context": "131K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "Credit-metered"
+        },
+        {
+          "id": "microsoft/phi-4",
+          "name": "phi-4",
+          "context": "128K",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "rateLimit": "Credit-metered"
+        },
+        {
+          "id": "Qwen/Qwen2.5-Coder-7B-Instruct",
+          "name": "Qwen2.5-Coder-7B-Instruct",
           "context": "131K",
           "maxOutput": "~4K",
           "modality": "Text",
@@ -720,10 +720,10 @@
       "footnoteRef": null,
       "models": [
         {
-          "id": "deepseek-ai/deepseek-r1",
-          "name": "deepseek-ai/deepseek-r1",
-          "context": "128K",
-          "maxOutput": "~163K",
+          "id": "deepseek-ai/deepseek-v4-flash",
+          "name": "deepseek-ai/deepseek-v4-flash",
+          "context": "1M",
+          "maxOutput": "~64K",
           "modality": "Text (reasoning)",
           "rateLimit": "~40 RPM"
         },
@@ -744,50 +744,50 @@
           "rateLimit": "~40 RPM"
         },
         {
-          "id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
-          "name": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+          "id": "nvidia/llama-3.3-nemotron-super-49b-v1",
+          "name": "nvidia/llama-3.3-nemotron-super-49b-v1",
           "context": "128K",
           "maxOutput": "4K",
           "modality": "Text",
           "rateLimit": "~40 RPM"
         },
         {
-          "id": "meta/llama-3.1-405b-instruct",
-          "name": "meta/llama-3.1-405b-instruct",
+          "id": "meta/llama-3.3-70b-instruct",
+          "name": "meta/llama-3.3-70b-instruct",
           "context": "128K",
           "maxOutput": "4K",
           "modality": "Text",
           "rateLimit": "~40 RPM"
         },
         {
-          "id": "qwen/qwen2.5-72b-instruct",
-          "name": "qwen/qwen2.5-72b-instruct",
+          "id": "mistralai/mistral-nemotron",
+          "name": "mistralai/mistral-nemotron",
           "context": "128K",
           "maxOutput": "8K",
           "modality": "Text",
           "rateLimit": "~40 RPM"
         },
         {
-          "id": "google/gemma-4-31b",
-          "name": "google/gemma-4-31b",
+          "id": "google/gemma-4-31b-it",
+          "name": "google/gemma-4-31b-it",
           "context": "128K",
           "maxOutput": "8K",
           "modality": "Text",
           "rateLimit": "~40 RPM"
         },
         {
-          "id": "mistralai/mistral-large-2-instruct",
-          "name": "mistralai/mistral-large-2-instruct",
+          "id": "mistralai/mistral-large-3-675b-instruct-2512",
+          "name": "mistralai/mistral-large-3-675b-instruct-2512",
           "context": "128K",
           "maxOutput": "4K",
           "modality": "Text",
           "rateLimit": "~40 RPM"
         },
         {
-          "id": "minimax/minimax-m2.7",
-          "name": "minimax/minimax-m2.7",
+          "id": "minimaxai/minimax-m2.7",
+          "name": "minimaxai/minimax-m2.7",
           "context": "128K",
-          "maxOutput": "8K",
+          "maxOutput": "~64K",
           "modality": "Text",
           "rateLimit": "~40 RPM"
         },
@@ -1006,14 +1006,6 @@
         {
           "id": "Meta-Llama-3_3-70B-Instruct",
           "name": "Meta-Llama-3_3-70B-Instruct",
-          "context": "131K",
-          "maxOutput": "~4K",
-          "modality": "Text",
-          "rateLimit": "2 RPM (anonymous)"
-        },
-        {
-          "id": "Llama-3.1-8B-Instruct",
-          "name": "Llama-3.1-8B-Instruct",
           "context": "131K",
           "maxOutput": "~4K",
           "modality": "Text",
