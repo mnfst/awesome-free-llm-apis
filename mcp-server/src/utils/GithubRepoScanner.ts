@@ -197,7 +197,7 @@ export class GithubRepoScanner {
     promptText?: string
   ): Promise<{ 
     treeSummary: string[]; 
-    scannedFiles: { path: string; dependencies: string[]; functions: string[]; flow: string[] }[] 
+    scannedFiles: { path: string; dependencies: string[]; functions: string[]; flow: string[]; flags: string[] }[] 
   }> {
     const tree = await this.fetchRepoTree(owner, repo, branch);
     const treeSummary = tree.filter(t => t.type === 'blob').map(t => t.path);
@@ -266,7 +266,7 @@ export class GithubRepoScanner {
       matchedFiles = candidates.slice(0, 3).map(c => c.path);
     }
     
-    const scannedFiles: { path: string; dependencies: string[]; functions: string[]; flow: string[] }[] = [];
+    const scannedFiles: { path: string; dependencies: string[]; functions: string[]; flow: string[]; flags: string[] }[] = [];
     for (const filePath of matchedFiles) {
       try {
         const fileContent = await this.fetchRawContent(owner, repo, filePath, branch);

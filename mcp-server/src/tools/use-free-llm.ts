@@ -1,17 +1,11 @@
 import crypto from 'node:crypto';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
-
-const execAsync = promisify(exec);
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 import { ProviderRegistry } from '../providers/registry.js';
 import { getMessageContent } from '../utils/MessageUtils.js';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'fs-extra';
 import { WorkspaceScanner } from '../cache/workspace.js';
+import { renderPdfPage } from '../utils/PdfRenderer.js';
 import type { ChatRequest, ChatResponse } from '../providers/types.js';
 import {
   PipelineExecutor,
@@ -28,6 +22,7 @@ import { getTokenStats } from './get-token-stats.js';
 import { validateProvider } from './validate-provider.js';
 import { initWorkspace } from './init-workspace.js';
 import { GlobalWikiManager } from '../utils/GlobalWikiManager.js';
+import { logToolCall } from '../utils/ChatLogger.js';
 
 export interface UseFreeLLMInput {
   model?: string;
@@ -297,51 +292,28 @@ export async function resolvePdfRef(
     return null;
   }
 
-  // 1. Check if index/offset is cached
+  const currentMtimeMs = (await fs.stat(absPdfPath)).mtimeMs;
+
+  // 1. Check if index/offset is cached, and whether the PDF has changed since it was cached
   const memoryKey = `pdf:index:${pdfName}`;
   const { memoryManager } = await import('../memory/index.js');
   const savedIndex = await memoryManager.longTerm.load(memoryKey) as any;
+  const isStale = !!savedIndex && savedIndex.mtimeMs !== currentMtimeMs;
 
   let physicalPage = pageNum;
-  if (savedIndex && typeof savedIndex.offset === 'number') {
+  if (savedIndex && !isStale && typeof savedIndex.offset === 'number') {
     if (pageNum !== savedIndex.index_page) {
       physicalPage = pageNum + savedIndex.offset;
     }
   }
 
   // 2. Run the python renderer script
-  const serverRoot = path.resolve(__dirname, '../..');
-  const hasServerVenv = await fs.pathExists(path.join(serverRoot, 'venv'));
-  const pythonPath = process.platform === 'win32'
-    ? path.join(hasServerVenv ? serverRoot : process.cwd(), 'venv', 'Scripts', 'python.exe')
-    : path.join(hasServerVenv ? serverRoot : process.cwd(), 'venv', 'bin', 'python');
-
-  let scriptPath = path.join(serverRoot, 'scripts', 'utils', 'pdf_screenshot.py');
-  if (!await fs.pathExists(scriptPath)) {
-    scriptPath = path.join(serverRoot, 'scripts', 'pdf_screenshot.py');
-  }
-  if (!await fs.pathExists(scriptPath)) {
-    scriptPath = path.join(process.cwd(), 'scripts', 'utils', 'pdf_screenshot.py');
-    if (!await fs.pathExists(scriptPath)) {
-      scriptPath = path.join(process.cwd(), 'scripts', 'pdf_screenshot.py');
-    }
-  }
-
-  let renderResult: any;
-  try {
-    const cmd = `"${pythonPath}" "${scriptPath}" "${absPdfPath}" ${physicalPage}`;
-    const { stdout } = await execAsync(cmd);
-    renderResult = JSON.parse(stdout);
-    if (renderResult.error) {
-      console.error(`[resolvePdfRef] Python script error: ${renderResult.error}`);
-      return null;
-    }
-  } catch (err) {
-    console.error(`[resolvePdfRef] Failed to execute Python script:`, err);
+  const renderResult = await renderPdfPage(absPdfPath, physicalPage);
+  if (!renderResult) {
     return null;
   }
 
-  const textContent = (renderResult.text || '').trim();
+  const textContent = renderResult.text;
 
   let imageBase64: string | null = null;
   if (renderResult.image_path) {
@@ -355,8 +327,23 @@ export async function resolvePdfRef(
     }
   }
 
-  // 3. If not cached, detect if this is an index page via multimodal LLM call
-  if (!savedIndex) {
+  // 2b. Fire-and-forget: keep the workspace wiki in sync with this PDF's content.
+  setImmediate(() => {
+    import('../memory/pdf-wiki.js')
+      .then(({ maybeIndexPdfIntoWiki }) => maybeIndexPdfIntoWiki({
+        workspaceRoot: wsRoot,
+        absPdfPath,
+        relativePdfPath,
+        totalPages: renderResult.total_pages,
+        pageNum: physicalPage,   // reuse already-rendered page, no extra subprocess
+        pageText: textContent,
+      }))
+      .catch(err => console.error('[resolvePdfRef] PDF wiki indexing failed:', err));
+  });
+
+  // 3. If not cached (or the PDF changed since it was cached), detect if this is an
+  // index page via multimodal LLM call
+  if (!savedIndex || isStale) {
     try {
       const registry = ProviderRegistry.getInstance();
       const provider = registry.getAvailableProviders().find(p => p.id !== 'siliconflow') || registry.getProvider('gemini');
@@ -407,14 +394,16 @@ For example:
           await memoryManager.longTerm.save(memoryKey, {
             is_index: true,
             index_page: pageNum,
-            offset: parsed.offset || 0
+            offset: parsed.offset || 0,
+            mtimeMs: currentMtimeMs
           });
           console.log(`[resolvePdfRef] Saved index mapping for ${pdfName}: page ${pageNum}, offset ${parsed.offset}`);
         } else {
           await memoryManager.longTerm.save(memoryKey, {
             is_index: false,
             index_page: pageNum,
-            offset: 0
+            offset: 0,
+            mtimeMs: currentMtimeMs
           });
         }
       }
@@ -571,7 +560,22 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     if (!parsedCall) break;
     toolCallDepth++;
 
-    const toolOutput = await executeServerToolCall(parsedCall, workspaceRoot);
+    const _tcStart = Date.now();
+    let toolOutput: any;
+    let toolCallIsError = false;
+    try {
+      toolOutput = await executeServerToolCall(parsedCall, workspaceRoot);
+    } catch (err: any) {
+      toolOutput = { error: err?.message || String(err) };
+      toolCallIsError = true;
+    }
+    const _tcMs = Date.now() - _tcStart;
+    if (effectiveSessionId) {
+      logToolCall(effectiveSessionId, parsedCall.tool, parsedCall.args, toolOutput, _tcMs, toolCallIsError)
+        .catch(() => {}); // fire-and-forget — must never gate the pipeline
+    }
+    if (toolCallIsError) throw new Error(toolOutput.error);
+
     context.request.messages.push(
       { role: 'assistant', content: assistantContent },
       {

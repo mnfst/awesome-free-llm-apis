@@ -667,6 +667,8 @@ function appendBubbleFromRecord(msg) {
     addSubtaskStartBubble(msg.content, msg.ts);
   } else if (msg.role === 'subtask_response') {
     addSubtaskResponseBubble(msg.content, msg.output, msg.ts, msg.contextInjected);
+  } else if (msg.role === 'tool_call') {
+    addToolCallBubble(msg.tool, msg.args, msg.result, msg.ts, msg.latencyMs, msg.isError);
   }
 }
 
@@ -739,6 +741,62 @@ function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected) {
       <span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
     </div>`;
   
+  chatLog.appendChild(div);
+  scrollChatBottom();
+  return div;
+}
+
+/**
+ * Renders a collapsed tool-call bubble for retrospect rendering.
+ * Follows the same <details>/<summary> pattern as addSubtaskResponseBubble.
+ * Called from appendBubbleFromRecord when role === 'tool_call'.
+ */
+function addToolCallBubble(tool, args, result, ts, latencyMs, isError) {
+  chatEmpty.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant subtask-collapse-card';
+  div.style.margin = '4px 0 4px 16px';
+  div.style.opacity = '0.80';
+
+  let parsedArgs = args;
+  let parsedResult = result;
+  try { if (typeof args === 'string') parsedArgs = JSON.parse(args); } catch {}
+  try { if (typeof result === 'string') parsedResult = JSON.parse(result); } catch {}
+
+  const resultPreview = (() => {
+    const s = typeof result === 'string' ? result : JSON.stringify(result ?? '');
+    return s.slice(0, 80) + (s.length > 80 ? '…' : '');
+  })();
+
+  const borderColor = isError ? 'var(--accent-red, #ef4444)' : 'var(--accent-cyan)';
+  const icon = isError ? '⚠️' : '🔧';
+
+  div.innerHTML = `
+    <div class="chat-bubble" style="padding:8px 12px; background:rgba(255,255,255,0.02); border-left:3px solid ${borderColor};">
+      <details>
+        <summary style="cursor:pointer; font-size:.76rem; font-weight:600; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center; outline:none; list-style:none;">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <span>${icon}</span>
+            <span style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">${esc(tool || '?')}</span>
+            <span style="color:var(--text-muted); font-size:.7rem;">${esc(resultPreview)}</span>
+          </span>
+          <span style="font-size:.68rem; color:var(--text-muted); white-space:nowrap; margin-left:8px;">${latencyMs != null ? latencyMs + 'ms' : ''} · ${new Date(ts || Date.now()).toLocaleTimeString()}</span>
+        </summary>
+        <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05); font-size:.73rem;">
+          <div style="margin-bottom:6px; color:var(--text-muted);"><strong>Args:</strong><br>
+            <pre style="font-family:'JetBrains Mono',monospace; white-space:pre-wrap; overflow-x:auto; max-height:120px;">${esc(JSON.stringify(parsedArgs, null, 2))}</pre>
+          </div>
+          <div style="color:var(--text-muted);"><strong>Result:</strong><br>
+            <pre style="font-family:'JetBrains Mono',monospace; white-space:pre-wrap; overflow-x:auto; max-height:120px;">${esc(JSON.stringify(parsedResult, null, 2))}</pre>
+          </div>
+        </div>
+      </details>
+    </div>
+    <div class="chat-meta" style="margin-left:16px;">
+      <span>Tool Call</span>
+      <span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
+    </div>`;
+
   chatLog.appendChild(div);
   scrollChatBottom();
   return div;

@@ -12,6 +12,7 @@ import { WorkspaceIndexer } from '../../memory/indexer.js';
 import { writeFileAtomic } from '../../utils/FileUtils.js';
 // Removed top-level import of instances.js to break circular dependency
 import { LLMExecutor } from '../../utils/LLMExecutor.js';
+import { logChatTurn } from '../../utils/ChatLogger.js';
 
 import {
     PROJECTS_DIR,
@@ -599,21 +600,7 @@ function addToQueues(
     } catch {}
 }
 
-async function logChatTurn(sessionId: string, turn: any): Promise<void> {
-    try {
-        const logPath = path.join(PROJECTS_DIR, sessionId, 'chat-log.json');
-        let log: any[] = [];
-        try {
-            const raw = await fs.readFile(logPath, 'utf-8');
-            log = JSON.parse(raw);
-        } catch {}
-        log.push({ ts: Date.now(), ...turn });
-        if (log.length > 200) log = log.slice(-200);
-        await writeFileAtomic(logPath, JSON.stringify(log));
-    } catch {
-        // non-fatal
-    }
-}
+// logChatTurn is now imported from ../../utils/ChatLogger.js (shared with mcp/index.ts)
 
 export function compressSemantically(text: string, maxChars: number): string {
     if (text.length <= maxChars) return text;

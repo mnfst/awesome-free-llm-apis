@@ -52,6 +52,8 @@ import { persistence } from './utils/PersistenceManager.js';
 import { initFirebase, syncStats, getLeaderboard } from './utils/firebase.js';
 import { withFileLock } from './utils/file-lock.js';
 import { writeFileAtomic } from './utils/FileUtils.js';
+import { WorkspaceScanner } from './cache/workspace.js';
+import { STATE_FILE } from './pipeline/middlewares/constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -328,10 +330,15 @@ async function main() {
                 ? params.messages
                 : [{ role: 'user', content: String(params.messages || params.prompt || '') }];
               
-              // Resolve sessionId from workspace_root if not provided
+              // Resolve sessionId from workspace_root using the same algorithm as the real pipeline
               let sid = params.sessionId;
               if (!sid && params.workspace_root) {
-                sid = Buffer.from(params.workspace_root).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
+                try {
+                  const hash = await new WorkspaceScanner(process.cwd()).getWorkspaceHash(params.workspace_root);
+                  sid = `ws-${hash.substring(0, 16)}`;
+                } catch {
+                  sid = '__no_ws__';
+                }
               }
 
               const r = await useFreeLLM({
@@ -424,6 +431,9 @@ async function main() {
           const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
           try { await fsp.access(projectsBase); } catch { return res.json({ sessions: [] }); }
 
+          // Denylist: exclude test/benchmark/fixture directories that pollute the sidebar
+          const DENYLIST_PREFIXES = ['test-', 'bench-', 'smoke-', 'stress-', 'full-stress-', 'e2e-', 'simulation-', 'study-'];
+
           const entries = await fsp.readdir(projectsBase);
           const MAX_CONCURRENT = 20;
           type SessionMeta = { id: string; msgCount: number; lastTs: number };
@@ -432,6 +442,8 @@ async function main() {
           for (let i = 0; i < entries.length; i += MAX_CONCURRENT) {
             const batch = entries.slice(i, i + MAX_CONCURRENT);
             const results = await Promise.all(batch.map(async d => {
+              // Skip test/benchmark artifact directories
+              if (DENYLIST_PREFIXES.some(prefix => d.startsWith(prefix))) return null;
               const full = path.resolve(projectsBase, d);
               if (path.dirname(full) !== path.resolve(projectsBase)) return null;
               try {
@@ -488,7 +500,7 @@ async function main() {
           // Phase 3 Optimization: Parallelize knowledge and queue reads
           const [knowledgeRes, queuesRes] = await Promise.all([
             fsp.readFile(path.join(projectDir, 'knowledge.md'), 'utf-8').catch(() => 'No memory yet – session not started.'),
-            fsp.readFile(path.join(projectDir, 'queues.json'), 'utf-8').catch(() => null)
+            fsp.readFile(path.join(projectDir, STATE_FILE), 'utf-8').catch(() => null)  // Bug fix: was 'queues.json', real writer uses STATE_FILE (state.json)
           ]);
 
           let queues: Record<string, string[]> = {
@@ -516,8 +528,9 @@ async function main() {
         try {
           const ws: string = (req.body?.workspace || '').toString().trim();
           if (!ws) return res.json({ sessionId: '__no_ws__' });
-          // Same algorithm as MemoryManager: first 8 chars of base64(workspacePath)
-          const sessionId = Buffer.from(ws).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
+          // Bug fix: use the real WorkspaceScanner hash algorithm, not base64 (was producing wrong IDs)
+          const hash = await new WorkspaceScanner(process.cwd()).getWorkspaceHash(ws);
+          const sessionId = `ws-${hash.substring(0, 16)}`;
           res.json({ sessionId });
         } catch (err) {
           res.status(500).json({ error: String(err) });
