@@ -27,6 +27,7 @@ import { indexWorkspace } from './index-workspace.js';
 import { getTokenStats } from './get-token-stats.js';
 import { validateProvider } from './validate-provider.js';
 import { initWorkspace } from './init-workspace.js';
+import { GlobalWikiManager } from '../utils/GlobalWikiManager.js';
 
 export interface UseFreeLLMInput {
   model?: string;
@@ -799,28 +800,41 @@ function tryExtractToolCall(content: string): ParsedToolCall | null {
   return null;
 }
 
-async function executeServerToolCall(call: ParsedToolCall, workspaceRoot?: string): Promise<any> {
+export async function executeServerToolCall(call: ParsedToolCall, workspaceRoot?: string): Promise<any> {
   const tool = call.tool.trim();
   const args = call.args || {};
 
-  if (tool === 'read_file') {
-    const rawPath = args.path || args.file_path;
-    if (!rawPath || typeof rawPath !== 'string') {
-      throw new Error('read_file requires `path`.');
+  try {
+    let result;
+    if (tool === 'read_file') {
+      const rawPath = args.path || args.file_path;
+      if (!rawPath || typeof rawPath !== 'string') {
+        throw new Error('read_file requires `path`.');
+      }
+      const resolved = path.resolve(workspaceRoot || process.cwd(), rawPath);
+      if (workspaceRoot && !resolved.startsWith(path.resolve(workspaceRoot))) {
+        throw new Error('read_file path is outside workspace_root.');
+      }
+      const content = await fs.readFile(resolved, 'utf-8');
+      result = { path: resolved, content };
+    } else if (tool === 'manage_memory') {
+      result = await manageMemory(args as any);
+    } else if (tool === 'index_workspace') {
+      result = await indexWorkspace(args as any);
+    } else if (tool === 'get_token_stats') {
+      result = await getTokenStats();
+    } else if (tool === 'validate_provider') {
+      result = await validateProvider(args.providerId);
+    } else if (tool === 'load_skill_prompt') {
+      result = await loadSkillPrompt({ skill: args.skill, type: 'load' });
+    } else {
+      throw new Error(`Unsupported tool call: ${tool}`);
     }
-    const resolved = path.resolve(workspaceRoot || process.cwd(), rawPath);
-    if (workspaceRoot && !resolved.startsWith(path.resolve(workspaceRoot))) {
-      throw new Error('read_file path is outside workspace_root.');
-    }
-    const content = await fs.readFile(resolved, 'utf-8');
-    return { path: resolved, content };
+
+    GlobalWikiManager.logSuccess(tool);
+    return result;
+  } catch (err: any) {
+    GlobalWikiManager.logFailure(tool);
+    throw err;
   }
-
-  if (tool === 'manage_memory') return await manageMemory(args as any);
-  if (tool === 'index_workspace') return await indexWorkspace(args as any);
-  if (tool === 'get_token_stats') return await getTokenStats();
-  if (tool === 'validate_provider') return await validateProvider(args.providerId);
-  if (tool === 'load_skill_prompt') return await loadSkillPrompt({ skill: args.skill, type: 'load' });
-
-  throw new Error(`Unsupported tool call: ${tool}`);
 }

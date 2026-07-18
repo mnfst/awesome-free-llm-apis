@@ -68,3 +68,28 @@ export function prependToMessageContent(msg: any, prefix: string): void {
         msg.content = prefix + (msg.content ? String(msg.content) : '');
     }
 }
+
+/**
+ * Safely appends a string to a message's content, preserving multi-modal structure if present.
+ */
+export function appendToMessageContent(msg: any, suffix: string): void {
+    if (!suffix) return;
+    
+    if (typeof msg.content === 'string') {
+        msg.content = ((msg.content || '') + suffix).trim();
+    } else if (Array.isArray(msg.content)) {
+        msg.content = [...msg.content, { type: 'text', text: suffix }];
+    } else if (msg.content && typeof msg.content === 'object') {
+        if ('text' in msg.content) {
+            msg.content.text = msg.content.text + suffix;
+        } else {
+            msg.content = [
+                msg.content,
+                { type: 'text', text: suffix }
+            ];
+        }
+    } else {
+        msg.content = (msg.content ? String(msg.content) : '') + suffix;
+    }
+}
+

@@ -19,6 +19,9 @@ export class TaskClassifier {
         'filter': TaskType.Moderation, 'policy': TaskType.Moderation,
         'think': TaskType.Reasoning, 'thinking': TaskType.Reasoning, 'reason': TaskType.Reasoning,
         'logic': TaskType.Reasoning, 'proof': TaskType.Reasoning, 'math': TaskType.Reasoning,
+        'cyber': TaskType.Cyber, 'exploit': TaskType.Cyber, 'vulnerability': TaskType.Cyber, 'pentest': TaskType.Cyber,
+        'pwn': TaskType.Cyber, 'cve': TaskType.Cyber, 'malware': TaskType.Cyber, 'fuzzing': TaskType.Cyber,
+        'ctf': TaskType.Cyber, 'phishing': TaskType.Cyber, 'soc': TaskType.Cyber, 'sast': TaskType.Cyber,
     };
 
     public static autoClassify(messages: Message[], explicitKeywords?: string[]): TaskType {
@@ -49,6 +52,11 @@ export class TaskClassifier {
 
         const rawLastMsg = getMessageContent(messages[messages.length - 1]);
         const lastMsg = TaskClassifier.getOriginalUserContent(rawLastMsg).toLowerCase();
+
+        const cyberTerms = /\b(ctf|exploit|pentest|pwn|cve|fuzzing|reverse-engineering|buffer-overflow|binary-analysis|wireshark|metasploit|port-scan|nmap|malware|phishing|secure-coding|owasp|sast|dast)\b/i;
+        if (cyberTerms.test(lastMsg)) {
+            return TaskType.Cyber;
+        }
 
         if (/\b(classify|sentiment|categorize)\b/i.test(lastMsg)) {
             return TaskType.Classification;

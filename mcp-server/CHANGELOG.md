@@ -14,6 +14,7 @@
 ### Next Updates
 
 - `browser_action` tool to be integrated with `use_free_llm` for browser automation tasks, leveraging `chrome-devtools-mcp` for headless browser control. Github scraping should be used to extract relevant information from repositories, and the tool should be able to handle dynamic content loading and pagination.
+- Assess migration to stream mode for supported providers to reduce latency and token wastage on long responses.
 
 ---
 
@@ -46,8 +47,7 @@
 
 ### Next updates
 - `AGENTS.md` should be injected during the decomposition phase(only / custom reading certain lines based on semantic understanding for subtasks) to provide agents with a reference of available tools and their usage.
-- Dashboard refactors to include tool call history and conversation history in a single view with filtering and search capabilities.
-- Assess migration to stream mode for supported providers to reduce latency and token wastage on long responses.
+- Dashboard refactors to include tool call history and conversation history in a single view with filtering and search capabilities.(Implemented)
 - Reassess our architecture and apply fixes if required to make the system more robust and resilient to failures and also to make it more scalable and maintainable.
 - Integrate a new TaskType 'cyber' to handle cyber security related tasks and also to be able to use the tools and models available in the `cyber_plan.md` to handle cyber security related tasks and also to be able to use the tools and models available in the `cyber_plan.md` to handle cyber security related tasks. (But tight keyword matching should be used to avoid false positives and also to avoid routing non-cyber tasks to the cyber models and tools.)
 - Github repo scanning in middleware(if github urls are present) using githubusercontent and github api(Similar to the one implemented in `skill_loader`) to understand the working of the repo and also to be able to identify the dependencies between files and also to be able to identify the function calls across multiple files in a project and also to be able to identify the variable/dataflow across multiple files in a project.

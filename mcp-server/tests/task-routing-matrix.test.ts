@@ -155,6 +155,14 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
         );
     });
 
+    it('should route Cyber security tasks correctly', async () => {
+        await verifyRouting(
+            'We need to write an exploit to solve this buffer overflow ctf vulnerability.',
+            TaskType.Cyber,
+            'deepseek/deepseek-r1'
+        );
+    });
+
     it('should prioritize explicit keywords even with conflicting content', async () => {
         const context: PipelineContext = {
             request: {
