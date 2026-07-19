@@ -111,3 +111,37 @@ export function appendToMessageContent(msg: any, suffix: string): void {
     }
 }
 
+/**
+ * Detects if a text prompt is considered "confused" (i.e. contains no actual instructions,
+ * consists only of file path references like file:///..., or uses default vision template boilerplates).
+ */
+export function isUserConfused(text?: string): boolean {
+    if (!text) return true;
+    const trimmed = text.trim();
+    if (trimmed.length === 0) return true;
+
+    // Check if it contains file paths
+    const hasFiles = /file:\/\/\/\S+/i.test(trimmed);
+    const cleanOfFiles = trimmed.replace(/file:\/\/\/\S+/g, '').trim();
+    
+    if (hasFiles && cleanOfFiles.length < 15) {
+        return true;
+    }
+
+    // Check if it contains default vision boilerplates or simple image instructions
+    const boilerplates = [
+        'analyze this image and provide a concise technical markdown report',
+        'analyze this image',
+        'what is this',
+        'describe this image',
+        'analyze the image',
+        'read this file',
+        'explain this'
+    ];
+    const lower = cleanOfFiles.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").trim();
+    if (boilerplates.includes(lower)) {
+        return true;
+    }
+
+    return false;
+}

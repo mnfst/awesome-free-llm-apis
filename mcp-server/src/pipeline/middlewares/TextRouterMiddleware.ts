@@ -2,7 +2,7 @@ import { Middleware, PipelineContext, NextFunction, TaskType } from '../middlewa
 import { LLMExecutor } from '../../utils/LLMExecutor.js';
 import { ContextManager } from '../../utils/ContextManager.js';
 import { PromptCompressor } from '../../utils/PromptCompressor.js';
-import { getMessageContent, prependToMessageContent } from '../../utils/MessageUtils.js';
+import { getMessageContent, prependToMessageContent, isUserConfused } from '../../utils/MessageUtils.js';
 import { TaskClassifier } from '../../utils/TaskClassifier.js';
 import { calculateModelWeightedMaxTokens } from '../../utils/model-tokens.js';
 import { ProviderRegistry } from '../../providers/registry.js';
@@ -554,6 +554,32 @@ export class TextRouterMiddleware implements Middleware {
             : '';
         const lowerPrompt = rawLastMsg.toLowerCase();
         
+        const confused = isUserConfused(rawLastMsg);
+        if (confused) {
+            console.debug('[TextRouter] Confused user state detected (no clear prompt or only file references).');
+            // Bypass wiki indexing and maintenance
+            (context as any).skipIndexing = true;
+            (context.request as any).skipIndexing = true;
+
+            // Prepend system note to inform the model and ask it to guide the user
+            const confusedInstruction = "\n[System Note: The user has not provided a clear request or instructions. They might be confused or just sharing/uploading. Please guide them on what they can do next with these files/images, summarize the contents briefly, and ask what they would like to do.]";
+            if (context.request.messages && context.request.messages.length > 0) {
+                const userMsg = context.request.messages.find(m => m.role === 'user');
+                if (userMsg) {
+                    if (typeof userMsg.content === 'string') {
+                        userMsg.content += confusedInstruction;
+                    } else if (Array.isArray(userMsg.content)) {
+                        const txtItem = userMsg.content.find((item: any) => item.type === 'text');
+                        if (txtItem) {
+                            txtItem.text += confusedInstruction;
+                        } else {
+                            userMsg.content.push({ type: 'text', text: confusedInstruction.trim() });
+                        }
+                    }
+                }
+            }
+        }
+
         const hasCodeExtensions = /\.(ts|js|py|go|rs|cpp|h|java|sh|rb|php|cs|swift|json|yml|yaml|toml)\b/i.test(lowerPrompt) ||
             (context.keywords && context.keywords.some(kw => /\.(ts|js|py|go|rs|cpp|h|java|sh|rb|php|cs|swift|json|yml|yaml|toml)\b/i.test(kw)));
         const hasCodingTerms = /\b(code|function|class|method|implement|implementation|refactor|debug|compile|build|test|git|repo|syntax|develop|program|script|rust|python|javascript|golang|cpp|c\+\+|java|ruby|php|html|css|sql)\b/i.test(lowerPrompt);
@@ -581,7 +607,7 @@ export class TextRouterMiddleware implements Middleware {
             return { modelId, score };
         })
         .filter(c => c.score >= 0)
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => confused ? a.score - b.score : b.score - a.score);
 
         finalTierModels = scoredCandidates.slice(0, 15).map(c => c.modelId);
 
@@ -612,7 +638,7 @@ export class TextRouterMiddleware implements Middleware {
             }
             const probA = quantumProbabilities.find(qp => qp.modelId === a)?.probability || 0;
             const probB = quantumProbabilities.find(qp => qp.modelId === b)?.probability || 0;
-            return probB - probA;
+            return confused ? probA - probB : probB - probA;
         });
 
         console.error(`[Router][Quantum] Top sorted candidates by collapse probability:`);

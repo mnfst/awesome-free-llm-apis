@@ -95,8 +95,9 @@ describe('PdfVisionHelper', () => {
         { image_path: dummyPath, rect: [0, 0, 200, 200], width_pt: 200, height_pt: 200 }
       ], 'page text', 'existing wiki content');
       
-      // index 0 is full page (300 tokens), index 1 is the sub-block
-      expect(chatSpy.mock.calls[1][0].max_tokens).toBe(100);
+      const tokensTried = chatSpy.mock.calls.map(c => c[0].max_tokens);
+      expect(tokensTried).toContain(300);
+      expect(tokensTried).toContain(100);
     } finally {
       await fs.remove(dummyPath);
       chatSpy.mockRestore();

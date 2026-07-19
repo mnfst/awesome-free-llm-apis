@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.7 – Semantic Log Compaction, Strict Vision Bypass + Testing Hardening (July 2026)
+## v1.0.7 – Wiki, Log Compaction, Process Locking, Dynamic Tokens, PDF Indexing + Testing Hardening (July 2026)
 
 ### 🚀 Highlights
 
@@ -9,13 +9,26 @@
 - **Strict Vision Task Debugger Bypass**: Resolved issues where prompts with error keywords routed to vision models triggered debugger diagnostics, strictly restricting the injection of local PowerShell/Bash diagnostics to non-vision tasks.
 - **Dynamic Search Limit Adjustments**: Bumped the search match limit to `50` for `.log`/`.json` files (from a default of `10`) to guarantee compaction logic is triggered.
 - **Search Robustness**: Appended `-H` to `rg` and `--with-filename` to `grep` calls inside the search executor to ensure stable filename path-splitting on both Windows and POSIX environments.
-- **Robust Integration Test Suite**: Created `tests/log-compaction.test.ts` covering unstructured logs, metrics JSON, and nested n8n workflow pipeline JSON (with code preservation validation), alongside new tests for the vision debugger bypass in `tests/tools.test.ts`.
+- **Process-Safe Exclusive File Locking**: Implemented atomic concurrency control in `src/utils/file-lock.ts` holding exclusive `wx` lock files with OS-level PID existence checks and 30-second stale age reaping to prevent database corruption during parallel indexing.
+- **Incremental PDF-Wiki RAG & Vision Indexing Pipeline**: Added a pipeline that renders pages, filters out small logos or thin divider lines (<40pt), upscales diagrams to 300 DPI, and injects rolling context into vision calls.
+- **Proportional Per-Page Budget Truncation**: Replaced heuristic markdown-based semantic compression with a deterministic proportional budget divider (`batchRawMaxChars / numPages`) to balance prompt space fairly across pages.
+- **Dynamic Output Token Budgeting**: Implemented model output `max_tokens` scaling based on first-pass creation/update states, batch page multipliers, and existing summary retention floors. Bounded vision calls dynamically between 100 and 500 tokens based on region size and context.
+- **Confused User Query Interception**: Automatically detects empty/boilerplate prompts or file-only attachments to:
+  - Reverse model fallback order (testing cheaper/faster models first like `gemini-3.1-flash-lite` to save budget).
+  - Append guiding system instructions.
+  - Set `skipIndexing = true` to bypass wiki maintenance and indexing runs.
+- **Project-Scoped Wiki & RAG Integration**: Developed a persistent repository-scoped wiki system (`src/memory/wiki.ts`) integrated with vector semantic storage (`src/memory/vector.ts`) to maintain structured knowledge and documentation.
+- **GitHub Repository Scanner & Analyzer**: Implemented `src/utils/GithubRepoScanner.ts` to fetch remote repository nodes, parse dependencies/imports, trace function flow, and dynamically index discovered tools.
+- **Global Wiki Namespace for Cyber Tools**: Standardized the `global-cyber-tools` shared wiki namespace across workspaces, gating tool validation via known cyber binaries (`sqlmap`, `nmap`, `wireshark`, etc.).
+- **Automatic Wiki Maintenance & Graph-Diff Linkage**: Built an event-driven maintainer (`src/memory/wiki-maintainer.ts`) that listens to repository file diff changes and parses import dependencies to automatically mark wiki pages stale when referencing code symbols are deleted.
+- **Robust Integration Test Suite**: Created `tests/log-compaction.test.ts` (unstructured logs/metrics JSON), `tests/file-lock.test.ts` (concurrency/stale PID/timeout rules), `tests/wiki-memory.test.ts` (confidence promotion/eviction limits), and updated `tests/pdf-vision-helper.test.ts`, `tests/pdf-wiki.test.ts`, and `tests/task-routing-matrix.test.ts`.
 
 ### Next Updates
 
 - `browser_action` tool to be integrated with `use_free_llm` for browser automation tasks, leveraging `chrome-devtools-mcp` for headless browser control. Github scraping should be used to extract relevant information from repositories, and the tool should be able to handle dynamic content loading and pagination.
 - Assess migration to stream mode for supported providers to reduce latency and token wastage on long responses.
 - `coding_agents` tool(not a one shot) which uses ollama driven local coding agents which has middleware acess to the workspace and can be used to generate code snippets, refactor code, and also to be able to understand the codebase and apply patches and preview diffs based on quantum based reasoning loops with lsp server integration for code understanding.
+- Present cyber library indexing should be retained but is misleading, it should be dynamic for all library and the wiki should be updated based on success and feedback from the tool runs.
 - `cyber_agents`tool a separate cyber routing middleware, which is isolated from the main routing middleware and can be used to handle cyber security related tasks. Dynamic tool dictionary(key: tool name, value: github_url) rather than a list of commonly used tools.
 
 ---
