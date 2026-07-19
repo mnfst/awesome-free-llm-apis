@@ -795,9 +795,14 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
   return finalContext.response;
 }
 
-export function flushSystem(): void {
+export async function flushSystem(): Promise<void> {
   getSharedResponseCache().flush();
-  getSharedRouter().flush();
+  // Persist pending usage counters before exit — deductTokens() only schedules a
+  // debounced disk write, so shutting down without this (or clearing in-memory
+  // state via getSharedRouter().flush() first, as this used to do) silently
+  // drops the last batch of request/token counts, which looked like usage
+  // "resetting" on every restart.
+  await getSharedRouter().persistNow();
 }
 
 interface ParsedToolCall {

@@ -78,6 +78,11 @@ describe('use_free_llm input validation', () => {
   });
 
   it('uses cache on second call', async () => {
+    // ResponseCache is persisted to disk (data/cache.json) and survives across
+    // test runs/processes — without clearing it first, a stale entry from a
+    // previous run under this exact cache key makes BOTH calls hit the cache,
+    // so chatSpy never gets invoked at all instead of exactly once.
+    getSharedResponseCache().clear();
     vi.stubEnv('GROQ_API_KEY', 'test-key-long-enough');
     (ProviderRegistry as unknown as { instance: undefined }).instance = undefined;
 

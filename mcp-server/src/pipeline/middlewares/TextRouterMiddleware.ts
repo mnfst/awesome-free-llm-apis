@@ -43,6 +43,10 @@ export class TextRouterMiddleware implements Middleware {
         this.executor.flush();
     }
 
+    public async persistNow(): Promise<void> {
+        await this.executor.persistNow();
+    }
+
     public static readonly taskRouteMap: Record<TaskType, string[]> = {
         [TaskType.Reasoning]: [
             'deepseek/deepseek-r1',

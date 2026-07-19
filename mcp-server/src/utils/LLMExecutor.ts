@@ -152,6 +152,17 @@ export class LLMExecutor {
     }
 
     /**
+     * Immediately persists current usage stats to disk, bypassing the debounce.
+     * Must be called before process exit — deductTokens() only schedules a
+     * debounced save (2s), so a shutdown that doesn't wait for it (or that
+     * discards in-memory state via flush() first) silently drops the last
+     * batch of usage counters, which looks like "usage keeps resetting".
+     */
+    async persistNow(): Promise<void> {
+        await this.persistStats();
+    }
+
+    /**
      * Persists current state to disk
      */
     private async persistStats(): Promise<void> {

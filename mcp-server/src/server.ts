@@ -774,7 +774,7 @@ async function main() {
 
         // Flush persistence
         try {
-          flushSystem();
+          await flushSystem();
           console.error('Persistence flushed');
         } catch (err) {
           console.error('Failed to flush persistence:', err);
@@ -796,6 +796,20 @@ async function main() {
       const transport = new StdioServerTransport();
       await server.connect(transport);
       console.error('MCP server running on stdio');
+
+      // Same usage-persistence gap as the SSE path: without this, every stdio
+      // session teardown (the common case for real MCP clients like Claude
+      // Desktop) drops any usage counters still sitting in the 2s debounce window.
+      const stdioShutdown = async () => {
+        try {
+          await flushSystem();
+        } catch (err) {
+          console.error('Failed to flush persistence:', err);
+        }
+        process.exit(0);
+      };
+      process.on('SIGTERM', stdioShutdown);
+      process.on('SIGINT', stdioShutdown);
     }
   } catch (err: any) {
     console.error(`[FATAL] Startup failed: ${err.message}`);
