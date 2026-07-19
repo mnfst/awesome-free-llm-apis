@@ -134,7 +134,12 @@ export async function resolveFileRefs(
     if (textPart) content = textPart.text || '';
   }
 
-  const uriRegex = /(?:\[([^\]]+)\]\()?(file|mcp|ctx7|artifact|pdf):\/\/([^\s)]+)(?:\))?/gi;
+  // Two alternatives: a markdown-link form `[label](proto://path with spaces)`, where the
+  // closing `)` unambiguously terminates the path (so spaces inside are fine — real project
+  // files/uploads legitimately have them, e.g. "SQL Injection Based on Reinforcement
+  // Learning.pdf"), and a bare `proto://path` form embedded directly in prose, where a
+  // path can't contain spaces without becoming ambiguous with the surrounding sentence.
+  const uriRegex = /\[(?<label>[^\]]+)\]\((?<bProto>file|mcp|ctx7|artifact|pdf):\/\/(?<bPath>[^)]+)\)|(?<proto>file|mcp|ctx7|artifact|pdf):\/\/(?<path>[^\s)]+)/gi;
   let newContent = content;
   const matches = [...content.matchAll(uriRegex)];
 
@@ -143,8 +148,9 @@ export async function resolveFileRefs(
 
   for (const match of matches) {
     const fullMatch = match[0];
-    const protocol = match[2].toLowerCase();
-    const uriPath = match[3];
+    const g = match.groups!;
+    const protocol = (g.bProto ?? g.proto)!.toLowerCase();
+    const uriPath = (g.bPath ?? g.path)!;
     let resolvedContent: string | null = null;
     let sourceLabel = '';
 
@@ -278,9 +284,12 @@ export async function resolvePdfRef(
   uriPath: string,
   workspaceRoot?: string
 ): Promise<{ resolvedContent: string; imagePath: string | null; imageBase64: string | null } | null> {
-  const parts = uriPath.split(':');
-  const relativePdfPath = parts[0];
-  const pageNumStr = parts[1] || '1';
+  // Split off only a trailing `:<pageNum>` suffix — a naive uriPath.split(':') breaks on
+  // absolute Windows paths, which have their own colon after the drive letter (e.g.
+  // "C:/Users/.../Resume.pdf:1" would split into "C", "/Users/.../Resume.pdf", "1").
+  const pageMatch = uriPath.match(/^(.*):(\d+)$/);
+  const relativePdfPath = pageMatch ? pageMatch[1] : uriPath;
+  const pageNumStr = pageMatch ? pageMatch[2] : '1';
   const pageNum = parseInt(pageNumStr, 10) || 1;
 
   const wsRoot = (workspaceRoot && workspaceRoot.trim()) ? path.resolve(workspaceRoot) : process.cwd();
@@ -546,7 +555,13 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     agentic,
     sessionId: effectiveSessionId,
     keywords,
-    isOnePass: input.isOnePass || false
+    // Defaults to true whenever this isn't an agentic call, so WorkspaceContextMiddleware's
+    // `allowMemory = context.isOnePass ? !!context.workspaceRoot : true` gate actually engages
+    // for plain one-shot chats too — previously only vision_tool ever set this explicitly, so
+    // every non-agentic use_free_llm call (workspace or not) always allowed memory injection,
+    // and with no workspaceRoot it fell back to the single shared '__no_ws__' namespace —
+    // leaking unrelated memory/wiki content from every other one-shot conversation into this one.
+    isOnePass: input.isOnePass ?? !agentic
   };
 
   let finalContext = await pipeline.execute(context);

@@ -26,20 +26,38 @@ export function getMessageContent(input: any): string {
             .map((part: any) => {
                 if (typeof part === 'string') return part;
                 if (part && typeof part === 'object') {
-                    return part.text || part.task || part.content || '';
+                    return extractTextField(part);
                 }
                 return String(part);
             })
             .filter(Boolean)
             .join(' ');
     }
-    
+
     // 3. Single-object content (some models/parsers return this)
     if (typeof content === 'object') {
-        return content.text || content.task || content.content || JSON.stringify(content);
+        return extractTextField(content) || JSON.stringify(content);
     }
-    
+
     return String(content);
+}
+
+/**
+ * Pulls a text-like field (`text`/`task`/`content`) off an object and guarantees a
+ * string back — recursing through getMessageContent() when that field is itself a
+ * nested array/object instead of returning it raw. Returning the raw value here was
+ * the actual bug: `part.text || part.task || part.content || ''` looks safe but if
+ * e.g. `part.content` is itself an array of content-parts (a nested/malformed
+ * multi-modal payload), it got returned as-is, silently violating this function's
+ * `string` contract — and wherever a caller interpolated that into a template
+ * literal or joined it with other strings, JS's implicit Array/Object.toString()
+ * produced "[object Object],[object Object],..." (one per nested part).
+ */
+function extractTextField(obj: any): string {
+    const val = obj?.text ?? obj?.task ?? obj?.content;
+    if (val === undefined || val === null || val === '') return '';
+    if (typeof val === 'string') return val;
+    return getMessageContent(val);
 }
 
 /**
