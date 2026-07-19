@@ -7,6 +7,14 @@ import { diffGraphs, type GraphDiff } from './graph-diff.js';
 import { memoryManager } from './index.js';
 import type { WikiMemory, WikiPage } from './wiki.js';
 import { ProviderRegistry } from '../providers/registry.js';
+import { withFileLock } from '../utils/file-lock.js';
+import { writeFileAtomic } from '../utils/FileUtils.js';
+
+// See long-term.ts/vector.ts for the same rationale: withFileLock() already reaps a
+// genuinely stuck/orphaned lock, so this only needs to be long enough that ordinary
+// contention (e.g. two concurrent maintenance runs on the same workspace) waits its
+// turn instead of failing.
+const LOCK_WAIT_MS = 30000;
 
 export interface WikiMaintenanceMeta {
   lastSyncCommitHash: string;
@@ -322,8 +330,11 @@ export async function runWikiMaintenance(workspaceRoot: string, wsHash?: string)
       await wiki.write(decision.title, decision.content, decision.tags, decision.links);
     }
 
-    await fs.mkdir(path.dirname(prevGraphPathFor(workspaceRoot)), { recursive: true });
-    await fs.writeFile(prevGraphPathFor(workspaceRoot), JSON.stringify(newGraph.serialize(), null, 2), 'utf-8');
+    const prevGraphPath = prevGraphPathFor(workspaceRoot);
+    await fs.mkdir(path.dirname(prevGraphPath), { recursive: true });
+    await withFileLock(prevGraphPath, async () => {
+      await writeFileAtomic(prevGraphPath, JSON.stringify(newGraph.serialize(), null, 2));
+    }, LOCK_WAIT_MS);
 
     await persistMeta(workspaceRoot, gate);
   } catch (err) {
@@ -340,5 +351,7 @@ async function persistMeta(workspaceRoot: string, gate: { freshCommitHash?: stri
   };
   const metaPath = metaPathFor(workspaceRoot);
   await fs.mkdir(path.dirname(metaPath), { recursive: true });
-  await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+  await withFileLock(metaPath, async () => {
+    await writeFileAtomic(metaPath, JSON.stringify(meta, null, 2));
+  }, LOCK_WAIT_MS);
 }

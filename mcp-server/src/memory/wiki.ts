@@ -2,6 +2,10 @@ import os from 'os';
 import { promises as fs } from 'fs';
 import { existsSync, readdirSync } from 'fs';
 import path from 'path';
+import { withFileLock } from '../utils/file-lock.js';
+
+// See long-term.ts/vector.ts for the same rationale.
+const LOCK_WAIT_MS = 30000;
 
 export interface WikiPage {
   title: string;
@@ -128,6 +132,12 @@ export class WikiMemory {
 
   private async ensureDir(): Promise<void> {
     await fs.mkdir(this.wikiDir, { recursive: true });
+  }
+
+  // Keyed by title alone (not the full per-tags path) so every writer targeting the
+  // same logical page contends for the same lock regardless of its `study` tag routing.
+  private lockPathForTitle(title: string): string {
+    return path.join(this.wikiDir, `${getFilename(title)}.opslock`);
   }
 
   private getPathForTitle(title: string, tags: string[] = []): string {
@@ -268,38 +278,50 @@ export class WikiMemory {
     };
   }
 
+  // write()/reinforce()/recordFailure() are all read-modify-write cycles keyed on the
+  // page's *current* confidence (e.g. "+0.15 from whatever it is now") — two concurrent
+  // calls to the same title (plausible: multiple subtask completions touching the same
+  // page, or agentic + wiki-maintainer both writing it around the same time) that both
+  // read before either writes lose one of the two updates entirely (last writer wins,
+  // silently). Locking the whole read-compute-write cycle per title serializes that.
+
   async write(title: string, content: string, tags: string[] = [], links: string[] = []): Promise<WikiPage> {
     await this.ensureDir();
+    return withFileLock(this.lockPathForTitle(title), async () => {
+      const existing = await this.read(title);
+      let confidence = existing ? Math.min(1.0, existing.confidence + 0.15) : 0.5;
 
-    const existing = await this.read(title);
-    let confidence = existing ? Math.min(1.0, existing.confidence + 0.15) : 0.5;
-
-    // Check if decision pattern is detected to auto-trigger ADR
-    let adr_ref = existing?.adr_ref;
-    if (confidence >= 0.85 && !adr_ref) {
-      const hasDecisionPattern = DECISION_PATTERNS.some(pat => pat.test(content));
-      if (hasDecisionPattern) {
-        adr_ref = await this.createADR(title, content);
+      // Check if decision pattern is detected to auto-trigger ADR
+      let adr_ref = existing?.adr_ref;
+      if (confidence >= 0.85 && !adr_ref) {
+        const hasDecisionPattern = DECISION_PATTERNS.some(pat => pat.test(content));
+        if (hasDecisionPattern) {
+          adr_ref = await this.createADR(title, content);
+        }
       }
-    }
 
-    return this.writePage(title, content, tags, links, confidence, adr_ref);
+      return this.writePage(title, content, tags, links, confidence, adr_ref);
+    }, LOCK_WAIT_MS);
   }
 
   async reinforce(title: string, delta = 0.15): Promise<WikiPage | null> {
-    const existing = await this.read(title);
-    if (!existing) return null;
-    const confidence = Math.min(1.0, existing.confidence + delta);
-    return this.writePage(title, existing.content, existing.tags, existing.links, confidence, existing.adr_ref);
+    return withFileLock(this.lockPathForTitle(title), async () => {
+      const existing = await this.read(title);
+      if (!existing) return null;
+      const confidence = Math.min(1.0, existing.confidence + delta);
+      return this.writePage(title, existing.content, existing.tags, existing.links, confidence, existing.adr_ref);
+    }, LOCK_WAIT_MS);
   }
 
   async recordFailure(title: string, reason: string, delta = 0.15): Promise<WikiPage | null> {
-    const existing = await this.read(title);
-    if (!existing) return null;
-    const confidence = Math.max(0, existing.confidence - delta);
-    const failureNote = `\n\n> ⚠️ Failure recorded (${new Date().toISOString().split('T')[0]}): ${reason}`;
-    const content = existing.content.includes(failureNote.trim()) ? existing.content : existing.content + failureNote;
-    return this.writePage(title, content, existing.tags, existing.links, confidence, existing.adr_ref);
+    return withFileLock(this.lockPathForTitle(title), async () => {
+      const existing = await this.read(title);
+      if (!existing) return null;
+      const confidence = Math.max(0, existing.confidence - delta);
+      const failureNote = `\n\n> ⚠️ Failure recorded (${new Date().toISOString().split('T')[0]}): ${reason}`;
+      const content = existing.content.includes(failureNote.trim()) ? existing.content : existing.content + failureNote;
+      return this.writePage(title, content, existing.tags, existing.links, confidence, existing.adr_ref);
+    }, LOCK_WAIT_MS);
   }
 
   private async enforcePageLimit(): Promise<void> {
