@@ -648,7 +648,7 @@ let attachments = []; // { id, kind, fileUri, relativePath, filename, page, targ
 let attachIdSeq = 0;
 
 function getPrimaryTextFieldId(tool) {
-  const f = tool.fields.find(f => f.type === 'textarea');
+  const f = tool?.fields?.find(f => f.type === 'textarea');
   return f ? f.id : null;
 }
 

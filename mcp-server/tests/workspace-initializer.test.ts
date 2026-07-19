@@ -87,8 +87,8 @@ describe('WorkspaceInitializer (Phase A)', () => {
         expect(existsSync(fallbackPath)).toBe(true);
     });
 
-    it('logs one-time creation message on stdout', async () => {
-        const consoleSpy = vi.spyOn(console, 'log');
+    it('logs one-time creation message on stderr', async () => {
+        const consoleSpy = vi.spyOn(console, 'error');
         const result = await initWorkspace(testDir);
         expect(result).toBe(true);
         expect(consoleSpy).toHaveBeenCalledWith(

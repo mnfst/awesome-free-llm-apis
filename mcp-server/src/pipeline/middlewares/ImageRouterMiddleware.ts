@@ -2,7 +2,7 @@ import { Middleware, PipelineContext, NextFunction } from '../middleware.js';
 import { LLMExecutor } from '../../utils/LLMExecutor.js';
 import { ProviderRegistry } from '../../providers/registry.js';
 import { getModelCapability } from '../../config/models.js';
-import { isUserConfused } from '../../utils/MessageUtils.js';
+import { isUserConfused, getMessageContent, appendToMessageContent } from '../../utils/MessageUtils.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -193,16 +193,8 @@ export class ImageRouterMiddleware implements Middleware {
         let userPrompt = '';
         if (context.request.messages && Array.isArray(context.request.messages)) {
             for (const msg of context.request.messages) {
-                if (msg.role === 'user') {
-                    if (typeof msg.content === 'string') {
-                        userPrompt += msg.content + ' ';
-                    } else if (Array.isArray(msg.content)) {
-                        for (const item of msg.content) {
-                            if (item && item.type === 'text') {
-                                userPrompt += item.text + ' ';
-                            }
-                        }
-                    }
+                if (msg.role === 'user' && msg.content) {
+                    userPrompt += getMessageContent(msg) + ' ';
                 }
             }
         }
@@ -219,16 +211,7 @@ export class ImageRouterMiddleware implements Middleware {
             if (context.request.messages && context.request.messages.length > 0) {
                 const userMsg = context.request.messages.find(m => m.role === 'user');
                 if (userMsg) {
-                    if (typeof userMsg.content === 'string') {
-                        userMsg.content += confusedInstruction;
-                    } else if (Array.isArray(userMsg.content)) {
-                        const txtItem = userMsg.content.find((item: any) => item.type === 'text');
-                        if (txtItem) {
-                            txtItem.text += confusedInstruction;
-                        } else {
-                            userMsg.content.push({ type: 'text', text: confusedInstruction.trim() });
-                        }
-                    }
+                    appendToMessageContent(userMsg, confusedInstruction);
                 }
             }
         }

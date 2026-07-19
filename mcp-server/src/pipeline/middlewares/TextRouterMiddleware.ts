@@ -2,7 +2,7 @@ import { Middleware, PipelineContext, NextFunction, TaskType } from '../middlewa
 import { LLMExecutor } from '../../utils/LLMExecutor.js';
 import { ContextManager } from '../../utils/ContextManager.js';
 import { PromptCompressor } from '../../utils/PromptCompressor.js';
-import { getMessageContent, prependToMessageContent, isUserConfused } from '../../utils/MessageUtils.js';
+import { getMessageContent, prependToMessageContent, appendToMessageContent, isUserConfused } from '../../utils/MessageUtils.js';
 import { TaskClassifier } from '../../utils/TaskClassifier.js';
 import { calculateModelWeightedMaxTokens } from '../../utils/model-tokens.js';
 import { ProviderRegistry } from '../../providers/registry.js';
@@ -566,16 +566,7 @@ export class TextRouterMiddleware implements Middleware {
             if (context.request.messages && context.request.messages.length > 0) {
                 const userMsg = context.request.messages.find(m => m.role === 'user');
                 if (userMsg) {
-                    if (typeof userMsg.content === 'string') {
-                        userMsg.content += confusedInstruction;
-                    } else if (Array.isArray(userMsg.content)) {
-                        const txtItem = userMsg.content.find((item: any) => item.type === 'text');
-                        if (txtItem) {
-                            txtItem.text += confusedInstruction;
-                        } else {
-                            userMsg.content.push({ type: 'text', text: confusedInstruction.trim() });
-                        }
-                    }
+                    appendToMessageContent(userMsg, confusedInstruction);
                 }
             }
         }

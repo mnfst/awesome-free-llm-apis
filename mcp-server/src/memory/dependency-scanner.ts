@@ -530,9 +530,8 @@ export class WorkspaceDependencyScanner {
         }
         if (exportedSymbolToFiles.size === 0) return;
 
-        const callSiteRegex = /\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g;
-
         for (const [relativePath, content] of this.fileContentCache.entries()) {
+            const callSiteRegex = /\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g;
             const importedFiles = new Set(
                 graph.getEdgesFrom(relativePath).filter(e => e.type === 'imports').map(e => e.target)
             );
@@ -576,8 +575,6 @@ export class WorkspaceDependencyScanner {
             }
         }
 
-        const callSiteRegex = /\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g;
-
         for (const members of familyMembers.values()) {
             if (members.length < 2) continue;
 
@@ -592,6 +589,7 @@ export class WorkspaceDependencyScanner {
             if (exportedSymbolToMembers.size === 0) continue;
 
             for (const callerId of members) {
+                const callSiteRegex = /\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g;
                 const content = this.snippetContentCache.get(callerId)!;
                 const seen = new Set<string>();
                 let match;
