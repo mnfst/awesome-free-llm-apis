@@ -433,52 +433,188 @@
     ══════════════════════════════════════════════════════════ -->
     <section class="tab-panel" id="panel-quickstart" role="tabpanel" aria-labelledby="tab-quickstart">
       <div class="section-title">⚙️ Quick Start</div>
-      <div class="section-sub">Get the server running and integrated in minutes.</div>
+      <div class="section-sub">Get API keys, learn the tool schemas, and steer prompts effectively.</div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;" class="qs-grid">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Installation</span></div>
-          <div class="card-body" style="position:relative;">
-            <div class="code-block" id="install-block">npm install
-
-cp .env.example .env
-# Edit .env — add your API keys
-
-npm run dashboard   # Start dashboard server
-npm run dev         # Start MCP server (stdio)</div>
-            <button class="copy-btn" data-target="install-block">Copy</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Tool Call Example</span></div>
-          <div class="card-body" style="position:relative;">
-            <div class="code-block" id="call-block">const result = await client.callTool("use_free_llm", {
-  messages: [{ role: "user", content: "Write auth.ts" }],
-  agentic: true,
-  workspace_root: "/abs/path/to/project",
-  keywords: ["security", "jwt"]
-});</div>
-            <button class="copy-btn" data-target="call-block">Copy</button>
-          </div>
+      <!-- Provider API Keys -->
+      <div class="section-title" style="margin-bottom:14px;">🔑 Provider API Keys</div>
+      <div class="section-sub" style="margin-bottom:14px;">Add these to your <code>.env</code> file. Only providers with a key set will be active — the rest run in offline/unavailable state.</div>
+      <div class="card" style="margin-bottom:28px;">
+        <div class="card-body" style="overflow-x:auto;">
+          <table class="qs-table" id="qs-provider-table">
+            <thead><tr><th>Provider</th><th>Env Var</th><th>Get API Key</th></tr></thead>
+            <tbody>
+              <tr><td>Cohere</td><td><code>CO_API_KEY</code></td><td><a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener noreferrer">dashboard.cohere.com/api-keys</a></td></tr>
+              <tr><td>Google Gemini</td><td><code>GEMINI_API_KEY</code></td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/app/apikey</a></td></tr>
+              <tr><td>Mistral AI</td><td><code>MISTRAL_API_KEY</code></td><td><a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer">console.mistral.ai/api-keys</a></td></tr>
+              <tr><td>Z AI (Zhipu AI)</td><td><code>ZHIPU_API_KEY</code></td><td><a href="https://open.bigmodel.cn/usercenter/apikeys" target="_blank" rel="noopener noreferrer">open.bigmodel.cn/usercenter/apikeys</a></td></tr>
+              <tr><td>Cerebras</td><td><code>CEREBRAS_API_KEY</code></td><td><a href="https://cloud.cerebras.ai/" target="_blank" rel="noopener noreferrer">cloud.cerebras.ai</a></td></tr>
+              <tr><td>Cloudflare Workers AI</td><td><code>CLOUDFLARE_API_TOKEN</code> + <code>CLOUDFLARE_ACCOUNT_ID</code></td><td><a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer">dash.cloudflare.com/profile/api-tokens</a></td></tr>
+              <tr><td>GitHub Models</td><td><code>GITHUB_TOKEN</code></td><td><a href="https://github.com/marketplace/models" target="_blank" rel="noopener noreferrer">github.com/marketplace/models</a></td></tr>
+              <tr><td>Groq</td><td><code>GROQ_API_KEY</code></td><td><a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer">console.groq.com/keys</a></td></tr>
+              <tr><td>Hugging Face</td><td><code>HF_TOKEN</code></td><td><a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer">huggingface.co/settings/tokens</a></td></tr>
+              <tr><td>Kilo Code</td><td><code>KILO_API_KEY</code></td><td><a href="https://kilo.ai" target="_blank" rel="noopener noreferrer">kilo.ai</a></td></tr>
+              <tr><td>LLM7.io</td><td><code>LLM7_API_KEY</code></td><td><a href="https://token.llm7.io" target="_blank" rel="noopener noreferrer">token.llm7.io</a></td></tr>
+              <tr><td>ModelScope</td><td><code>MODELSCOPE_API_KEY</code></td><td><a href="https://modelscope.cn/my/myaccesstoken" target="_blank" rel="noopener noreferrer">modelscope.cn/my/myaccesstoken</a></td></tr>
+              <tr><td>NVIDIA NIM</td><td><code>NVIDIA_API_KEY</code></td><td><a href="https://build.nvidia.com/explore/discover" target="_blank" rel="noopener noreferrer">build.nvidia.com/explore/discover</a></td></tr>
+              <tr><td>Ollama Cloud</td><td><code>OLLAMA_API_KEY</code></td><td><a href="https://ollama.com/settings/keys" target="_blank" rel="noopener noreferrer">ollama.com/settings/keys</a></td></tr>
+              <tr><td>OpenRouter</td><td><code>OPENROUTER_API_KEY</code></td><td><a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a></td></tr>
+              <tr><td>SiliconFlow</td><td><code>SILICONFLOW_API_KEY</code></td><td><a href="https://cloud.siliconflow.cn/account/ak" target="_blank" rel="noopener noreferrer">cloud.siliconflow.cn/account/ak</a></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <style>.qs-grid { @media (max-width:768px) { grid-template-columns: 1fr; } }</style>
+      <!-- MCP Tool Usage Schemas -->
+      <div class="section-title" style="margin-bottom:14px;">🛠️ MCP Tool Schemas</div>
+      <div class="section-sub" style="margin-bottom:14px;">Every tool exposed by this MCP server, with its parameters as actually defined in the server's tool schema.</div>
+      <div class="qs-tool-list" id="qs-tool-list">
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">use_free_llm</span><span class="qs-tool-desc">Chat completion with optional agentic workspace grounding</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>messages</code></td><td>array&lt;{role, content}&gt;</td><td>✓</td><td>Chat history, OpenAI-style</td></tr>
+              <tr><td><code>model</code></td><td>string</td><td></td><td>Explicit model override (default: auto-routed)</td></tr>
+              <tr><td><code>keywords</code></td><td>string[]</td><td></td><td>Steers which reference-doc sections get prioritized</td></tr>
+              <tr><td><code>agentic</code></td><td>boolean</td><td></td><td>Enables subtask decomposition + workspace memory</td></tr>
+              <tr><td><code>workspace_root</code></td><td>string</td><td></td><td>Absolute path — required alongside <code>agentic</code></td></tr>
+              <tr><td><code>sessionId</code></td><td>string</td><td></td><td>Resume a specific conversation/session</td></tr>
+              <tr><td><code>google_search</code></td><td>boolean</td><td></td><td>Gemini-only web grounding</td></tr>
+              <tr><td><code>skill</code></td><td>string</td><td></td><td>Load a named skill's instructions before executing</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">vision_tool</span><span class="qs-tool-desc">Analyze a local image via a vision-capable model</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>workspace_root</code></td><td>string</td><td>✓</td><td>Image path is validated to stay inside this boundary</td></tr>
+              <tr><td><code>image_path</code></td><td>string</td><td>✓</td><td><code>file:///</code> URI to a local image</td></tr>
+              <tr><td><code>prompt</code></td><td>string</td><td></td><td>Text prompt accompanying the image</td></tr>
+              <tr><td><code>model</code></td><td>string</td><td></td><td>Explicit vision model override</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">execute_skill</span><span class="qs-tool-desc">Run a prompt using a local skill's instructions + reference files</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>skill</code></td><td>string</td><td>✓</td><td>Skill directory name under <code>.free-llm-mcp/skills/</code></td></tr>
+              <tr><td><code>input</code></td><td>string</td><td>✓</td><td>The prompt/instruction to run</td></tr>
+              <tr><td><code>model</code></td><td>string</td><td></td><td>Explicit model override</td></tr>
+              <tr><td><code>workspace_root</code></td><td>string</td><td></td><td>Absolute path to the project root</td></tr>
+              <tr><td><code>sessionId</code></td><td>string</td><td></td><td>Resume a specific session</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">load_skill_prompt</span><span class="qs-tool-desc">Search or download a skill from the remote skills index</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>type</code></td><td>enum: load | search</td><td>✓</td><td></td></tr>
+              <tr><td><code>name</code></td><td>string</td><td>if <code>load</code></td><td>Skill name/ID to download</td></tr>
+              <tr><td><code>keywords</code></td><td>string[]</td><td>if <code>search</code></td><td>Search terms against the skills index</td></tr>
+              <tr><td><code>workspaceDir</code></td><td>string</td><td></td><td>Where to save the skill locally</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">manage_memory</span><span class="qs-tool-desc">Search, list, or clear persistent workspace memory / wiki</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>action</code></td><td>enum: search | list | stats | clear</td><td>✓</td><td></td></tr>
+              <tr><td><code>workspace_root</code></td><td>string</td><td></td><td>Absolute path to the workspace</td></tr>
+              <tr><td><code>query</code></td><td>string</td><td>for search</td><td></td></tr>
+              <tr><td><code>limit</code></td><td>number</td><td></td><td>Default 10, for search</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">store_workspace_skill</span><span class="qs-tool-desc">Persist structured knowledge/scripts into the workspace</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>name</code></td><td>string</td><td>✓</td><td>Lowercase-hyphenated skill name</td></tr>
+              <tr><td><code>description</code></td><td>string</td><td>✓</td><td></td></tr>
+              <tr><td><code>what</code></td><td>string[]</td><td>✓</td><td>Key decisions/implementation details</td></tr>
+              <tr><td><code>workspace_root</code></td><td>string</td><td>✓</td><td></td></tr>
+              <tr><td><code>why</code></td><td>string</td><td></td><td>Rationale</td></tr>
+              <tr><td><code>files</code></td><td>string[]</td><td></td><td>Referenced file paths</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">index_workspace</span><span class="qs-tool-desc">Proactively index workspace files for semantic search</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>workspace_root</code></td><td>string</td><td>✓</td><td></td></tr>
+              <tr><td><code>force</code></td><td>boolean</td><td></td><td>Re-index even if a cache is present</td></tr>
+            </tbody>
+          </table>
+        </details>
+      </div>
 
-      <div class="section-title" style="margin-bottom:14px;">Pipeline Phases</div>
-      <div class="pipeline-phases">
-        <div class="phase-row">
-          <div class="phase-num">1</div>
-          <div><div class="phase-name">Request & Cache</div><div class="phase-desc">StructuralMarkdown resolves <code>file://</code> URIs · ResponseCache checks workspace-aware cache</div></div>
-        </div>
-        <div class="phase-row">
-          <div class="phase-num">2</div>
-          <div><div class="phase-name">Context & Agentic Planning</div><div class="phase-desc">WorkspaceContext injects vector memory · AgenticMiddleware decomposes goals, processes subtask images, runs quantum-weighted execution loop</div></div>
-        </div>
-        <div class="phase-row">
-          <div class="phase-num">3</div>
-          <div><div class="phase-name">Routing & LLM Execution</div><div class="phase-desc">ImageRouter handles VLM · TextRouter classifies task type · Quantum scorer collapses to best provider · LLMExecutor dispatches with circuit breaker</div></div>
-        </div>
+      <!-- Prompting & Steering Guide -->
+      <div class="section-title" style="margin-top:28px;margin-bottom:14px;">🧭 Prompting & Steering</div>
+      <div class="section-sub" style="margin-bottom:14px;">Four independent mechanisms change how a prompt is processed — combine any of them.</div>
+      <div class="qs-tool-list">
+        <details class="qs-tool-card" open>
+          <summary><span class="qs-tool-name">"override" keyword</span><span class="qs-tool-desc">In-prompt text — bypasses .gitignore during context gathering</span></summary>
+          <div class="qs-guide-body">
+            Typing the literal word <code>override</code> (or <code>all files</code>, <code>gitignored</code>, <code>ignored</code>) anywhere in your prompt makes the workspace context gatherer scan <strong>every file, including <code>.gitignore</code>d ones</strong> — useful for inspecting build output, <code>node_modules</code> config, or <code>.env</code> templates. It only changes which files are visible to context-gathering; it does not affect model choice, persona, or task type.
+            <div class="code-block" style="margin-top:10px;font-size:.75rem;">"Check the override — read all files under dist/ for the compiled output"</div>
+          </div>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">Task-lane DSL prefixes</span><span class="qs-tool-desc">In-prompt text — forces sequential vs. parallel subtask order</span></summary>
+          <div class="qs-guide-body">
+            Prefix individual lines in a multi-step prompt to override the automatic planner's heuristics:
+            <ul style="margin:8px 0 0 18px;">
+              <li><code>&gt;</code> — run in <strong>parallel</strong> (auto-downgraded to sequential if two parallel tasks share the same classified task type)</li>
+              <li><code>-</code>, <code>*</code>, or <code>1.</code> — run <strong>sequentially</strong></li>
+            </ul>
+            <div class="code-block" style="margin-top:10px;font-size:.75rem;">&gt; read auth.ts
+&gt; search for API keys
+- implement new middleware</div>
+          </div>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">Persona auto-detection</span><span class="qs-tool-desc">In-prompt phrasing — changes context ranking and response style</span></summary>
+          <div class="qs-guide-body">
+            The server classifies every prompt into a persona by scanning its text for phrase patterns, first match wins, checked in this order:
+            <table class="qs-table" style="margin-top:10px;">
+              <thead><tr><th>Persona</th><th>Triggered by phrases like...</th></tr></thead>
+              <tbody>
+                <tr><td><code>debugger</code></td><td>error, exception, bug, crash, stack trace, leak, broken, "why does", type error, undefined, null, failed, issue, schema, variable, parameter</td></tr>
+                <tr><td><code>researcher</code></td><td><code>pdf://</code>, paper, citation, arxiv, research, study, thesis, literature</td></tr>
+                <tr><td><code>student</code></td><td>"explain how", "how to", tutorial, "what is", learn, teaching, concept</td></tr>
+                <tr><td><code>marketer</code></td><td>seo, marketing, campaign, keyword, traffic, ad</td></tr>
+                <tr><td><code>planner</code></td><td>plan, roadmap, timeline, milestone, phase, step</td></tr>
+                <tr><td><code>coder</code></td><td>implement, refactor, class, function, method, interface, module, compile, run, build, test, package.json, tsconfig.json</td></tr>
+                <tr><td><code>generic</code></td><td>fallback — none of the above matched</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:10px;">Pin a persona explicitly (always wins over heuristics) by adding this line to your workspace's <code>AGENTS.md</code>:</div>
+            <div class="code-block" style="margin-top:6px;font-size:.75rem;">preferred persona: coder</div>
+          </div>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">keywords parameter</span><span class="qs-tool-desc">API param on use_free_llm — steers doc-section selection, not persona</span></summary>
+          <div class="qs-guide-body">
+            <code>keywords</code> is a <code>string[]</code> field passed on the tool call itself (not typed in the prompt). It boosts which sections of injected reference documentation get prioritized when the system prompt is assembled. It has no effect on persona or task-lane routing — those are driven entirely by the prompt text mechanisms above.
+            <div class="code-block" style="margin-top:10px;font-size:.75rem;">{
+  "messages": [{ "role": "user", "content": "Add rate limiting to the login endpoint" }],
+  "keywords": ["security", "jwt", "rate-limit"],
+  "agentic": true,
+  "workspace_root": "c:/Users/mahes/project"
+}</div>
+          </div>
+        </details>
       </div>
 
     </section>

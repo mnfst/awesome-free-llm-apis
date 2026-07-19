@@ -113,6 +113,64 @@ Proactively index all relevant files in the workspace for semantic search.
 
 ---
 
+## 🧭 Prompting & Steering Directives
+
+These are the mechanisms that change how a prompt is processed. They're independent of each other — a single request can use all four at once.
+
+### 1. The `override` keyword (in-prompt, bypasses `.gitignore`)
+Typing the literal word **`override`** (or `all files`, `gitignored`, `ignored`) anywhere in your prompt text tells the workspace context gatherer to **scan every file, including `.gitignore`d ones**, instead of the default tracked-files-only scan. Use this when you need the agent to see build output, `node_modules` config, `.env` templates, or other normally-excluded files.
+
+```
+"Check the override — read all files under dist/ for the compiled output"
+```
+
+This only affects which files are visible to context-gathering; it does not change model choice, persona, or task type.
+
+### 2. Task-lane DSL prefixes (in-prompt, controls sequential vs. parallel subtasks)
+Prefix individual lines of a multi-step prompt to force execution order — this takes precedence over the automatic planner's heuristics:
+- `>` — run this subtask **in parallel** with others (auto-downgraded to sequential if two parallel tasks share the same classified `TaskType`, to avoid race conditions).
+- `-`, `*`, or `1.` — run this subtask **sequentially**.
+
+```
+> read auth.ts
+> search for API keys
+- implement new middleware
+```
+
+### 3. Persona auto-detection (in-prompt phrasing, changes context ranking and response style)
+The server classifies every prompt into a **persona** by scanning its raw text for phrase patterns (first match wins, checked in this order):
+
+| Persona | Triggered by phrases like... |
+|---|---|
+| `debugger` | error, exception, bug, crash, stack trace, leak, broken, "why does", type error, undefined, null, failed, issue, schema, variable, parameter |
+| `researcher` | `pdf://`, paper, citation, arxiv, research, study, thesis, literature |
+| `student` | "explain how", "how to", tutorial, "what is", learn, teaching, concept |
+| `marketer` | seo, marketing, campaign, keyword, traffic, ad |
+| `planner` | plan, roadmap, timeline, milestone, phase, step |
+| `coder` | implement, refactor, class, function, method, interface, module, compile, run, build, test, package.json, tsconfig.json |
+| `generic` | (fallback — none of the above matched) |
+
+`debugger` is checked first (its patterns are broad on purpose — debugging sessions need the widest context), `coder` last before the fallback. The detected persona re-ranks which workspace files/wiki entries are considered relevant (e.g. `researcher`/`student` favor theoretical/reference material over implementation files) and, for `debugger`, appends token-efficient CLI-reading tips to the response.
+
+**Pin a persona explicitly** by adding a line to your workspace's `AGENTS.md` — this always wins over heuristic detection:
+```
+preferred persona: coder
+```
+
+### 4. The `keywords` parameter (API param, steers *documentation section* selection — not persona)
+`keywords` is a `string[]` field on `use_free_llm` (and `load_skill_prompt`'s search mode) — **not** something you type inside the prompt text. It's a separate, explicit steering signal that boosts which sections of injected reference documentation get prioritized/kept when the system prompt is assembled (each matching section gets a scoring boost). It has no effect on persona or task-lane routing.
+
+```json
+{
+  "messages": [{ "role": "user", "content": "Add rate limiting to the login endpoint" }],
+  "keywords": ["security", "jwt", "rate-limit"],
+  "agentic": true,
+  "workspace_root": "c:/Users/mahes/project"
+}
+```
+
+---
+
 ## ⚠️ Agentic Behavior & Limits
 
 - **Subtask cap**: The pipeline executes at most **3 subtasks** per request. For larger plans, break your request into multiple calls or use the `continue` resume command.
