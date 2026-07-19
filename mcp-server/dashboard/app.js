@@ -120,7 +120,7 @@ async function renderResponse(data) {
   const SIZE_THRESHOLD = 100 * 1024; // 100KB
   const jsonStr = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
   if (jsonStr.length > SIZE_THRESHOLD) {
-    return `<span style="color:var(--text-muted);font-size:.78rem;">Response too large to render (${(jsonStr.length/1024).toFixed(0)}KB). </span><button onclick="navigator.clipboard.writeText(this.dataset.v);this.textContent='Copied!'" data-v="${esc(jsonStr)}" class="btn btn-outline btn-sm" style="margin-left:8px;">Copy Raw</button>`;
+    return `<span style="color:var(--text-muted);font-size:.78rem;">Response too large to render (${(jsonStr.length/1024).toFixed(0)}KB). </span><button class="copy-raw-btn btn btn-outline btn-sm" data-v="${esc(jsonStr)}" style="margin-left:8px;">Copy Raw</button>`;
   }
   return highlightJSON(result);
 }
@@ -255,27 +255,42 @@ function renderProviders(providers, provStats) {
   }).join('');
 
   document.getElementById('stat-providers').textContent = activeCount;
-
-  // Bind verify buttons
-  providersGrid.querySelectorAll('.verify-btn').forEach(btn => {
-    btn.addEventListener('click', () => verifyProvider(btn.dataset.pid, btn));
-  });
 }
 
-async function verifyProvider(providerId, btn) {
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Verifying…';
+// Delegated: bound once (not re-bound per render), since providersGrid.innerHTML
+// gets fully replaced by fetchStats() every 5s — a per-render addEventListener
+// binding is harmless here, but the button element itself can be swapped out
+// from under an in-flight click, so verifyProvider() below re-queries the live
+// node by data-pid at each step instead of trusting the one it started with.
+providersGrid?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.verify-btn');
+  if (btn) verifyProvider(btn.dataset.pid);
+});
+
+const VERIFY_BTN_MARKUP = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Verify`;
+
+function getVerifyBtn(providerId) {
+  return providersGrid?.querySelector(`.verify-btn[data-pid="${CSS.escape(providerId)}"]`) || null;
+}
+
+async function verifyProvider(providerId) {
+  const setState = (html, color, disabled) => {
+    const live = getVerifyBtn(providerId); // periodic refresh may have replaced the node
+    if (!live) return;
+    live.innerHTML = html;
+    live.style.color = color;
+    live.disabled = disabled;
+  };
+  setState('<span class="spinner"></span> Verifying…', '', true);
   try {
     const r  = await fetch('/api/validate-provider', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ providerId }) });
     const d  = await r.json();
-    btn.innerHTML = d.success ? '✓ OK' : '✗ Failed';
-    btn.style.color = d.success ? 'var(--accent-green)' : 'var(--accent-red)';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.color=''; btn.disabled=false; fetchStats(); }, 2000);
+    setState(d.success ? '✓ OK' : '✗ Failed', d.success ? 'var(--accent-green)' : 'var(--accent-red)', true);
+    setTimeout(() => { setState(VERIFY_BTN_MARKUP, '', false); fetchStats(); }, 2000);
   } catch {
-    btn.innerHTML = '✗ Error';
-    btn.style.color = 'var(--accent-red)';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.color=''; btn.disabled=false; }, 2000);
+    setState('✗ Error', 'var(--accent-red)', true);
+    setTimeout(() => { setState(VERIFY_BTN_MARKUP, '', false); }, 2000);
   }
 }
 
@@ -598,6 +613,27 @@ const pgLatency     = document.getElementById('pg-latency');
 const pgWorkspace   = document.getElementById('pg-workspace');
 const convList      = document.getElementById('pg-conv-list');
 const convSearch    = document.getElementById('pg-conv-search');
+
+// Delegated click handling for buttons rendered into chat bubbles (Copy / Copy Raw).
+// The dashboard's CSP sets `script-src-attr: 'none'` (Helmet default, never overridden),
+// which silently blocks inline onclick="..." attributes — these buttons used to rely on
+// that and simply did nothing when clicked. Delegating from the container (loaded via the
+// external, CSP-allowed /app.js) works correctly.
+chatLog?.addEventListener('click', (e) => {
+  const copyRaw = e.target.closest('.copy-raw-btn');
+  if (copyRaw) {
+    navigator.clipboard.writeText(copyRaw.dataset.v || '');
+    copyRaw.textContent = 'Copied!';
+    return;
+  }
+  const copyChat = e.target.closest('.chat-copy-btn');
+  if (copyChat) {
+    const text = copyChat.closest('.chat-msg')?.querySelector('.chat-bubble')?.innerText || '';
+    navigator.clipboard.writeText(text);
+    copyChat.textContent = 'Copied!';
+    setTimeout(() => { copyChat.textContent = 'Copy'; }, 1500);
+  }
+});
 
 // In-memory cache of current conversation (avoids re-fetching for every append)
 let chatHistory = [];
@@ -992,7 +1028,7 @@ function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save =
   div.innerHTML = `
     <div class="chat-bubble">${html}</div>
     <div class="chat-meta">${latBadge}${modelBadge(model, provider)}<span>${esc(tool)}</span><span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
-      <button class="chat-copy-btn" onclick="navigator.clipboard.writeText(this.closest('.chat-msg').querySelector('.chat-bubble').innerText);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500);">Copy</button>
+      <button class="chat-copy-btn">Copy</button>
     </div>`;
   spinnerEl.replaceWith(div);
   if (save) scrollChatBottom();
@@ -1320,7 +1356,11 @@ function renderQueue(id, items) {
 }
 
 let _historyData = [];
-let _historyExpanded = false;
+let _historyExpanded = false; // drives the "Expand All / Collapse All" button label
+let _expandedIndices = new Set(); // per-entry state, since the Memory tab polls every 3s and
+                                   // used to fully rebuild the list from a single shared flag —
+                                   // discarding whatever the user had just manually expanded on
+                                   // the very next poll tick, making the dropdown look broken.
 
 function renderHistory(history) {
   const el = document.getElementById('queue-history');
@@ -1353,10 +1393,10 @@ function _applyHistoryFilter(q) {
     const filesStr = h.filesModified?.length
       ? `<div style="font-size:.7rem;color:var(--accent-cyan);margin-top:4px;">Files: ${h.filesModified.map(f => `<code style="font-size:.7rem;">${esc(f)}</code>`).join(', ')}</div>`
       : '';
-    const expanded = _historyExpanded;
+    const expanded = _expandedIndices.has(globalIdx);
     return `
       <div class="queue-item hist-entry" data-idx="${globalIdx}" style="flex-direction:column;align-items:stretch;gap:0;border-left:3px solid ${borderColor};padding-left:10px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:6px 0;" onclick="toggleHistEntry(${globalIdx})">
+        <div class="hist-entry-toggle" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:6px 0;">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${isError ? 'var(--accent-red)' : 'var(--accent-purple)'};color:#fff;font-size:.65rem;font-weight:700;flex-shrink:0;">${globalIdx + 1}</span>
             <span style="font-weight:600;color:var(--text-primary);font-size:.82rem;">${esc(h.task || 'Untitled step')}</span>
@@ -1383,14 +1423,28 @@ function _applyHistoryFilter(q) {
   });
 }
 
-window.toggleHistEntry = function(idx) {
+function toggleHistEntry(idx) {
   const body = document.getElementById(`hist-out-${idx}`);
   const chevron = document.getElementById(`hist-chevron-${idx}`);
   if (!body) return;
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
   if (chevron) chevron.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
-};
+  // Persist so the next 3s poll's full re-render doesn't silently collapse this again.
+  if (open) _expandedIndices.delete(idx);
+  else _expandedIndices.add(idx);
+}
+
+// Delegated click for individual subtask rows — the CSP's `script-src-attr: 'none'`
+// (Helmet default) silently blocks inline onclick="..." attributes, so this can't be
+// bound inline; delegate from the container instead (same fix as the copy buttons above).
+document.getElementById('queue-history')?.addEventListener('click', (e) => {
+  const row = e.target.closest('.hist-entry-toggle');
+  if (!row) return;
+  const entry = row.closest('.hist-entry');
+  if (!entry) return;
+  toggleHistEntry(parseInt(entry.dataset.idx, 10));
+});
 
 // History filter input
 document.getElementById('history-filter')?.addEventListener('input', e => {
@@ -1401,6 +1455,11 @@ document.getElementById('history-filter')?.addEventListener('input', e => {
 document.getElementById('history-toggle-all')?.addEventListener('click', function() {
   _historyExpanded = !_historyExpanded;
   this.textContent = _historyExpanded ? 'Collapse All' : 'Expand All';
+  if (_historyExpanded) {
+    _historyData.forEach((_, i) => _expandedIndices.add(i));
+  } else {
+    _expandedIndices.clear();
+  }
   _applyHistoryFilter(document.getElementById('history-filter')?.value || '');
 });
 
