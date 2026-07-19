@@ -22,7 +22,7 @@
     "report": "tsx --env-file=.env scripts/evaluation/model-report.ts"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.2.0",
+    "@huggingface/transformers": "^3.8.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@types/multer": "^2.2.0",
     "cohere-ai": "^7.21.0",
