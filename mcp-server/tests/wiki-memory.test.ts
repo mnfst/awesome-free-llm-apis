@@ -3,6 +3,7 @@ import { WikiMemory } from '../src/memory/wiki.js';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import { wikiConfig } from '../src/config/wiki-config.js';
 
 describe('WikiMemory (Phase B)', () => {
     const testDir = path.join(process.cwd(), 'temp_test_wiki_ws');
@@ -147,9 +148,9 @@ Some other details.`;
         expect(page?.content).toContain('File auth.ts deleted');
     });
 
-    it('write() rejects pages exceeding 4KB', async () => {
+    it('write() rejects pages exceeding maxPageSizeBytes', async () => {
         const wiki = new WikiMemory(wsHash, testDir);
-        const hugeContent = 'a'.repeat(5000); // 5000 bytes > 4KB
+        const hugeContent = 'a'.repeat(wikiConfig.maxPageSizeBytes + 100);
         
         await expect(
             wiki.write('Huge Page', hugeContent)

@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import { existsSync, readdirSync } from 'fs';
 import path from 'path';
 import { withFileLock } from '../utils/file-lock.js';
+import { wikiConfig } from '../config/wiki-config.js';
 
 // See long-term.ts/vector.ts for the same rationale.
 const LOCK_WAIT_MS = 30000;
@@ -36,9 +37,6 @@ const DECISION_PATTERNS = [
   /we\s+use\s+.*\s+because/i,
   /decision:/i
 ];
-
-const MAX_WIKI_PAGES = 500;
-const MAX_PAGE_SIZE = 4096; // 4KB
 
 function getFilename(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9_-]/g, '_') + '.md';
@@ -251,8 +249,8 @@ export class WikiMemory {
     }
 
     const raw = stringifyFrontmatter(frontmatter, content);
-    if (Buffer.byteLength(raw, 'utf-8') > MAX_PAGE_SIZE) {
-      throw new Error(`Wiki page exceeds maximum size of ${MAX_PAGE_SIZE} bytes.`);
+    if (Buffer.byteLength(raw, 'utf-8') > wikiConfig.maxPageSizeBytes) {
+      throw new Error(`Wiki page exceeds maximum size of ${wikiConfig.maxPageSizeBytes} bytes.`);
     }
 
     const targetPath = this.getPathForTitle(title, tags);
@@ -326,7 +324,7 @@ export class WikiMemory {
 
   private async enforcePageLimit(): Promise<void> {
     const files = await this.getWikiFiles();
-    if (files.length <= MAX_WIKI_PAGES) return;
+    if (files.length <= wikiConfig.maxWikiPages) return;
 
     const pages: Array<{ path: string; confidence: number; updated: number }> = [];
     for (const f of files) {
@@ -352,7 +350,7 @@ export class WikiMemory {
     });
 
     // Evict all excess pages
-    const excessCount = files.length - MAX_WIKI_PAGES;
+    const excessCount = files.length - wikiConfig.maxWikiPages;
     const toEvict = pages.slice(0, excessCount);
     for (const p of toEvict) {
       try {

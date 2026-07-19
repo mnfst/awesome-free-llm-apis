@@ -13,6 +13,7 @@ import {
 import { WikiMemory } from '../src/memory/wiki.js';
 import { memoryManager } from '../src/memory/index.js';
 import { ProviderRegistry } from '../src/providers/registry.js';
+import { wikiConfig } from '../src/config/wiki-config.js';
 
 describe('diffGraphs', () => {
   it('treats everything as new when there is no prior graph', () => {
@@ -185,7 +186,7 @@ describe('parseAndValidateDecisions', () => {
   });
 
   it('drops elements whose content exceeds the page-size budget', () => {
-    const raw = JSON.stringify([{ title: 'Too Big', content: 'a'.repeat(4000), tags: [], links: [] }]);
+    const raw = JSON.stringify([{ title: 'Too Big', content: 'a'.repeat(wikiConfig.maxPageBodyBytes + 1), tags: [], links: [] }]);
     expect(parseAndValidateDecisions(raw, candidates)).toEqual([]);
   });
 

@@ -12,6 +12,13 @@ export interface PdfRenderResult {
   text: string;
   image_path: string | null;
   total_pages: number;
+  image_coverage_ratio?: number;
+  image_blocks?: Array<{
+    rect: number[];
+    image_path: string;
+    width_pt: number;
+    height_pt: number;
+  }>;
 }
 
 /**
@@ -49,6 +56,8 @@ export async function renderPdfPage(absPdfPath: string, pageNum: number): Promis
       text: (result.text || '').trim(),
       image_path: result.image_path || null,
       total_pages: typeof result.total_pages === 'number' ? result.total_pages : 1,
+      image_coverage_ratio: typeof result.image_coverage_ratio === 'number' ? result.image_coverage_ratio : undefined,
+      image_blocks: Array.isArray(result.image_blocks) ? result.image_blocks : undefined,
     };
   } catch (err) {
     console.error(`[renderPdfPage] Failed to execute Python script for page ${pageNum}:`, err);

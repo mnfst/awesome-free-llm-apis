@@ -9,6 +9,7 @@ import type { WikiMemory, WikiPage } from './wiki.js';
 import { ProviderRegistry } from '../providers/registry.js';
 import { withFileLock } from '../utils/file-lock.js';
 import { writeFileAtomic } from '../utils/FileUtils.js';
+import { wikiConfig } from '../config/wiki-config.js';
 
 // See long-term.ts/vector.ts for the same rationale: withFileLock() already reaps a
 // genuinely stuck/orphaned lock, so this only needs to be long enough that ordinary
@@ -30,11 +31,7 @@ export interface WikiMaintenanceDecision {
   links: string[];
 }
 
-const MAX_PAGE_BODY_BYTES = 3500; // stay comfortably under WikiMemory's 4096-byte MAX_PAGE_SIZE once frontmatter is added
 const MAX_TITLE_LENGTH = 200;
-const MAX_DIFF_SUMMARY_CHARS = 3000;
-const MAX_CANDIDATE_PAGES = 15;
-const MAX_CANDIDATE_KEYWORDS = 8;
 
 function metaPathFor(workspaceRoot: string): string {
   return path.join(workspaceRoot, '.free-llm-mcp', 'wiki_maintenance_meta.json');
@@ -157,8 +154,8 @@ function summarizeDiffForPrompt(diff: GraphDiff, graph: RepositoryGraph): string
   }
 
   const summary = lines.join('\n');
-  return summary.length > MAX_DIFF_SUMMARY_CHARS
-    ? summary.slice(0, MAX_DIFF_SUMMARY_CHARS) + '\n... (truncated)'
+  return summary.length > wikiConfig.maxDiffSummaryChars
+    ? summary.slice(0, wikiConfig.maxDiffSummaryChars) + '\n... (truncated)'
     : summary;
 }
 
@@ -169,19 +166,19 @@ async function findCandidatePages(wiki: WikiMemory, diff: GraphDiff, graph: Repo
     keywords.add(path.basename(node.id, path.extname(node.id)));
     const exports: string[] = node.metadata?.exports || [];
     for (const sym of exports.slice(0, 2)) keywords.add(sym);
-    if (keywords.size >= MAX_CANDIDATE_KEYWORDS) break;
+    if (keywords.size >= wikiConfig.maxCandidateKeywords) break;
   }
 
   const seen = new Map<string, WikiPage>();
-  for (const keyword of Array.from(keywords).slice(0, MAX_CANDIDATE_KEYWORDS)) {
+  for (const keyword of Array.from(keywords).slice(0, wikiConfig.maxCandidateKeywords)) {
     const results = await wiki.search(keyword);
     for (const page of results) {
       if (!seen.has(page.title)) seen.set(page.title, page);
     }
-    if (seen.size >= MAX_CANDIDATE_PAGES) break;
+    if (seen.size >= wikiConfig.maxCandidatePages) break;
   }
 
-  return Array.from(seen.values()).slice(0, MAX_CANDIDATE_PAGES);
+  return Array.from(seen.values()).slice(0, wikiConfig.maxCandidatePages);
 }
 
 /**
@@ -214,7 +211,7 @@ export function parseAndValidateDecisions(raw: string, candidateTitles: Set<stri
     const content = typeof item.content === 'string' ? item.content.trim() : '';
     if (!title || !content) continue;
     if (title.length > MAX_TITLE_LENGTH) continue;
-    if (Buffer.byteLength(content, 'utf-8') > MAX_PAGE_BODY_BYTES) continue;
+    if (Buffer.byteLength(content, 'utf-8') > wikiConfig.maxPageBodyBytes) continue;
 
     const tags = Array.isArray(item.tags) ? item.tags.filter((t: any) => typeof t === 'string') : [];
     const rawLinks = Array.isArray(item.links) ? item.links.filter((l: any) => typeof l === 'string') : [];
@@ -261,7 +258,7 @@ export async function decideWikiUpdates(params: {
     candidateBlock,
     '',
     'Return ONLY a JSON array, each element:',
-    '{ "title": "short descriptive title", "content": "wiki page body in markdown, under 3000 characters", "tags": ["code", ...], "links": ["<exact title from candidate list above>", ...] }',
+    `{ "title": "short descriptive title", "content": "wiki page body in markdown, under ${wikiConfig.maxPageBodyBytes} characters", "tags": ["code", ...], "links": ["<exact title from candidate list above>", ...] }`,
     'Return [] if no update is warranted.'
   ].join('\n');
 
@@ -274,7 +271,7 @@ export async function decideWikiUpdates(params: {
       model: provider.models[0]?.id,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
-      max_tokens: 1500,
+      max_tokens: wikiConfig.maxTokensLlmResponse,
     });
 
     const content = response.choices?.[0]?.message?.content;

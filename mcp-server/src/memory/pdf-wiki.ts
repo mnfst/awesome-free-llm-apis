@@ -8,14 +8,8 @@ import { parseAndValidateDecisions } from './wiki-maintainer.js';
 import type { WikiPage } from './wiki.js';
 import { vectorStore } from './vector.js';
 import { summarizeTextLocally } from '../tools/use-free-llm.js';
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-const PAGE_BATCH_THRESHOLD = 5;   // trigger LLM pass every N new distinct pages
-const MAX_TRACKED_PAGES = 100;    // safety cap — stop growing beyond this
-const CHUNK_SIZE = 400;           // characters per vector chunk
-const CHUNK_OVERLAP = 100;        // overlap stride between chunks
-const RAG_TOP_K = 8;              // semantic chunks retrieved per pass
-const MAX_CANDIDATE_PAGES = 15;
+import { wikiConfig } from '../config/wiki-config.js';
+import { shouldUseVision, describePageVision } from '../utils/PdfVisionHelper.js';
 
 // ─── State shape ─────────────────────────────────────────────────────────────
 interface PdfWikiState {
@@ -59,9 +53,9 @@ async function findCandidatePages(
     for (const page of results) {
       if (!seen.has(page.title)) seen.set(page.title, page);
     }
-    if (seen.size >= MAX_CANDIDATE_PAGES) break;
+    if (seen.size >= wikiConfig.maxCandidatePages) break;
   }
-  return Array.from(seen.values()).slice(0, MAX_CANDIDATE_PAGES);
+  return Array.from(seen.values()).slice(0, wikiConfig.maxCandidatePages);
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
@@ -80,8 +74,21 @@ export async function maybeIndexPdfIntoWiki(params: {
   totalPages: number;
   pageNum: number;
   pageText: string;
+  imageCoverageRatio?: number;
+  imagePath?: string | null;
+  imageBlocks?: Array<{ image_path: string; rect: number[]; width_pt: number; height_pt: number }>;
 }): Promise<void> {
-  const { workspaceRoot, absPdfPath, relativePdfPath, totalPages, pageNum, pageText } = params;
+  const {
+    workspaceRoot,
+    absPdfPath,
+    relativePdfPath,
+    totalPages,
+    pageNum,
+    pageText,
+    imageCoverageRatio,
+    imagePath,
+    imageBlocks
+  } = params;
 
   try {
     const { WorkspaceScanner } = await import('../cache/workspace.js');
@@ -121,8 +128,26 @@ export async function maybeIndexPdfIntoWiki(params: {
       return;
     }
 
+    // Fetch rolling document context from the existing wiki page (if any) to guide vision models
+    let previousWikiContext = '';
+    if (state.wikiTitle) {
+      try {
+        const wiki = memoryManager.getWiki(wsHash);
+        const wikiPage = await wiki.read(state.wikiTitle);
+        if (wikiPage && wikiPage.content) {
+          previousWikiContext = wikiPage.content;
+        }
+      } catch { /* best effort */ }
+    }
+
     const pdfBasename = path.basename(absPdfPath);
-    const chunks = chunkText(pageText, CHUNK_SIZE, CHUNK_OVERLAP);
+    let effectivePageText = pageText;
+    if (imageCoverageRatio !== undefined && imagePath && shouldUseVision(imageCoverageRatio, pageText)) {
+      const visionDesc = await describePageVision(imagePath, pdfBasename, pageNum, imageBlocks, pageText, previousWikiContext);
+      if (visionDesc) effectivePageText = pageText + visionDesc;
+    }
+
+    const chunks = chunkText(effectivePageText, wikiConfig.chunkSize, wikiConfig.chunkOverlap);
     const newChunkIds: string[] = [];
 
     for (let ci = 0; ci < chunks.length; ci++) {
@@ -144,14 +169,14 @@ export async function maybeIndexPdfIntoWiki(params: {
     }
 
     // Track this page (deduplicated)
-    if (!state.pagesSeen.includes(pageNum) && state.pagesSeen.length < MAX_TRACKED_PAGES) {
+    if (!state.pagesSeen.includes(pageNum) && state.pagesSeen.length < wikiConfig.maxTrackedPages) {
       state.pagesSeen.push(pageNum);
       state.pagesSeen.sort((a, b) => a - b);
     }
     state.chunkIds = [...(state.chunkIds || []), ...newChunkIds];
 
     // ── Step 3: Trigger gate ────────────────────────────────────────────────
-    if (state.pagesSeen.length - state.lastSummarizedPageCount < PAGE_BATCH_THRESHOLD) {
+    if (state.pagesSeen.length - state.lastSummarizedPageCount < wikiConfig.pageBatchThreshold) {
       await memoryManager.longTerm.save(cacheKey, state);
       return;
     }
@@ -161,23 +186,40 @@ export async function maybeIndexPdfIntoWiki(params: {
     const batchTexts: string[] = [];
     for (const pg of batchPageNums) {
       if (pg === pageNum) {
-        batchTexts.push(pageText);
+        batchTexts.push(effectivePageText);
       } else {
         try {
           const rendered = await renderPdfPage(absPdfPath, pg);
-          if (rendered?.text) batchTexts.push(rendered.text);
+          if (rendered?.text) {
+            let pgText = rendered.text;
+            if (rendered.image_coverage_ratio && rendered.image_path && shouldUseVision(rendered.image_coverage_ratio, pgText)) {
+              const visionDesc = await describePageVision(rendered.image_path, pdfBasename, pg, rendered.image_blocks, pgText, previousWikiContext);
+              if (visionDesc) pgText += visionDesc;
+            }
+            batchTexts.push(pgText);
+          }
         } catch (err) {
           console.error(`[pdf-wiki] Failed to render batch page ${pg}:`, err);
         }
       }
     }
-    const batchRaw = batchTexts.join('\n\n');
+    // Per-page proportional budget: divide batchRawMaxChars equally across pages so every
+    // page contributes regardless of length (avoids front-loading page 1 and dropping others).
+    const batchRaw = batchTexts.length > 0
+      ? batchTexts
+          .map((pt, i) => {
+            const perPageBudget = Math.floor(wikiConfig.batchRawMaxChars / batchTexts.length);
+            const clipped = pt.length > perPageBudget ? pt.slice(0, perPageBudget) + '\n... [page truncated]' : pt;
+            return `[Page ${batchPageNums[i] ?? i + 1}]\n${clipped}`;
+          })
+          .join('\n\n')
+      : '';
 
     // ── Step 5: Semantic retrieval (RAG) ────────────────────────────────────
-    const semanticQuery = summarizeTextLocally(batchRaw, 300);
+    const semanticQuery = summarizeTextLocally(batchRaw, wikiConfig.ragQuerySumChars);
     let ragChunksBlock = '(no related prior content found)';
     try {
-      const retrieved = await vectorStore.search(wsHash, semanticQuery, RAG_TOP_K) as any[];
+      const retrieved = await vectorStore.search(wsHash, semanticQuery, wikiConfig.ragTopK) as any[];
       // Filter to same PDF only
       const relevant = retrieved.filter(r =>
         r.metadata?.pdfPath === relativePdfPath && !batchPageNums.includes(r.metadata?.page)
@@ -218,25 +260,35 @@ export async function maybeIndexPdfIntoWiki(params: {
       ragChunksBlock,
       '',
       `## [NEW PAGES (batch ${state.lastSummarizedPageCount + 1}–${state.pagesSeen.length})]`,
-      batchRaw.slice(0, 3500),
+      batchRaw,
       '',
       '## Candidate Existing Wiki Pages (reference by exact title only)',
       candidateBlock,
       '',
       state.wikiTitle
         ? `Task: Update the wiki page. Preserve the title "${state.wikiTitle}" exactly. Integrate new content with the existing summary, using RAG-retrieved excerpts to resolve cross-references. Output: single JSON object {title, content, tags, links} or empty array [] if unsummarisable.`
-        : 'Task: Create a wiki page summarizing this document. Return ONLY a JSON array with zero or one element: { "title": "short descriptive title", "content": "wiki page body in markdown, under 3000 characters", "tags": ["pdf", ...], "links": ["<exact title from candidate list>", ...] }. Return [] if unsummarisable.',
+        : `Task: Create a wiki page summarizing this document. Return ONLY a JSON array with zero or one element: { "title": "short descriptive title", "content": "wiki page body in markdown, under ${wikiConfig.maxPageBodyBytes} characters", "tags": ["pdf", ...], "links": ["<exact title from candidate list>", ...] }. Return [] if unsummarisable.`,
     ].join('\n');
 
     const registry = ProviderRegistry.getInstance();
     const provider = registry.getAvailableProviders().find(p => p.id !== 'siliconflow') || registry.getProvider('gemini');
     if (!provider) return;
 
+    // Dynamically calculate output budget based on create/update task, page batch depth, and existing summary retention floor
+    const isCreate = !state.wikiTitle;
+    const batchBonus = batchPageNums.length * 80;
+    const summaryRetentionFloor = Math.ceil(existingSummary.length / 4);
+    const baseOutputTokens = isCreate ? 2400 : 1400;
+    const dynamicMaxTokens = Math.min(
+      wikiConfig.maxTokensLlmResponse,
+      Math.max(baseOutputTokens, summaryRetentionFloor + batchBonus)
+    );
+
     const response = await provider.chat({
       model: provider.models[0]?.id,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
-      max_tokens: 1500,
+      max_tokens: dynamicMaxTokens,
     });
 
     const rawText = typeof response.choices?.[0]?.message?.content === 'string'

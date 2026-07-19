@@ -17,6 +17,8 @@ import os from 'os';
 import { WikiMemory } from '../src/memory/wiki.js';
 import { memoryManager } from '../src/memory/index.js';
 import { ProviderRegistry } from '../src/providers/registry.js';
+import { wikiConfig } from '../src/config/wiki-config.js';
+
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -50,6 +52,16 @@ vi.mock('../src/tools/use-free-llm.js', () => ({
   summarizeTextLocally: vi.fn((text: string) => text.slice(0, 150)),
 }));
 
+const { shouldUseVisionMock, describePageVisionMock } = vi.hoisted(() => ({
+  shouldUseVisionMock: vi.fn().mockReturnValue(false),
+  describePageVisionMock: vi.fn().mockResolvedValue(''),
+}));
+vi.mock('../src/utils/PdfVisionHelper.js', () => ({
+  shouldUseVision: shouldUseVisionMock,
+  describePageVision: describePageVisionMock,
+}));
+export { shouldUseVisionMock, describePageVisionMock };
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const WS_HASH = 'pdf-rag-test-hash';
@@ -73,8 +85,16 @@ function mockProvider(rawJson: string) {
   return chat;
 }
 
-/** Call maybeIndexPdfIntoWiki for a given page number on the given PDF file. */
-async function callIndex(absPath: string, relPath: string, pageNum: number, pageText = `text-for-page-${pageNum}`, totalPages = 10) {
+async function callIndex(
+  absPath: string,
+  relPath: string,
+  pageNum: number,
+  pageText = `text-for-page-${pageNum}`,
+  totalPages = 10,
+  imageCoverageRatio?: number,
+  imagePath?: string | null,
+  imageBlocks?: Array<{ image_path: string; rect: number[]; width_pt: number; height_pt: number }>
+) {
   const { maybeIndexPdfIntoWiki } = await import('../src/memory/pdf-wiki.js');
   await maybeIndexPdfIntoWiki({
     workspaceRoot: path.dirname(absPath),
@@ -83,6 +103,9 @@ async function callIndex(absPath: string, relPath: string, pageNum: number, page
     totalPages,
     pageNum,
     pageText,
+    imageCoverageRatio,
+    imagePath,
+    imageBlocks,
   });
 }
 
@@ -306,5 +329,46 @@ describe('maybeIndexPdfIntoWiki — RAG pipeline', () => {
     expect(page).not.toBeNull();
     expect(page?.tags).toContain('pdf');
     expect(page?.tags).toContain('architecture');
+  });
+
+  // ── Test 11: Splices vision description on high coverage ──────────────────
+  it('splices vision description into pageText when image_coverage_ratio is high and text is sparse', async () => {
+    const { absPath, relPath } = await makePdf();
+    shouldUseVisionMock.mockReturnValueOnce(true);
+    describePageVisionMock.mockResolvedValueOnce('\n\n[Vision — page 1]\nA complex diagram of components.');
+
+    await callIndex(absPath, relPath, 1, 'sparse text', 10, 0.35, '/tmp/dummy.png', []);
+
+    // Check if the vector store received the augmented content
+    const calls = vectorUpsertMock.mock.calls;
+    const allContent = calls.map(([, item]: any) => item.content).join(' ');
+    expect(allContent).toContain('complex diagram');
+  });
+
+  // ── Test 12: Per-page proportional budget slicing ────────────────────────
+  it('clips each page text proportionally to batchRawMaxChars / numPages', async () => {
+    const chat = mockProvider(JSON.stringify([{ title: 'Budget', content: 'Clipped correctly.', tags: [], links: [] }]));
+    const { absPath, relPath } = await makePdf();
+
+    const originalMax = wikiConfig.batchRawMaxChars;
+    // 5 pages × budget forces ~20 chars per page
+    (wikiConfig as any).batchRawMaxChars = 100;
+
+    try {
+      for (let pg = 1; pg <= 5; pg++) {
+        const longText = `Page${pg}: ${'x'.repeat(200)} end of page ${pg}`;
+        await callIndex(absPath, relPath, pg, longText);
+      }
+
+      expect(chat).toHaveBeenCalled();
+      const promptSent = chat.mock.calls[0][0].messages[0].content;
+
+      // Each page must appear labelled in the prompt
+      expect(promptSent).toContain('[Page');
+      // Truncation marker must appear since pages are longer than per-page budget
+      expect(promptSent).toContain('[page truncated]');
+    } finally {
+      (wikiConfig as any).batchRawMaxChars = originalMax;
+    }
   });
 });

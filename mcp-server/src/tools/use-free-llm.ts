@@ -346,6 +346,9 @@ export async function resolvePdfRef(
         totalPages: renderResult.total_pages,
         pageNum: physicalPage,   // reuse already-rendered page, no extra subprocess
         pageText: textContent,
+        imageCoverageRatio: renderResult.image_coverage_ratio,
+        imagePath: renderResult.image_path,
+        imageBlocks: renderResult.image_blocks,
       }))
       .catch(err => console.error('[resolvePdfRef] PDF wiki indexing failed:', err));
   });
