@@ -1,18 +1,19 @@
 import { describe, it, expect, vi } from 'vitest';
+import { ProviderRegistry } from '../src/providers/registry.js';
+
+const mockProvider = {
+  id: 'gemini',
+  models: [{ id: 'gemini-3.1-flash-lite' }],
+  isAvailable: () => true,
+  chat: async (params?: any) => ({
+    choices: [{ message: { content: 'Mocked vision description.' } }]
+  })
+};
 
 vi.mock('../src/providers/registry.js', () => ({
   ProviderRegistry: {
     getInstance: () => ({
-      getAvailableProviders: () => [
-        {
-          id: 'gemini',
-          models: [{ id: 'gemini-3.1-flash-lite' }],
-          isAvailable: () => true,
-          chat: async () => ({
-            choices: [{ message: { content: 'Mocked vision description.' } }]
-          })
-        }
-      ]
+      getAvailableProviders: () => [mockProvider]
     })
   }
 }));
@@ -63,5 +64,42 @@ describe('PdfVisionHelper', () => {
     expect(desc).toContain('Mocked vision description.');
 
     await fs.remove(dummyPath);
+  });
+
+  it('describePageVision adjusts max_tokens dynamically', async () => {
+    const chatSpy = vi.spyOn(mockProvider, 'chat');
+
+    const fs = await import('fs-extra');
+    const path = await import('path');
+    const dummyPath = path.join(process.cwd(), 'scratch', 'dummy_test_tokens.png');
+    await fs.ensureDir(path.dirname(dummyPath));
+    await fs.writeFile(dummyPath, 'dummy data');
+
+    try {
+      // 1. First pass (no wiki context) -> expecting 500 for full page
+      await describePageVision(dummyPath, 'test.pdf', 5, [], 'page text', '');
+      expect(chatSpy).toHaveBeenCalled();
+      expect(chatSpy.mock.calls[0][0].max_tokens).toBe(500);
+
+      chatSpy.mockClear();
+
+      // 2. Subsequent pass (with wiki context) -> expecting 300 for full page
+      await describePageVision(dummyPath, 'test.pdf', 5, [], 'page text', 'existing wiki content');
+      expect(chatSpy.mock.calls[0][0].max_tokens).toBe(300);
+
+      chatSpy.mockClear();
+
+      // 3. Sub-blocks -> expecting area-scaled tokens between 100 and 200
+      // A 200x200 pt crop has area 40000. 40000 / 500000 * 800 = 64 -> floor capped at 100
+      await describePageVision(dummyPath, 'test.pdf', 5, [
+        { image_path: dummyPath, rect: [0, 0, 200, 200], width_pt: 200, height_pt: 200 }
+      ], 'page text', 'existing wiki content');
+      
+      // index 0 is full page (300 tokens), index 1 is the sub-block
+      expect(chatSpy.mock.calls[1][0].max_tokens).toBe(100);
+    } finally {
+      await fs.remove(dummyPath);
+      chatSpy.mockRestore();
+    }
   });
 });

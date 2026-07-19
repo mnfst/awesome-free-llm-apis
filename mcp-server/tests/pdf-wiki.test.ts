@@ -371,4 +371,43 @@ describe('maybeIndexPdfIntoWiki — RAG pipeline', () => {
       (wikiConfig as any).batchRawMaxChars = originalMax;
     }
   });
+
+  // ── Test 13: Dynamic token budget calculation ─────────────────────────────
+  it('calculates the dynamic max_tokens budget based on page count and existing summary size', async () => {
+    const chat = mockProvider(JSON.stringify([{ title: 'Dynamic Tokens', content: 'Testing tokens.', tags: [], links: [] }]));
+    const { absPath, relPath } = await makePdf();
+
+    // 1. Initial creation pass (isCreate = true, existingSummary = "")
+    for (let pg = 1; pg <= 5; pg++) {
+      await callIndex(absPath, relPath, pg);
+    }
+    expect(chat).toHaveBeenCalledTimes(1);
+    let chatArgs = chat.mock.calls[0][0];
+    const expectedCreateTokens = Math.min(
+      wikiConfig.maxTokensLlmResponse,
+      Math.max(2400, 0 + 5 * 80)
+    );
+    expect(chatArgs.max_tokens).toBe(expectedCreateTokens);
+
+    chat.mockClear();
+
+    // 2. Secondary update pass (isCreate = false, existingSummary is populated)
+    const wiki = new WikiMemory(WS_HASH, wikiDir);
+    // Write a large summary to the wiki page so the next pass reads a large existingSummary
+    const largeSummary = 'x'.repeat(8000);
+    await wiki.write('Dynamic Tokens', largeSummary, ['pdf'], []);
+
+    // Reference pages 6 to 10 to trigger the next 5-page batch
+    for (let pg = 6; pg <= 10; pg++) {
+      await callIndex(absPath, relPath, pg);
+    }
+
+    expect(chat).toHaveBeenCalledTimes(1);
+    chatArgs = chat.mock.calls[0][0];
+    const expectedUpdateTokens = Math.min(
+      wikiConfig.maxTokensLlmResponse,
+      Math.max(1400, Math.ceil(largeSummary.length / 4) + 5 * 80)
+    );
+    expect(chatArgs.max_tokens).toBe(expectedUpdateTokens);
+  });
 });
