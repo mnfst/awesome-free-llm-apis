@@ -168,7 +168,7 @@ export async function initWorkspace(workspaceRoot: string): Promise<boolean> {
     const tmpPath = `${agentsPath}.${Date.now()}.${Math.random().toString(36).substring(7)}.tmp`;
     await fs.writeFile(tmpPath, content, 'utf-8');
     await fs.rename(tmpPath, agentsPath);
-    console.log(`[free-llm-mcp] Created AGENTS.md in your workspace. This file guides how the AI assistant understands your project. Edit it to customize behavior.`);
+    console.error(`[free-llm-mcp] Created AGENTS.md in your workspace. This file guides how the AI assistant understands your project. Edit it to customize behavior.`);
     return true;
   } catch (err) {
     // Fallback to ~/.free-llm-mcp/agents-config.json when workspace is read-only

@@ -175,7 +175,7 @@ ${sanitizedContent.slice(0, 2000)}`;
                             const meta = JSON.parse(metaContent);
                             if (meta.lastCommitHash === currentCommitHash && currentCommitHash !== '') {
                                 runScan = false;
-                                console.log('[WorkspaceIndexer] Repository graph cache hit via Git commit hash');
+                                console.error('[WorkspaceIndexer] Repository graph cache hit via Git commit hash');
                             }
                         } catch {}
                     }
@@ -205,7 +205,7 @@ ${sanitizedContent.slice(0, 2000)}`;
                     lastScannedAt: Date.now()
                 };
                 await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-                console.log('[WorkspaceIndexer] Rebuilt repository dependency graph and wiki index.');
+                console.error('[WorkspaceIndexer] Rebuilt repository dependency graph and wiki index.');
             }
         } catch (err) {
             console.error('[WorkspaceIndexer] Failed to run repository dependency graph scanner:', err);

@@ -409,7 +409,7 @@ For example:
             offset: parsed.offset || 0,
             mtimeMs: currentMtimeMs
           });
-          console.log(`[resolvePdfRef] Saved index mapping for ${pdfName}: page ${pageNum}, offset ${parsed.offset}`);
+          console.error(`[resolvePdfRef] Saved index mapping for ${pdfName}: page ${pageNum}, offset ${parsed.offset}`);
         } else {
           await memoryManager.longTerm.save(memoryKey, {
             is_index: false,
