@@ -191,6 +191,29 @@ export class WikiMemory {
     return null;
   }
 
+  async list(): Promise<Array<Pick<WikiPage, 'title' | 'tier' | 'confidence' | 'tags' | 'updated' | 'links'>>> {
+    const files = await this.getWikiFiles();
+    const pages: Array<Pick<WikiPage, 'title' | 'tier' | 'confidence' | 'tags' | 'updated' | 'links'>> = [];
+    for (const f of files) {
+      try {
+        const raw = await fs.readFile(f, 'utf-8');
+        const { frontmatter } = parseFrontmatter(raw);
+        pages.push({
+          title: frontmatter.title || path.basename(f, '.md'),
+          tier: frontmatter.tier || 'episodic',
+          confidence: typeof frontmatter.confidence === 'number' ? frontmatter.confidence : 0.5,
+          tags: frontmatter.tags || [],
+          updated: frontmatter.updated || '',
+          links: (frontmatter.links || []).map((l: string) => l.replace(/^\[\[|\]\]$/g, ''))
+        });
+      } catch {
+        // ignore
+      }
+    }
+    pages.sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
+    return pages;
+  }
+
   private async writePage(
     title: string,
     content: string,

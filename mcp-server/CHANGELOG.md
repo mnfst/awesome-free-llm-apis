@@ -15,6 +15,7 @@
 
 - `browser_action` tool to be integrated with `use_free_llm` for browser automation tasks, leveraging `chrome-devtools-mcp` for headless browser control. Github scraping should be used to extract relevant information from repositories, and the tool should be able to handle dynamic content loading and pagination.
 - Assess migration to stream mode for supported providers to reduce latency and token wastage on long responses.
+- `coding_agents` tool which uses ollama driven local coding agents which has middleware acess to the workspace and can be used to generate code snippets, refactor code, and also to be able to understand the codebase and apply patches and preview diffs based on quantum based reasoning loops with lsp server integration for code understanding.
 
 ---
 
@@ -53,8 +54,7 @@
 - Github repo scanning in middleware(if github urls are present) using githubusercontent and github api(Similar to the one implemented in `skill_loader`) to understand the working of the repo and also to be able to identify the dependencies between files and also to be able to identify the function calls across multiple files in a project and also to be able to identify the variable/dataflow across multiple files in a project.
 - For cyber tools available in github we can maintain global wiki and update it based on sucess rate.
 - Intelligent context extraction needs to corellate variable/dataflow or function calls across files and also to be able to identify the dependencies between. (eg. `jsCode` and `pythonCode` in n8n workflow json files [Our context extraction should know that it is a JavaScript code snippet that is a part of a workflow], or function calls across multiple files in a project,github actions workflow etc.)
-- LLM Wikiv2 full integration with `use_free_llm` and also other tools.
-- Wiki maintenance and update mechanism to be added to the middleware to keep the wiki up to date with the latest changes in the project and also to be able to add and apply entanglement to the wiki as required.
+- Wiki maintenance and update mechanism to be added to the middleware to keep the wiki up to date with the latest changes in the project and also to be able to add and relate them using a rag based mechanism.
 - Wiki rendering with link clicking and also to be able to add and apply entanglement to the wiki as required.
 - Conversation mechanism for all tools to be displayed in the dashboard with filtering and search capabilities.
 

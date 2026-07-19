@@ -24,6 +24,7 @@
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@types/multer": "^2.2.0",
     "cohere-ai": "^7.21.0",
     "cors": "^2.8.6",
     "express": "^4.21.2",
@@ -33,6 +34,7 @@
     "ignore": "^7.0.5",
     "js-tiktoken": "^1.0.21",
     "lru-cache": "^11.0.0",
+    "multer": "^2.2.0",
     "node-fetch": "^3.3.2",
     "node-localstorage": "^3.0.5",
     "quickjs-emscripten": "^0.29.0",

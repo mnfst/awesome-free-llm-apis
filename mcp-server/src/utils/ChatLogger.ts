@@ -1,7 +1,7 @@
 import path from 'path';
 import os from 'os';
 import { writeFileAtomic } from './FileUtils.js';
-import { readFile, ensureDir } from 'fs-extra';
+import fs from 'fs-extra';
 
 const PROJECTS_DIR = path.join(os.homedir(), '.free-llm-mcp', 'projects');
 
@@ -17,10 +17,10 @@ function truncate(s: string, max: number): string {
 export async function logChatTurn(sessionId: string, turn: Record<string, any>): Promise<void> {
   try {
     const logPath = path.join(PROJECTS_DIR, sessionId, 'chat-log.json');
-    await ensureDir(path.dirname(logPath));
+    await fs.ensureDir(path.dirname(logPath));
     let log: any[] = [];
     try {
-      const raw = await readFile(logPath, 'utf-8');
+      const raw = await fs.readFile(logPath, 'utf-8');
       log = JSON.parse(raw);
     } catch { /* start fresh */ }
     log.push({ ts: Date.now(), ...turn });

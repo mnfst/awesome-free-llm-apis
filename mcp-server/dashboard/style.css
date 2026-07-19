@@ -639,6 +639,78 @@ select option { background: var(--bg-elevated); }
   flex-shrink: 0;
 }
 
+/* Attachments row */
+.pg-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px;
+}
+.pg-attachments:empty { display: none; }
+.attach-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--glass-border);
+  font-size: .72rem;
+  color: var(--text-secondary);
+}
+.attach-chip input[type="number"] {
+  width: 48px;
+  font-size: .72rem;
+  padding: 2px 4px;
+}
+.attach-chip .attach-remove {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.attach-chip .attach-remove:hover { color: var(--accent-red); }
+
+/* Wiki tab */
+.wiki-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.wiki-sidebar { max-height: 620px; display: flex; flex-direction: column; }
+.wiki-page-list { overflow-y: auto; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.wiki-page-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .78rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wiki-page-item:hover { background: rgba(255,255,255,.05); }
+.wiki-page-item.active { background: rgba(255,255,255,.08); color: var(--text-primary); }
+.wiki-content-pane { min-height: 400px; }
+.wiki-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px 16px;
+}
+.wiki-related:empty { display: none; }
+.wiki-link-chip {
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--glass-border);
+  font-size: .72rem;
+  color: var(--accent-cyan);
+  cursor: pointer;
+}
+.wiki-link-chip:hover { background: rgba(255,255,255,.1); }
+.wiki-link { color: var(--accent-cyan); cursor: pointer; text-decoration: underline; }
+
 /* ─── Chat Bubbles ─────────────────────────────────────────────── */
 .chat-msg {
   display: flex;

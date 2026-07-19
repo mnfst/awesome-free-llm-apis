@@ -51,6 +51,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
         Memory
       </button>
+      <button class="tab-btn" data-tab="wiki" role="tab" aria-selected="false" id="tab-wiki">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Wiki
+      </button>
       <button class="tab-btn" data-tab="profile" role="tab" aria-selected="false" id="tab-profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Profile & Leaderboard
@@ -240,8 +244,15 @@
             </div>
           </div>
 
+          <!-- Attachments row -->
+          <div class="pg-attachments" id="pg-attachments"></div>
+
           <!-- Send bar -->
           <div class="pg-send-bar">
+            <input type="file" id="pg-file-input" accept="image/*,application/pdf" style="display:none;">
+            <button class="btn btn-outline btn-sm" id="pg-attach-btn" title="Attach image or PDF">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
             <span id="pg-status" style="font-size:.72rem;color:var(--text-muted);"></span>
             <span id="pg-latency" class="latency-badge" style="display:none;"></span>
             <button class="btn btn-primary" id="pg-run-btn" style="margin-left:auto;gap:6px;">
@@ -251,6 +262,45 @@
           </div>
         </div>
 
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TAB: WIKI
+    ══════════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="panel-wiki" role="tabpanel" aria-labelledby="tab-wiki">
+      <div class="section-title">📖 Workspace Wiki</div>
+      <div class="section-sub">Browse pages the agent has written to memory for a workspace. Click a page or a related-page chip to navigate.</div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-body">
+          <div class="session-controls">
+            <label class="field-label" style="margin:0;white-space:nowrap;" for="wiki-workspace-input">Workspace</label>
+            <input type="text" id="wiki-workspace-input" class="session-input" placeholder="workspace path used to look up its wiki">
+            <button class="btn btn-primary btn-sm" id="wiki-load-btn">Load Wiki</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="wiki-layout">
+        <div class="card wiki-sidebar">
+          <div class="card-header" style="padding:10px 16px;">
+            <span class="card-title" style="font-size:.82rem;">Pages</span>
+          </div>
+          <div class="card-body wiki-page-list" id="wiki-page-list">
+            <div class="conv-empty">Load a workspace to see its wiki pages.</div>
+          </div>
+        </div>
+
+        <div class="card wiki-content-pane">
+          <div class="card-header" style="padding:10px 16px;">
+            <span class="card-title" id="wiki-page-title" style="font-size:.82rem;">No page selected</span>
+          </div>
+          <div class="card-body" id="wiki-page-body">
+            <div class="conv-empty">Select a page from the list.</div>
+          </div>
+          <div class="wiki-related" id="wiki-related"></div>
+        </div>
       </div>
     </section>
 

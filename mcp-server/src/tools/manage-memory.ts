@@ -3,7 +3,7 @@ import { WorkspaceScanner } from '../cache/workspace.js';
 import { ContextManager } from '../utils/ContextManager.js';
 
 export interface ManageMemoryInput {
-    action: 'search' | 'list' | 'stats' | 'clear' | 'wiki_search' | 'wiki_write';
+    action: 'search' | 'list' | 'stats' | 'clear' | 'wiki_search' | 'wiki_write' | 'wiki_list' | 'wiki_read';
     workspace_root?: string;
     query?: string;
     limit?: number;
@@ -34,6 +34,18 @@ export async function manageMemory(input: ManageMemoryInput) {
             const wiki = memoryManager.getWiki(namespace || wsHash);
             const page = await wiki.write(title, content, tags || [], links || []);
             return { success: true, page };
+        }
+        case 'wiki_list': {
+            const wiki = memoryManager.getWiki(namespace || wsHash);
+            return { pages: await wiki.list() };
+        }
+        case 'wiki_read': {
+            if (!title) {
+                throw new Error('wiki_read requires `title`.');
+            }
+            const wiki = memoryManager.getWiki(namespace || wsHash);
+            const page = await wiki.read(title);
+            return { page };
         }
         case 'stats':
             return await memoryManager.getCompressionStats();

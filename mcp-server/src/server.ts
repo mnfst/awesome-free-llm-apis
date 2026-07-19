@@ -35,6 +35,7 @@ import { createMCPServer } from './mcp/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import helmet from 'helmet';
+import multer from 'multer';
 import crypto from 'crypto';
 import os from 'os';
 import { getTokenStats } from './tools/get-token-stats.js';
@@ -374,6 +375,10 @@ async function main() {
                 workspace_root: params.workspace_root,
                 query: params.query,
                 limit: params.limit,
+                title: params.title,
+                content: params.content,
+                tags: params.tags,
+                links: params.links,
               });
               break;
             case 'index_workspace':
@@ -411,6 +416,55 @@ async function main() {
           res.json({ ok: true, latencyMs: Date.now() - start, result });
         } catch (err: any) {
           res.status(500).json({ ok: false, latencyMs: Date.now() - start, error: String(err?.message || err) });
+        }
+      });
+
+      // File upload for the Tool Playground chatbox — image/PDF attachments.
+      // Stored under the selected workspace so vision_tool's boundary check and
+      // use-free-llm's file:// resolver (both scoped to workspace_root) can read them back.
+      const uploadStorage = multer.memoryStorage();
+      const upload = multer({
+        storage: uploadStorage,
+        limits: { fileSize: 20 * 1024 * 1024 },
+        fileFilter: (_req, file, cb) => {
+          if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+            cb(null, true);
+          } else {
+            cb(new Error('Only image and PDF files are allowed'));
+          }
+        },
+      });
+
+      app.post('/api/upload', upload.single('file'), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const file = (req as any).file as Express.Multer.File | undefined;
+          if (!file) {
+            res.status(400).json({ error: 'No file uploaded' });
+            return;
+          }
+          const workspaceRoot = (req.body?.workspace_root || '').toString().trim();
+          const safeName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+          let destDir: string;
+          let relativePath: string | undefined;
+          if (workspaceRoot) {
+            const wsAbs = path.resolve(workspaceRoot);
+            destDir = path.join(wsAbs, '.mcp-uploads');
+            relativePath = path.join('.mcp-uploads', safeName);
+          } else {
+            destDir = path.join(os.tmpdir(), 'mcp-uploads');
+          }
+
+          await fsp.mkdir(destDir, { recursive: true });
+          const absPath = path.join(destDir, safeName);
+          await fsp.writeFile(absPath, file.buffer);
+
+          const fileUri = 'file:///' + absPath.replace(/\\/g, '/');
+          const kind = file.mimetype === 'application/pdf' ? 'pdf' : 'image';
+          res.json({ absPath, fileUri, relativePath: relativePath?.replace(/\\/g, '/'), kind });
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
         }
       });
 

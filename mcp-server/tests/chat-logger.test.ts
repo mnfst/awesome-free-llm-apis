@@ -25,11 +25,18 @@ const { readFileMock } = vi.hoisted(() => ({
   readFileMock: vi.fn(),
 }));
 vi.mock('fs-extra', async () => {
-  const real = await vi.importActual<typeof import('fs-extra')>('fs-extra');
-  return {
-    ...real,
+  const real = await vi.importActual<any>('fs-extra');
+  const defaultExport = real.default || real;
+  const mocked = {
+    ...defaultExport,
     readFile: readFileMock,
     ensureDir: vi.fn().mockResolvedValue(undefined),
+  };
+  return {
+    ...real,
+    default: mocked,
+    readFile: readFileMock,
+    ensureDir: mocked.ensureDir,
   };
 });
 

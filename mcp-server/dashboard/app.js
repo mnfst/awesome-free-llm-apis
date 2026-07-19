@@ -70,6 +70,10 @@ async function renderMarkdown(text) {
       .replace(/\*\*([^*]+)\*\*/g, (_, t) => `<strong>${t}</strong>`)
       // Italic
       .replace(/\*([^*]+)\*/g, (_, t) => `<em>${t}</em>`)
+      // Wiki-style internal links: [[Title]] — text here is already HTML-escaped by the esc(part) pass above
+      .replace(/\[\[([^\]]+)\]\]/g, (_, title) => `<a href="#" class="wiki-link" data-title="${title.replace(/"/g, '&quot;')}">${title}</a>`)
+      // Markdown links: [text](url) — only http(s) URLs become real links, everything else stays plain text
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, text, url) => `<a href="${url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer">${text}</a>`)
       // H1-H3
       .replace(/^### (.+)$/gm, '<h3 style="font-size:.85rem;color:var(--text-primary);margin:10px 0 4px;">$1</h3>')
       .replace(/^## (.+)$/gm, '<h2 style="font-size:.95rem;color:var(--text-primary);margin:12px 0 6px;">$1</h2>')
@@ -125,6 +129,7 @@ tabBtns.forEach(btn => {
     if (target === 'providers') fetchStats();
     if (target === 'playground') ensureModels();
     if (target === 'profile')  { fetchUserConfig(); fetchLeaderboard(); }
+    if (target === 'wiki')     { initWikiTab(); }
   });
 });
 
@@ -583,6 +588,125 @@ const convSearch    = document.getElementById('pg-conv-search');
 // In-memory cache of current conversation (avoids re-fetching for every append)
 let chatHistory = [];
 let activeSessionId = '__no_ws__';
+
+// ─── FILE ATTACHMENTS ───────────────────────────────────────────
+const pgAttachBtn   = document.getElementById('pg-attach-btn');
+const pgFileInput   = document.getElementById('pg-file-input');
+const pgAttachments = document.getElementById('pg-attachments');
+
+let attachments = []; // { id, kind, fileUri, relativePath, filename, page, targetFieldId }
+let attachIdSeq = 0;
+
+function getPrimaryTextFieldId(tool) {
+  const f = tool.fields.find(f => f.type === 'textarea');
+  return f ? f.id : null;
+}
+
+function insertTokenIntoField(fieldId, token) {
+  const el = document.getElementById(`pg-field-${fieldId}`);
+  if (!el) return;
+  const sep = el.value && !el.value.endsWith('\n') && !el.value.endsWith(' ') ? ' ' : '';
+  el.value = `${el.value}${sep}${token}`;
+}
+
+function replaceTokenInField(fieldId, oldToken, newToken) {
+  const el = document.getElementById(`pg-field-${fieldId}`);
+  if (!el) return;
+  el.value = el.value.replace(oldToken, newToken);
+}
+
+function removeTokenFromField(fieldId, token) {
+  const el = document.getElementById(`pg-field-${fieldId}`);
+  if (!el) return;
+  el.value = el.value.replace(token, '').replace(/\s{2,}/g, ' ').trim();
+}
+
+function renderAttachments() {
+  pgAttachments.innerHTML = attachments.map(a => `
+    <span class="attach-chip" data-attach-id="${a.id}">
+      📎 ${esc(a.filename)}
+      ${a.kind === 'pdf' ? `<input type="number" min="1" value="${a.page}" class="attach-page-input" data-attach-id="${a.id}" title="PDF page number">` : ''}
+      <span class="attach-remove" data-attach-id="${a.id}">×</span>
+    </span>
+  `).join('');
+
+  pgAttachments.querySelectorAll('.attach-remove').forEach(btn => {
+    btn.addEventListener('click', () => removeAttachment(btn.dataset.attachId));
+  });
+  pgAttachments.querySelectorAll('.attach-page-input').forEach(inp => {
+    inp.addEventListener('change', () => updateAttachmentPage(inp.dataset.attachId, inp.value));
+  });
+}
+
+function updateAttachmentPage(id, newPageStr) {
+  const a = attachments.find(a => a.id === id);
+  if (!a) return;
+  const newPage = Math.max(1, parseInt(newPageStr, 10) || 1);
+  const oldToken = a.token;
+  a.token = a.token.replace(/:\d+$/, `:${newPage}`);
+  a.page = newPage;
+  if (a.targetFieldId) replaceTokenInField(a.targetFieldId, oldToken, a.token);
+}
+
+function removeAttachment(id) {
+  const a = attachments.find(a => a.id === id);
+  if (!a) return;
+  if (a.targetFieldId) {
+    if (a.isDirectFieldValue) {
+      const el = document.getElementById(`pg-field-${a.targetFieldId}`);
+      if (el && el.value === a.token) el.value = '';
+    } else {
+      removeTokenFromField(a.targetFieldId, a.token);
+    }
+  }
+  attachments = attachments.filter(x => x.id !== id);
+  renderAttachments();
+}
+
+async function handleFileSelected(file) {
+  if (!file) return;
+  const ws = pgWorkspace.value.trim();
+  const formData = new FormData();
+  formData.append('file', file);
+  if (ws) formData.append('workspace_root', ws);
+
+  pgAttachBtn.disabled = true;
+  try {
+    const r = await fetch('/api/upload', { method: 'POST', body: formData });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Upload failed');
+
+    const id = `att-${++attachIdSeq}`;
+    const isVisionTool = activeTool.id === 'vision_tool';
+
+    if (d.kind === 'image' && isVisionTool) {
+      // Fill image_path directly — that field already exists on vision_tool
+      const el = document.getElementById('pg-field-image_path');
+      if (el) el.value = d.fileUri;
+      attachments.push({ id, kind: 'image', filename: file.name, token: d.fileUri, targetFieldId: 'image_path', isDirectFieldValue: true });
+    } else if (d.kind === 'image') {
+      const fieldId = getPrimaryTextFieldId(activeTool);
+      if (fieldId) insertTokenIntoField(fieldId, d.fileUri);
+      attachments.push({ id, kind: 'image', filename: file.name, token: d.fileUri, targetFieldId: fieldId });
+    } else {
+      // PDF — embed as pdf://<relativePath>:<page>, page editable via the chip
+      const ref = d.relativePath || d.absPath.replace(/\\/g, '/');
+      const token = `pdf://${ref}:1`;
+      const fieldId = getPrimaryTextFieldId(activeTool);
+      if (fieldId) insertTokenIntoField(fieldId, token);
+      attachments.push({ id, kind: 'pdf', filename: file.name, token, page: 1, targetFieldId: fieldId });
+    }
+    renderAttachments();
+  } catch (err) {
+    alert(`Upload failed: ${err.message}`);
+  } finally {
+    pgAttachBtn.disabled = false;
+    pgFileInput.value = '';
+  }
+}
+
+pgAttachBtn?.addEventListener('click', () => pgFileInput.click());
+pgFileInput?.addEventListener('change', () => handleFileSelected(pgFileInput.files[0]));
 
 // ─── Session ID resolution (server-side, so all instances agree) ──
 async function resolveSessionId(ws) {
@@ -1085,6 +1209,8 @@ pgRunBtn.addEventListener('click', async () => {
     pgRunBtn.disabled = false;
     pgRunBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
     refreshConvList(); // update message count in sidebar
+    attachments = [];
+    renderAttachments();
   }
 });
 
@@ -1097,6 +1223,8 @@ pgClearBtn.addEventListener('click', async () => {
   chatEmpty.style.display = 'flex';
   pgStatus.textContent = '';
   pgLatency.style.display = 'none';
+  attachments = [];
+  renderAttachments();
   refreshConvList();
 });
 
@@ -1386,3 +1514,100 @@ setInterval(() => {
   const memActive = document.getElementById('panel-memory')?.classList.contains('active');
   if (memActive) fetchSessions();
 }, 10000);
+
+// ─── WIKI TAB ───────────────────────────────────────────────────
+const wikiWorkspaceInput = document.getElementById('wiki-workspace-input');
+const wikiLoadBtn        = document.getElementById('wiki-load-btn');
+const wikiPageList       = document.getElementById('wiki-page-list');
+const wikiPageTitle      = document.getElementById('wiki-page-title');
+const wikiPageBody       = document.getElementById('wiki-page-body');
+const wikiRelated        = document.getElementById('wiki-related');
+
+let wikiInitialized = false;
+let wikiActiveTitle = null;
+
+function initWikiTab() {
+  if (!wikiInitialized) {
+    wikiInitialized = true;
+    const savedWs = localStorage.getItem('mcp-workspace');
+    if (savedWs) {
+      wikiWorkspaceInput.value = savedWs;
+      loadWikiList();
+    }
+  }
+}
+
+async function callManageMemory(params) {
+  const r = await fetch('/api/tool', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tool: 'manage_memory', params: { ...params, workspace_root: wikiWorkspaceInput.value.trim() } })
+  });
+  const d = await r.json();
+  if (!r.ok || d.ok === false) throw new Error(d.error || 'Request failed');
+  return d.result;
+}
+
+async function loadWikiList() {
+  wikiPageList.innerHTML = '<div class="conv-empty">Loading…</div>';
+  try {
+    const result = await callManageMemory({ action: 'wiki_list' });
+    const pages = result.pages || [];
+    if (!pages.length) {
+      wikiPageList.innerHTML = '<div class="conv-empty">No wiki pages yet for this workspace.</div>';
+      return;
+    }
+    wikiPageList.innerHTML = pages.map(p => `
+      <div class="wiki-page-item${p.title === wikiActiveTitle ? ' active' : ''}" data-title="${esc(p.title)}">
+        <span>${esc(p.title)}</span>
+        <span class="badge ${p.tier === 'semantic' ? 'badge-green' : 'badge-amber'}" style="width:fit-content;font-size:.62rem;">${esc(p.tier)} · ${Math.round((p.confidence||0)*100)}%</span>
+      </div>
+    `).join('');
+    wikiPageList.querySelectorAll('.wiki-page-item').forEach(el => {
+      el.addEventListener('click', () => loadWikiPage(el.dataset.title));
+    });
+  } catch (err) {
+    wikiPageList.innerHTML = `<div class="conv-empty">Failed to load: ${esc(err.message)}</div>`;
+  }
+}
+
+async function loadWikiPage(title) {
+  wikiActiveTitle = title;
+  wikiPageTitle.textContent = title;
+  wikiPageBody.innerHTML = '<div class="conv-empty">Loading…</div>';
+  wikiRelated.innerHTML = '';
+  wikiPageList.querySelectorAll('.wiki-page-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.title === title);
+  });
+  try {
+    const result = await callManageMemory({ action: 'wiki_read', title });
+    const page = result.page;
+    if (!page) {
+      wikiPageBody.innerHTML = '<div class="conv-empty">Page not found.</div>';
+      return;
+    }
+    wikiPageBody.innerHTML = await renderMarkdown(page.content);
+    if (page.links && page.links.length) {
+      wikiRelated.innerHTML = page.links.map(l => `<span class="wiki-link-chip" data-title="${esc(l)}">${esc(l)}</span>`).join('');
+      wikiRelated.querySelectorAll('.wiki-link-chip').forEach(el => {
+        el.addEventListener('click', () => loadWikiPage(el.dataset.title));
+      });
+    }
+  } catch (err) {
+    wikiPageBody.innerHTML = `<div class="conv-empty">Failed to load page: ${esc(err.message)}</div>`;
+  }
+}
+
+// Delegated click handler for [[wiki links]] rendered inline by renderMarkdown()
+wikiPageBody?.addEventListener('click', (e) => {
+  const a = e.target.closest('.wiki-link');
+  if (a) {
+    e.preventDefault();
+    loadWikiPage(a.dataset.title);
+  }
+});
+
+wikiLoadBtn?.addEventListener('click', loadWikiList);
+wikiWorkspaceInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') loadWikiList();
+});
