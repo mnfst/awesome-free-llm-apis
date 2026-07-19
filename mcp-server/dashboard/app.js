@@ -5,6 +5,12 @@
 'use strict';
 
 // ─── Utility ────────────────────────────────────────────────────
+function modelBadge(model, provider) {
+  if (!model && !provider) return '';
+  const label = provider && model ? `${provider}/${model}` : (provider || model);
+  return `<span class="latency-badge model-badge" style="display:inline-flex;" title="Model used for this call">🧬 ${esc(label)}</span>`;
+}
+
 function esc(str) {
   if (!str) return '';
   const d = document.createElement('div');
@@ -92,16 +98,24 @@ async function renderMarkdown(text) {
   return `<div class="md-body" style="line-height:1.6;font-size:.82rem;color:var(--text-secondary);">${rendered.join('')}</div>`;
 }
 
-// Smart response renderer: detect markdown vs JSON
+// Smart response renderer: extracts the actual message text (result / result.content)
+// and renders it as markdown regardless of whether it "looks like" markdown — the
+// markdown-indicator regex used to gate this, so plain short replies (e.g. "OK", "9")
+// fell through to a raw JSON dump of the whole result object, which meant metadata
+// fields like `model`/`provider` (added for the UI badges, never meant to be shown as
+// message text) ended up printed inline in the chat bubble. Falls back to a JSON dump
+// only when there's genuinely no string content field to render.
 async function renderResponse(data) {
   const result = data.result ?? data;
-  // If result is a plain string with markdown indicators
-  if (typeof result === 'string' && /[#*`\n]|```/.test(result)) {
+  // Plain string result
+  if (typeof result === 'string') {
     return await renderMarkdown(result);
   }
-  // Nested content field (common MCP response shape)
-  if (result?.content && typeof result.content === 'string' && /[#*`\n]|```/.test(result.content)) {
-    return await renderMarkdown(result.content);
+  // Nested text field — different tools use different keys (use_free_llm/vision_tool
+  // use `content`/`response`, execute_skill uses `response`, etc.)
+  const nestedText = result?.content ?? result?.response;
+  if (typeof nestedText === 'string') {
+    return await renderMarkdown(nestedText);
   }
   const SIZE_THRESHOLD = 100 * 1024; // 100KB
   const jsonStr = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
@@ -783,14 +797,14 @@ function appendBubbleFromRecord(msg) {
     const el = addSpinnerBubble(msg.tool);
     renderMarkdown(msg.content).then(html => {
       if (!el.isConnected) return;
-      replaceSpinnerWithResponse(el, html, msg.latencyMs, msg.tool, msg.ts, false);
+      replaceSpinnerWithResponse(el, html, msg.latencyMs, msg.tool, msg.ts, false, msg.model, msg.provider);
     });
   } else if (msg.role === 'error') {
     addErrorBubbleEl(msg.content, msg.tool, msg.ts);
   } else if (msg.role === 'subtask_start') {
     addSubtaskStartBubble(msg.content, msg.ts);
   } else if (msg.role === 'subtask_response') {
-    addSubtaskResponseBubble(msg.content, msg.output, msg.ts, msg.contextInjected);
+    addSubtaskResponseBubble(msg.content, msg.output, msg.ts, msg.contextInjected, msg.model, msg.provider);
   } else if (msg.role === 'tool_call') {
     addToolCallBubble(msg.tool, msg.args, msg.result, msg.ts, msg.latencyMs, msg.isError);
   }
@@ -814,7 +828,7 @@ function addSubtaskStartBubble(taskText, ts) {
   return div;
 }
 
-function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected) {
+function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected, model, provider) {
   chatEmpty.style.display = 'none';
   
   // Remove any active spinner for this subtask to keep the flow clean
@@ -861,7 +875,7 @@ function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected) {
       ${contextHtml}
     </div>
     <div class="chat-meta" style="margin-left: 16px;">
-      <span>Subagent Execution</span>
+      ${modelBadge(model, provider)}<span>Subagent Execution</span>
       <span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
     </div>`;
   
@@ -969,7 +983,7 @@ function addSpinnerBubble(tool) {
   return div;
 }
 
-function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save = true) {
+function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save = true, model, provider) {
   const div = document.createElement('div');
   div.className = 'chat-msg assistant';
   const latBadge = latencyMs != null
@@ -977,7 +991,7 @@ function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save =
     : '';
   div.innerHTML = `
     <div class="chat-bubble">${html}</div>
-    <div class="chat-meta">${latBadge}<span>${esc(tool)}</span><span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
+    <div class="chat-meta">${latBadge}${modelBadge(model, provider)}<span>${esc(tool)}</span><span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
       <button class="chat-copy-btn" onclick="navigator.clipboard.writeText(this.closest('.chat-msg').querySelector('.chat-bubble').innerText);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500);">Copy</button>
     </div>`;
   spinnerEl.replaceWith(div);
@@ -1146,7 +1160,8 @@ pgRunBtn.addEventListener('click', async () => {
   saveTurn(activeSessionId, userTurn);
   addUserBubbleEl(userText, activeTool.id, ts);
 
-  const spinnerEl = addSpinnerBubble(activeTool.id);
+  let spinnerEl = addSpinnerBubble(activeTool.id);
+  let requestDone = false;
 
   pgRunBtn.disabled = true;
   pgRunBtn.innerHTML = '<span class="spinner"></span>';
@@ -1160,6 +1175,14 @@ pgRunBtn.addEventListener('click', async () => {
       if (log.length !== chatHistory.length) {
         chatHistory = log;
         rebuildChatLog();
+        // rebuildChatLog() wipes chatLog.innerHTML, which destroys the spinner
+        // bubble appended below — without re-adding it, the spinner silently
+        // disappears (and the later spinnerEl.replaceWith() below becomes a
+        // no-op on a detached node) as soon as any mid-flight server-side turn
+        // (a tool call, an agentic subtask) lands before the final response.
+        if (!requestDone) {
+          spinnerEl = addSpinnerBubble(activeTool.id);
+        }
       }
     } catch {}
   }, 800);
@@ -1180,11 +1203,15 @@ pgRunBtn.addEventListener('click', async () => {
     } else {
       const html    = await renderResponse(data);
       const rawText = (data.result ?? data);
-      const content = typeof rawText === 'string' ? rawText : JSON.stringify(rawText, null, 2);
-      const assistantTurn = { role: 'assistant', tool: activeTool.id, content, latencyMs, ts: replyTs };
+      const nestedText = rawText?.content ?? rawText?.response;
+      const content = typeof rawText === 'string' ? rawText
+        : (typeof nestedText === 'string' ? nestedText : JSON.stringify(rawText, null, 2));
+      const respModel = data.result?.model;
+      const respProvider = data.result?.provider;
+      const assistantTurn = { role: 'assistant', tool: activeTool.id, content, latencyMs, ts: replyTs, model: respModel, provider: respProvider };
       chatHistory.push(assistantTurn);
       saveTurn(activeSessionId, assistantTurn);
-      replaceSpinnerWithResponse(spinnerEl, html, latencyMs, activeTool.id, replyTs);
+      replaceSpinnerWithResponse(spinnerEl, html, latencyMs, activeTool.id, replyTs, true, respModel, respProvider);
       if (latencyMs != null) {
         pgLatency.textContent = `${latencyMs}ms`;
         pgLatency.className = `latency-badge${latencyMs > 3000 ? ' slow' : ''}`;
@@ -1200,6 +1227,7 @@ pgRunBtn.addEventListener('click', async () => {
     spinnerEl.replaceWith(addErrorBubbleEl(errMsg, activeTool.id, Date.now()));
     pgStatus.textContent = '✗ Error'; pgStatus.style.color = 'var(--accent-red)';
   } finally {
+    requestDone = true;
     clearInterval(pollInterval);
     // Do one final sync to ensure everything is matched up
     try {

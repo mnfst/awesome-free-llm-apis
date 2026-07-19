@@ -37,7 +37,6 @@ export interface PersistentUsage {
 
 export class PersistenceManager {
   private filePath: string;
-  private isLocal: boolean = false;
   private lastSavedState: PersistentUsage | null = null;
 
   constructor(customPath?: string) {
@@ -45,21 +44,18 @@ export class PersistenceManager {
   }
 
   /**
-   * Resolves the persistence path:
-   * 1. Check current directory for .mcp-usage.json
-   * 2. Fallback to ~/.free-llm-mcp/usage-stats.json
+   * Resolves the persistence path. Always the canonical global location unless
+   * explicitly overridden via MCP_USAGE_PATH — this file holds the Firebase
+   * identity (firebaseUid/firebaseRefreshToken), so it must resolve to the same
+   * path regardless of the process's current working directory. Previously this
+   * probed `cwd()` for a local `.mcp-usage.json` and silently preferred it when
+   * present, which meant launching the server from a different directory (e.g.
+   * different MCP client configs) would read/write a different state file —
+   * appearing as the server "creating a new user" and losing quota history.
    */
   private resolvePath(): string {
-    const localPath = path.join(process.cwd(), '.mcp-usage.json');
-    try {
-      if (fs.existsSync(localPath)) {
-        // Test writability
-        fs.accessSync(localPath, fs.constants.W_OK);
-        this.isLocal = true;
-        return localPath;
-      }
-    } catch (e) {
-      // Not writable or doesn't exist
+    if (process.env.MCP_USAGE_PATH) {
+      return process.env.MCP_USAGE_PATH;
     }
 
     const homeDir = os.homedir();
@@ -74,9 +70,7 @@ export class PersistenceManager {
    */
   async ensureStorage(): Promise<boolean> {
     try {
-      if (!this.isLocal) {
-        await fs.ensureDir(path.dirname(this.filePath));
-      }
+      await fs.ensureDir(path.dirname(this.filePath));
       return true;
     } catch (e) {
       console.error('Failed to ensure storage directory:', e);
@@ -107,7 +101,7 @@ export class PersistenceManager {
         return resetData;
       }
     } catch (e) {
-      console.warn('[PersistenceManager] Telemetry/Usage file tampered or corrupted! resetting state...');
+      console.warn(`[PersistenceManager] Failed to read/decrypt usage state at ${this.filePath} — resetting state (including Firebase identity). Cause: ${(e as Error)?.message || e}`);
     }
 
     this.lastSavedState = JSON.parse(JSON.stringify(emptyState));

@@ -350,7 +350,7 @@ async function main() {
                 workspace_root: params.workspace_root,
                 sessionId: sid || '__no_ws__',
               });
-              result = { content: r?.choices?.[0]?.message?.content ?? '' };
+              result = { content: r?.choices?.[0]?.message?.content ?? '', model: r?.model, provider: r?._providerId };
               break;
             }
             case 'vision_tool':

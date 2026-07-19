@@ -438,6 +438,7 @@ select option { background: var(--bg-elevated); }
   border: 1px solid rgba(16,185,129,.2);
 }
 .latency-badge.slow { background: rgba(245,158,11,.1); color: var(--accent-amber); border-color: rgba(245,158,11,.2); }
+.model-badge { background: rgba(6,182,212,.1); color: var(--accent-cyan); border-color: rgba(6,182,212,.2); }
 
 /* ─── Memory Tab ─────────────────────────────────────────────── */
 .memory-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }

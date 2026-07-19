@@ -35,6 +35,8 @@ export interface ChatResponse {
     total_tokens: number;
   };
   _headers?: Record<string, string>;
+  /** Provider id that actually served this response — stamped by LLMExecutor.tryProvider(), used for tracing. */
+  _providerId?: string;
 }
 
 export interface RateLimits {

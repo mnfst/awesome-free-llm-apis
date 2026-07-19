@@ -30,6 +30,8 @@ interface SubtaskHistoryEntry {
     output: string;
     filesModified: string[];
     timestamp: number;
+    model?: string;
+    provider?: string;
 }
 
 interface QueueState {
@@ -842,7 +844,7 @@ async function executeSingleSubtask(
     while (!subtaskCompleted && enrichmentCycleCount <= MAX_ENRICHMENT_CYCLES) {
         try {
             const userMessage = context.request.messages.find(m => m.role === 'user');
-            const mainPrompt = userMessage ? String(userMessage.content) : undefined;
+            const mainPrompt = userMessage ? getMessageContent(userMessage.content) : undefined;
             const userKeywords = context.keywords || [];
             const subtaskPrompt = await getIntelligentSystemPrompt({
                 context: currentTask,
@@ -1171,7 +1173,7 @@ export class AgenticMiddleware implements Middleware {
         const q = await getOrLoadState(sessionId);
 
         const userMessage = context.request.messages.find(m => m.role === 'user');
-        let userContent = userMessage ? String(userMessage.content).trim() : undefined;
+        let userContent = userMessage ? getMessageContent(userMessage.content).trim() : undefined;
         if (userContent) {
             userContent = getOriginalUserContent(userContent);
         }
@@ -1481,12 +1483,16 @@ export class AgenticMiddleware implements Middleware {
                 }
 
                 // Log subtask completion
-                await logChatTurn(sessionId, { 
-                    role: 'subtask_response', 
-                    tool: 'Agentic Subtask', 
-                    content: `Completed: ${currentTask}`, 
+                const subtaskModel = context.response?.model;
+                const subtaskProvider = context.response?._providerId;
+                await logChatTurn(sessionId, {
+                    role: 'subtask_response',
+                    tool: 'Agentic Subtask',
+                    content: `Completed: ${currentTask}`,
                     output: responseContent,
-                    contextInjected: subtaskContexts
+                    contextInjected: subtaskContexts,
+                    model: subtaskModel,
+                    provider: subtaskProvider
                 });
 
                 // Record history of the completed subtask
@@ -1496,7 +1502,9 @@ export class AgenticMiddleware implements Middleware {
                     task: currentTask,
                     output: responseContent,
                     filesModified,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    model: subtaskModel,
+                    provider: subtaskProvider
                 });
 
                 if (globalRetrospectionCount < 2) {
@@ -1565,7 +1573,13 @@ export class AgenticMiddleware implements Middleware {
         if (context.response && q.nowQueue.length === 0) {
             const finalContent = getResponseContent(context);
             if (finalContent) {
-                await logChatTurn(sessionId, { role: 'assistant', tool: 'Agentic Output', content: finalContent });
+                await logChatTurn(sessionId, {
+                    role: 'assistant',
+                    tool: 'Agentic Output',
+                    content: finalContent,
+                    model: context.response?.model,
+                    provider: context.response?._providerId
+                });
             }
         }
 

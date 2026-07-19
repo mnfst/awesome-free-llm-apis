@@ -524,6 +524,7 @@ export class LLMExecutor {
         // Record success for circuit breaker
         this.recordProviderSuccess(providerId);
 
+        if (response) response._providerId = providerId;
         return response;
     }
 
