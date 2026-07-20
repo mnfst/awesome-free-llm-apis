@@ -847,7 +847,9 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
         const { memoryManager } = await import('../memory/index.js');
         const { GLOBAL_CYBER_WIKI_NS } = await import('../utils/GithubRepoScanner.js');
         const isCyber = context.taskType === TaskType.Cyber;
-        const wiki = memoryManager.getWiki(isCyber ? GLOBAL_CYBER_WIKI_NS : (context.wsHash || context.sessionId || 'global'));
+        const wiki = isCyber
+          ? memoryManager.getWiki(GLOBAL_CYBER_WIKI_NS)
+          : memoryManager.getWiki(context.wsHash || context.sessionId || 'global', context.workspaceRoot);
         const failureLanguage = /\b(didn't work|did not work|failed to|failure|error occurred|unsuccessful|not working)\b/i;
         const isFailure = failureLanguage.test(finalChoice.content);
 

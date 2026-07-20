@@ -472,7 +472,7 @@ export class WorkspaceContextMiddleware implements Middleware {
             try {
                 const persona = taskTypeToPersona(context.taskType);
                 const wikiNamespace = context.wsHash || context.sessionId;
-                const wiki = memoryManager.getWiki(wikiNamespace || 'global');
+                const wiki = memoryManager.getWiki(wikiNamespace || 'global', context.workspaceRoot);
                 const pages = await wiki.search(userContent, persona);
                 if (pages.length > 0) {
                     const topPages = pages.slice(0, 3);

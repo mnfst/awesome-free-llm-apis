@@ -2,9 +2,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { detectPersona } from '../src/utils/persona-detector.js';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
 describe('PersonaDetector (Phase D)', () => {
-    const tempDir = path.join(process.cwd(), 'temp_test_persona_ws');
+    // Outside the repo tree so the .agents/AGENTS.md parent-walk-up
+    // (findAgentsMdPath) can't escape into this repo's real .agents/AGENTS.md.
+    const tempDir = path.join(os.tmpdir(), `free-llm-mcp-persona-test-${Date.now()}`);
 
     beforeEach(async () => {
         await fs.rm(tempDir, { recursive: true, force: true });

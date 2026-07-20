@@ -111,7 +111,7 @@ export async function maybeIndexPdfIntoWiki(params: {
       // PDF changed: mark old wiki page stale and delete embedded chunks
       if (state.wikiTitle) {
         try {
-          const wiki = memoryManager.getWiki(wsHash);
+          const wiki = memoryManager.getWiki(wsHash, workspaceRoot);
           await (wiki as any).markStale?.(state.wikiTitle, 'Source PDF changed on disk.');
         } catch { /* markStale is optional */ }
       }
@@ -135,7 +135,7 @@ export async function maybeIndexPdfIntoWiki(params: {
     let previousWikiContext = '';
     if (state.wikiTitle) {
       try {
-        const wiki = memoryManager.getWiki(wsHash);
+        const wiki = memoryManager.getWiki(wsHash, workspaceRoot);
         const wikiPage = await wiki.read(state.wikiTitle);
         if (wikiPage && wikiPage.content) {
           previousWikiContext = wikiPage.content;
@@ -237,7 +237,7 @@ export async function maybeIndexPdfIntoWiki(params: {
     }
 
     // ── Step 6: Build rolling-summary LLM prompt ────────────────────────────
-    const wiki = memoryManager.getWiki(wsHash);
+    const wiki = memoryManager.getWiki(wsHash, workspaceRoot);
     let existingSummary = '(none — first pass)';
     if (state.wikiTitle) {
       try {

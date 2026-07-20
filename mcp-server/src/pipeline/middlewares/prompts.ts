@@ -1,6 +1,7 @@
 import { promises as fsp } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findAgentsMdPath } from '../../utils/agents-md-locator.js';
 
 /**
  * Calculates Jaccard similarity between a set of tokens and a string.
@@ -252,10 +253,10 @@ export interface PromptOptions {
 async function getRelevantAgentsGuide(workspaceRoot: string, subtaskQuery: string): Promise<string> {
     try {
         const agentsPaths = [
-            path.join(workspaceRoot, '.agents', 'AGENTS.md'),
+            findAgentsMdPath(workspaceRoot),
             path.join(workspaceRoot, 'AGENTS.md')
-        ];
-        
+        ].filter((p): p is string => !!p);
+
         let filePath = '';
         for (const p of agentsPaths) {
             try {

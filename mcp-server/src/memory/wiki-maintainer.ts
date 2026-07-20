@@ -318,7 +318,7 @@ export async function runWikiMaintenance(workspaceRoot: string, wsHash?: string)
       return;
     }
 
-    const wiki = memoryManager.getWiki(resolvedWsHash);
+    const wiki = memoryManager.getWiki(resolvedWsHash, workspaceRoot);
 
     await markStaleForRemovedFiles(wiki, diff.removedNodes);
 

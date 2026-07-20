@@ -23,7 +23,7 @@ export async function manageMemory(input: ManageMemoryInput) {
     const wsHash = await workspaceScanner.getWorkspaceHash(workspaceRoot);
     switch (action) {
         case 'wiki_search': {
-            const wiki = memoryManager.getWiki(namespace || wsHash);
+            const wiki = memoryManager.getWiki(namespace || wsHash, workspaceRoot);
             const results = await wiki.search(query || '', persona);
             return { results: results.slice(0, limit) };
         }
@@ -31,19 +31,19 @@ export async function manageMemory(input: ManageMemoryInput) {
             if (!title || !content) {
                 throw new Error('wiki_write requires `title` and `content`.');
             }
-            const wiki = memoryManager.getWiki(namespace || wsHash);
+            const wiki = memoryManager.getWiki(namespace || wsHash, workspaceRoot);
             const page = await wiki.write(title, content, tags || [], links || []);
             return { success: true, page };
         }
         case 'wiki_list': {
-            const wiki = memoryManager.getWiki(namespace || wsHash);
+            const wiki = memoryManager.getWiki(namespace || wsHash, workspaceRoot);
             return { pages: await wiki.list() };
         }
         case 'wiki_read': {
             if (!title) {
                 throw new Error('wiki_read requires `title`.');
             }
-            const wiki = memoryManager.getWiki(namespace || wsHash);
+            const wiki = memoryManager.getWiki(namespace || wsHash, workspaceRoot);
             const page = await wiki.read(title);
             return { page };
         }

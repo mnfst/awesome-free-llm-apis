@@ -157,7 +157,7 @@ export async function executeSkill(input: ExecuteSkillInput): Promise<ExecuteSki
     // Surface known pitfalls/prior learnings for this skill from the wiki, if any.
     try {
       const wsHash = await workspaceScanner.getWorkspaceHash(workspace_root);
-      const wiki = memoryManager.getWiki(wsHash);
+      const wiki = memoryManager.getWiki(wsHash, workspace_root);
       const pastNotes = await wiki.search(skill, 'coder');
       const relevantNotes = pastNotes.filter(p => p.tags.includes(skill)).slice(0, 2);
       if (relevantNotes.length > 0) {
@@ -200,7 +200,7 @@ export async function executeSkill(input: ExecuteSkillInput): Promise<ExecuteSki
     // Record that this skill/pattern ran successfully, for future pitfall lookups.
     try {
       const wsHash = await workspaceScanner.getWorkspaceHash(workspace_root);
-      const wiki = memoryManager.getWiki(wsHash);
+      const wiki = memoryManager.getWiki(wsHash, workspace_root);
       await wiki.write(`Skill run: ${skill}`, responseText, ['skill', skill], []);
     } catch (err: any) {
       console.error(`[execute-skill] Wiki write failed for skill "${skill}":`, err.message);

@@ -1,3 +1,4 @@
+import path from 'path';
 import { ShortTermMemory } from './short-term.js';
 import { LongTermMemory } from './long-term.js';
 import { WikiMemory } from './wiki.js';
@@ -57,11 +58,13 @@ export class MemoryManager {
     this.longTerm = new LongTermMemory(storePath);
   }
 
-  getWiki(workspaceHash: string): WikiMemory {
-    let wiki = this.wikis.get(workspaceHash);
+  getWiki(workspaceHash: string, workspaceRoot?: string): WikiMemory {
+    const cacheKey = workspaceRoot ? `${workspaceHash}:local` : workspaceHash;
+    let wiki = this.wikis.get(cacheKey);
     if (!wiki) {
-      wiki = new WikiMemory(workspaceHash);
-      this.wikis.set(workspaceHash, wiki);
+      const customBaseDir = workspaceRoot ? path.join(workspaceRoot, '.free-llm-mcp', 'wiki') : undefined;
+      wiki = new WikiMemory(workspaceHash, customBaseDir);
+      this.wikis.set(cacheKey, wiki);
     }
     return wiki;
   }
