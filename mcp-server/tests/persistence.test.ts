@@ -105,4 +105,43 @@ describe('Persistence Layer Hardening', () => {
         expect(loaded.dailyTotalRequests).toBe(0); // Reset
         expect(loaded.lifetimeTotalRequests).toBe(1000); // Preserved
     });
+
+    it('recovers the Firebase identity from the .bak file when the primary file is corrupted', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        const stateWithIdentity: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 3,
+            dailyTotalTokens: 300,
+            lifetimeTotalRequests: 3,
+            lifetimeTotalTokens: 300,
+            firebaseUid: 'uid-should-survive',
+            firebaseRefreshToken: 'refresh-should-survive',
+            providers: {}
+        };
+        await pm.save(stateWithIdentity);
+
+        // Corrupt only the primary file — the .bak written alongside save() should still be intact.
+        await fs.writeFile(testFile, 'not-valid-encrypted-json', 'utf8');
+
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const recovered = await pm.load();
+        errorSpy.mockRestore();
+
+        expect(recovered.firebaseUid).toBe('uid-should-survive');
+        expect(recovered.firebaseRefreshToken).toBe('refresh-should-survive');
+    });
+
+    it('logs loudly (console.error) and loses identity only when both primary and backup are unreadable', async () => {
+        const pm = new PersistenceManager(testFile);
+        await fs.writeFile(testFile, 'not-valid-encrypted-json', 'utf8');
+        // No .bak file exists at all in this scenario.
+
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const result = await pm.load();
+
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('INCLUDING FIREBASE IDENTITY'));
+        expect(result.firebaseUid).toBeUndefined();
+        errorSpy.mockRestore();
+    });
 });

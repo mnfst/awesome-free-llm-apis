@@ -38,34 +38,9 @@ python -m venv venv
 
 pip install -U google-genai python-dotenv
 ```
-### 3. Sandbox Requirements (for `code_mode`): IGNORE THIS SECTION
 
-The `code_mode` tool provides isolated script execution. Some runtimes require manual setup:
-
-#### Python Sandbox
-Mandatory for `language: "python"`. It is highly recommended to use a virtual environment.
-```bash
-# Within your active venv:
-pip install RestrictedPython
-```
-
-#### Go Sandbox
-Requires a pre-built binary for JS execution via `goja`.
-```bash
-cd scripts/go-sandbox-runner
-go build -o sandbox-runner .
-```
-
-#### Rust Sandbox
-Requires a pre-built binary for JS execution via `boa_engine`.
-```bash
-cd scripts/rust-sandbox-runner
-cargo build --release
-```
-
-> [!NOTE] 
-> The Node.js executor automatically detects these binaries if they are built in their respective directories. Python execution requires `python3` to be available on your system path with `RestrictedPython` installed in the environment used to run the server.<br>
-> This tool call is deprecated and has been removed. But the underlying code is available in 'scripts/sandboxes' folder.
+> [!NOTE]
+> **`code_mode` is deprecated and not registered as an MCP tool** (`src/mcp/index.ts`). The sandbox runners it used (Python/Go/Rust isolated script execution) still exist under `scripts/sandboxes/` for reference, but there's nothing to install here for a normal setup — skip straight to Configuration below.
 
 ## Configuration
 
@@ -107,6 +82,34 @@ npm run dev
 ```
 
 Then visit `http://localhost:3000` to view the visual dashboard for provider health and token tracking.
+
+## Using `use_free_llm` for project-scoped work
+
+`use_free_llm` is the main tool and its current parameters are (see `src/mcp/index.ts` for the authoritative schema):
+
+| Param | Required? | Purpose |
+|---|---|---|
+| `messages` | **required** | `{role, content}[]` — the conversation. |
+| `model` | optional | Specific model ID; omit to let the router pick. |
+| `keywords` | optional | Steering tags (e.g. `["python", "sql"]`) to prioritize reference-map injection. |
+| `agentic` | optional | Enables task decomposition + memory/wiki injection. **Set `true` for any project-scoped work.** |
+| `workspace_root` | recommended | Absolute path to the project root. Required for memory enrichment, context retrieval, and workspace-scoped recall. |
+| `sessionId` | optional | Partitions state/logs; auto-derived from `workspace_root` if omitted. |
+| `skipIndexing` | optional | Skips the pre-emptive full-workspace re-index + wiki-maintenance pass agentic mode normally runs every call. Set `true` for requests narrowly about one file/PDF that don't need a full re-scan. |
+| `google_search` | optional | Enable Google Search grounding for Gemini models. |
+| `skill` | optional | Load a specific skill by id/name from the remote skill index. |
+
+> [!IMPORTANT]
+> **When performing any task scoped to a project or workspace, you MUST pass both `workspace_root` (absolute path) and `agentic: true`.** Omitting either disables memory injection, context enrichment, and session persistence — the response will be blind to prior work. A bare call with only `messages` is for one-off queries that don't need project context.
+
+```json
+{ "messages": [...], "agentic": true, "workspace_root": "/abs/path/to/project", "keywords": ["python"] }
+```
+
+### Project conventions this server picks up automatically
+
+- **`.agents/AGENTS.md`** — per-project agent guidance (persona override, project description, etc). Auto-created on first agentic call against a `workspace_root` if it doesn't already exist; if you've hand-authored one, it's never overwritten — only the boilerplate template gets prepended ahead of your content. In a monorepo, this file can live at the repo root above a subproject's `workspace_root` — the server walks up (bounded) to find it, so subprojects share one canonical file (see `src/utils/agents-md-locator.ts`).
+- **Per-workspace wiki storage** — `agentic` mode's wiki memory is stored under `<workspace_root>/.free-llm-mcp/wiki/`, scoped to that project (falls back to a global `~/.free-llm-mcp/wiki/` location only for namespaces with no workspace, e.g. shared cyber-tools knowledge).
 
 ## MCP Client Configuration
 
@@ -208,6 +211,22 @@ Once copied, your agent will automatically detect the `@free-llms` skill and its
 cd mcp-server
 npm run smoke-test
 ```
+
+## Available Tools
+
+The current registered MCP tools (`src/mcp/index.ts`):
+
+- **`use_free_llm`** — universal chat interface with automatic provider failover; see parameters above.
+- **`vision_tool`** — analyze a local image via a vision-capable model.
+- **`load_skill_prompt`** — search for or load a dynamic skill from the skill index.
+- **`get_token_stats`** — inspect provider/token usage.
+- **`validate_provider`** — check whether a given provider/model is currently usable.
+- **`manage_memory`** — `wiki_search` / `wiki_write` / `wiki_list` / `wiki_read` / `search` / `list` / `stats` / `clear` actions against a workspace's memory.
+- **`store_workspace_skill`** — persist a reusable workspace-specific skill.
+- **`index_workspace`** — force a full workspace re-index (accepts a `force` param).
+- **`execute_skill`** — run a previously stored/loaded skill against a workspace.
+
+(`code_mode` is deprecated and not in this list — see the note in Installation above.)
 
 ## Orchestration Pipeline
 

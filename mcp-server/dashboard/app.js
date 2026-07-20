@@ -1346,17 +1346,20 @@ async function fetchMemory(sid) {
     const d = await r.json();
     memKnowledge.value = d.knowledge || '';
     memSessionLabel.textContent = ` — ${sid}`;
-    renderQueue('queue-now',     d.queues?.nowQueue);
-    renderQueue('queue-next',    d.queues?.nextQueue);
-    renderQueue('queue-blocked', d.queues?.blockedQueue);
+    const resolvedContext = d.queues?.resolvedContext || {};
+    renderQueue('queue-now',     d.queues?.nowQueue,     resolvedContext);
+    renderQueue('queue-next',    d.queues?.nextQueue,    resolvedContext);
+    renderQueue('queue-blocked', d.queues?.blockedQueue, resolvedContext);
+    renderQueue('queue-improve', d.queues?.improveQueue, resolvedContext);
     renderHistory(d.queues?.history);
+    renderPausedBanner(d.queues?.paused, d.queues?.promptId);
     memUpdated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
   } catch (err) {
     memKnowledge.value = `Fetch error: ${err.message}`;
   }
 }
 
-function renderQueue(id, items) {
+function renderQueue(id, items, resolvedContext) {
   const el = document.getElementById(id);
   if (!el) return;
   if (!items?.length) {
@@ -1366,13 +1369,31 @@ function renderQueue(id, items) {
   el.innerHTML = items.map(item => {
     // Queue entries are {id, task} objects; the `typeof` check keeps this working against
     // state.json files persisted before this shape existed.
-    const text = typeof item === 'string' ? item : (item?.task ?? String(item));
+    let text = typeof item === 'string' ? item : (item?.task ?? String(item));
+    // Task text may still contain unresolved protected_ref_N placeholders
+    // (lazy-resolution design) — swap in the actual content from
+    // resolvedContext at display time so raw placeholder tokens aren't shown.
+    if (resolvedContext) {
+      text = text.replace(/protected_ref_[A-Za-z0-9_]+/g, m => resolvedContext[m] ?? m);
+    }
     return `
     <div class="queue-item">
       <span class="queue-chevron">›</span>
       <span>${esc(text)}</span>
     </div>`;
   }).join('');
+}
+
+function renderPausedBanner(paused, promptId) {
+  const banner = document.getElementById('mem-paused-banner');
+  if (!banner) return;
+  if (paused) {
+    const idEl = document.getElementById('mem-paused-promptid');
+    if (idEl) idEl.textContent = `continue ${promptId || ''}`;
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 let _historyData = [];
@@ -1420,8 +1441,11 @@ function _applyHistoryFilter(q) {
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${isError ? 'var(--accent-red)' : 'var(--accent-purple)'};color:#fff;font-size:.65rem;font-weight:700;flex-shrink:0;">${globalIdx + 1}</span>
             <span style="font-weight:600;color:var(--text-primary);font-size:.82rem;">${esc(h.task || 'Untitled step')}</span>
+            ${h.taskId ? `<code style="font-size:.65rem;color:var(--text-muted);">${esc(h.taskId)}</code>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            ${h.provider ? `<span style="font-size:.68rem;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--accent-cyan);">${esc(h.provider)}</span>` : ''}
+            ${h.model ? `<span style="font-size:.68rem;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--text-muted);">${esc(h.model)}</span>` : ''}
             ${dateStr ? `<span style="font-size:.68rem;color:var(--text-muted);">${dateStr}</span>` : ''}
             <span id="hist-chevron-${globalIdx}" style="color:var(--text-muted);transition:transform .2s;transform:${expanded ? 'rotate(90deg)' : 'rotate(0deg)'};">&rsaquo;</span>
           </div>

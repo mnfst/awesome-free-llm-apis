@@ -37,10 +37,12 @@ export interface PersistentUsage {
 
 export class PersistenceManager {
   private filePath: string;
+  private backupPath: string;
   private lastSavedState: PersistentUsage | null = null;
 
   constructor(customPath?: string) {
     this.filePath = customPath || this.resolvePath();
+    this.backupPath = `${this.filePath}.bak`;
   }
 
   /**
@@ -100,8 +102,26 @@ export class PersistenceManager {
         this.lastSavedState = JSON.parse(JSON.stringify(resetData));
         return resetData;
       }
-    } catch (e) {
-      console.warn(`[PersistenceManager] Failed to read/decrypt usage state at ${this.filePath} — resetting state (including Firebase identity). Cause: ${(e as Error)?.message || e}`);
+    } catch (primaryError) {
+      // Primary file is corrupted/undecryptable. Before giving up the Firebase
+      // identity (firebaseUid/firebaseRefreshToken — losing these re-registers
+      // the user as a brand new anonymous account), try the backup written
+      // alongside the last successful save().
+      try {
+        if (await fs.pathExists(this.backupPath)) {
+          const rawBackup = await fs.readFile(this.backupPath, 'utf8');
+          const decryptedBackup = await decrypt(rawBackup);
+          const data = JSON.parse(decryptedBackup);
+          const resetData = this.handleDailyReset(data);
+          this.lastSavedState = JSON.parse(JSON.stringify(resetData));
+          console.error(`[PersistenceManager] Primary usage state at ${this.filePath} was corrupted/undecryptable (${(primaryError as Error)?.message || primaryError}) — recovered Firebase identity and usage stats from backup at ${this.backupPath}.`);
+          return resetData;
+        }
+      } catch (backupError) {
+        console.error(`[PersistenceManager] Backup usage state at ${this.backupPath} was also corrupted/undecryptable: ${(backupError as Error)?.message || backupError}`);
+      }
+
+      console.error(`[PersistenceManager] Failed to read/decrypt usage state at ${this.filePath} and no usable backup was found — resetting state, INCLUDING FIREBASE IDENTITY (a new anonymous account will be created). Cause: ${(primaryError as Error)?.message || primaryError}`);
     }
 
     this.lastSavedState = JSON.parse(JSON.stringify(emptyState));
@@ -154,13 +174,23 @@ export class PersistenceManager {
       }
 
       const merged = this.merge(diskState, memoryState);
-      
+
       // Atomic write: encrypt merged data, write to tmp, then rename
       const tmpPath = `${this.filePath}.tmp`;
       const serialized = JSON.stringify(merged);
       const encrypted = await encrypt(serialized);
       await fs.writeFile(tmpPath, encrypted, 'utf8');
       await fs.rename(tmpPath, this.filePath);
+
+      // Best-effort backup copy so load() can recover the Firebase identity
+      // if the primary file is later found corrupted/undecryptable.
+      try {
+        const backupTmpPath = `${this.backupPath}.tmp`;
+        await fs.writeFile(backupTmpPath, encrypted, 'utf8');
+        await fs.rename(backupTmpPath, this.backupPath);
+      } catch (backupErr) {
+        console.error('Failed to write usage stats backup:', backupErr);
+      }
 
       // Update baseline for next delta calculation
       this.lastSavedState = JSON.parse(JSON.stringify(memoryState));

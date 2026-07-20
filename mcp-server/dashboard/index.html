@@ -352,6 +352,12 @@
         </div>
       </div>
 
+      <!-- HITL pause banner — mirrors the chat-side "⚠️ Pipeline Paused" banner so the
+           dashboard shows the same paused/promptId state, not just the raw chat text. -->
+      <div id="mem-paused-banner" style="display:none;margin-bottom:16px;padding:10px 16px;border-radius:var(--radius-sm);background:rgba(234,179,8,.12);border:1px solid var(--accent-yellow, #eab308);color:var(--text-primary);font-size:.82rem;">
+        ⚠️ <strong>Pipeline Paused</strong> — reply <code id="mem-paused-promptid"></code> to resume.
+      </div>
+
       <!-- Momentum Queues -->
       <div class="memory-grid">
         <div class="card">
@@ -365,6 +371,10 @@
         <div class="card">
           <div class="card-header"><span class="card-title" style="color:var(--accent-red);">⛔ Blocked</span></div>
           <div class="card-body"><div class="queue-list" id="queue-blocked"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title" style="color:var(--accent-purple);">✨ Improve Queue</span></div>
+          <div class="card-body"><div class="queue-list" id="queue-improve"></div></div>
         </div>
       </div>
 
@@ -491,6 +501,25 @@
               <tr><td><code>sessionId</code></td><td>string</td><td></td><td>Resume a specific conversation/session</td></tr>
               <tr><td><code>google_search</code></td><td>boolean</td><td></td><td>Gemini-only web grounding</td></tr>
               <tr><td><code>skill</code></td><td>string</td><td></td><td>Load a named skill's instructions before executing</td></tr>
+              <tr><td><code>skipIndexing</code></td><td>boolean</td><td></td><td>Skip the pre-emptive full-workspace re-index + wiki-maintenance pass agentic mode normally runs every call — use for requests narrowly about one file/PDF</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">get_token_stats</span><span class="qs-tool-desc">Real-time per-provider token/request usage</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td colspan="4">No parameters. Returns <code>[{ id, name, isAvailable, rateLimits:{rpm,rpd,tpm}, usage:{tokens,requests} }]</code> — counters reset on server restart.</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">validate_provider</span><span class="qs-tool-desc">Live health-check + credential validation for one provider</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>providerId</code></td><td>string</td><td>✓</td><td>e.g. <code>"groq"</code>, <code>"gemini"</code>, <code>"openrouter"</code></td></tr>
             </tbody>
           </table>
         </details>
@@ -609,7 +638,7 @@
                 <tr><td><code>generic</code></td><td>fallback — none of the above matched</td></tr>
               </tbody>
             </table>
-            <div style="margin-top:10px;">Pin a persona explicitly (always wins over heuristics) by adding this line to your workspace's <code>AGENTS.md</code>:</div>
+            <div style="margin-top:10px;">Pin a persona explicitly (always wins over heuristics) by adding this line to your workspace's <code>.agents/AGENTS.md</code> (canonical location — auto-created there, walks up to a monorepo root if nested; falls back to a legacy root-level <code>AGENTS.md</code> if that's all that exists):</div>
             <div class="code-block" style="margin-top:6px;font-size:.75rem;">preferred persona: coder</div>
           </div>
         </details>
