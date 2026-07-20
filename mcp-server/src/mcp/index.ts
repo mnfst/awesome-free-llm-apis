@@ -34,7 +34,7 @@ async function deriveSessionIdFromArgs(args: Record<string, any> | null | undefi
 
 export async function createMCPServer(): Promise<Server> {
   const server = new Server(
-    { name: 'free-llm-apis', version: '1.0.6' },
+    { name: 'free-llm-apis', version: '1.0.7' },
     { capabilities: { tools: {} } }
   );
 
@@ -111,37 +111,14 @@ export async function createMCPServer(): Promise<Server> {
             workspace_root: { type: 'string', description: 'Workspace path for cache-keying and auto-sessionId derivation' },
             google_search: { type: 'boolean', description: 'Enable Google search for Gemini models (default false)' },
             skill: { type: 'string', description: 'Optional skill id/name loaded dynamically from remote skill index' },
+            skipIndexing: {
+              type: 'boolean',
+              description: 'Skip the pre-emptive full-workspace re-index + wiki-maintenance pass that agentic mode normally runs on every call with workspace_root. Set true for requests narrowly about a specific file/PDF reference that don\'t need (or shouldn\'t pay the latency/provider-budget cost of) a full codebase re-scan — otherwise that unrelated indexing work can starve the actual request of provider quota.'
+            },
           },
           required: ['messages'],
         },
       },
-      // {
-      //   name: 'free_llm_api',
-      //   description: 'Backward-compatible alias for use_free_llm. Returns Markdown text.',
-      //   inputSchema: {
-      //     type: 'object' as const,
-      //     properties: {
-      //       messages: {
-      //         type: 'array',
-      //         items: {
-      //           type: 'object',
-      //           properties: {
-      //             role: { type: 'string', enum: ['system', 'user', 'assistant'] },
-      //             content: { type: 'string' },
-      //           },
-      //           required: ['role', 'content'],
-      //         },
-      //       },
-      //       model: { type: 'string' },
-      //       keywords: { type: 'array', items: { type: 'string' } },
-      //       agentic: { type: 'boolean' },
-      //       sessionId: { type: 'string' },
-      //       workspace_root: { type: 'string' },
-      //       skill: { type: 'string', description: 'Optional dynamic skill id/name from awesome-antigravity-skills index' },
-      //     },
-      //     required: ['messages'],
-      //   },
-      // },
       {
         name: 'vision_tool',
         description: 'Analyze a local image using a vision-capable model via use_free_llm.',

@@ -6,6 +6,7 @@ import os from 'node:os';
 import fs from 'fs-extra';
 import { WorkspaceScanner } from '../cache/workspace.js';
 import { renderPdfPage } from '../utils/PdfRenderer.js';
+import { getModelCapability } from '../config/models.js';
 import type { ChatRequest, ChatResponse } from '../providers/types.js';
 import {
   PipelineExecutor,
@@ -24,6 +25,15 @@ import { initWorkspace } from './init-workspace.js';
 import { GlobalWikiManager } from '../utils/GlobalWikiManager.js';
 import { logToolCall } from '../utils/ChatLogger.js';
 
+// Each pdf:// reference costs a subprocess render plus a vision-classification LLM call
+// (resolvePdfRef) — sequential, uncapped resolution of many pages in one pass would be an
+// unbounded-sequential-cost pattern that can exhaust a provider's rate limit. Cap to 5
+// pdf:// references per pass (matches wikiConfig.pageBatchThreshold's existing precedent
+// of 5 for the same reason, in the separate wiki-indexing system). Exported so every
+// resolution path — resolveFileRefs()'s top-level intake AND AgenticMiddleware's
+// subtask-local proactive resolution — enforces the same real limit, not just the first one.
+export const MAX_PDF_PAGES_PER_PASS = 5;
+
 export interface UseFreeLLMInput {
   model?: string;
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }>;
@@ -40,6 +50,11 @@ export interface UseFreeLLMInput {
   isOnePass?: boolean;
   keywords?: string[];
   skill?: string;
+  // Skip the pre-emptive full-workspace re-index + wiki-maintenance pass that
+  // normally runs on every agentic call with a workspace_root. Useful when the
+  // request is narrowly about a specific file/PDF reference and doesn't need (or
+  // shouldn't pay the latency/provider-budget cost of) a full codebase re-scan.
+  skipIndexing?: boolean;
 }
 
 const workspaceScanner = new WorkspaceScanner(process.cwd());
@@ -146,6 +161,8 @@ export async function resolveFileRefs(
   const wsRoot = (workspaceRoot && workspaceRoot.trim()) ? path.resolve(workspaceRoot) : undefined;
   const imageAttachments: string[] = [];
 
+  let pdfPagesResolved = 0;
+
   for (const match of matches) {
     const fullMatch = match[0];
     const g = match.groups!;
@@ -223,7 +240,14 @@ export async function resolveFileRefs(
         console.error(`[v1.0.4][resolveRefs] UNRESOLVED — injecting sentinel for ${baseName}`);
       }
     } else if (protocol === 'pdf') {
+      if (pdfPagesResolved >= MAX_PDF_PAGES_PER_PASS) {
+        const sentinel = `[PDF-PAGE-DEFERRED: ${uriPath} — resolve in a follow-up request; max ${MAX_PDF_PAGES_PER_PASS} PDF pages per pass.]`;
+        newContent = newContent.replace(fullMatch, sentinel);
+        console.error(`[v1.0.4][resolveRefs] PDF page cap reached (${MAX_PDF_PAGES_PER_PASS}) — deferring ${uriPath}`);
+        continue;
+      }
       const res = await resolvePdfRef(uriPath, workspaceRoot);
+      pdfPagesResolved++;
       if (res) {
         resolvedContent = res.resolvedContent;
         newContent = newContent.replace(fullMatch, `${fullMatch}\n\n${resolvedContent}`);
@@ -357,10 +381,23 @@ export async function resolvePdfRef(
   // index page via multimodal LLM call
   if (!savedIndex || isStale) {
     try {
+      // This call sends a multimodal `image_url` content part (OpenAI-style, base64 data
+      // URI), unlike the plain-text provider-selection calls elsewhere in this codebase —
+      // it needs providers whose declared vision capability is real, not "whichever's
+      // first and isn't siliconflow". Reuse the same source of truth ImageRouterMiddleware
+      // uses (ProviderRegistry.getAvailableVisionModels(), backed by each provider's own
+      // `visionModels` — BaseProvider, computed from the centralized `isVisionSupported()`
+      // config) rather than a hand-maintained duplicate list — and try every candidate in
+      // order rather than picking one and giving up, so a single provider being down or
+      // rate-limited doesn't silently kill classification.
       const registry = ProviderRegistry.getInstance();
-      const provider = registry.getAvailableProviders().find(p => p.id !== 'siliconflow') || registry.getProvider('gemini');
-      if (provider) {
-        const promptForLLM = `Analyze the attached screenshot from the PDF page.
+      // Cheapest-capability-first: this is a small, low-stakes classification call
+      // (max_tokens: 150), not a task that needs the strongest available model.
+      const orderedCandidates = registry.getAvailableVisionModels()
+        .sort((a, b) => getModelCapability(a.model.id) - getModelCapability(b.model.id))
+        .map(({ provider, model }) => ({ provider, model: model.id }));
+
+      const promptForLLM = `Analyze the attached screenshot from the PDF page.
 Determine if this page is a Table of Contents (TOC) / Index of the document.
 Return ONLY a valid JSON object matching this structure:
 {
@@ -368,40 +405,50 @@ Return ONLY a valid JSON object matching this structure:
   "offset": <number or 0>,
   "explanation": "Why or why not"
 }
-Note: 'offset' is defined as the difference (physical_page_number - printed_page_number). 
+Note: 'offset' is defined as the difference (physical_page_number - printed_page_number).
 For example:
 - If this page is physical page 2, and the printed page number on the page is '2', the offset is 0.
 - If this page is physical page 5, but the printed page number on it is '1', the offset is 4.
 - If it is not an index page, set offset to 0.`;
 
-        const response = await provider.chat({
-          model: provider.models[0]?.id,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: promptForLLM },
-                {
-                  type: 'image_url',
-                  image_url: { url: imageBase64 || '' }
-                }
-              ]
-            }
-          ],
-          temperature: 0.1,
-          max_tokens: 150
-        });
-
-        const choice = response.choices?.[0];
-        const content = getMessageContent(choice?.message) || '';
-        let parsed: any = null;
+      let attemptSucceeded = false;
+      let parsed: any = null;
+      for (const { provider, model } of orderedCandidates) {
         try {
-          parsed = JSON.parse(content.replace(/```json|```/g, '').trim());
-        } catch {
-          const match = content.match(/\{[\s\S]*?\}/);
-          if (match) parsed = JSON.parse(match[0]);
-        }
+          const response = await provider.chat({
+            model,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: promptForLLM },
+                  {
+                    type: 'image_url',
+                    image_url: { url: imageBase64 || '' }
+                  }
+                ]
+              }
+            ],
+            temperature: 0.1,
+            max_tokens: 150
+          });
 
+          const choice = response.choices?.[0];
+          const content = getMessageContent(choice?.message) || '';
+          try {
+            parsed = JSON.parse(content.replace(/```json|```/g, '').trim());
+          } catch {
+            const match = content.match(/\{[\s\S]*?\}/);
+            if (match) parsed = JSON.parse(match[0]);
+          }
+          attemptSucceeded = true;
+          break;
+        } catch (err) {
+          console.error(`[resolvePdfRef] Vision classification attempt via ${provider.id}/${model} failed:`, err);
+        }
+      }
+
+      if (attemptSucceeded) {
         if (parsed && parsed.is_index) {
           await memoryManager.longTerm.save(memoryKey, {
             is_index: true,
@@ -418,14 +465,23 @@ For example:
             mtimeMs: currentMtimeMs
           });
         }
+      } else {
+        console.error(`[resolvePdfRef] All vision classification attempts failed for ${pdfName}; will retry on next reference.`);
       }
     } catch (err) {
       console.error(`[resolvePdfRef] LLM classification failed:`, err);
     }
   }
 
+  // Closing sentinel matters: resolveFileRefs() splices this in right after the pdf://
+  // marker with no separator from whatever text originally followed it in the same
+  // message (e.g. "pdf://x.pdf:1 summarize this page" -> "...page text... summarize this
+  // page"). Without an explicit end marker, downstream consumers that need to treat this
+  // block as one opaque unit (decomposeGoal, classifyIntent) can't tell where injected
+  // content ends and the user's real trailing instruction begins.
   const finalContent = `[PDF-Context] --- FILE: ${pdfName} physical_page:${physicalPage} ---\n` +
-    `Page Text:\n${textContent || '(No extractable text found. Vision analysis screenshot attached.)'}`;
+    `Page Text:\n${textContent || '(No extractable text found. Vision analysis screenshot attached.)'}` +
+    `\n[/PDF-Context]`;
 
   return {
     resolvedContent: finalContent,
@@ -449,6 +505,7 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     workspace_root: workspaceRoot,
     keywords,
     skill,
+    skipIndexing,
   } = input;
 
   const promptInput = (input as any).prompt;
@@ -475,45 +532,50 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     }
   }
 
-  // v1.0.4 Resolution Pass: Resolve file, artifact, ctx7, pdf references in user messages
-  if (agentic) {
-    if (workspaceRoot) {
-      setImmediate(() => {
-        initWorkspace(workspaceRoot).catch(err => {
-          console.error('[free-llm-mcp] Failed to initialize workspace config:', err);
-        });
+  // v1.0.4 Resolution Pass: Resolve file, artifact, ctx7, pdf references in user messages.
+  // Previously gated behind `agentic` — but resolveFileRefs()/resolvePdfRef() (and by
+  // extension PDF-to-wiki indexing, which only ever fires from inside resolvePdfRef) both
+  // already degrade gracefully with no workspace_root, so there's no real reason a plain
+  // one-shot chat couldn't reference a pdf://, file://, or artifact:// URI too. Gating this
+  // meant a one-shot request with a pdf:// reference (e.g. the dashboard's file-upload flow
+  // in one-shot mode) silently never resolved it — the raw "pdf://..." text just got sent
+  // to the model as-is, and PDF-to-wiki indexing never ran at all.
+  if (workspaceRoot) {
+    setImmediate(() => {
+      initWorkspace(workspaceRoot).catch(err => {
+        console.error('[free-llm-mcp] Failed to initialize workspace config:', err);
       });
-    }
+    });
+  }
 
-    for (const msg of messages) {
-      if (msg.role === 'user' && (typeof msg.content === 'string' || Array.isArray(msg.content))) {
-        await resolveFileRefs(msg, messages, workspaceRoot);
-      }
+  for (const msg of messages) {
+    if (msg.role === 'user' && (typeof msg.content === 'string' || Array.isArray(msg.content))) {
+      await resolveFileRefs(msg, messages, workspaceRoot);
     }
+  }
 
-    // v1.0.4 Hard Stop Gate: If any sentinel is present after resolution, short-circuit
-    // the entire pipeline and return a structured error. The LLM is never called.
-    const sentinelPattern = /\[NOT_FOUND_HARD_STOP:[^\]]+\]/g;
-    const allSentinels: string[] = [];
-    for (const msg of messages) {
-      if (typeof msg.content === 'string') {
-        const found = msg.content.match(sentinelPattern);
-        if (found) allSentinels.push(...found);
-      }
+  // v1.0.4 Hard Stop Gate: If any sentinel is present after resolution, short-circuit
+  // the entire pipeline and return a structured error. The LLM is never called.
+  const sentinelPattern = /\[NOT_FOUND_HARD_STOP:[^\]]+\]/g;
+  const allSentinels: string[] = [];
+  for (const msg of messages) {
+    if (typeof msg.content === 'string') {
+      const found = msg.content.match(sentinelPattern);
+      if (found) allSentinels.push(...found);
     }
-    if (allSentinels.length > 0) {
-      const detail = allSentinels.join('\n');
-      const errorMsg = `❌ **File Not Found — Request Aborted**\n\nThe following file URI(s) could not be resolved. The request was not forwarded to the model to prevent hallucination:\n\n${detail}\n\nPlease provide the correct absolute path(s) and try again.`;
-      console.error(`[v1.0.4][useFreeLLM] Hard Stop — ${allSentinels.length} unresolved URI(s), aborting pipeline.`);
-      return {
-        id: 'middleware-gate',
-        object: 'chat.completion',
-        created: Math.floor(Date.now() / 1000),
-        model: 'middleware-gate',
-        choices: [{ index: 0, message: { role: 'assistant', content: errorMsg }, finish_reason: 'stop' }],
-        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
-      };
-    }
+  }
+  if (allSentinels.length > 0) {
+    const detail = allSentinels.join('\n');
+    const errorMsg = `❌ **File Not Found — Request Aborted**\n\nThe following file URI(s) could not be resolved. The request was not forwarded to the model to prevent hallucination:\n\n${detail}\n\nPlease provide the correct absolute path(s) and try again.`;
+    console.error(`[v1.0.4][useFreeLLM] Hard Stop — ${allSentinels.length} unresolved URI(s), aborting pipeline.`);
+    return {
+      id: 'middleware-gate',
+      object: 'chat.completion',
+      created: Math.floor(Date.now() / 1000),
+      model: 'middleware-gate',
+      choices: [{ index: 0, message: { role: 'assistant', content: errorMsg }, finish_reason: 'stop' }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    };
   }
 
   const request: ChatRequest = {
@@ -524,6 +586,7 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     top_p,
     stream,
     agentic,
+    skipIndexing,
   };
 
   const pipeline = new PipelineExecutor();

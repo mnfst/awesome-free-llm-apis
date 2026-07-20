@@ -140,7 +140,14 @@ export class WikiMemory {
 
   private getPathForTitle(title: string, tags: string[] = []): string {
     const filename = getFilename(title);
-    if (tags.map(t => t.toLowerCase()).includes('study')) {
+    const lowerTags = tags.map(t => t.toLowerCase());
+    // PDF-derived pages (maybeIndexPdfIntoWiki always tags with 'pdf') live in their own
+    // subdir — keeps document-derived content visibly separate from codebase-architecture
+    // pages (the general workspace wiki root) rather than interleaving them by filename.
+    if (lowerTags.includes('pdf')) {
+      return path.join(this.wikiDir, 'pdf', filename);
+    }
+    if (lowerTags.includes('study')) {
       return path.join(this.wikiDir, 'study', filename);
     }
     return path.join(this.wikiDir, filename);
@@ -172,7 +179,8 @@ export class WikiMemory {
     const filename = getFilename(title);
     const paths = [
       path.join(this.wikiDir, filename),
-      path.join(this.wikiDir, 'study', filename)
+      path.join(this.wikiDir, 'study', filename),
+      path.join(this.wikiDir, 'pdf', filename)
     ];
 
     for (const p of paths) {

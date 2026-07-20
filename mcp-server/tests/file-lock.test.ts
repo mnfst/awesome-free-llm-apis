@@ -94,16 +94,16 @@ describe('file-lock', () => {
         await expect(fs.stat(lockFile)).rejects.toThrow();
     });
 
-    it('should reap lock if the lock file is older than STALE_LOCK_MS', async () => {
-        // Create a lock file held by the current process PID (which is alive)
+    it('should reap lock if the lock file has no valid PID and is older than 30 seconds', async () => {
+        // Create a lock file with invalid PID content
         await fs.mkdir(path.dirname(lockFile), { recursive: true });
-        await fs.writeFile(lockFile, String(process.pid), 'utf8');
+        await fs.writeFile(lockFile, 'NaN', 'utf8');
 
-        // Backdate the lock file to be older than STALE_LOCK_MS (30000ms)
+        // Backdate the lock file to be older than 30 seconds (40000ms)
         const oldTime = new Date(Date.now() - 40000);
         await fs.utimes(lockFile, oldTime, oldTime);
 
-        // Verify we can acquire the lock because it is older than STALE_LOCK_MS
+        // Verify we can acquire the lock because it is stale
         const start = Date.now();
         const result = await withFileLock(testFile, async () => {
             return 'acquired-stale';

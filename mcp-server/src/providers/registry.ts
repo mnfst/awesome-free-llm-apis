@@ -78,6 +78,23 @@ export class ProviderRegistry {
     return Array.from(this.providers.values()).filter((p) => p.isAvailable());
   }
 
+  /**
+   * Flattened {provider, model} pairs across every currently-available provider's
+   * declared visionModels (BaseProvider.visionModels, computed from the centralized
+   * isVisionSupported() config). Single source of truth for "which provider/model
+   * combos can actually accept multimodal image_url content" — callers should use this
+   * instead of re-deriving their own vision-model set from getAvailableProviders().
+   */
+  getAvailableVisionModels(): Array<{ provider: Provider; model: ProviderModel }> {
+    const results: Array<{ provider: Provider; model: ProviderModel }> = [];
+    for (const provider of this.getAvailableProviders()) {
+      for (const model of provider.visionModels) {
+        results.push({ provider, model });
+      }
+    }
+    return results;
+  }
+
   getAllProviders(): Provider[] {
     return Array.from(this.providers.values());
   }

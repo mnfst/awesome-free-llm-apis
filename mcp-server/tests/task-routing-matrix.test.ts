@@ -178,7 +178,7 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
         expect(trySpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'qwen/qwen3-coder-480b-a35b:free', expect.any(Number));
     });
 
-    it('should reverse model preference, set skipIndexing, and append system note for a confused user query', async () => {
+    it('should reverse model preference and append system note for a confused user query', async () => {
         const context: PipelineContext = {
             request: {
                 // Just a file path with no actual prompt
@@ -188,10 +188,6 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
 
         const trySpy = vi.spyOn(executor, 'tryProvider').mockResolvedValue({ id: 'ok' } as any);
         await router.execute(context, async () => { });
-
-        // Confused user check should set skipIndexing to true
-        expect((context as any).skipIndexing).toBe(true);
-        expect((context.request as any).skipIndexing).toBe(true);
 
         // Confused user check should append System Note to prompt
         const content = context.request.messages[0].content;

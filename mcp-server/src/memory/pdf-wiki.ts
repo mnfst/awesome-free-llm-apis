@@ -30,8 +30,11 @@ function chunkText(text: string, chunkSize: number, overlap: number): string[] {
   let start = 0;
   while (start < text.length) {
     chunks.push(text.slice(start, start + chunkSize));
-    start += chunkSize - overlap;
-    if (start + overlap >= text.length) break;
+    if (start + chunkSize >= text.length) {
+      break;
+    }
+    const step = Math.max(1, chunkSize - overlap);
+    start += step;
   }
   if (chunks.length === 0 && text.trim()) chunks.push(text);
   return chunks;

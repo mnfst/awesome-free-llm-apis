@@ -36,13 +36,17 @@ async function getDirectoryTree(dirPath: string, maxDepth = 2, currentDepth = 0)
     }
 }
 
+function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function extractUsageAndDocstrings(content: string, commands: string[]): string {
     const lines = content.split('\n');
     let output = '';
     
     // 1. Identify and extract lines with specific options/examples
     const examples: string[] = [];
-    const commandRegexes = commands.map(cmd => new RegExp(`\\b${cmd}\\b.*?(?:-[a-zA-Z]|--[a-z])`, 'i'));
+    const commandRegexes = commands.map(cmd => new RegExp(`\\b${escapeRegExp(cmd)}\\b.*?(?:-[a-zA-Z]|--[a-z])`, 'i'));
     
     for (const line of lines) {
         if (/(license|copyright|copyrighted|download|mailing list|installing|contributing|build status)/i.test(line)) {
@@ -91,7 +95,7 @@ function extractUsageAndDocstrings(content: string, commands: string[]): string 
     const blocks: string[] = [];
     while ((match = codeBlockRegex.exec(content)) !== null) {
         const blockContent = match[1];
-        if (commands.some(cmd => new RegExp(`\\b${cmd}\\b`, 'i').test(blockContent))) {
+        if (commands.some(cmd => new RegExp(`\\b${escapeRegExp(cmd)}\\b`, 'i').test(blockContent))) {
             blocks.push(blockContent.trim());
         }
     }
@@ -139,7 +143,7 @@ function extractCommandsFromPrompt(prompt: string, repo: string): string[] {
     const knownCommands = ['nmap', 'sqlmap', 'hydra', 'gobuster', 'nikto', 'hashcat', 'john', 'pytest', 'git', 'curl', 'wget'];
     const promptLower = prompt.toLowerCase();
     for (const cmd of knownCommands) {
-        if (new RegExp(`\\b${cmd}\\b`, 'i').test(promptLower)) {
+        if (new RegExp(`\\b${escapeRegExp(cmd)}\\b`, 'i').test(promptLower)) {
             commands.add(cmd);
         }
     }
@@ -269,7 +273,7 @@ export class WorkspaceContextMiddleware implements Middleware {
                         const lines = readme.split('\n');
                         const matches = lines.filter(l => {
                             const trimmed = l.trim();
-                            if (!new RegExp(`\\b${cmd}\\b`, 'i').test(trimmed)) return false;
+                            if (!new RegExp(`\\b${escapeRegExp(cmd)}\\b`, 'i').test(trimmed)) return false;
                             if (/(license|copyright|copyrighted|download|mailing list|installing|contributing|build status|badge\.svg)/i.test(trimmed)) return false;
                             return true;
                         });
@@ -357,18 +361,6 @@ export class WorkspaceContextMiddleware implements Middleware {
             grepCharLimit = 1500;
         }
 
-        // 0. Pre-emptive Memory Update for Agentic Requests
-        if (isAgentic && context.workspaceRoot && !(context.request as any).skipIndexing) {
-            try {
-                console.debug(`[WorkspaceContextMiddleware] Pre-emptive indexing for agentic task in ${context.workspaceRoot}`);
-                const indexer = new WorkspaceIndexer(context.workspaceRoot);
-                // Run indexer with force=false to respect caches but ensure latest files are present
-                await indexer.indexWorkspace(context.workspaceRoot, false);
-            } catch (err) {
-                console.error(`[WorkspaceContextMiddleware] Pre-emptive indexing failed: ${err}`);
-            }
-        }
-
         // 1. Resolve Workspace Hash
         if (context.workspaceRoot && !context.wsHash) {
             try {
@@ -378,17 +370,29 @@ export class WorkspaceContextMiddleware implements Middleware {
             }
         }
 
-        // 1b. Fire-and-forget, condition-gated wiki maintenance. Runs after the
-        // pre-emptive indexing pass above has already refreshed repo_graph.json, so it
-        // diffs against a current graph without a second full workspace scan. Never
-        // awaited — must not add latency to the response.
+        // 0+1b. Pre-emptive workspace indexing followed by wiki maintenance, backgrounded
+        // together so neither adds latency to the response. Wiki maintenance depends on
+        // indexing having already refreshed repo_graph.json, so they run in this order
+        // inside one setImmediate rather than as two separately-scheduled passes.
         if (isAgentic && context.workspaceRoot && !(context.request as any).skipIndexing) {
             const workspaceRoot = context.workspaceRoot;
             const wsHash = context.wsHash;
-            setImmediate(() => {
-                import('../../memory/wiki-maintainer.js')
-                    .then(({ runWikiMaintenance }) => runWikiMaintenance(workspaceRoot, wsHash))
-                    .catch(err => console.error(`[WorkspaceContextMiddleware] Wiki maintenance failed: ${err}`));
+            setImmediate(async () => {
+                try {
+                    console.debug(`[WorkspaceContextMiddleware] Pre-emptive indexing for agentic task in ${workspaceRoot}`);
+                    const indexer = new WorkspaceIndexer(workspaceRoot);
+                    // Run indexer with force=false to respect caches but ensure latest files are present
+                    await indexer.indexWorkspace(workspaceRoot, false);
+                } catch (err) {
+                    console.error(`[WorkspaceContextMiddleware] Pre-emptive indexing failed: ${err}`);
+                }
+
+                try {
+                    const { runWikiMaintenance } = await import('../../memory/wiki-maintainer.js');
+                    await runWikiMaintenance(workspaceRoot, wsHash);
+                } catch (err) {
+                    console.error(`[WorkspaceContextMiddleware] Wiki maintenance failed: ${err}`);
+                }
             });
         }
 

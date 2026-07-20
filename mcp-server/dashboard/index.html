@@ -224,11 +224,21 @@
               <!-- Workspace input inline -->
               <div style="display:flex;gap:6px;align-items:center;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                <input type="text" id="pg-workspace" placeholder="workspace path (enables agentic)" style="width:220px;font-size:.78rem;" title="Set workspace root — saved automatically. Changing this starts a new conversation.">
+                <input type="text" id="pg-workspace" placeholder="workspace path (enables memory/grounding)" style="width:220px;font-size:.78rem;" title="Set workspace root — saved automatically. Changing this starts a new conversation.">
                 <button type="button" id="pg-folder-btn" class="btn btn-outline btn-sm" title="Pick workspace folder" style="padding:3px 7px;">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 </button>
               </div>
+              <!-- Agentic is opt-in, independent of whether a workspace is set — workspace
+                   memory/context grounding and file/pdf reference resolution both already
+                   work without it. Agentic adds subtask decomposition + a pre-emptive
+                   full-workspace re-index, which is unnecessary overhead (and can mangle
+                   simple reference-only requests) unless you actually want multi-step
+                   planning. -->
+              <label style="display:flex;gap:5px;align-items:center;font-size:.78rem;color:var(--text-muted);cursor:pointer;" title="Enable subtask decomposition + pre-emptive workspace re-indexing. Leave off for simple grounded Q&A, including PDF/file/image references — those already work via the workspace above.">
+                <input type="checkbox" id="pg-agentic-toggle" style="cursor:pointer;">
+                🧠 Agentic
+              </label>
               <button class="btn btn-outline btn-sm" id="pg-clear-btn" title="Clear conversation">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
               </button>

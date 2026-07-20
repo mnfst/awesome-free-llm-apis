@@ -1,10 +1,10 @@
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'fs-extra';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -45,8 +45,7 @@ export async function renderPdfPage(absPdfPath: string, pageNum: number): Promis
   }
 
   try {
-    const cmd = `"${pythonPath}" "${scriptPath}" "${absPdfPath}" ${pageNum}`;
-    const { stdout } = await execAsync(cmd);
+    const { stdout } = await execFileAsync(pythonPath, [scriptPath, absPdfPath, String(pageNum)]);
     const result = JSON.parse(stdout);
     if (result.error) {
       console.error(`[renderPdfPage] Python script error: ${result.error}`);

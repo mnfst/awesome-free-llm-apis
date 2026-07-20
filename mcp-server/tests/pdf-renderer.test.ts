@@ -1,20 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { execMock } = vi.hoisted(() => ({ execMock: vi.fn() }));
+const { execFileMock } = vi.hoisted(() => ({ execFileMock: vi.fn() }));
 
 vi.mock('node:child_process', () => ({
-  exec: execMock,
+  execFile: execFileMock,
 }));
 
 function mockExecOnce(stdout: string) {
-  execMock.mockImplementationOnce((_cmd: string, cb: (err: Error | null, result: { stdout: string; stderr: string }) => void) => {
+  execFileMock.mockImplementationOnce((_file: string, _args: string[], cb: (err: Error | null, result: { stdout: string; stderr: string }) => void) => {
     cb(null, { stdout, stderr: '' });
   });
 }
 
 describe('renderPdfPage', () => {
   beforeEach(() => {
-    execMock.mockReset();
+    execFileMock.mockReset();
   });
 
   it('parses a successful {text, image_path, total_pages} response', async () => {
@@ -36,7 +36,7 @@ describe('renderPdfPage', () => {
   });
 
   it('returns null when the subprocess invocation itself fails', async () => {
-    execMock.mockImplementationOnce((_cmd: string, cb: (err: Error | null, result?: any) => void) => {
+    execFileMock.mockImplementationOnce((_file: string, _args: string[], cb: (err: Error | null, result?: any) => void) => {
       cb(new Error('spawn failed'));
     });
 

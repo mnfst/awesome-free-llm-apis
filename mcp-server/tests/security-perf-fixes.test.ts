@@ -135,12 +135,12 @@ describe('TDD Fixes Verification Suite', () => {
 - fix the auth bug
 - write unit tests
             `;
-            const tasks = decomposeGoal(goal);
+            const { tasks } = decomposeGoal(goal);
             expect(tasks).toHaveLength(4);
-            expect(tasks[0]).toBe('[parallel] summarize the auth module');
-            expect(tasks[1]).toBe('[parallel] search for rate limit patterns');
-            expect(tasks[2]).toBe('[sequential] fix the auth bug');
-            expect(tasks[3]).toBe('[sequential] write unit tests');
+            expect(tasks[0].task).toBe('[parallel] summarize the auth module');
+            expect(tasks[1].task).toBe('[parallel] search for rate limit patterns');
+            expect(tasks[2].task).toBe('[sequential] fix the auth bug');
+            expect(tasks[3].task).toBe('[sequential] write unit tests');
         });
 
         it('should downgrade parallel tasks of the same TaskType to sequential', async () => {
@@ -149,18 +149,18 @@ describe('TDD Fixes Verification Suite', () => {
 > fix auth bug
 > fix rate limiting in middleware
             `;
-            const tasks = decomposeGoal(goal);
+            const { tasks } = decomposeGoal(goal);
             expect(tasks).toHaveLength(2);
             // Both are TaskType.Coding, so they must be downgraded to sequential
-            expect(tasks[0]).toBe('[sequential] fix auth bug');
-            expect(tasks[1]).toBe('[sequential] fix rate limiting in middleware');
+            expect(tasks[0].task).toBe('[sequential] fix auth bug');
+            expect(tasks[1].task).toBe('[sequential] fix rate limiting in middleware');
         });
 
         it('should be parsed correctly by buildExecutionPlan to override lanes', async () => {
             const { buildExecutionPlan } = await import('../src/pipeline/middlewares/task-classifier.js');
             const tasks = [
-                '[parallel] summarize the auth module',
-                '[parallel] search for rate limit patterns'
+                { id: 't1', task: '[parallel] summarize the auth module' },
+                { id: 't2', task: '[parallel] search for rate limit patterns' }
             ];
             const plan = await buildExecutionPlan(tasks, path.resolve('.'));
             expect(plan.phase1).toHaveLength(2);

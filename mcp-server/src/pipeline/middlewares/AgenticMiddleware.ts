@@ -27,6 +27,7 @@ import { ProviderRegistry } from '../../providers/registry.js';
 
 interface SubtaskHistoryEntry {
     task: string;
+    taskId?: string;
     output: string;
     filesModified: string[];
     timestamp: number;
@@ -34,16 +35,48 @@ interface SubtaskHistoryEntry {
     provider?: string;
 }
 
+// A queued subtask. `task` may contain `protected_ref_N` placeholder tokens standing in for
+// injected pdf://file://artifact:// content (see protectInjectedReferenceBlocks) — those are
+// resolved back to full content lazily, once, right before a subtask's prompt is built
+// (executeSingleSubtask), using QueueState.resolvedContext. Everything upstream of that
+// (decomposeGoal, buildExecutionPlan, queue storage, logs, history) only ever sees the short
+// placeholder form.
+interface QueueTask {
+    id: string;
+    task: string;
+}
+
 interface QueueState {
-    nowQueue: string[];
-    nextQueue: string[];
-    blockedQueue: string[];
-    improveQueue: string[];
+    nowQueue: QueueTask[];
+    nextQueue: QueueTask[];
+    blockedQueue: QueueTask[];
+    improveQueue: QueueTask[];
+    resolvedContext?: Record<string, string>;
     history?: SubtaskHistoryEntry[];
     paused?: boolean;
     promptId?: string;
     pausedSubtaskIndex?: number;
     retrospectionInjections?: number;
+}
+
+export function createEmptyQueueState(): QueueState {
+    return {
+        nowQueue: [],
+        nextQueue: [],
+        blockedQueue: [],
+        improveQueue: [],
+        resolvedContext: {},
+        history: [],
+        paused: false,
+        promptId: undefined,
+        pausedSubtaskIndex: undefined
+    };
+}
+
+let queueTaskIdCounter = 0;
+function newQueueTaskId(): string {
+    queueTaskIdCounter = (queueTaskIdCounter + 1) % 1_000_000;
+    return `t${Date.now().toString(36)}${queueTaskIdCounter.toString(36)}`;
 }
 
 /**
@@ -73,20 +106,12 @@ async function getOrLoadState(sessionId: string): Promise<QueueState> {
     }
 
     if (!state) {
-        state = {
-            nowQueue: [],
-            nextQueue: [],
-            blockedQueue: [],
-            improveQueue: [],
-            history: [],
-            paused: false,
-            promptId: undefined,
-            pausedSubtaskIndex: undefined
-        };
+        state = createEmptyQueueState();
         queues.set(sessionId, state);
     } else {
         if (!state.history) state.history = [];
         if (state.paused === undefined) state.paused = false;
+        if (!state.resolvedContext) state.resolvedContext = {};
     }
     return state;
 }
@@ -243,7 +268,130 @@ async function ensureProjectFiles(sessionId: string, workspaceRoot?: string): Pr
     return projectDir;
 }
 
-export function decomposeGoal(goal: string): string[] {
+// Matches resolveFileRefs()/resolvePdfRef()'s reference markers (use-free-llm.ts's uriRegex),
+// bare `protocol://path` or bracketed `[label](protocol://path)` form.
+const REFERENCE_MARKER_REGEX = /\[(?<label>[^\]]+)\]\((?<bProto>file|mcp|ctx7|artifact|pdf):\/\/(?<bPath>[^)]+)\)|(?<proto>file|mcp|ctx7|artifact|pdf):\/\/(?<path>[^\s)]+)/gi;
+
+/**
+ * Replaces each reference marker plus its immediately-following injected content block
+ * (resolveFileRefs()/resolvePdfRef() inject resolved PDF/file/artifact content in place)
+ * with an opaque placeholder token, so decomposeGoal()'s line-splitting logic can't shred
+ * the injected block's own internal line structure into bogus one-line "subtasks."
+ */
+// Bracketed system sentinels — [NOT_FOUND_HARD_STOP: ...], [PDF-PAGE-DEFERRED: ...], etc.
+// (use-free-llm.ts's resolveFileRefs) — that stand in for a reference when it couldn't be
+// resolved or was deferred. These often carry the original file path verbatim (e.g. a PDF
+// basename with capitalized segments), which leaks into classifyIntent's capital-word
+// heuristic exactly like unprotected PDF page content did — same bug, different source, so
+// it gets the same opaque-placeholder treatment below.
+const SENTINEL_REGEX = /\[[A-Z][A-Z0-9_-]*:[^\]]*\]/g;
+
+export function protectInjectedReferenceBlocks(goal: string): { tokenized: string; placeholders: Map<string, string> } {
+    const placeholders = new Map<string, string>();
+    const matches = [...goal.matchAll(REFERENCE_MARKER_REGEX)];
+
+    let tokenized: string;
+    let placeholderIndex = 0;
+
+    if (matches.length === 0) {
+        tokenized = goal;
+    } else {
+        tokenized = '';
+        let cursor = 0;
+
+        for (let i = 0; i < matches.length; i++) {
+            const match = matches[i];
+            const matchStart = match.index ?? -1;
+            if (matchStart < cursor) continue; // already consumed as part of a prior span
+
+            const markerEnd = matchStart + match[0].length;
+            const rest = goal.slice(markerEnd);
+            const leadingWsLen = rest.length - rest.trimStart().length;
+            const contentStart = markerEnd + leadingWsLen;
+
+            const PDF_CONTEXT_CLOSE = '[/PDF-Context]';
+            let blockEnd: number;
+            if (goal.startsWith('```', contentStart)) {
+                const closeIdx = goal.indexOf('```', contentStart + 3);
+                blockEnd = closeIdx === -1 ? goal.length : closeIdx + 3;
+            } else if (goal.startsWith('[PDF-Context]', contentStart)) {
+                const closeIdx = goal.indexOf(PDF_CONTEXT_CLOSE, contentStart);
+                blockEnd = closeIdx === -1 ? goal.length : closeIdx + PDF_CONTEXT_CLOSE.length;
+            } else {
+                // No known closing delimiter (older/unrecognized injected content shape) —
+                // fall back to running until the next reference marker or end of string.
+                // This can still swallow trailing user text that immediately follows an
+                // unrecognized injected block on the same line; recognized shapes above
+                // avoid that by bounding themselves explicitly.
+                const nextMatch = matches.slice(i + 1).find(m => (m.index ?? -1) >= contentStart);
+                blockEnd = nextMatch ? (nextMatch.index as number) : goal.length;
+            }
+
+            const placeholder = `protected_ref_${placeholderIndex++}`;
+            placeholders.set(placeholder, goal.slice(matchStart, blockEnd));
+            tokenized += goal.slice(cursor, matchStart) + placeholder;
+            cursor = blockEnd;
+        }
+        tokenized += goal.slice(cursor);
+    }
+
+    // Second pass: protect any bracketed system sentinels left over (self-contained, no
+    // "following content" to bound — the whole match is the span).
+    let finalTokenized = '';
+    let sentinelCursor = 0;
+    for (const m of tokenized.matchAll(SENTINEL_REGEX)) {
+        const start = m.index ?? -1;
+        const end = start + m[0].length;
+        const placeholder = `protected_ref_${placeholderIndex++}`;
+        placeholders.set(placeholder, m[0]);
+        finalTokenized += tokenized.slice(sentinelCursor, start) + placeholder;
+        sentinelCursor = end;
+    }
+    finalTokenized += tokenized.slice(sentinelCursor);
+
+    return { tokenized: finalTokenized, placeholders };
+}
+
+// Scans raw (untokenized) message text for [PDF-PAGE-DEFERRED: <path> — ...] sentinels
+// (resolveFileRefs()'s 5-page-per-pass cap) and returns the deferred page references found.
+function extractDeferredPdfPages(text: string): string[] {
+    const regex = /\[PDF-PAGE-DEFERRED:\s*([^—\]]+?)\s*—[^\]]*\]/g;
+    return [...text.matchAll(regex)].map(m => m[1].trim());
+}
+
+// The model isn't reliably mentioning a deferred page on its own (confirmed live: a 6-page
+// request with one page deferred by the cap produced a response that never mentioned page 6
+// at all, especially once context-budget truncation drops earlier pages too) — so this is
+// appended deterministically rather than left to chance.
+function appendDeferredPagesNotice(content: string, deferred: string[], maxPages: number): string {
+    if (deferred.length === 0) return content;
+    const list = deferred.map(d => `- \`${d}\``).join('\n');
+    return `${content}\n\n---\n⚠️ **Note:** ${deferred.length} PDF page reference(s) were not processed in this pass (max ${maxPages} pages per request) and are not reflected above:\n${list}\nAsk again in a follow-up request to include them.`;
+}
+
+function restoreProtectedReferenceBlocks(text: string, placeholders: Map<string, string>): string {
+    let restored = text;
+    for (const [placeholder, original] of placeholders) {
+        restored = restored.split(placeholder).join(original);
+    }
+    return restored;
+}
+
+// Returns subtasks with `protected_ref_N` placeholder tokens left UNRESOLVED (not restored
+// to raw injected content) — decomposeGoalCore's line-splitting, buildExecutionPlan's
+// dependency/file-extraction heuristics, and queue storage/logs all then operate on short,
+// clean text instead of raw PDF/file page content. `resolvedContext` carries the
+// placeholder -> full-content map for the caller to retain (QueueState.resolvedContext) and
+// resolve lazily, once, at actual subtask-execution time (see executeSingleSubtask).
+export function decomposeGoal(goal: string): { tasks: QueueTask[]; resolvedContext: Record<string, string> } {
+    const { tokenized, placeholders } = protectInjectedReferenceBlocks(goal);
+    const steps = placeholders.size === 0 ? decomposeGoalCore(goal) : decomposeGoalCore(tokenized);
+    const tasks = steps.map(task => ({ id: newQueueTaskId(), task }));
+    const resolvedContext = Object.fromEntries(placeholders);
+    return { tasks, resolvedContext };
+}
+
+function decomposeGoalCore(goal: string): string[] {
     let items: string[] = [];
     const lines = goal.split('\n').map(l => l.trim()).filter(Boolean);
     
@@ -826,6 +974,8 @@ function calculateQuantumSemanticWeights(
 
 async function executeSingleSubtask(
     currentTask: string,
+    taskId: string,
+    resolvedContext: Record<string, string>,
     context: PipelineContext,
     sessionId: string,
     projectDir: string,
@@ -842,6 +992,46 @@ async function executeSingleSubtask(
     let subtaskCompleted = false;
 
     while (!subtaskCompleted && enrichmentCycleCount <= MAX_ENRICHMENT_CYCLES) {
+        // Subtask-local PDF reference resolution: this subtask's own text may reference a
+        // pdf:// that wasn't part of the original top-level intake (e.g. a reference the
+        // planner introduced mid-plan). Resolve it once here — cached into resolvedContext,
+        // and the raw marker replaced with an opaque placeholder using the same token scheme
+        // protectInjectedReferenceBlocks uses — so it flows through the rest of this function
+        // exactly like an intake-resolved reference, and a re-entered enrichment cycle (this
+        // loop runs again on the same `currentTask`, which by then already holds the
+        // placeholder, not raw "pdf://...") never re-renders the page.
+        const pdfMatches = [...currentTask.matchAll(REFERENCE_MARKER_REGEX)]
+            .filter(m => (m.groups?.bProto ?? m.groups?.proto)?.toLowerCase() === 'pdf');
+        if (pdfMatches.length > 0) {
+            try {
+                const { resolvePdfRef, MAX_PDF_PAGES_PER_PASS } = await import('../../tools/use-free-llm.js');
+                let updatedTask = currentTask;
+                for (let i = 0; i < pdfMatches.length; i++) {
+                    const m = pdfMatches[i];
+                    const uriPath = m.groups?.bPath ?? m.groups?.path;
+                    if (!uriPath) continue;
+                    // Same real cap as resolveFileRefs()'s top-level intake — this loop is a
+                    // second, independent resolution path (subtask-local references), and
+                    // without its own limit it would bypass the cap entirely for any subtask
+                    // text that happens to carry many pdf:// markers.
+                    if (i >= MAX_PDF_PAGES_PER_PASS) {
+                        const sentinel = `[PDF-PAGE-DEFERRED: ${uriPath} — resolve in a follow-up request; max ${MAX_PDF_PAGES_PER_PASS} PDF pages per pass.]`;
+                        updatedTask = updatedTask.replace(m[0], sentinel);
+                        continue;
+                    }
+                    const res = await resolvePdfRef(uriPath, workspaceRoot);
+                    if (res) {
+                        const placeholder = `protected_ref_${taskId}_${Object.keys(resolvedContext).length}`;
+                        resolvedContext[placeholder] = `${m[0]}\n\n${res.resolvedContent}`;
+                        updatedTask = updatedTask.replace(m[0], placeholder);
+                    }
+                }
+                currentTask = updatedTask;
+            } catch (err) {
+                console.error(`[AgenticMiddleware] Subtask-local PDF resolution failed: ${err}`);
+            }
+        }
+
         try {
             const userMessage = context.request.messages.find(m => m.role === 'user');
             const mainPrompt = userMessage ? getMessageContent(userMessage.content) : undefined;
@@ -892,7 +1082,16 @@ async function executeSingleSubtask(
                 }
             }
 
-            const taskHeader = `\n\n## 📝 CURRENT SUBTASK\nYou are currently executing this subtask:\n- **Task**: ${currentTask}\n\nStrictly focus on this subtask using the tools provided.${historySection}`;
+            // Resolve protected_ref_N placeholders back to full injected content only here, right
+            // before the prompt actually shown to the LLM is built. Everything upstream of this
+            // point (decomposeGoal, buildExecutionPlan, queue storage, logs, history) only ever
+            // sees the short placeholder form — this is the one place the real content gets
+            // substituted back in, resolved fresh from the retained map rather than re-derived.
+            const resolvedTaskText = Object.keys(resolvedContext).length > 0
+                ? restoreProtectedReferenceBlocks(currentTask, new Map(Object.entries(resolvedContext)))
+                : currentTask;
+
+            const taskHeader = `\n\n## 📝 CURRENT SUBTASK\nYou are currently executing this subtask:\n- **Task**: ${resolvedTaskText}\n\nStrictly focus on this subtask using the tools provided.${historySection}`;
 
             const messages = context.request.messages;
             const sysMsgIdx = messages.findIndex(m => m.role === 'system');
@@ -959,18 +1158,33 @@ async function executeSingleSubtask(
             }
         }
 
-        if (!handledProactively) {
-            const { ImageRouterMiddleware } = await import('./ImageRouterMiddleware.js');
-            const imageRouter = new ImageRouterMiddleware(executor);
-            const processedMessages = await imageRouter.processImageMessages(context.request.messages);
+        // Everything from here on makes real LLM calls (executor.prompt()) that can throw
+        // (network errors, provider exceptions, etc.). Those must not escape uncaught: the
+        // caller's `if (!success || !responseContent)` branch (AgenticMiddleware.ts, in the
+        // sequential-execution while loop) already turns a `false` return into a proper HITL
+        // pause — sets q.paused/q.promptId, persists, and returns a `continue <id>` message —
+        // exactly the recoverable state a crash should land in. Before this try/catch, an
+        // uncaught exception here skipped that branch entirely, leaving nowQueue stuck
+        // non-empty on disk with paused:false: invisible to the user, and every future call
+        // against the same session would silently resume and re-crash on the same subtask
+        // forever, with no `continue` prompt ever shown.
+        try {
+            if (!handledProactively) {
+                const { ImageRouterMiddleware } = await import('./ImageRouterMiddleware.js');
+                const imageRouter = new ImageRouterMiddleware(executor);
+                const processedMessages = await imageRouter.processImageMessages(context.request.messages);
 
-            const response = await executor.prompt(processedMessages, context.request.model, {
-                taskType: context.taskType || 'coding',
-                google_search: context.request.google_search,
-                sessionId,
-                agentic: false
-            });
-            context.response = response;
+                const response = await executor.prompt(processedMessages, context.request.model, {
+                    taskType: context.taskType || 'coding',
+                    google_search: context.request.google_search,
+                    sessionId,
+                    agentic: false
+                });
+                context.response = response;
+            }
+        } catch (err) {
+            console.error(`[AgenticMiddleware] Subtask execution crashed: ${err}`);
+            return false;
         }
 
         const responseContent = getResponseContent(context);
@@ -1060,12 +1274,18 @@ async function executeSingleSubtask(
                     context.request.messages.push({ role: 'user', content: recoveryMsg });
                     subtaskContexts.push(`🛡️ **Recovery Context**: Injected ${recoveryAnswers.length} lines to resolve hallucination.`);
                     
-                    const recoveryResponse = await executor.prompt(context.request.messages, context.request.model, {
-                        taskType: context.taskType || 'coding',
-                        google_search: context.request.google_search,
-                        sessionId,
-                        agentic: false
-                    });
+                    let recoveryResponse;
+                    try {
+                        recoveryResponse = await executor.prompt(context.request.messages, context.request.model, {
+                            taskType: context.taskType || 'coding',
+                            google_search: context.request.google_search,
+                            sessionId,
+                            agentic: false
+                        });
+                    } catch (err) {
+                        console.error(`[AgenticMiddleware] Hallucination-recovery call crashed: ${err}`);
+                        return false;
+                    }
                     context.response = recoveryResponse;
                     
                     if (recoveryResponse) {
@@ -1122,7 +1342,7 @@ export class AgenticMiddleware implements Middleware {
         this.executor = executor || new LLMExecutor();
     }
 
-    private limitSubtasks(steps: string[]): string[] {
+    private limitSubtasks(steps: QueueTask[]): QueueTask[] {
         if (steps.length > 3) {
             return steps.slice(0, 3);
         }
@@ -1189,7 +1409,7 @@ export class AgenticMiddleware implements Middleware {
                     console.error(`[AgenticMiddleware] Resume command matched! Resuming session=${sessionId} with input: ${inputForNext}`);
                     q.paused = false;
                     if (inputForNext && q.nowQueue.length > 0) {
-                        q.nowQueue[0] = `${q.nowQueue[0]} (User input: ${inputForNext})`;
+                        q.nowQueue[0].task = `${q.nowQueue[0].task} (User input: ${inputForNext})`;
                     }
                     persistStateDebounced(sessionId, projectDir);
                 } else {
@@ -1201,7 +1421,26 @@ export class AgenticMiddleware implements Middleware {
         (context as any).isSubtask = q.nowQueue.length > 0;
 
         if (userContent && q.nowQueue.length === 0) {
-            const intent = classifyIntent(userContent);
+            // classifyIntent()'s heuristics (hasFile/hasTask/hasQuestion) must run on the
+            // user's actual typed text, not on injected pdf://file://artifact:// content —
+            // otherwise capitalized words or keywords inside an injected PDF page (e.g. a
+            // filename like "Cyber_Forensics.pdf") can flip a plain "summarize this page"
+            // ask into CLEAR_TASK, sending it through full agentic subtask decomposition
+            // instead of the cheaper QUESTION path.
+            const { tokenized: intentTokenized, placeholders: intentPlaceholders } = protectInjectedReferenceBlocks(userContent);
+            let intent = classifyIntent(intentTokenized);
+            if (intent === 'CONFUSED' && intentPlaceholders.size > 0) {
+                // A pdf://file://artifact:// reference was already resolved — that's proof
+                // of a concrete target, so this isn't genuinely ambiguous. Route to QUESTION
+                // instead: it builds its prompt from the full resolved userContent AND
+                // includes context.grepContext (already populated with any relevant wiki
+                // knowledge by WorkspaceContextMiddleware upstream), so the model answers
+                // directly instead of asking where a file is when its content is already in
+                // front of it. disambiguateConfusedIntent (the CONFUSED path) gets neither —
+                // it would ask a clarifying question about content it was just shown.
+                console.error(`[AgenticMiddleware] CONFUSED intent upgraded to QUESTION: reference content already resolved.`);
+                intent = 'QUESTION';
+            }
             if (intent === 'CONFUSED') {
                 console.error(`[AgenticMiddleware] User intent classified as CONFUSED. Executing bare clarification.`);
                 const clarification = await disambiguateConfusedIntent(userContent, workspaceRoot);
@@ -1245,6 +1484,14 @@ export class AgenticMiddleware implements Middleware {
 
                 const { getSharedRouter } = await import('../../pipeline/instances.js');
                 await getSharedRouter().execute(context, async () => { });
+
+                const deferredPages = extractDeferredPdfPages(userContent);
+                if (deferredPages.length > 0 && context.response?.choices?.[0]?.message) {
+                    const { MAX_PDF_PAGES_PER_PASS } = await import('../../tools/use-free-llm.js');
+                    const msg = context.response.choices[0].message as any;
+                    const currentContent = getMessageContent(msg.content);
+                    msg.content = appendDeferredPagesNotice(currentContent, deferredPages, MAX_PDF_PAGES_PER_PASS);
+                }
                 return;
             }
         }
@@ -1262,13 +1509,14 @@ export class AgenticMiddleware implements Middleware {
             // Log the user's turn to the chat log
             await logChatTurn(sessionId, { role: 'user', tool: 'use_free_llm', content: userContent });
 
-            const steps = decomposeGoal(userContent);
+            const { tasks: steps, resolvedContext } = decomposeGoal(userContent);
             const limitedSteps = this.limitSubtasks(steps);
-            
+
             const plan = await buildExecutionPlan(limitedSteps, workspaceRoot || process.cwd());
             executionPlanBrief = `<details><summary>🔍 Task Plan</summary>\n\n${plan.userBrief}\n</details>\n\n`;
-            
+
             q.nowQueue.push(...limitedSteps);
+            q.resolvedContext = { ...(q.resolvedContext || {}), ...resolvedContext };
         }
 
         persistStateDebounced(sessionId, projectDir);
@@ -1308,7 +1556,10 @@ export class AgenticMiddleware implements Middleware {
             if (isParallel && !isLowThroughput && phase1Tasks.length > 1) {
                 console.error(`[AgenticMiddleware] Parallel execution: running ${phase1Tasks.length} tasks concurrently`);
                 
-                // Pre-parallel indexing run: index once so children are fully up-to-date and lock-free
+                // Pre-parallel indexing run: index once so children are fully up-to-date and lock-free.
+                // This single call is what prevents concurrent-indexing races between subtasks below —
+                // subtasks execute via executeSingleSubtask() directly and never re-enter the pipeline
+                // (so they never re-trigger WorkspaceContextMiddleware's own indexing pass).
                 if (workspaceRoot) {
                     try {
                         console.error(`[AgenticMiddleware] Running pre-parallel workspace indexing...`);
@@ -1324,12 +1575,11 @@ export class AgenticMiddleware implements Middleware {
                         ...context,
                         request: {
                             ...context.request,
-                            skipIndexing: true, // <-- Skip concurrent indexing to avoid lock races
                             messages: context.request.messages.map(m => ({ ...m }))
                         }
                     } as any;
                     
-                    await executeSingleSubtask(t.task, clonedCtx, sessionId, projectDir, workspaceRoot, subtaskIteration, q.history || [], this.executor, [], commsQueue, promptQueue);
+                    await executeSingleSubtask(t.task, t.id, (q.resolvedContext ??= {}), clonedCtx, sessionId, projectDir, workspaceRoot, subtaskIteration, q.history || [], this.executor, [], commsQueue, promptQueue);
                     return clonedCtx;
                 });
 
@@ -1388,7 +1638,7 @@ export class AgenticMiddleware implements Middleware {
                     }]
                 } as any;
 
-                q.nowQueue.splice(0, phase1Tasks.length);
+                q.nowQueue = q.nowQueue.filter(e => !phase1Tasks.some(t => t.id === e.id));
                 persistStateDebounced(sessionId, projectDir);
 
             } else {
@@ -1452,7 +1702,7 @@ export class AgenticMiddleware implements Middleware {
                 const subtaskContexts: string[] = [];
                 await logChatTurn(sessionId, { role: 'subtask_start', tool: 'Agentic Subtask', content: currentTask });
 
-                const success = await executeSingleSubtask(currentTask, context, sessionId, projectDir, workspaceRoot, subtaskIteration, q.history || [], this.executor, subtaskContexts, commsQueue, promptQueue);
+                const success = await executeSingleSubtask(currentTask, currentTaskNode.id, (q.resolvedContext ??= {}), context, sessionId, projectDir, workspaceRoot, subtaskIteration, q.history || [], this.executor, subtaskContexts, commsQueue, promptQueue);
                 
                 const responseContent = getResponseContent(context);
 
@@ -1500,6 +1750,7 @@ export class AgenticMiddleware implements Middleware {
                 if (!q.history) q.history = [];
                 q.history.push({
                     task: currentTask,
+                    taskId: currentTaskNode.id,
                     output: responseContent,
                     filesModified,
                     timestamp: Date.now(),
@@ -1541,7 +1792,7 @@ export class AgenticMiddleware implements Middleware {
                                          q.retrospectionInjections++;
                                          console.error(`[AgenticMiddleware] Subtask scope expansion detected. Mutating queue.`);
                                          const newSubtask = `Address expanded scope from retrospection: ${newResponseContent.slice(0, 80)}...`;
-                                         q.nowQueue.splice(1, 0, newSubtask);
+                                         q.nowQueue.splice(1, 0, { id: newQueueTaskId(), task: newSubtask });
                                      }
                                  }
                              }
@@ -1549,7 +1800,7 @@ export class AgenticMiddleware implements Middleware {
                     }
                 }
 
-                q.nowQueue.shift();
+                q.nowQueue = q.nowQueue.filter(e => e.id !== currentTaskNode.id);
                 persistStateDebounced(sessionId, projectDir);
 
                 if (q.nowQueue.length === 0 && context.response && executionPlanBrief) {
@@ -1584,6 +1835,15 @@ export class AgenticMiddleware implements Middleware {
         }
 
         } catch (err: any) {
+            // Last-resort net for anything outside the subtask-execution loop (e.g.
+            // buildExecutionPlan() itself throwing, state I/O failures). Subtask-execution
+            // failures specifically (executor.prompt() throwing) are caught one level in,
+            // inside executeSingleSubtask(), and turned into a proper paused/`continue <id>`
+            // state via the `if (!success || !responseContent)` branch above — they should
+            // rarely reach here. This catch still only logs telemetry and rethrows; it does
+            // NOT clear q.nowQueue or set q.paused, so anything that does land here still
+            // leaves the queue stuck exactly as before — only the loop-level catch above
+            // makes that recoverable.
             console.error(`[AgenticMiddleware] Error during execution:`, err);
             try {
                 const now = Date.now();

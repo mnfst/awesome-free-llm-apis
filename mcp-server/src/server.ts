@@ -349,6 +349,7 @@ async function main() {
                 agentic: !!params.agentic,
                 workspace_root: params.workspace_root,
                 sessionId: sid || '__no_ws__',
+                skipIndexing: !!params.skipIndexing,
               });
               result = { content: r?.choices?.[0]?.message?.content ?? '', model: r?.model, provider: r?._providerId };
               break;
@@ -450,6 +451,27 @@ async function main() {
           let relativePath: string | undefined;
           if (workspaceRoot) {
             const wsAbs = path.resolve(workspaceRoot);
+            
+            // Path traversal safety gate: restrict allowed roots
+            const normAbs = wsAbs.replace(/\\/g, '/');
+            const allowedPrefixes = [
+              process.cwd().replace(/\\/g, '/'),
+              os.homedir().replace(/\\/g, '/'),
+              path.join(os.homedir(), '.anthropic', 'artifacts').replace(/\\/g, '/'),
+              path.join(os.homedir(), '.openai', 'artifacts').replace(/\\/g, '/'),
+              path.join(os.homedir(), '.codex', 'artifacts').replace(/\\/g, '/'),
+              path.join(os.homedir(), '.gemini', 'antigravity').replace(/\\/g, '/'),
+            ];
+            const isSafe = allowedPrefixes.some(prefix => {
+              const normPrefix = prefix.replace(/\/$/, '') + '/';
+              return normAbs === prefix || normAbs.startsWith(normPrefix);
+            });
+            
+            if (!isSafe) {
+              res.status(400).json({ error: 'workspace_root path traversal check failed (Security Gate)' });
+              return;
+            }
+
             destDir = path.join(wsAbs, '.mcp-uploads');
             relativePath = path.join('.mcp-uploads', safeName);
           } else {
@@ -557,7 +579,11 @@ async function main() {
             fsp.readFile(path.join(projectDir, STATE_FILE), 'utf-8').catch(() => null)  // Bug fix: was 'queues.json', real writer uses STATE_FILE (state.json)
           ]);
 
-          let queues: Record<string, string[]> = {
+          // Queue entries are `{id, task}` objects as of the Phase 2 schema migration
+          // (AgenticMiddleware.ts's QueueTask) — this endpoint just proxies parsed state.json
+          // straight to the dashboard, so `any[]` here (not a duplicated empty-state literal
+          // importing AgenticMiddleware.ts) is intentional; it never constructs real entries.
+          let queues: Record<string, any[]> = {
             nowQueue: [], nextQueue: [], blockedQueue: [], improveQueue: []
           };
           if (queuesRes) {

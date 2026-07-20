@@ -611,6 +611,7 @@ const pgClearBtn    = document.getElementById('pg-clear-btn');
 const pgStatus      = document.getElementById('pg-status');
 const pgLatency     = document.getElementById('pg-latency');
 const pgWorkspace   = document.getElementById('pg-workspace');
+const pgAgenticToggle = document.getElementById('pg-agentic-toggle');
 const convList      = document.getElementById('pg-conv-list');
 const convSearch    = document.getElementById('pg-conv-search');
 
@@ -1037,16 +1038,23 @@ function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save =
 // ─── Update workspace header badges ──────────────────────────────
 function updateWorkspaceUI() {
   const ws = pgWorkspace.value.trim();
+  const agentic = !!pgAgenticToggle?.checked;
   if (ws) {
     chatLabel.textContent = ws.split(/[\\\/]/).pop() || ws;
-    chatBadge.textContent = '🧠 Agentic';
-    chatBadge.className = 'badge badge-purple';
+    if (agentic) {
+      chatBadge.textContent = '🧠 Agentic';
+      chatBadge.className = 'badge badge-purple';
+    } else {
+      chatBadge.textContent = '📂 Grounded';
+      chatBadge.className = 'badge badge-cyan';
+    }
   } else {
     chatLabel.textContent = 'No workspace — one-shot mode';
     chatBadge.textContent = '⚡ One-shot';
     chatBadge.className = 'badge badge-amber';
   }
 }
+pgAgenticToggle?.addEventListener('change', updateWorkspaceUI);
 
 // ─── Conversation list panel ──────────────────────────────────────
 let _convSearchTimer = null;
@@ -1182,7 +1190,14 @@ pgRunBtn.addEventListener('click', async () => {
   if (ws) {
     params.workspace_root = ws;
     params.sessionId = activeSessionId;
-    if (activeTool.id === 'use_free_llm') {
+    // Agentic is an explicit opt-in (see the checkbox next to the workspace input) —
+    // it used to be auto-enabled just because a workspace was set, which forced every
+    // grounded request (including simple pdf://file:// reference lookups, which already
+    // work via workspace memory/context alone) through subtask decomposition. That
+    // decomposition has no way to distinguish injected reference content from
+    // user-authored task lists, so it could shred a resolved PDF-context block into
+    // bogus one-line "subtasks".
+    if (activeTool.id === 'use_free_llm' && pgAgenticToggle?.checked) {
       params.agentic = true;
     }
   }
@@ -1348,11 +1363,16 @@ function renderQueue(id, items) {
     el.innerHTML = '<div class="queue-empty">—</div>';
     return;
   }
-  el.innerHTML = items.map(item => `
+  el.innerHTML = items.map(item => {
+    // Queue entries are {id, task} objects; the `typeof` check keeps this working against
+    // state.json files persisted before this shape existed.
+    const text = typeof item === 'string' ? item : (item?.task ?? String(item));
+    return `
     <div class="queue-item">
       <span class="queue-chevron">›</span>
-      <span>${esc(String(item))}</span>
-    </div>`).join('');
+      <span>${esc(text)}</span>
+    </div>`;
+  }).join('');
 }
 
 let _historyData = [];

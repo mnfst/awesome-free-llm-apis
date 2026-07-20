@@ -557,9 +557,6 @@ export class TextRouterMiddleware implements Middleware {
         const confused = isUserConfused(rawLastMsg);
         if (confused) {
             console.debug('[TextRouter] Confused user state detected (no clear prompt or only file references).');
-            // Bypass wiki indexing and maintenance
-            (context as any).skipIndexing = true;
-            (context.request as any).skipIndexing = true;
 
             // Prepend system note to inform the model and ask it to guide the user
             const confusedInstruction = "\n[System Note: The user has not provided a clear request or instructions. They might be confused or just sharing/uploading. Please guide them on what they can do next with these files/images, summarize the contents briefly, and ask what they would like to do.]";

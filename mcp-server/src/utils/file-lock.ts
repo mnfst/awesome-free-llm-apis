@@ -1,10 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-// If a lock file is older than this, its holder is presumed dead (crashed,
-// force-killed — SIGKILL never runs the `finally` cleanup below) rather than
-// just slow, and it's safe to break the lock instead of waiting/failing.
-const STALE_LOCK_MS = 30000;
+
 
 function isPidAlive(pid: number): boolean {
     if (!Number.isFinite(pid) || pid <= 0) return false;
@@ -40,8 +37,17 @@ async function reapIfStale(lockPath: string): Promise<void> {
     }
 
     const age = Date.now() - stat.mtimeMs;
-    const holderDead = Number.isFinite(holderPid) && !isPidAlive(holderPid);
-    if (holderDead || age > STALE_LOCK_MS) {
+    const hasValidPid = Number.isFinite(holderPid) && holderPid > 0;
+    
+    let shouldReap = false;
+    if (hasValidPid) {
+        shouldReap = !isPidAlive(holderPid);
+    } else {
+        // Fallback for corrupted/unreadable locks: break lock if older than 30 seconds
+        shouldReap = age > 30000;
+    }
+
+    if (shouldReap) {
         try {
             await fs.unlink(lockPath);
         } catch {

@@ -202,9 +202,6 @@ export class ImageRouterMiddleware implements Middleware {
 
         if (confused) {
             console.debug('[ImageRouter] Confused user state detected (no clear prompt or boilerplate prompt).');
-            // Bypass wiki indexing and maintenance
-            (context as any).skipIndexing = true;
-            (context.request as any).skipIndexing = true;
 
             // Prepend system note to inform the model and ask it to guide the user
             const confusedInstruction = "\n[System Note: The user has not provided a clear request or instructions. They might be confused or just uploading/sharing files. Please guide them on what they can do next with these files/images, summarize the contents briefly, and ask what they would like to do.]";
@@ -223,18 +220,10 @@ export class ImageRouterMiddleware implements Middleware {
         }
 
         const requestedModel = context.request.model;
-        const availableProviders = ProviderRegistry.getInstance().getAvailableProviders();
+        const registry = ProviderRegistry.getInstance();
+        const availableProviders = registry.getAvailableProviders();
 
-        // Build candidate models from each provider's declared visionModels list
-        const visionModelSet = new Set<string>();
-        for (const provider of availableProviders) {
-            if (provider.visionModels && provider.visionModels.length > 0) {
-                for (const vm of provider.visionModels) {
-                    visionModelSet.add(vm.id);
-                }
-            }
-        }
-        let candidateModels = Array.from(visionModelSet);
+        let candidateModels = [...new Set(registry.getAvailableVisionModels().map(({ model }) => model.id))];
 
         // Prioritize requested model if it's a known vision model
         if (requestedModel && requestedModel !== 'any') {

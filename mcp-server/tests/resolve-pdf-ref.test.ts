@@ -28,14 +28,23 @@ vi.mock('../src/memory/pdf-wiki.js', () => ({
 }));
 
 const { chatMock } = vi.hoisted(() => ({ chatMock: vi.fn() }));
-vi.mock('../src/providers/registry.js', () => ({
-  ProviderRegistry: {
-    getInstance: vi.fn().mockReturnValue({
-      getAvailableProviders: () => [{ id: 'mock-provider', models: [{ id: 'mock-model' }], chat: chatMock }],
-      getProvider: () => ({ id: 'mock-provider', models: [{ id: 'mock-model' }], chat: chatMock }),
-    })
-  }
-}));
+vi.mock('../src/providers/registry.js', () => {
+  const mockProvider = {
+    id: 'mock-provider',
+    models: [{ id: 'mock-model' }],
+    visionModels: [{ id: 'mock-model' }],
+    chat: chatMock,
+  };
+  return {
+    ProviderRegistry: {
+      getInstance: vi.fn().mockReturnValue({
+        getAvailableProviders: () => [mockProvider],
+        getProvider: () => mockProvider,
+        getAvailableVisionModels: () => mockProvider.visionModels.map(model => ({ provider: mockProvider, model })),
+      })
+    }
+  };
+});
 
 describe('resolvePdfRef offset-cache staleness', () => {
   beforeEach(() => {

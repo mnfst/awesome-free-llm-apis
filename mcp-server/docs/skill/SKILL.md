@@ -59,6 +59,25 @@ When `"agentic": true` is enabled, the pipeline decomposes the user's goal into 
 }
 ```
 
+#### Working with `pdf://`/`file://` references that aren't a workspace task
+`pdf://`, `file://`, and `artifact://` reference resolution — including PDF-to-wiki indexing — works regardless of `agentic`. It does **not** require workspace mode. So for a request that's narrowly about a document (e.g. "summarize this PDF") and doesn't touch the codebase, the simplest and cheapest option is to just **not** set `"agentic": true` at all:
+```json
+{
+  "messages": [{ "role": "user", "content": "[notes](pdf://docs/manual.pdf:12) summarize this page" }]
+}
+```
+This resolves the reference and indexes it into the wiki (under a workspace-scoped `pdf/` subdirectory, kept separate from codebase-architecture pages) with none of the overhead below.
+
+If you genuinely need *both* — e.g. "read this PDF spec and implement it in `src/routes.ts`" — you still want `"agentic": true` for the coding half. In that mixed case only, every agentic call with a `workspace_root` also backgrounds (non-blocking) a pre-emptive full-workspace re-index followed by a wiki-maintenance pass (regenerating general codebase-architecture wiki pages). That's the right default when the task is genuinely about the codebase, but you can opt out of it with `"skipIndexing": true` if you know this particular call doesn't need it — this flag must be set on the initial request itself; it cannot be toggled mid-pipeline:
+```json
+{
+  "messages": [{ "role": "user", "content": "[notes](pdf://docs/manual.pdf:12) summarize this page" }],
+  "agentic": true,
+  "workspace_root": "c:/Users/mahes/project",
+  "skipIndexing": true
+}
+```
+
 ---
 
 ### `load_skill_prompt` [NEW]
