@@ -40,7 +40,8 @@ export class LongTermMemory {
   // clear() would correctly delete a key, but the very next unrelated
   // save()/delete() batch on this instance would merge in this process's
   // stale in-memory copy of it and put it right back.
-  private pendingWrite: Promise<void> | null = null;
+  private activeBatchPromise: Promise<void> | null = null;
+  private nextBatchPromise: Promise<void> | null = null;
   private pendingWrites = new Map<string, unknown>();
   private pendingDeletes = new Set<string>();
 
@@ -91,9 +92,9 @@ export class LongTermMemory {
 
   /** Batches this process's in-flight mutations into one locked read-merge-write cycle. */
   private scheduleWrite(): Promise<void> {
-    if (this.pendingWrite) return this.pendingWrite;
+    if (this.nextBatchPromise) return this.nextBatchPromise;
 
-    this.pendingWrite = (async () => {
+    this.nextBatchPromise = (async () => {
       // Let any synchronously-issued save()/delete() calls from this tick join the batch.
       await new Promise<void>(resolve => setImmediate(resolve));
       const writes = new Map(this.pendingWrites);
@@ -101,28 +102,35 @@ export class LongTermMemory {
       this.pendingWrites.clear();
       this.pendingDeletes.clear();
 
-      // Clear the reference immediately after snapshotting so subsequent calls start a new batch
-      this.pendingWrite = null;
+      const myPromise = this.nextBatchPromise!;
+      this.nextBatchPromise = null;
+      this.activeBatchPromise = myPromise;
 
-      await withFileLock(this.storePath, async () => {
-        let onDisk: Record<string, unknown> = {};
-        try {
-          onDisk = JSON.parse(await fs.readFile(this.storePath, 'utf-8'));
-        } catch {
-          // no file yet, or unreadable — treat as empty base
+      try {
+        await withFileLock(this.storePath, async () => {
+          let onDisk: Record<string, unknown> = {};
+          try {
+            onDisk = JSON.parse(await fs.readFile(this.storePath, 'utf-8'));
+          } catch {
+            // no file yet, or unreadable — treat as empty base
+          }
+          // Apply ONLY this batch's explicit mutations on top of the current on-disk
+          // truth — never the whole in-memory `this.data`, which can hold stale copies
+          // of keys this process never meant to touch (see class-level comment).
+          const merged = { ...onDisk };
+          for (const [key, value] of writes) merged[key] = value;
+          for (const key of deletes) delete merged[key];
+          await writeFileAtomic(this.storePath, JSON.stringify(merged, null, 2));
+          this.data = merged; // keep in-memory view consistent with what's now durably on disk
+        }, LOCK_WAIT_MS);
+      } finally {
+        if (this.activeBatchPromise === myPromise) {
+          this.activeBatchPromise = null;
         }
-        // Apply ONLY this batch's explicit mutations on top of the current on-disk
-        // truth — never the whole in-memory `this.data`, which can hold stale copies
-        // of keys this process never meant to touch (see class-level comment).
-        const merged = { ...onDisk };
-        for (const [key, value] of writes) merged[key] = value;
-        for (const key of deletes) delete merged[key];
-        await writeFileAtomic(this.storePath, JSON.stringify(merged, null, 2));
-        this.data = merged; // keep in-memory view consistent with what's now durably on disk
-      }, LOCK_WAIT_MS);
+      }
     })();
 
-    return this.pendingWrite!;
+    return this.nextBatchPromise || this.activeBatchPromise!;
   }
 
   async save(key: string, value: unknown): Promise<void> {

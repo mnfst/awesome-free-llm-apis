@@ -52,8 +52,25 @@ export async function buildExecutionPlan(
         // Fallback: graph is empty/null if file doesn't exist
     }
 
+    // Ensure all tasks are normalized to TaskInput objects (guard against legacy string[] queues)
+    const normalizedTasks: TaskInput[] = tasks.map((t, idx) => {
+        if (typeof t === 'string') {
+            return {
+                id: `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+                task: t
+            };
+        }
+        if (!t || typeof t.task !== 'string') {
+            return {
+                id: t?.id || `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+                task: String(t?.task || t || '')
+            };
+        }
+        return t;
+    });
+
     // Limit to max 3 subtasks as per constraints
-    const rawActiveTasks = tasks.slice(0, 3);
+    const rawActiveTasks = normalizedTasks.slice(0, 3);
     if (rawActiveTasks.length === 0) {
         return {
             userBrief: 'No tasks to plan.',

@@ -112,6 +112,24 @@ async function getOrLoadState(sessionId: string): Promise<QueueState> {
         if (!state.history) state.history = [];
         if (state.paused === undefined) state.paused = false;
         if (!state.resolvedContext) state.resolvedContext = {};
+        
+        // Migrate legacy string queues to QueueTask objects
+        const migrateQueue = (q: any[]) => {
+            if (!Array.isArray(q)) return [];
+            return q.map((item, idx) => {
+                if (typeof item === 'string') {
+                    return {
+                        id: `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+                        task: item
+                    };
+                }
+                return item;
+            });
+        };
+        state.nowQueue = migrateQueue(state.nowQueue);
+        state.nextQueue = migrateQueue(state.nextQueue);
+        state.blockedQueue = migrateQueue(state.blockedQueue);
+        state.improveQueue = migrateQueue(state.improveQueue);
     }
     return state;
 }
