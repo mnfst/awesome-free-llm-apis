@@ -171,10 +171,17 @@ export async function maybeIndexPdfIntoWiki(params: {
       }
     }
 
-    // Track this page (deduplicated)
-    if (!state.pagesSeen.includes(pageNum) && state.pagesSeen.length < wikiConfig.maxTrackedPages) {
-      state.pagesSeen.push(pageNum);
-      state.pagesSeen.sort((a, b) => a - b);
+    // Track this page (deduplicated). maxTrackedPages is a safety valve for pathological
+    // cases, not a normal content-loss point — pages beyond it are still embedded above and
+    // remain RAG-searchable, but stop contributing to the rolling wiki summary, so make that
+    // visible instead of silent.
+    if (!state.pagesSeen.includes(pageNum)) {
+      if (state.pagesSeen.length < wikiConfig.maxTrackedPages) {
+        state.pagesSeen.push(pageNum);
+        state.pagesSeen.sort((a, b) => a - b);
+      } else {
+        console.warn(`[pdf-wiki] "${pdfBasename}" hit maxTrackedPages (${wikiConfig.maxTrackedPages}) — page ${pageNum} is embedded and RAG-searchable but will not be folded into the wiki summary. Raise PDF_MAX_PAGES if this document should be fully summarized.`);
+      }
     }
     state.chunkIds = [...(state.chunkIds || []), ...newChunkIds];
 
@@ -219,14 +226,28 @@ export async function maybeIndexPdfIntoWiki(params: {
       : '';
 
     // ── Step 5: Semantic retrieval (RAG) ────────────────────────────────────
+    // Scale retrieval width with how much of the document is actually embedded — a fixed
+    // top-k (e.g. 8) that's fine for a 10-page PDF leaves most of a large book's chunks
+    // permanently unreachable by any single query. Grows with chunkIds.length, bounded by
+    // ragTopKCeiling so a single retrieval pass still stays a sane prompt size.
+    const effectiveRagTopK = Math.min(
+      wikiConfig.ragTopKCeiling,
+      wikiConfig.ragTopK + Math.floor(state.chunkIds.length / 50)
+    );
     const semanticQuery = summarizeTextLocally(batchRaw, wikiConfig.ragQuerySumChars);
     let ragChunksBlock = '(no related prior content found)';
     try {
-      const retrieved = await vectorStore.search(wsHash, semanticQuery, wikiConfig.ragTopK) as any[];
+      const retrieved = await vectorStore.search(wsHash, semanticQuery, effectiveRagTopK) as any[];
       // Filter to same PDF only
       const relevant = retrieved.filter(r =>
         r.metadata?.pdfPath === relativePdfPath && !batchPageNums.includes(r.metadata?.page)
       );
+      // Beyond pure similarity, prefer chunks near the current batch's pages — cross-page
+      // continuity for a book matters more from nearby chapters than from a distant but
+      // lexically-similar section.
+      const nearestDistance = (page: number) =>
+        Math.min(...batchPageNums.map(pg => Math.abs(pg - page)));
+      relevant.sort((a, b) => nearestDistance(a.metadata?.page ?? 0) - nearestDistance(b.metadata?.page ?? 0));
       if (relevant.length > 0) {
         ragChunksBlock = relevant
           .map((r, i) => `[Chunk ${i + 1} — page ${r.metadata?.page}, score ${(r as any).score?.toFixed(2) ?? '?'}]\n${r.content}`)
@@ -269,7 +290,10 @@ export async function maybeIndexPdfIntoWiki(params: {
       candidateBlock,
       '',
       state.wikiTitle
-        ? `Task: Update the wiki page. Preserve the title "${state.wikiTitle}" exactly. Integrate new content with the existing summary, using RAG-retrieved excerpts to resolve cross-references. Output: single JSON object {title, content, tags, links} or empty array [] if unsummarisable.`
+        // Body-size cap applies to updates too, not just the initial create — without it, a long
+        // document's summary can keep growing unbounded across many batches (recency dilution +
+        // eventual prompt-size pressure), instead of staying a stable-size distillation.
+        ? `Task: Update the wiki page. Preserve the title "${state.wikiTitle}" exactly. Integrate new content with the existing summary, using RAG-retrieved excerpts to resolve cross-references. Keep the merged content under ${wikiConfig.maxPageBodyBytes} characters — condense/prune older material rather than letting it grow unbounded across batches. Output: single JSON object {title, content, tags, links} or empty array [] if unsummarisable.`
         : `Task: Create a wiki page summarizing this document. Return ONLY a JSON array with zero or one element: { "title": "short descriptive title", "content": "wiki page body in markdown, under ${wikiConfig.maxPageBodyBytes} characters", "tags": ["pdf", ...], "links": ["<exact title from candidate list>", ...] }. Return [] if unsummarisable.`,
     ].join('\n');
 

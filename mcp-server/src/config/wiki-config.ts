@@ -11,8 +11,13 @@
  * PDF_BATCH_THRESHOLD   - pages to accumulate before triggering LLM (default: 5)
  * PDF_CHUNK_SIZE        - chars per vector chunk (default: 600)
  * PDF_CHUNK_OVERLAP     - overlap between chunks (default: 120)
- * PDF_RAG_TOP_K         - top-k chunks retrieved per RAG pass (default: 8)
- * PDF_MAX_PAGES         - max PDF pages tracked per document (default: 100)
+ * PDF_RAG_TOP_K         - base top-k chunks retrieved per RAG pass (default: 8); scales up with
+ *                         document chunk count, capped by PDF_RAG_TOP_K_CEILING
+ * PDF_RAG_TOP_K_CEILING - max top-k a large document's RAG pass can scale to (default: 40)
+ * PDF_MAX_PAGES         - safety-valve ceiling on pages tracked per document (default: 100000,
+ *                         effectively unbounded — chunk embedding is already uncapped, so this
+ *                         only guards against pathological cases; hitting it logs a warning
+ *                         rather than silently dropping summarization coverage)
  * PDF_RAG_QUERY_CHARS   - chars of batch text used to build RAG query (default: 400)
  */
 
@@ -37,7 +42,8 @@ export const wikiConfig = {
   chunkSize:             parseInt(process.env.PDF_CHUNK_SIZE       ?? '600',  10),
   chunkOverlap:          parseInt(process.env.PDF_CHUNK_OVERLAP    ?? '120',  10),
   ragTopK:               parseInt(process.env.PDF_RAG_TOP_K        ?? '8',    10),
-  maxTrackedPages:       parseInt(process.env.PDF_MAX_PAGES        ?? '100',  10),
+  ragTopKCeiling:        parseInt(process.env.PDF_RAG_TOP_K_CEILING ?? '40',  10),
+  maxTrackedPages:       parseInt(process.env.PDF_MAX_PAGES        ?? '100000', 10),
   ragQuerySumChars:      parseInt(process.env.PDF_RAG_QUERY_CHARS  ?? '400',  10),
   batchRawMaxChars:      contextK * 512,             // half context for batch text
 } as const;

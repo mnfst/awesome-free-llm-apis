@@ -14,4 +14,12 @@ describe('wikiConfig', () => {
     const overhead = wikiConfig.maxPageSizeBytes - wikiConfig.maxPageBodyBytes;
     expect(overhead).toBeGreaterThanOrEqual(400);
   });
+
+  it('maxTrackedPages default is a safety valve, not a small silent content-loss cap (was 100)', () => {
+    expect(wikiConfig.maxTrackedPages).toBeGreaterThan(1000);
+  });
+
+  it('ragTopKCeiling is greater than the base ragTopK, so retrieval can scale up for large documents', () => {
+    expect(wikiConfig.ragTopKCeiling).toBeGreaterThan(wikiConfig.ragTopK);
+  });
 });

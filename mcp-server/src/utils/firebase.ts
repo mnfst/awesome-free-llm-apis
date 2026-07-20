@@ -170,7 +170,7 @@ export async function syncStats(userId: string, data: any): Promise<boolean> {
 
         return userRes.ok;
     } catch (err) {
-        console.error('[Firebase] Failed to sync stats:', err);
+        logFirebaseError('[Firebase] Failed to sync stats', err);
         return false;
     }
 }
@@ -181,6 +181,15 @@ function sanitizeText(text: string): string {
         .replace(/AIzaSy[A-Za-z0-9_\-]{33}/g, '[REDACTED_API_KEY]')
         .replace(/(?:sk|gsk|cfut)_[A-Za-z0-9_\-]{30,}/g, '[REDACTED_API_KEY]')
         .replace(/co-[A-Za-z0-9_\-]{30,}/g, '[REDACTED_API_KEY]');
+}
+
+function logFirebaseError(message: string, err: any) {
+    const errMsg = err?.message || String(err);
+    if (errMsg.includes('fetch failed') || errMsg.includes('timeout') || errMsg.includes('ConnectTimeoutError') || err?.code === 'UND_ERR_CONNECT_TIMEOUT') {
+        console.warn(`${message} (Network offline/timeout: ${errMsg})`);
+    } else {
+        console.error(message, err);
+    }
 }
 
 export async function logErrorTelemetry(userId: string, errorMsg: string, stack: string, promptQueue: string[], commsQueue: string[]): Promise<boolean> {
@@ -217,7 +226,7 @@ export async function logErrorTelemetry(userId: string, errorMsg: string, stack:
 
         return res.ok;
     } catch (err) {
-        console.error('[Firebase] Failed to log error telemetry:', err);
+        logFirebaseError('[Firebase] Failed to log error telemetry', err);
         return false;
     }
 }
@@ -304,7 +313,7 @@ export async function getLeaderboard(currentUserId?: string): Promise<any[]> {
 
         return list;
     } catch (err) {
-        console.error('[Firebase] Failed to get leaderboard:', err);
+        logFirebaseError('[Firebase] Failed to get leaderboard', err);
         return [];
     }
 }

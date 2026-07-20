@@ -295,24 +295,58 @@ describe('maybeIndexPdfIntoWiki — RAG pipeline', () => {
     expect(promptSecond).toContain('Pinned Title'); // existing wikiTitle fed into prompt
   });
 
-  // ── Test 9: MAX_TRACKED_PAGES cap stops pagesSeen growth ──────────────────
-  it('stops tracking new pages for summarization once MAX_TRACKED_PAGES=100 is reached', async () => {
+  // ── Test 9: maxTrackedPages is now a safety valve (default effectively unbounded), not a
+  // silent 100-page content-loss point — hitting an explicitly configured low cap logs a
+  // warning instead of silently dropping the page from summarization coverage.
+  it('stops tracking new pages for summarization once a configured maxTrackedPages cap is reached, and warns loudly', async () => {
     const chat = mockProvider('[]');
     const { absPath, relPath } = await makePdf('big.pdf');
 
-    // Seed state as if 100 pages are already tracked
+    const originalCap = wikiConfig.maxTrackedPages;
+    (wikiConfig as any).maxTrackedPages = 100;
+
+    try {
+      // Seed state as if 100 pages are already tracked
+      const fakeState = {
+        mtimeMs: (await fs.stat(absPath)).mtimeMs,
+        pagesSeen: Array.from({ length: 100 }, (_, i) => i + 1),
+        lastSummarizedPageCount: 100,
+        chunkIds: [],
+      };
+      await memoryManager.longTerm.save(`${STATE_KEY_PREFIX}:${'big.pdf'}:state`, fakeState);
+      chat.mockClear();
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Referencing page 101 should NOT trigger LLM (cap reached), but should warn loudly.
+      await callIndex(absPath, 'big.pdf', 101, 'new text beyond cap', 200);
+      expect(chat).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('maxTrackedPages'));
+
+      warnSpy.mockRestore();
+    } finally {
+      (wikiConfig as any).maxTrackedPages = originalCap;
+    }
+  });
+
+  // ── Test 9b: default maxTrackedPages no longer silently caps a large document at 100 pages ──
+  it('keeps tracking pages well past the old 100-page default (maxTrackedPages default is now effectively unbounded)', async () => {
+    const chat = mockProvider('[]');
+    const { absPath, relPath } = await makePdf('book.pdf');
+
     const fakeState = {
       mtimeMs: (await fs.stat(absPath)).mtimeMs,
       pagesSeen: Array.from({ length: 100 }, (_, i) => i + 1),
       lastSummarizedPageCount: 100,
       chunkIds: [],
     };
-    await memoryManager.longTerm.save(`${STATE_KEY_PREFIX}:${'big.pdf'}:state`, fakeState);
+    await memoryManager.longTerm.save(`${STATE_KEY_PREFIX}:book.pdf:state`, fakeState);
     chat.mockClear();
 
-    // Referencing page 101 should NOT trigger LLM (cap reached)
-    await callIndex(absPath, 'big.pdf', 101, 'new text beyond cap', 200);
-    expect(chat).not.toHaveBeenCalled();
+    // Page 101 (beyond the OLD default cap) should still be tracked and count toward the batch.
+    await callIndex(absPath, 'book.pdf', 101, 'new text beyond old cap', 400);
+    const savedState: any = await memoryManager.longTerm.load(`${STATE_KEY_PREFIX}:book.pdf:state`);
+    expect(savedState.pagesSeen).toContain(101);
   });
 
   // ── Test 10: Writes wiki page tagged with 'pdf' ───────────────────────────
@@ -409,5 +443,49 @@ describe('maybeIndexPdfIntoWiki — RAG pipeline', () => {
       Math.max(1400, Math.ceil(largeSummary.length / 4) + 5 * 80)
     );
     expect(chatArgs.max_tokens).toBe(expectedUpdateTokens);
+  });
+
+  // ── Test 14: RAG top-k scales with document chunk count ──────────────────
+  it('requests a wider RAG top-k for documents with more embedded chunks, capped by ragTopKCeiling', async () => {
+    const chat = mockProvider('[]');
+    const { absPath, relPath } = await makePdf('scaled.pdf');
+
+    // Seed state with a large number of already-embedded chunks (simulating a big document).
+    const fakeState = {
+      mtimeMs: (await fs.stat(absPath)).mtimeMs,
+      pagesSeen: [1, 2, 3, 4],
+      lastSummarizedPageCount: 0,
+      chunkIds: Array.from({ length: 500 }, (_, i) => `chunk-${i}`),
+    };
+    await memoryManager.longTerm.save(`${STATE_KEY_PREFIX}:scaled.pdf:state`, fakeState);
+
+    await callIndex(absPath, 'scaled.pdf', 5, 'page five text', 200);
+    expect(chat).toHaveBeenCalledTimes(1);
+
+    expect(vectorSearchMock).toHaveBeenCalled();
+    const topKArg = vectorSearchMock.mock.calls[0][2];
+    // base (8) + floor(500/50)=10 = 18, capped at ragTopKCeiling (40)
+    expect(topKArg).toBeGreaterThan(wikiConfig.ragTopK);
+    expect(topKArg).toBeLessThanOrEqual(wikiConfig.ragTopKCeiling);
+  });
+
+  // ── Test 15: RAG results are ordered by proximity to the current batch's pages ──
+  it('orders retrieved RAG chunks by page-proximity to the current batch, not raw score order', async () => {
+    vectorSearchMock.mockResolvedValueOnce([
+      { id: 'far', content: 'far chunk', metadata: { pdfPath: 'prox.pdf', page: 1 }, score: 0.95 },
+      { id: 'near', content: 'near chunk', metadata: { pdfPath: 'prox.pdf', page: 9 }, score: 0.60 },
+    ]);
+    const chat = mockProvider('[]');
+    const { absPath, relPath } = await makePdf('prox.pdf');
+
+    // Batch will be pages 6-10 (current page 10 triggers); page 9 is much closer to this
+    // batch than page 1, even though page 1's chunk scored higher on raw similarity.
+    for (let pg = 6; pg <= 10; pg++) {
+      await callIndex(absPath, 'prox.pdf', pg, `text-${pg}`, 200);
+    }
+    expect(chat).toHaveBeenCalledTimes(1);
+
+    const prompt: string = chat.mock.calls[0][0].messages[0].content;
+    expect(prompt.indexOf('near chunk')).toBeLessThan(prompt.indexOf('far chunk'));
   });
 });
