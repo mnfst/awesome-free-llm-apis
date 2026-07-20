@@ -14,6 +14,18 @@ export async function initFirebase(): Promise<string> {
 
     const state = await persistence.load();
 
+    // Fast-path offline fallback to avoid connection timeouts if a failure happened recently
+    const now = Date.now();
+    const lastFailed = state.lastAuthFailedTime || 0;
+    if (now - lastFailed < 60 * 60 * 1000) {
+        isOffline = true;
+        if (!state.fallbackUid) {
+            state.fallbackUid = crypto.randomUUID();
+            await persistence.save(state);
+        }
+        return state.fallbackUid;
+    }
+
     if (!apiKey || !projectId) {
         console.warn('[Firebase] Firebase configuration missing, running in offline fallback mode.');
         isOffline = true;
@@ -75,10 +87,11 @@ export async function initFirebase(): Promise<string> {
         console.warn(`[Firebase] Connection failed: ${(error as Error).message}. Running in offline fallback mode.`);
         isOffline = true;
         
+        state.lastAuthFailedTime = Date.now();
         if (!state.fallbackUid) {
             state.fallbackUid = crypto.randomUUID();
-            await persistence.save(state);
         }
+        await persistence.save(state);
         return state.fallbackUid;
     }
 }

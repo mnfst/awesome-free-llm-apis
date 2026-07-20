@@ -124,12 +124,18 @@ async function initTelemetry() {
       await persistence.save(state);
     }
     
-    // Sync if more than 24 hours have passed since lastSyncTime
+    // Sync if more than 24 hours have passed since lastSyncTime, and at least 1 hour since last failure
     const hoursSinceSync = (now - (state.lastSyncTime || 0)) / (1000 * 60 * 60);
-    if (hoursSinceSync >= 24 && !state.optOutTelemetry) {
+    const msSinceFailure = now - (state.lastSyncFailedTime || 0);
+    if (hoursSinceSync >= 24 && msSinceFailure >= 60 * 60 * 1000 && !state.optOutTelemetry) {
       const success = await syncStats(state.userId, state);
       if (success) {
         state.lastSyncTime = now;
+        state.lastSyncFailedTime = undefined;
+        await persistence.save(state);
+      } else {
+        // Explicitly record failure time to trigger a 1-hour retry backoff
+        state.lastSyncFailedTime = now;
         await persistence.save(state);
       }
     }

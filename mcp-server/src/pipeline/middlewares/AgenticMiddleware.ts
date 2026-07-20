@@ -363,6 +363,20 @@ function extractDeferredPdfPages(text: string): string[] {
 // request with one page deferred by the cap produced a response that never mentioned page 6
 // at all, especially once context-budget truncation drops earlier pages too) — so this is
 // appended deterministically rather than left to chance.
+// Context-injected log entries previously only recorded a label (e.g. "File Injected: auth.ts
+// (2400 chars)") — the actual injected text lived only in context.request.messages, which is
+// never persisted, so nothing downstream (dashboard included) could ever show what was really
+// injected. This caps what gets logged (chat-log.json has a rolling 200-entry window — don't
+// bloat it with a full 50KB file), not what a user can see: the dashboard renders a short
+// preview with a click-to-expand for the full (capped) text.
+const MAX_CONTEXT_LOG_CHARS = 4000;
+function excerptForLog(text: string): string {
+    const trimmed = text.trim();
+    return trimmed.length > MAX_CONTEXT_LOG_CHARS
+        ? trimmed.slice(0, MAX_CONTEXT_LOG_CHARS) + '…[truncated]'
+        : trimmed;
+}
+
 function appendDeferredPagesNotice(content: string, deferred: string[], maxPages: number): string {
     if (deferred.length === 0) return content;
     const list = deferred.map(d => `- \`${d}\``).join('\n');
@@ -1137,7 +1151,7 @@ async function executeSingleSubtask(
                         const extension = path.extname(filename).slice(1) || 'text';
                         const proactiveMsg = `[PROACTIVE-CONTEXT] Content of \`${filename}\`:\n\n\`\`\`${extension}\n${truncated}\n\`\`\``;
                         context.request.messages.push({ role: 'user', content: proactiveMsg });
-                        subtaskContexts.push(`📄 **File Injected**: \`${filename}\` (${truncated.length} chars)`);
+                        subtaskContexts.push(`📄 **File Injected**: \`${filename}\` (${truncated.length} chars)\n${excerptForLog(truncated)}`);
                         addToQueues(commsQueue, promptQueue, 'proactive_context_injected', {
                             file: filename
                         });
@@ -1232,7 +1246,7 @@ async function executeSingleSubtask(
                 const uniqueLines = [...new Set(gatheredContextLines)];
                 const enrichmentMsg = `[CONTEXT-ENRICHMENT] Here is the gathered context from the workspace:\n\n${uniqueLines.join('\n')}`;
                 context.request.messages.push({ role: 'user', content: enrichmentMsg });
-                subtaskContexts.push(`🔍 **Grep Context**: Injected ${uniqueLines.length} lines matching: \`${cues.join(', ') || 'workspace query'}\``);
+                subtaskContexts.push(`🔍 **Grep Context**: Injected ${uniqueLines.length} lines matching: \`${cues.join(', ') || 'workspace query'}\`\n${excerptForLog(uniqueLines.join('\n'))}`);
             } else {
                 const entityName = cues.length > 0 ? cues.join(', ') : 'requested content';
                 const unavailableMsg = `[CONTEXT-UNAVAILABLE] ${entityName} was not found in the workspace. Please proceed with available information.`;
@@ -1272,7 +1286,7 @@ async function executeSingleSubtask(
                 if (recoveryAnswers.length > 0) {
                     const recoveryMsg = `[RECOVERY-CONTEXT] We noticed a potential hallucination or missing info. Here is the gathered recovery context:\n\n${recoveryAnswers.join('\n')}`;
                     context.request.messages.push({ role: 'user', content: recoveryMsg });
-                    subtaskContexts.push(`🛡️ **Recovery Context**: Injected ${recoveryAnswers.length} lines to resolve hallucination.`);
+                    subtaskContexts.push(`🛡️ **Recovery Context**: Injected ${recoveryAnswers.length} lines to resolve hallucination.\n${excerptForLog(recoveryAnswers.join('\n'))}`);
                     
                     let recoveryResponse;
                     try {
@@ -1441,8 +1455,22 @@ export class AgenticMiddleware implements Middleware {
                 console.error(`[AgenticMiddleware] CONFUSED intent upgraded to QUESTION: reference content already resolved.`);
                 intent = 'QUESTION';
             }
+            // Human-readable labels describing what context (if any) was injected for this
+            // turn — surfaced to the dashboard the same way subtask_response entries already
+            // expose `contextInjected`, so CONFUSED/QUESTION turns aren't a blind spot.
+            const turnContextInjected: string[] = [];
+            if (intentPlaceholders.size > 0) {
+                const resolvedExcerpt = excerptForLog([...intentPlaceholders.values()].join('\n---\n'));
+                turnContextInjected.push(`📄 **Reference Content Resolved**: ${intentPlaceholders.size} file/PDF reference(s) injected into context.\n${resolvedExcerpt}`);
+            }
+            const memoryContextStr = (context as any).memoryContext;
+            if (memoryContextStr) turnContextInjected.push(`🧠 **Workspace Memory Injected**\n${excerptForLog(String(memoryContextStr))}`);
+            const grepContextStr = (context as any).grepContext;
+            if (grepContextStr) turnContextInjected.push(`📚 **Wiki Knowledge Injected**\n${excerptForLog(String(grepContextStr))}`);
+
             if (intent === 'CONFUSED') {
                 console.error(`[AgenticMiddleware] User intent classified as CONFUSED. Executing bare clarification.`);
+                await logChatTurn(sessionId, { role: 'user', tool: 'use_free_llm', content: userContent, contextInjected: turnContextInjected });
                 const clarification = await disambiguateConfusedIntent(userContent, workspaceRoot);
                 context.response = {
                     id: `clarification-${Date.now()}`,
@@ -1455,11 +1483,13 @@ export class AgenticMiddleware implements Middleware {
                         finish_reason: 'stop'
                     }]
                 } as any;
+                await logChatTurn(sessionId, { role: 'assistant', tool: 'Agentic Output', content: clarification.markdown });
                 return;
             }
 
             if (intent === 'QUESTION') {
                 console.error(`[AgenticMiddleware] User intent classified as QUESTION. Skipping decomposition loop.`);
+                await logChatTurn(sessionId, { role: 'user', tool: 'use_free_llm', content: userContent, contextInjected: turnContextInjected });
                 try {
                     const groundingGate: string = (context as any).groundingGate || '';
                     const userKeywords = context.keywords || [];
@@ -1492,6 +1522,16 @@ export class AgenticMiddleware implements Middleware {
                     const currentContent = getMessageContent(msg.content);
                     msg.content = appendDeferredPagesNotice(currentContent, deferredPages, MAX_PDF_PAGES_PER_PASS);
                 }
+
+                const questionResponseContent = getMessageContent(context.response?.choices?.[0]?.message?.content ?? '');
+                await logChatTurn(sessionId, {
+                    role: 'assistant',
+                    tool: 'Agentic Output',
+                    content: questionResponseContent,
+                    contextInjected: turnContextInjected,
+                    model: context.response?.model,
+                    provider: (context.response as any)?._providerId
+                });
                 return;
             }
         }
@@ -1771,7 +1811,7 @@ export class AgenticMiddleware implements Middleware {
 
                         if (gathered && gathered.length > 0) {
                             const limited = gathered.slice(0, 5);
-                            subtaskContexts.push(`💡 **Data Demand Context**: Injected ${limited.length} lines of matching code/text.`);
+                            subtaskContexts.push(`💡 **Data Demand Context**: Injected ${limited.length} lines of matching code/text.\n${excerptForLog(limited.join('\n'))}`);
                             const enrichmentMsg = `[CONTEXT-ENRICHMENT] Here is the gathered context from the workspace:\n\n${limited.join('\n')}`;
                             context.request.messages.push({ role: 'user', content: enrichmentMsg });
 

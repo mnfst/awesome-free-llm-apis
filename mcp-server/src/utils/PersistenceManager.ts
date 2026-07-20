@@ -21,6 +21,8 @@ export interface PersistentUsage {
   firebaseUid?: string;
   firebaseRefreshToken?: string;
   fallbackUid?: string;
+  lastAuthFailedTime?: number;
+  lastSyncFailedTime?: number;
   providers: Record<string, {
     lastSyncTime: number;
     localTotalRequests: number;
@@ -38,11 +40,60 @@ export interface PersistentUsage {
 export class PersistenceManager {
   private filePath: string;
   private backupPath: string;
+  private lockPath: string;
   private lastSavedState: PersistentUsage | null = null;
 
   constructor(customPath?: string) {
     this.filePath = customPath || this.resolvePath();
     this.backupPath = `${this.filePath}.bak`;
+    this.lockPath = `${this.filePath}.lock`;
+  }
+
+  /**
+   * Serializes save()'s read-merge-write cycle. Without this, two concurrent saves (e.g.
+   * firebase.ts's initFirebase() persisting a fresh firebaseUid, racing against
+   * LLMExecutor's debounced/shutdown persistStats() — which saves a state object that
+   * omits firebaseUid entirely, relying on merge()'s disk-fallback) can interleave: the
+   * second save reads disk BEFORE the first's write lands, so its merge falls back to a
+   * stale (or absent) firebaseUid/firebaseRefreshToken and then overwrites the first
+   * save's fresh identity. Observed live: the Firebase UID silently changed on every
+   * server restart because this race kept discarding the just-persisted identity.
+   * Mirrors DiffScanner's acquireLock()/releaseLock() pattern (diff-scanner.ts), but waits
+   * for the lock instead of skipping — a save must never be silently dropped.
+   */
+  private async acquireLock(timeoutMs = 5000): Promise<() => Promise<void>> {
+    const start = Date.now();
+    while (true) {
+      try {
+        // fs-extra promisifies the callback-style fs.open, which yields a raw fd
+        // number (not a fs/promises FileHandle) — close via fs.close(fd).
+        const fd = await fs.open(this.lockPath, 'wx');
+        await fs.close(fd);
+        return async () => { await fs.remove(this.lockPath).catch(() => {}); };
+      } catch (err: any) {
+        if (err?.code !== 'EEXIST') {
+          // Unexpected error acquiring the lock (e.g. permissions) — proceed without
+          // it rather than hang or drop the save.
+          return async () => {};
+        }
+        // Stale-lock override: a process that crashed mid-save shouldn't wedge every
+        // future save forever.
+        try {
+          const stat = await fs.stat(this.lockPath);
+          if (Date.now() - stat.mtimeMs > 10000) {
+            await fs.remove(this.lockPath).catch(() => {});
+            continue;
+          }
+        } catch { /* lock file vanished between checks — just retry the acquire */ }
+
+        if (Date.now() - start > timeoutMs) {
+          // Waited long enough — proceed without the lock rather than hang indefinitely.
+          // Losing exclusivity here is strictly better than losing the save entirely.
+          return async () => {};
+        }
+        await new Promise(r => setTimeout(r, 25));
+      }
+    }
   }
 
   /**
@@ -148,6 +199,7 @@ export class PersistenceManager {
    * Saves usage stats to disk using Read-Merge-Write for atomicity
    */
   async save(memoryState: PersistentUsage): Promise<void> {
+    const releaseLock = await this.acquireLock();
     try {
       await this.ensureStorage();
       const today = new Date().toISOString().split('T')[0];
@@ -196,6 +248,8 @@ export class PersistenceManager {
       this.lastSavedState = JSON.parse(JSON.stringify(memoryState));
     } catch (e) {
       console.error('Error saving usage stats:', e);
+    } finally {
+      await releaseLock();
     }
   }
 

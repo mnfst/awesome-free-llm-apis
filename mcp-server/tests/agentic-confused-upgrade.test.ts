@@ -80,4 +80,102 @@ UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765
         expect(content).not.toContain('I need a bit more detail');
         expect(content).toBe('Routed via QUESTION path.');
     });
+
+    it('logs the user turn and the final response to chat-log.json for the QUESTION path (dashboard visibility)', async () => {
+        const { getSharedRouter } = await import('../src/pipeline/instances.js');
+        vi.spyOn(getSharedRouter(), 'execute').mockImplementation(async (ctx: any) => {
+            ctx.response = {
+                id: 'router-mock',
+                object: 'chat.completion',
+                created: Date.now(),
+                model: 'mock-model',
+                choices: [{ index: 0, message: { role: 'assistant', content: 'Routed via QUESTION path.' }, finish_reason: 'stop' }],
+            };
+        });
+
+        const middleware = new AgenticMiddleware();
+        const context: PipelineContext = {
+            sessionId,
+            agentic: true,
+            request: {
+                model: 'any',
+                agentic: true,
+                messages: [{ role: 'user', content: goal }],
+            },
+        } as any;
+
+        await middleware.execute(context, async () => {});
+
+        const logPath = path.join(projectDir, 'chat-log.json');
+        const log = JSON.parse(await fs.readFile(logPath, 'utf-8'));
+        const roles = log.map((t: any) => t.role);
+        expect(roles).toContain('user');
+        expect(roles).toContain('assistant');
+        const assistantTurn = log.find((t: any) => t.role === 'assistant');
+        expect(assistantTurn.content).toBe('Routed via QUESTION path.');
+    });
+
+    it('logs the actual resolved reference content in contextInjected, not just a label (dashboard "View Injected Context")', async () => {
+        const { getSharedRouter } = await import('../src/pipeline/instances.js');
+        vi.spyOn(getSharedRouter(), 'execute').mockImplementation(async (ctx: any) => {
+            ctx.response = {
+                id: 'router-mock',
+                object: 'chat.completion',
+                created: Date.now(),
+                model: 'mock-model',
+                choices: [{ index: 0, message: { role: 'assistant', content: 'ok' }, finish_reason: 'stop' }],
+            };
+        });
+
+        const middleware = new AgenticMiddleware();
+        const context: PipelineContext = {
+            sessionId,
+            agentic: true,
+            request: {
+                model: 'any',
+                agentic: true,
+                messages: [{ role: 'user', content: goal }],
+            },
+        } as any;
+
+        await middleware.execute(context, async () => {});
+
+        const logPath = path.join(projectDir, 'chat-log.json');
+        const log = JSON.parse(await fs.readFile(logPath, 'utf-8'));
+        const userTurn = log.find((t: any) => t.role === 'user' && t.content === goal);
+        expect(userTurn).toBeDefined();
+        expect(Array.isArray(userTurn.contextInjected)).toBe(true);
+        const referenceEntry = userTurn.contextInjected.find((c: string) => c.includes('Reference Content Resolved'));
+        expect(referenceEntry).toBeDefined();
+        // The actual injected page text (UNIQUE_MARKER_...), not just a count/label.
+        expect(referenceEntry).toContain('UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765');
+    });
+
+    it('logs the user turn and clarification response to chat-log.json for the CONFUSED path (dashboard visibility)', async () => {
+        const middleware = new AgenticMiddleware();
+        const plainConfusedGoal = 'summarize this page in one sentence.'; // no resolved reference — stays CONFUSED
+        const confusedSessionId = `test-confused-plain-${Date.now()}`;
+        const confusedProjectDir = path.join(os.homedir(), '.free-llm-mcp', 'projects', confusedSessionId);
+        try {
+            const context: PipelineContext = {
+                sessionId: confusedSessionId,
+                agentic: true,
+                request: {
+                    model: 'any',
+                    agentic: true,
+                    messages: [{ role: 'user', content: plainConfusedGoal }],
+                },
+            } as any;
+
+            await middleware.execute(context, async () => {});
+
+            const logPath = path.join(confusedProjectDir, 'chat-log.json');
+            const log = JSON.parse(await fs.readFile(logPath, 'utf-8'));
+            const roles = log.map((t: any) => t.role);
+            expect(roles).toContain('user');
+            expect(roles).toContain('assistant');
+        } finally {
+            await fs.remove(confusedProjectDir).catch(() => {});
+        }
+    });
 });

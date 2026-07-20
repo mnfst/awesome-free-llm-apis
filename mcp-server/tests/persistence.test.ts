@@ -132,6 +132,55 @@ describe('Persistence Layer Hardening', () => {
         expect(recovered.firebaseRefreshToken).toBe('refresh-should-survive');
     });
 
+    it('serializes concurrent save() calls so a Firebase-identity save is never clobbered by a racing counter-only save', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // Seed disk with no identity yet, matching a fresh install.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 0, dailyTotalTokens: 0, lifetimeTotalRequests: 0, lifetimeTotalTokens: 0,
+            providers: {}
+        });
+
+        // Force the exact interleaving that reproduces the bug without the lock: delay the
+        // FIRST writeFile call (the counter-only save's tmp write) so it lands AFTER the
+        // identity save's own read-merge-write has fully completed — the counter-only save
+        // already read a stale (no-identity) disk snapshot before that point, so its delayed
+        // write clobbers the identity the other save just persisted.
+        const originalWriteFile = fs.writeFile.bind(fs);
+        let writeCount = 0;
+        const writeFileSpy = vi.spyOn(fs, 'writeFile').mockImplementation(async (...args: any[]) => {
+            writeCount++;
+            if (writeCount === 1) {
+                await new Promise(r => setTimeout(r, 150));
+            }
+            return (originalWriteFile as any)(...args);
+        });
+
+        const counterOnlySave = pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 5, dailyTotalTokens: 500, lifetimeTotalRequests: 5, lifetimeTotalTokens: 500,
+            providers: {}
+        });
+        // Give counterOnlySave time to finish its read+merge and reach its (now-delayed) write.
+        await new Promise(r => setTimeout(r, 10));
+        const identitySave = pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 0, dailyTotalTokens: 0, lifetimeTotalRequests: 0, lifetimeTotalTokens: 0,
+            firebaseUid: 'uid-must-survive',
+            firebaseRefreshToken: 'refresh-must-survive',
+            providers: {}
+        });
+
+        await Promise.all([counterOnlySave, identitySave]);
+        writeFileSpy.mockRestore();
+
+        const finalRaw = await fs.readFile(testFile, 'utf8');
+        const finalState = JSON.parse(await decrypt(finalRaw));
+        expect(finalState.firebaseUid).toBe('uid-must-survive');
+        expect(finalState.firebaseRefreshToken).toBe('refresh-must-survive');
+    });
+
     it('logs loudly (console.error) and loses identity only when both primary and backup are unreadable', async () => {
         const pm = new PersistenceManager(testFile);
         await fs.writeFile(testFile, 'not-valid-encrypted-json', 'utf8');

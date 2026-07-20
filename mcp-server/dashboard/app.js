@@ -23,6 +23,25 @@ function fmt(n) {
   return Number(n).toLocaleString();
 }
 
+// Renders one "contextInjected" entry — server sends "<label>\n<excerpt>" (excerpt optional).
+// Shows a 400-char preview inline; if the excerpt is longer, a <details> reveals the rest,
+// same click-to-expand pattern used elsewhere in this file (history entries, tool-call bubbles).
+const CONTEXT_PREVIEW_CHARS = 400;
+function renderContextEntry(raw) {
+  const nlIdx = raw.indexOf('\n');
+  const label = nlIdx === -1 ? raw : raw.slice(0, nlIdx);
+  const excerpt = nlIdx === -1 ? '' : raw.slice(nlIdx + 1).trim();
+  if (!excerpt) return `<li>${esc(label)}</li>`;
+  const isLong = excerpt.length > CONTEXT_PREVIEW_CHARS;
+  const preview = isLong ? excerpt.slice(0, CONTEXT_PREVIEW_CHARS) + '…' : excerpt;
+  const excerptStyle = "white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:.68rem;opacity:.85;margin-top:3px;";
+  return `<li>
+    <div>${esc(label)}</div>
+    <div style="${excerptStyle}">${esc(preview)}</div>
+    ${isLong ? `<details style="margin-top:3px;"><summary style="cursor:pointer;font-size:.66rem;color:var(--accent-cyan);">Show full (${excerpt.length} chars)</summary><div style="${excerptStyle}">${esc(excerpt)}</div></details>` : ''}
+  </li>`;
+}
+
 // JSON syntax highlighter — XSS-safe: escape HTML first
 function highlightJSON(obj) {
   const raw = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
@@ -834,7 +853,7 @@ function appendBubbleFromRecord(msg) {
     const el = addSpinnerBubble(msg.tool);
     renderMarkdown(msg.content).then(html => {
       if (!el.isConnected) return;
-      replaceSpinnerWithResponse(el, html, msg.latencyMs, msg.tool, msg.ts, false, msg.model, msg.provider);
+      replaceSpinnerWithResponse(el, html, msg.latencyMs, msg.tool, msg.ts, false, msg.model, msg.provider, msg.contextInjected);
     });
   } else if (msg.role === 'error') {
     addErrorBubbleEl(msg.content, msg.tool, msg.ts);
@@ -890,7 +909,7 @@ function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected, mod
           <span>📂</span> <span>View Injected Context (${contextInjected.length})</span>
         </summary>
         <ul style="margin-top:6px; padding-left:16px; font-size:.7rem; color:var(--text-muted); display:flex; flex-direction:column; gap:4px; list-style-type:circle;">
-          ${contextInjected.map(c => `<li>${esc(c)}</li>`).join('')}
+          ${contextInjected.map(renderContextEntry).join('')}
         </ul>
        </details>`
     : '';
@@ -1020,14 +1039,27 @@ function addSpinnerBubble(tool) {
   return div;
 }
 
-function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save = true, model, provider) {
+function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save = true, model, provider, contextInjected) {
   const div = document.createElement('div');
   div.className = 'chat-msg assistant';
   const latBadge = latencyMs != null
     ? `<span class="latency-badge${latencyMs > 3000 ? ' slow' : ''}" style="display:inline-flex;">${latencyMs}ms</span>`
     : '';
+  // Same <details>/<summary> pattern as addSubtaskResponseBubble's "View Injected Context" —
+  // QUESTION/CONFUSED-routed turns (which never went through subtask decomposition) can also
+  // have resolved references / memory / wiki context injected, and it shouldn't be a blind spot.
+  const contextHtml = Array.isArray(contextInjected) && contextInjected.length > 0
+    ? `<details style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.06);">
+        <summary style="cursor:pointer; font-size:.7rem; color:var(--accent-cyan); display:flex; align-items:center; gap:4px; outline:none; list-style:none;">
+          <span>📂</span> <span>View Injected Context (${contextInjected.length})</span>
+        </summary>
+        <ul style="margin-top:6px; padding-left:16px; font-size:.7rem; color:var(--text-muted); display:flex; flex-direction:column; gap:4px; list-style-type:circle;">
+          ${contextInjected.map(renderContextEntry).join('')}
+        </ul>
+       </details>`
+    : '';
   div.innerHTML = `
-    <div class="chat-bubble">${html}</div>
+    <div class="chat-bubble">${html}${contextHtml}</div>
     <div class="chat-meta">${latBadge}${modelBadge(model, provider)}<span>${esc(tool)}</span><span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
       <button class="chat-copy-btn">Copy</button>
     </div>`;
