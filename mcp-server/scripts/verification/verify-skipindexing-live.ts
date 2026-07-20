@@ -3,6 +3,7 @@
  * CONFUSED->QUESTION routing upgrade, across agentic true/false and skipIndexing.
  * Run with: npx tsx --env-file=.env <this file>
  */
+import 'dotenv/config';
 import path from 'path';
 import { useFreeLLM } from '../../src/tools/use-free-llm.js';
 
@@ -24,6 +25,7 @@ function withCapturedLogs<T>(fn: () => Promise<T>): Promise<{ result: T; logs: s
     }).catch(err => {
         console.error = origError;
         console.debug = origDebug;
+        err.logs = logs;
         throw err;
     });
 }
@@ -42,61 +44,97 @@ function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 async function scenario(name: string, params: Parameters<typeof useFreeLLM>[0]) {
     console.log(`\n=== ${name} ===`);
     const start = Date.now();
-    const { result, logs } = await withCapturedLogs(() => useFreeLLM(params));
-    const elapsed = Date.now() - start;
-    const flags = summarizeIndexingLogs(logs);
-    const content = result.choices?.[0]?.message?.content;
-    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-    console.log(`  elapsed: ${elapsed}ms`);
-    console.log(`  background codebase re-index observed: ${flags.indexing}`);
-    console.log(`  pdf page cap triggered: ${flags.pdfPageCap} (deferred markers: ${flags.deferredCount})`);
-    console.log(`  looks like a clarifying question (bad): ${/i need a bit more detail/i.test(contentStr)}`);
-    console.log(`  response preview: ${contentStr.replace(/\n/g, ' ')}...`);
-    return { elapsed, flags, contentStr };
+    try {
+        const { result, logs } = await withCapturedLogs(() => useFreeLLM(params));
+        const elapsed = Date.now() - start;
+        const flags = summarizeIndexingLogs(logs);
+        const content = result.choices?.[0]?.message?.content;
+        const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+        console.log(`  elapsed: ${elapsed}ms`);
+        console.log(`  background codebase re-index observed: ${flags.indexing}`);
+        console.log(`  pdf page cap triggered: ${flags.pdfPageCap} (deferred markers: ${flags.deferredCount})`);
+        console.log(`  looks like a clarifying question (bad): ${/i need a bit more detail/i.test(contentStr)}`);
+        console.log(`  response preview: ${contentStr.replace(/\n/g, ' ')}...`);
+        console.log('  Captured Logs:');
+        logs.forEach(l => console.log('    ' + l));
+        return { elapsed, flags, contentStr };
+    } catch (err: any) {
+        const elapsed = Date.now() - start;
+        console.error(`  [SCENARIO ERROR] ${elapsed}ms: ${err.message}`);
+        console.log('  Captured Logs (Error):');
+        if (err.logs) {
+            err.logs.forEach((l: any) => console.log('    ' + l));
+        } else {
+            // We can't access logs if withCapturedLogs threw before returning, but we wrapped it
+        }
+    }
 }
 
 async function main() {
-    // 1. Single page, agentic:false — baseline, should still just work (real summary).
+    console.log('[Diag] Environment check:');
+    console.log('  CO_API_KEY:', !!process.env.CO_API_KEY);
+    console.log('  GEMINI_API_KEY:', !!process.env.GEMINI_API_KEY);
+    console.log('  process.env keys count:', Object.keys(process.env).length);
+
+    // 1. Single page, agentic:false — excluded per user request.
+    /*
     await scenario('1. Single-page, agentic:false', {
         messages: [{ role: 'user', content: `${singlePageRef} summarize this page in one sentence.` }],
     } as any);
     await sleep(5000);
+    */
 
     // 1b. Multi-page (6 refs > cap of 5), agentic:false — proves the cap alone, independent
     //     of agentic routing: exactly 5 resolve, the 6th is deferred with a sentinel, and the
     //     model shouldn't hallucinate content for the deferred page.
-    await scenario('1b. Multi-page (6 refs), agentic:false', {
-        messages: [{ role: 'user', content: `${multiPageRefs} summarize each page in one sentence.` }],
-    } as any);
+    try {
+        await scenario('1b. Multi-page (6 refs), agentic:false', {
+            messages: [{ role: 'user', content: `${multiPageRefs} summarize each page in one sentence.` }],
+        } as any);
+    } catch (e: any) {
+        console.error('1b failed directly:', e);
+    }
     await sleep(5000);
 
     // 2. Single page, agentic:true, skipIndexing unset — proves the CONFUSED->QUESTION
     //    upgrade: should return a real summary (not "I need a bit more detail"), and the
     //    background codebase re-index should still fire.
-    await scenario('2. Single-page, agentic:true, skipIndexing unset', {
-        messages: [{ role: 'user', content: `${singlePageRef} summarize this page in one sentence.` }],
-        agentic: true,
-        workspace_root: REPO_ROOT,
-    } as any);
+    try {
+        await scenario('2. Single-page, agentic:true, skipIndexing unset', {
+            messages: [{ role: 'user', content: `${singlePageRef} summarize this page in one sentence.` }],
+            agentic: true,
+            workspace_root: REPO_ROOT,
+        } as any);
+    } catch (e: any) {
+        console.error('2 failed directly:', e);
+    }
     await sleep(8000);
 
     // 3. Single page, agentic:true, skipIndexing:true — same routing fix, but confirms
     //    skipIndexing still independently gates only the codebase re-index pass.
-    await scenario('3. Single-page, agentic:true, skipIndexing:true', {
-        messages: [{ role: 'user', content: `${singlePageRef} summarize this page in one sentence.` }],
-        agentic: true,
-        workspace_root: REPO_ROOT,
-        skipIndexing: true,
-    } as any);
+    try {
+        await scenario('3. Single-page, agentic:true, skipIndexing:true', {
+            messages: [{ role: 'user', content: `${singlePageRef} summarize this page in one sentence.` }],
+            agentic: true,
+            workspace_root: REPO_ROOT,
+            skipIndexing: true,
+        } as any);
+    } catch (e: any) {
+        console.error('3 failed directly:', e);
+    }
     await sleep(5000);
 
     // 2b. Multi-page (6 refs), agentic:true, skipIndexing unset — the combined case: cap +
     //     routing fix + background indexing all together, wall-clock bounded by the cap.
-    await scenario('2b. Multi-page (6 refs), agentic:true, skipIndexing unset', {
-        messages: [{ role: 'user', content: `${multiPageRefs} summarize each page in one sentence.` }],
-        agentic: true,
-        workspace_root: REPO_ROOT,
-    } as any);
+    try {
+        await scenario('2b. Multi-page (6 refs), agentic:true, skipIndexing unset', {
+            messages: [{ role: 'user', content: `${multiPageRefs} summarize each page in one sentence.` }],
+            agentic: true,
+            workspace_root: REPO_ROOT,
+        } as any);
+    } catch (e: any) {
+        console.error('2b failed directly:', e);
+    }
 
     console.log('\nDone.');
 }

@@ -516,6 +516,10 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     messages = [];
   }
 
+  // Capture the original user prompt for persona detection to avoid false positives from resolved/injected file contents
+  const originalUserMessage = messages.find(m => m.role === 'user');
+  const originalUserContent = originalUserMessage ? (typeof originalUserMessage.content === 'string' ? originalUserMessage.content : JSON.stringify(originalUserMessage.content)) : '';
+
   if (skill) {
     const loadedSkill = await loadSkillPrompt({ skill, type: 'load' });
     if (loadedSkill.success && loadedSkill.prompt) {
@@ -723,16 +727,16 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     const { detectPersona } = await import('../utils/persona-detector.js');
     const userMessage = messages.find(m => m.role === 'user');
     const userContent = userMessage ? (typeof userMessage.content === 'string' ? userMessage.content : JSON.stringify(userMessage.content)) : '';
-    const persona = detectPersona(userContent, workspaceRoot);
+    const persona = detectPersona(originalUserContent, workspaceRoot);
 
     if (context.taskType !== TaskType.Vision && persona === 'debugger') {
       const isWindows = os.platform() === 'win32';
-      const queryLower = userContent.toLowerCase();
+      const queryLower = originalUserContent.toLowerCase();
 
       // Parse referenced files from the prompt
-      const mdFiles = userContent.match(/\b[\w\-./\\]+\.md\b/gi) || [];
-      const jsonFiles = userContent.match(/\b[\w\-./\\]+\.json\b/gi) || [];
-      const logFiles = userContent.match(/\b[\w\-./\\]+\.(log|txt)\b/gi) || [];
+      const mdFiles = originalUserContent.match(/\b[\w\-./\\]+\.md\b/gi) || [];
+      const jsonFiles = originalUserContent.match(/\b[\w\-./\\]+\.json\b/gi) || [];
+      const logFiles = originalUserContent.match(/\b[\w\-./\\]+\.(log|txt)\b/gi) || [];
       
       const targetMd = mdFiles[0] ? path.basename(mdFiles[0]) : 'file.md';
       const targetJson = jsonFiles[0] ? path.basename(jsonFiles[0]) : 'file.json';

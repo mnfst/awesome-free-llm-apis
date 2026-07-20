@@ -195,8 +195,12 @@ export class ContextGatherer {
         const overrideIgnores = /\b(override|all files|gitignored|ignored)\b/i.test(query);
 
         // 5. Rank Candidates with priorityFiles support
-        const candidates = await WorkspaceWalker.findRelevantFiles(workspaceRoot, Array.from(terms), limit, overrideIgnores, isTheoretical, priorityFiles);
-        if (candidates.length === 0) return [];
+        let candidates = await WorkspaceWalker.findRelevantFiles(workspaceRoot, Array.from(terms), limit, overrideIgnores, isTheoretical, priorityFiles);
+        let fallbackToRoot = false;
+        if (candidates.length === 0) {
+            candidates = [workspaceRoot];
+            fallbackToRoot = true;
+        }
 
         // 6. Tool Detection
         let tool: 'rg' | 'grep' | 'powershell' | 'none' = 'none';
@@ -225,24 +229,36 @@ export class ContextGatherer {
             const normalizedCandidates = candidates.map(c => c.replace(/\\/g, '/'));
             // We use a total match limit of 10 per file to prevent bloat. We bump limit to 50 for .log/.json files to ensure compaction triggers.
             const isLogOrJsonSearch = candidates.some(f => f.endsWith('.log') || f.endsWith('.json'));
-            const limit = isLogOrJsonSearch ? '50' : '10';
+            const matchLimit = isLogOrJsonSearch ? '50' : '10';
             
             if (tool === 'rg') {
-                const args = ['-m', limit, '-n', '-i', '-C', contextLines, '--no-heading', '-H'];
+                const args = ['-m', matchLimit, '-n', '-i', '-C', contextLines, '--no-heading', '-H'];
                 if (overrideIgnores) args.push('-u');
+                if (fallbackToRoot) {
+                    args.push('-g', '!node_modules', '-g', '!.git', '-g', '!dist', '-g', '!build', '-g', '!venv', '-g', '!.venv', '-g', '!.free-llm-mcp', '-g', '!.gemini');
+                }
                 args.push('-e', `(${combinedPattern})`);
                 args.push(...normalizedCandidates);
                 
                 const res = await spawnAsync('rg', args, 15000);
                 stdout = res.stdout;
             } else if (tool === 'grep') {
-                const args = ['-n', '-E', '-i', '-m', limit, '-C', contextLines, '--with-filename', `(${combinedPattern})`].concat(normalizedCandidates);
+                const extraArgs = fallbackToRoot ? ['-r', '--exclude-dir={node_modules,.git,dist,build,venv,.venv}'] : [];
+                const args = ['-n', '-E', '-i', '-m', matchLimit, '-C', contextLines, '--with-filename']
+                    .concat(extraArgs)
+                    .concat([`(${combinedPattern})`])
+                    .concat(normalizedCandidates);
                 const res = await spawnAsync('grep', args, 15000);
                 stdout = res.stdout;
             } else if (tool === 'powershell') {
                 // Windows PowerShell Get-Content fallback - only run if pattern is safe (alphanumeric, pipes, underscores, hyphens)
                 if (/^[a-zA-Z0-9_\-|]+$/.test(combinedPattern)) {
-                    for (const file of candidates) {
+                    let targets = candidates;
+                    if (fallbackToRoot) {
+                        const files = await WorkspaceWalker.findRelevantFiles(workspaceRoot, [], 15, overrideIgnores, isTheoretical, priorityFiles);
+                        targets = files;
+                    }
+                    for (const file of targets) {
                         try {
                             const cleanPattern = combinedPattern;
                             const cleanPath = file.replace(/"/g, '`"');
@@ -277,7 +293,7 @@ export class ContextGatherer {
                         const cleanMatch = match.replace(/\r$/, '');
                         // Handle formatting: path/to/file:line:content or path/to/file-line-content
                         // Use regex to split reliably even if path contains colons or dashes
-                        const parts = cleanMatch.match(/^(.+?)[:|-](\d+)[:|-](.*)$/);
+                        const parts = cleanMatch.match(/^((?:[A-Za-z]:)?[^:|]+?)[:|-](\d+)[:|-](.*)$/);
                         if (parts) {
                             const rawFilePath = parts[1];
                             const lineNum = parseInt(parts[2]);

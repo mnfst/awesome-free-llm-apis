@@ -16,11 +16,32 @@ export class CohereProvider extends BaseProvider {
     { id: 'command-r7b-12-2024', name: 'Command R7B' },
     { id: 'command-a-reasoning-08-2025', name: 'Command A Reasoning' },
     { id: 'c4ai-aya-vision-32b', name: 'Aya Vision 32B' },
+    { id: 'command-a-vision-07-2025', name: 'Command A Vision 07 2025' },
   ];
 
   private getClient(): CohereClientV2 {
     return new CohereClientV2({
       token: this.getApiKey(),
+    });
+  }
+
+  private mapMessagesForCohere(messages: any[]): any[] {
+    return messages.map((m) => {
+      if (Array.isArray(m.content)) {
+        const content = m.content.map((item: any) => {
+          if (item && typeof item === 'object' && item.type === 'image_url') {
+            return {
+              type: 'image_url',
+              imageUrl: {
+                url: item.image_url?.url
+              }
+            };
+          }
+          return item;
+        });
+        return { role: m.role, content };
+      }
+      return { role: m.role, content: m.content };
     });
   }
 
@@ -30,12 +51,10 @@ export class CohereProvider extends BaseProvider {
     const client = this.getClient();
 
     const actualModel = request.model || 'command-r-plus-08-2024';
+    const processedMessages = await this.processImageMessages(request.messages);
     const response = await client.chat({
       model: actualModel,
-      messages: request.messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
+      messages: this.mapMessagesForCohere(processedMessages),
       maxTokens: request.max_tokens,
       temperature: request.temperature,
     });
@@ -70,12 +89,10 @@ export class CohereProvider extends BaseProvider {
     const client = this.getClient();
 
     const actualModel = request.model || 'command-r-plus-08-2024';
+    const processedMessages = await this.processImageMessages(request.messages);
     const stream = await client.chatStream({
       model: actualModel,
-      messages: request.messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
+      messages: this.mapMessagesForCohere(processedMessages),
       maxTokens: request.max_tokens,
       temperature: request.temperature,
     });

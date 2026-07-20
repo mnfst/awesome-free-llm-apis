@@ -6,6 +6,13 @@ const IMAGE_COVERAGE_THRESHOLD = 0.05; // lower threshold to capture drawings to
 /** Word count below which extracted text is considered "sparse" */
 const SPARSE_TEXT_WORD_LIMIT = 250;
 
+/** Base Gemini timeout for a full-page vision call, extended per context weight */
+const FULL_PAGE_BASE_TIMEOUT_MS = 30000;
+const FULL_PAGE_MAX_TIMEOUT_MS = 50000;
+/** Base Gemini timeout for a cropped sub-block vision call, extended per area weight */
+const SUB_BLOCK_BASE_TIMEOUT_MS = 20000;
+const SUB_BLOCK_MAX_TIMEOUT_MS = 35000;
+
 export function shouldUseVision(imageCoverageRatio: number, extractedText: string): boolean {
   if (imageCoverageRatio < IMAGE_COVERAGE_THRESHOLD) return false;
   const wordCount = extractedText.trim().split(/\s+/).filter(Boolean).length;
@@ -78,8 +85,8 @@ export async function describePageVision(
     const modelId = provider.models[0]?.id;
     if (!modelId) return '';
 
-    // Helper to call vision for a single image path with dynamically calculated maxTokens
-    const callVisionModel = async (imgPath: string, promptText: string, maxTokens: number): Promise<string> => {
+    // Helper to call vision for a single image path with dynamically calculated maxTokens/timeoutMs
+    const callVisionModel = async (imgPath: string, promptText: string, maxTokens: number, timeoutMs: number): Promise<string> => {
       try {
         if (!await fs.pathExists(imgPath)) return '';
         const imageBuffer = await fs.readFile(imgPath);
@@ -97,6 +104,7 @@ export async function describePageVision(
           }],
           temperature: 0.2,
           max_tokens: maxTokens,
+          timeoutMs,
         });
 
         const text = response?.choices?.[0]?.message?.content;
@@ -113,8 +121,14 @@ export async function describePageVision(
     // 1. Full page: First pass has a larger budget (500 tokens), subsequent ones delta (300 tokens)
     const isFirstPass = !wikiContext;
     const fullPageMaxTokens = isFirstPass ? 500 : 300;
+    // Context weightage: more image blocks and more surrounding text mean more for the
+    // model to describe, so extend the kill-timer proportionally rather than a flat 30s.
+    const fullPageTimeoutMs = Math.min(
+      FULL_PAGE_MAX_TIMEOUT_MS,
+      FULL_PAGE_BASE_TIMEOUT_MS + Math.min(20000, imageBlocks.length * 4000 + Math.floor((pageText.length + wikiContext.length) / 500) * 1000)
+    );
     tasks.push(
-      callVisionModel(imagePath, buildVisionPrompt(pdfBasename, pageNum, false, pageText, wikiContext), fullPageMaxTokens)
+      callVisionModel(imagePath, buildVisionPrompt(pdfBasename, pageNum, false, pageText, wikiContext), fullPageMaxTokens, fullPageTimeoutMs)
         .then(text => ({ type: 'full', text }))
     );
 
@@ -124,8 +138,10 @@ export async function describePageVision(
       const blockArea = block.width_pt * block.height_pt;
       const areaRatio = blockArea / 500000;
       const blockMaxTokens = Math.min(200, Math.max(100, Math.round(areaRatio * 800)));
+      // Larger cropped regions likely contain more visual detail — extend timeout with area.
+      const blockTimeoutMs = Math.min(SUB_BLOCK_MAX_TIMEOUT_MS, SUB_BLOCK_BASE_TIMEOUT_MS + Math.round(areaRatio * 15000));
       tasks.push(
-        callVisionModel(block.image_path, buildVisionPrompt(pdfBasename, pageNum, true, pageText, wikiContext), blockMaxTokens)
+        callVisionModel(block.image_path, buildVisionPrompt(pdfBasename, pageNum, true, pageText, wikiContext), blockMaxTokens, blockTimeoutMs)
           .then(text => ({ type: 'block', text, index: idx }))
       );
     });

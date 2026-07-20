@@ -8,6 +8,78 @@ let cachedIdToken = '';
 let idTokenExpiry = 0;
 let cachedRefreshToken = '';
 
+// How long a single failure keeps us in offline mode before we're willing to re-probe.
+// Previously 1 hour, which meant one transient network blip hid getUserStats/getLeaderboard/
+// syncStats behind the offline short-circuit for a full hour with no way back except a
+// process restart — punishing a real, connected user for a single retry-able hiccup.
+const OFFLINE_COOLDOWN_MS = 2 * 60 * 1000;
+let lastOfflineSetAt = 0;
+
+function markOffline() {
+    isOffline = true;
+    lastOfflineSetAt = Date.now();
+}
+
+function markOnline() {
+    isOffline = false;
+    lastOfflineSetAt = 0;
+}
+
+/**
+ * Callers that only have `isOffline` to check would otherwise stay offline for the full
+ * OFFLINE_COOLDOWN_MS even once connectivity is actually back. Once the cooldown has
+ * elapsed, opportunistically re-probes Firestore before deciding to keep bailing — so a
+ * caller sees fresh data as soon as the network recovers instead of waiting out a fixed
+ * window (or, previously, a full hour) unconditionally.
+ */
+async function refreshOfflineStatus(userId?: string): Promise<boolean> {
+    if (!isOffline) return false;
+    if (Date.now() - lastOfflineSetAt < OFFLINE_COOLDOWN_MS) return true;
+    if (!userId) return true;
+    const online = await probeFirestore(userId);
+    if (online) {
+        markOnline();
+        return false;
+    }
+    markOffline();
+    return true;
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15000): Promise<Response> {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (err) {
+        clearTimeout(id);
+        throw err;
+    }
+}
+
+async function probeFirestore(userId: string): Promise<boolean> {
+    try {
+        const token = await getValidIdToken();
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${userId}`;
+        const res = await fetchWithTimeout(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        }, 3000);
+        // Any completed HTTP response proves Firestore is reachable — including a 404,
+        // which just means this user's doc doesn't exist yet (e.g. a brand new anonymous
+        // user who has never synced). Only a thrown network/timeout error (caught below)
+        // means we're actually offline; treating a legitimate 404 as "offline" here used to
+        // trip isOffline=true for every new user and permanently hide getUserStats/
+        // getLeaderboard behind the offline short-circuit despite Firestore working fine.
+        return res.status < 500;
+    } catch {
+        return false;
+    }
+}
+
 export async function initFirebase(): Promise<string> {
     apiKey = process.env.FIREBASE_API_KEY || '';
     projectId = process.env.FIREBASE_PROJECT_ID || '';
@@ -16,25 +88,29 @@ export async function initFirebase(): Promise<string> {
 
     // Fast-path offline fallback to avoid connection timeouts if a failure happened recently
     const now = Date.now();
-    const lastFailed = state.lastAuthFailedTime || 0;
-    if (now - lastFailed < 60 * 60 * 1000) {
-        isOffline = true;
+    const lastFailed = Math.max(state.lastAuthFailedTime || 0, state.lastSyncFailedTime || 0);
+    if (now - lastFailed < OFFLINE_COOLDOWN_MS) {
+        markOffline();
         if (!state.fallbackUid) {
             state.fallbackUid = crypto.randomUUID();
-            await persistence.save(state);
         }
-        return state.fallbackUid;
+        state.userId = state.userId || state.fallbackUid;
+        state.username = state.username || `anonymous-${state.userId.substring(0, 6)}`;
+        await persistence.save(state);
+        return state.userId;
     }
 
     if (!apiKey || !projectId) {
         console.warn('[Firebase] Firebase configuration missing, running in offline fallback mode.');
-        isOffline = true;
-        
+        markOffline();
+
         if (!state.fallbackUid) {
             state.fallbackUid = crypto.randomUUID();
-            await persistence.save(state);
         }
-        return state.fallbackUid;
+        state.userId = state.userId || state.fallbackUid;
+        state.username = state.username || `anonymous-${state.userId.substring(0, 6)}`;
+        await persistence.save(state);
+        return state.userId;
     }
 
     try {
@@ -48,10 +124,21 @@ export async function initFirebase(): Promise<string> {
                 cachedIdToken = refreshed.idToken;
                 idTokenExpiry = Date.now() + refreshed.expiresIn * 1000;
                 cachedRefreshToken = refreshed.refreshToken;
-                isOffline = false;
+                
+                // Background-probe Firestore before declaring isOffline = false
+                const firestoreOnline = await probeFirestore(refreshed.userId);
+                if (firestoreOnline) {
+                    markOnline();
+                    state.lastSyncFailedTime = undefined;
+                } else {
+                    markOffline();
+                    state.lastSyncFailedTime = Date.now();
+                }
                 
                 (state as any).firebaseRefreshToken = refreshed.refreshToken;
                 state.firebaseUid = refreshed.userId;
+                state.userId = refreshed.userId;
+                state.username = state.username || `anonymous-${refreshed.userId.substring(0, 6)}`;
                 await persistence.save(state);
 
                 console.error(`[Firebase Debug] Syncing stats. Authenticated UID: "${refreshed.userId}", Target Document ID: "${refreshed.userId}"`);
@@ -61,7 +148,7 @@ export async function initFirebase(): Promise<string> {
 
         // Fallback or brand new sign-in: Sign up anonymously via REST
         const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
-        const res = await fetch(url, {
+        const res = await fetchWithTimeout(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ returnSecureToken: true })
@@ -75,31 +162,44 @@ export async function initFirebase(): Promise<string> {
         cachedIdToken = data.idToken;
         idTokenExpiry = Date.now() + parseInt(data.expiresIn, 10) * 1000;
         cachedRefreshToken = data.refreshToken;
-        isOffline = false;
+
+        // Background-probe Firestore before declaring isOffline = false
+        const firestoreOnline = await probeFirestore(data.localId);
+        if (firestoreOnline) {
+            markOnline();
+            state.lastSyncFailedTime = undefined;
+        } else {
+            markOffline();
+            state.lastSyncFailedTime = Date.now();
+        }
 
         state.firebaseUid = data.localId;
         (state as any).firebaseRefreshToken = data.refreshToken;
+        state.userId = data.localId;
+        state.username = state.username || `anonymous-${data.localId.substring(0, 6)}`;
         await persistence.save(state);
 
         console.error(`[Firebase Debug] Syncing stats. Authenticated UID: "${data.localId}", Target Document ID: "${data.localId}"`);
         return data.localId;
     } catch (error) {
         console.warn(`[Firebase] Connection failed: ${(error as Error).message}. Running in offline fallback mode.`);
-        isOffline = true;
-        
+        markOffline();
+
         state.lastAuthFailedTime = Date.now();
         if (!state.fallbackUid) {
             state.fallbackUid = crypto.randomUUID();
         }
+        state.userId = state.userId || state.fallbackUid;
+        state.username = state.username || `anonymous-${state.userId.substring(0, 6)}`;
         await persistence.save(state);
-        return state.fallbackUid;
+        return state.userId;
     }
 }
 
 async function exchangeRefreshToken(refreshToken: string): Promise<{ idToken: string; refreshToken: string; userId: string; expiresIn: number } | null> {
     try {
         const url = `https://securetoken.googleapis.com/v1/token?key=${apiKey}`;
-        const res = await fetch(url, {
+        const res = await fetchWithTimeout(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`
@@ -135,7 +235,7 @@ async function getValidIdToken(): Promise<string> {
 }
 
 export async function syncStats(userId: string, data: any): Promise<boolean> {
-    if (isOffline) return false;
+    if (await refreshOfflineStatus(userId)) return false;
     try {
         const token = await getValidIdToken();
         const todayStr = new Date().toISOString().split('T')[0];
@@ -151,7 +251,7 @@ export async function syncStats(userId: string, data: any): Promise<boolean> {
         };
 
         // Write user document
-        const userRes = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${userId}?updateMask.fieldPaths=username&updateMask.fieldPaths=lifetimeTokens&updateMask.fieldPaths=lifetimeRequests&updateMask.fieldPaths=lastSyncTime&updateMask.fieldPaths=optOutTelemetry`, {
+        const userRes = await fetchWithTimeout(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${userId}?updateMask.fieldPaths=username&updateMask.fieldPaths=lifetimeTokens&updateMask.fieldPaths=lifetimeRequests&updateMask.fieldPaths=lastSyncTime&updateMask.fieldPaths=optOutTelemetry`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -172,7 +272,7 @@ export async function syncStats(userId: string, data: any): Promise<boolean> {
             }
         };
 
-        await fetch(`${dailyUrl}?updateMask.fieldPaths=userId&updateMask.fieldPaths=date&updateMask.fieldPaths=dailyRequests&updateMask.fieldPaths=dailyTokens&updateMask.fieldPaths=lastUpdated`, {
+        await fetchWithTimeout(`${dailyUrl}?updateMask.fieldPaths=userId&updateMask.fieldPaths=date&updateMask.fieldPaths=dailyRequests&updateMask.fieldPaths=dailyTokens&updateMask.fieldPaths=lastUpdated`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -197,16 +297,29 @@ function sanitizeText(text: string): string {
 }
 
 function logFirebaseError(message: string, err: any) {
+    if (isOffline) return;
     const errMsg = err?.message || String(err);
-    if (errMsg.includes('fetch failed') || errMsg.includes('timeout') || errMsg.includes('ConnectTimeoutError') || err?.code === 'UND_ERR_CONNECT_TIMEOUT') {
+    const isNetworkError = 
+        errMsg.includes('fetch failed') || 
+        errMsg.includes('timeout') || 
+        errMsg.includes('ConnectTimeoutError') || 
+        errMsg.includes('aborted') || 
+        err?.name === 'AbortError' || 
+        err?.code === 'UND_ERR_CONNECT_TIMEOUT';
+    if (isNetworkError) {
         console.warn(`${message} (Network offline/timeout: ${errMsg})`);
+        markOffline();
+        persistence.load().then(state => {
+            state.lastSyncFailedTime = Date.now();
+            return persistence.save(state);
+        }).catch(() => {});
     } else {
         console.error(message, err);
     }
 }
 
 export async function logErrorTelemetry(userId: string, errorMsg: string, stack: string, promptQueue: string[], commsQueue: string[]): Promise<boolean> {
-    if (isOffline) return false;
+    if (await refreshOfflineStatus(userId)) return false;
     try {
         const token = await getValidIdToken();
         const errorId = crypto.randomUUID();
@@ -228,7 +341,7 @@ export async function logErrorTelemetry(userId: string, errorMsg: string, stack:
             }
         };
 
-        const res = await fetch(url, {
+        const res = await fetchWithTimeout(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -249,37 +362,63 @@ export async function logErrorTelemetry(userId: string, errorMsg: string, stack:
  * dashboard's lifetime totals (the local usage-stats.json's in-memory counters get reset
  * on a small interval, so the dashboard reads this instead of summing local state).
  */
+function isRetryableNetworkError(err: any): boolean {
+    const errMsg = err?.message || String(err);
+    return errMsg.includes('fetch failed') ||
+        errMsg.includes('timeout') ||
+        errMsg.includes('ConnectTimeoutError') ||
+        errMsg.includes('aborted') ||
+        err?.name === 'AbortError' ||
+        err?.code === 'UND_ERR_CONNECT_TIMEOUT';
+}
+
+const GET_USER_STATS_RETRY_DELAYS_MS = [500, 1500];
+
 export async function getUserStats(userId: string): Promise<{
     username: string;
     lifetimeTokens: number;
     lifetimeRequests: number;
     lastSyncTime: number;
 } | null> {
-    if (isOffline) return null;
-    try {
-        const token = await getValidIdToken();
-        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${userId}`;
-        const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) return null;
+    if (await refreshOfflineStatus(userId)) return null;
 
-        const doc = await res.json();
-        const fields = doc.fields || {};
-        return {
-            username: fields.username?.stringValue || `anonymous-${userId.substring(0, 6)}`,
-            lifetimeTokens: parseInt(fields.lifetimeTokens?.integerValue || '0', 10),
-            lifetimeRequests: parseInt(fields.lifetimeRequests?.integerValue || '0', 10),
-            lastSyncTime: parseInt(fields.lastSyncTime?.integerValue || '0', 10)
-        };
-    } catch (err) {
-        logFirebaseError('[Firebase] Failed to get user stats', err);
-        return null;
+    let lastErr: any;
+    for (let attempt = 0; attempt <= GET_USER_STATS_RETRY_DELAYS_MS.length; attempt++) {
+        try {
+            const token = await getValidIdToken();
+            const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${userId}`;
+            const res = await fetchWithTimeout(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) return null;
+
+            const doc = await res.json();
+            const fields = doc.fields || {};
+            return {
+                username: fields.username?.stringValue || `anonymous-${userId.substring(0, 6)}`,
+                lifetimeTokens: parseInt(fields.lifetimeTokens?.integerValue || '0', 10),
+                lifetimeRequests: parseInt(fields.lifetimeRequests?.integerValue || '0', 10),
+                lastSyncTime: parseInt(fields.lastSyncTime?.integerValue || '0', 10)
+            };
+        } catch (err) {
+            lastErr = err;
+            const isLastAttempt = attempt === GET_USER_STATS_RETRY_DELAYS_MS.length;
+            if (isLastAttempt || !isRetryableNetworkError(err)) break;
+            await new Promise(resolve => setTimeout(resolve, GET_USER_STATS_RETRY_DELAYS_MS[attempt]));
+        }
     }
+
+    logFirebaseError('[Firebase] Failed to get user stats', lastErr);
+    return null;
 }
 
+const GET_LEADERBOARD_RETRY_DELAYS_MS = [500, 1500];
+
 export async function getLeaderboard(currentUserId?: string): Promise<any[]> {
-    if (isOffline) return [];
+    if (await refreshOfflineStatus(currentUserId)) return [];
+
+    let lastErr: any;
+    for (let attempt = 0; attempt <= GET_LEADERBOARD_RETRY_DELAYS_MS.length; attempt++) {
     try {
         const token = await getValidIdToken();
         const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
@@ -298,7 +437,7 @@ export async function getLeaderboard(currentUserId?: string): Promise<any[]> {
             }
         };
 
-        const res = await fetch(url, {
+        const res = await fetchWithTimeout(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -342,7 +481,7 @@ export async function getLeaderboard(currentUserId?: string): Promise<any[]> {
         if (currentUserId && !currentUserInTop10) {
             // Fetch current user document
             const userUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${currentUserId}`;
-            const userRes = await fetch(userUrl, {
+            const userRes = await fetchWithTimeout(userUrl, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (userRes.ok) {
@@ -360,7 +499,13 @@ export async function getLeaderboard(currentUserId?: string): Promise<any[]> {
 
         return list;
     } catch (err) {
-        logFirebaseError('[Firebase] Failed to get leaderboard', err);
-        return [];
+        lastErr = err;
+        const isLastAttempt = attempt === GET_LEADERBOARD_RETRY_DELAYS_MS.length;
+        if (isLastAttempt || !isRetryableNetworkError(err)) break;
+        await new Promise(resolve => setTimeout(resolve, GET_LEADERBOARD_RETRY_DELAYS_MS[attempt]));
     }
+    }
+
+    logFirebaseError('[Firebase] Failed to get leaderboard', lastErr);
+    return [];
 }

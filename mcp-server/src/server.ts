@@ -26,6 +26,13 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error(`[CRITICAL] Unhandled Rejection at: ${promise}, reason: ${reason}`);
 });
 
+import dns from 'dns';
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {
+  // Safe fallback if ran on older unsupported Node engines
+}
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -104,9 +111,14 @@ async function validateSandboxDependencies() {
 
 }
 
-async function initTelemetry() {
+async function initTelemetry(force = false) {
   try {
     const state = await persistence.load();
+    if (force) {
+      state.lastAuthFailedTime = undefined;
+      state.lastSyncFailedTime = undefined;
+      await persistence.save(state);
+    }
     
     // Ensure userId is established (authenticate anonymously) and aligned with the active Firebase session
     const uid = await initFirebase();
@@ -154,7 +166,7 @@ async function main() {
     await getSharedRouter().init();
     
     // Initialize telemetry / session manager
-    await initTelemetry();
+    await initTelemetry(true);
 
     // Periodically check/sync telemetry every hour (supports continuous server runs)
     const telemetryInterval = setInterval(async () => {

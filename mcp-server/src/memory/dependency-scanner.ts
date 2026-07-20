@@ -510,6 +510,11 @@ export class WorkspaceDependencyScanner {
 
         this.addInvokesEdges(graph);
         this.addSnippetInvokesEdges(graph);
+
+        // Evacuate caches to free memory after scanning completes
+        this.fileContentCache.clear();
+        this.snippetContentCache.clear();
+        this.workspaceFiles.clear();
     }
 
     /**

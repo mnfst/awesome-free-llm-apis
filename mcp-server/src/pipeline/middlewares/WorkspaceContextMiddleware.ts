@@ -194,6 +194,17 @@ export class WorkspaceContextMiddleware implements Middleware {
         let userContent = userMessage ? (typeof userMessage.content === 'string' ? userMessage.content : JSON.stringify(userMessage.content)) : '';
         const isAgentic = context.request.agentic === true;
 
+        // Check if this is a vision/multimodal task (contains images or is routed as vision)
+        const isVision = context.taskType === 'vision' || context.request.messages.some(m => 
+            Array.isArray(m.content) && m.content.some((item: any) => item && typeof item === 'object' && item.type === 'image_url')
+        );
+
+        if (isVision) {
+            console.debug(`[WorkspaceContextMiddleware] Vision/multimodal task detected. Skipping workspace text context injection to prevent context bloat.`);
+            await next();
+            return;
+        }
+
         // Check for Github URL in user prompt
         if (userContent) {
             const cleanPrompt = getCleanUserPrompt(userContent);
