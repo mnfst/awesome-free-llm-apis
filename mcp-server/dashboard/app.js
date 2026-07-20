@@ -213,7 +213,13 @@ async function fetchStats() {
     const totals = data.serverTotals || {};
     document.getElementById('stat-daily-req').textContent = fmt(totals.dailyRequests);
     document.getElementById('stat-daily-tok').textContent = fmt(totals.dailyTokens);
-    document.getElementById('stat-lifetime').textContent  = fmt(totals.lifetimeRequests);
+    const lifetimeEl = document.getElementById('stat-lifetime');
+    lifetimeEl.textContent = fmt(totals.lifetimeRequests);
+    // Lifetime totals reset in-memory on a small interval now, so the server prefers a
+    // Firebase-synced read for this figure — surface which source it actually came from.
+    lifetimeEl.title = data.lifetimeSource === 'firebase'
+      ? `Synced from Firebase${data.lastSyncTime ? ' (last sync: ' + new Date(data.lastSyncTime).toLocaleString() + ')' : ''}`
+      : 'Local count (Firebase sync unavailable/offline)';
 
     renderProviders(data.stats || [], provStats);
   } catch (err) {

@@ -50,7 +50,7 @@ import { getSharedRouter } from './pipeline/instances.js';
 import { execSync } from 'child_process';
 import fs, { promises as fsp } from 'fs';
 import { persistence } from './utils/PersistenceManager.js';
-import { initFirebase, syncStats, getLeaderboard } from './utils/firebase.js';
+import { initFirebase, syncStats, getLeaderboard, getUserStats } from './utils/firebase.js';
 import { withFileLock } from './utils/file-lock.js';
 import { writeFileAtomic } from './utils/FileUtils.js';
 import { WorkspaceScanner } from './cache/workspace.js';
@@ -155,6 +155,18 @@ async function main() {
     
     // Initialize telemetry / session manager
     await initTelemetry();
+
+    // Periodically check/sync telemetry every hour (supports continuous server runs)
+    const telemetryInterval = setInterval(async () => {
+      try {
+        await initTelemetry();
+      } catch (err) {
+        // Silent warning
+      }
+    }, 60 * 60 * 1000);
+    if (typeof telemetryInterval.unref === 'function') {
+      telemetryInterval.unref();
+    }
     
     const isSse = process.argv.includes('--sse');
     if (isSse) {
@@ -279,7 +291,30 @@ async function main() {
 
       app.get('/api/token-stats', async (req, res) => {
         try {
-          const stats = await getTokenStats();
+          const stats: any = await getTokenStats();
+          // Per-provider live fields (isAvailable, remainingRequests/Tokens) have no Firebase
+          // equivalent and must stay local. But lifetime totals get reset in-memory on a
+          // small interval now (LLMExecutor's periodic local-persist-and-reset), so they're
+          // no longer reliable to sum from local state for display — overlay the durable
+          // Firebase-synced lifetime totals when available, falling back to the local sum
+          // (already in `stats`) if offline or not yet synced.
+          try {
+            const state = await persistence.load();
+            if (state.userId) {
+              const fbStats = await getUserStats(state.userId);
+              if (fbStats) {
+                stats.serverTotals = {
+                  ...stats.serverTotals,
+                  lifetimeRequests: fbStats.lifetimeRequests,
+                  lifetimeTokens: fbStats.lifetimeTokens
+                };
+                stats.lifetimeSource = 'firebase';
+                stats.lastSyncTime = fbStats.lastSyncTime;
+              }
+            }
+          } catch {
+            // Firebase read unavailable — leave the local-sum serverTotals already in `stats`.
+          }
           res.json(stats);
         } catch (err) {
           res.status(500).json({ error: String(err) });

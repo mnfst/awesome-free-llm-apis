@@ -244,6 +244,40 @@ export async function logErrorTelemetry(userId: string, errorMsg: string, stack:
     }
 }
 
+/**
+ * Reads a single user's persisted stats doc from Firestore — the source of truth for the
+ * dashboard's lifetime totals (the local usage-stats.json's in-memory counters get reset
+ * on a small interval, so the dashboard reads this instead of summing local state).
+ */
+export async function getUserStats(userId: string): Promise<{
+    username: string;
+    lifetimeTokens: number;
+    lifetimeRequests: number;
+    lastSyncTime: number;
+} | null> {
+    if (isOffline) return null;
+    try {
+        const token = await getValidIdToken();
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${userId}`;
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return null;
+
+        const doc = await res.json();
+        const fields = doc.fields || {};
+        return {
+            username: fields.username?.stringValue || `anonymous-${userId.substring(0, 6)}`,
+            lifetimeTokens: parseInt(fields.lifetimeTokens?.integerValue || '0', 10),
+            lifetimeRequests: parseInt(fields.lifetimeRequests?.integerValue || '0', 10),
+            lastSyncTime: parseInt(fields.lastSyncTime?.integerValue || '0', 10)
+        };
+    } catch (err) {
+        logFirebaseError('[Firebase] Failed to get user stats', err);
+        return null;
+    }
+}
+
 export async function getLeaderboard(currentUserId?: string): Promise<any[]> {
     if (isOffline) return [];
     try {

@@ -193,4 +193,109 @@ describe('Persistence Layer Hardening', () => {
         expect(result.firebaseUid).toBeUndefined();
         errorSpy.mockRestore();
     });
+
+    it('saves and loads lastAuthFailedTime and lastSyncFailedTime properties correctly', async () => {
+        const pm = new PersistenceManager(testFile);
+        const state: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1,
+            dailyTotalTokens: 100,
+            lifetimeTotalRequests: 1,
+            lifetimeTotalTokens: 100,
+            lastAuthFailedTime: 123456789,
+            lastSyncFailedTime: 987654321,
+            providers: {}
+        };
+        await pm.save(state);
+
+        const loaded = await pm.load();
+        expect(loaded.lastAuthFailedTime).toBe(123456789);
+        expect(loaded.lastSyncFailedTime).toBe(987654321);
+    });
+
+    it('preserves lastAuthFailedTime/lastSyncFailedTime through merge() when a later save omits them entirely', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // First save establishes both failure timestamps on disk.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1, dailyTotalTokens: 100, lifetimeTotalRequests: 1, lifetimeTotalTokens: 100,
+            lastAuthFailedTime: 111,
+            lastSyncFailedTime: 222,
+            providers: {}
+        });
+
+        // A second save (e.g. LLMExecutor.persistStats()'s counter-only object) never
+        // references these fields at all — merge() must fall back to disk, not drop them.
+        const counterOnlyState: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 2, dailyTotalTokens: 200, lifetimeTotalRequests: 2, lifetimeTotalTokens: 200,
+            providers: {}
+        };
+        expect('lastAuthFailedTime' in counterOnlyState).toBe(false);
+        expect('lastSyncFailedTime' in counterOnlyState).toBe(false);
+        await pm.save(counterOnlyState);
+
+        const loaded = await pm.load();
+        expect(loaded.lastAuthFailedTime).toBe(111);
+        expect(loaded.lastSyncFailedTime).toBe(222);
+    });
+
+    it('honors an explicit clear (lastSyncFailedTime = undefined) instead of restoring the stale disk value', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // Seed a prior failure on disk.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1, dailyTotalTokens: 100, lifetimeTotalRequests: 1, lifetimeTotalTokens: 100,
+            lastSyncFailedTime: 999,
+            providers: {}
+        });
+
+        // Mirrors server.ts's initTelemetry(): after a successful sync, explicitly clears
+        // the failure timestamp by assigning undefined (not by omitting the key).
+        const clearedState: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1, dailyTotalTokens: 100, lifetimeTotalRequests: 1, lifetimeTotalTokens: 100,
+            lastSyncFailedTime: undefined,
+            providers: {}
+        };
+        expect('lastSyncFailedTime' in clearedState).toBe(true);
+        await pm.save(clearedState);
+
+        const loaded = await pm.load();
+        expect(loaded.lastSyncFailedTime).toBeUndefined();
+    });
+
+    it('resetBaseline() zeroes the delta baseline so a post-reset save correctly re-accumulates from zero instead of going negative', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // Simulate LLMExecutor accumulating a large amount of usage this process run.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 100, dailyTotalTokens: 10000,
+            lifetimeTotalRequests: 100, lifetimeTotalTokens: 10000,
+            providers: { p1: { lastSyncTime: Date.now(), localTotalRequests: 100, localTotalTokens: 10000 } }
+        });
+
+        // Periodic local-persist-and-reset: in-memory counters just got zeroed by the caller
+        // (mirrors LLMExecutor.periodicPersistAndReset), so the baseline must reset too.
+        pm.resetBaseline();
+
+        // A small amount of new usage accumulates after the reset.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 3, dailyTotalTokens: 300,
+            lifetimeTotalRequests: 3, lifetimeTotalTokens: 300,
+            providers: { p1: { lastSyncTime: Date.now(), localTotalRequests: 3, localTotalTokens: 300 } }
+        });
+
+        const finalRaw = await fs.readFile(testFile, 'utf8');
+        const finalState = JSON.parse(await decrypt(finalRaw));
+        // Without resetBaseline(), delta = max(0, 3 - 100) = 0 → disk total would stay at 100.
+        // With it, delta = max(0, 3 - 0) = 3, added on top of disk's existing 100 base.
+        expect(finalState.lifetimeTotalRequests).toBe(103);
+        expect(finalState.lifetimeTotalTokens).toBe(10300);
+        expect(finalState.providers.p1.localTotalRequests).toBe(103);
+    });
 });

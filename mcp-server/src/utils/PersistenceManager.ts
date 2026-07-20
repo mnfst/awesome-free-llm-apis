@@ -17,6 +17,11 @@ export interface PersistentUsage {
   sessionToken?: string;
   sessionExpiresAt?: number;
   lastSyncTime?: number;
+  // Separate from lastSyncTime (which gates the ~24h Firebase sync, firebase.ts/server.ts's
+  // initTelemetry): stamps the last time this local usage-stats.json was itself flushed to
+  // disk by the periodic local-persist interval, independent of whether/when that data was
+  // ever synced to Firebase.
+  lastLocalPersistTime?: number;
   optOutTelemetry?: boolean;
   firebaseUid?: string;
   firebaseRefreshToken?: string;
@@ -254,6 +259,27 @@ export class PersistenceManager {
   }
 
   /**
+   * Zeroes the counter fields (but not identity/session fields) on the in-memory delta
+   * baseline (lastSavedState), so the next save()'s merge() computes deltas relative to
+   * zero instead of the pre-reset totals. Must be called immediately after a caller resets
+   * its own in-memory usage counters (e.g. LLMExecutor's periodic local-persist-and-reset),
+   * and only after that reset data has already been persisted — otherwise the next delta
+   * calculation (`memory.X - prev.X`) goes negative, gets clamped to 0 by merge(), and the
+   * next batch of real usage silently fails to be added to the disk total.
+   */
+  resetBaseline(): void {
+    if (!this.lastSavedState) return;
+    this.lastSavedState = {
+      ...this.lastSavedState,
+      dailyTotalRequests: 0,
+      dailyTotalTokens: 0,
+      lifetimeTotalRequests: 0,
+      lifetimeTotalTokens: 0,
+      providers: {}
+    };
+  }
+
+  /**
    * Merges two usage states, favoring the most progress/latest sync
    */
   private merge(disk: PersistentUsage, memory: PersistentUsage): PersistentUsage {
@@ -290,10 +316,22 @@ export class PersistenceManager {
       sessionToken: memory.sessionToken || base.sessionToken,
       sessionExpiresAt: memory.sessionExpiresAt || base.sessionExpiresAt,
       lastSyncTime: Math.max(base.lastSyncTime || 0, memory.lastSyncTime || 0),
+      lastLocalPersistTime: Math.max(base.lastLocalPersistTime || 0, memory.lastLocalPersistTime || 0),
       optOutTelemetry: memory.optOutTelemetry !== undefined ? memory.optOutTelemetry : base.optOutTelemetry,
       firebaseUid: memory.firebaseUid || base.firebaseUid,
       firebaseRefreshToken: memory.firebaseRefreshToken || base.firebaseRefreshToken,
       fallbackUid: memory.fallbackUid || base.fallbackUid,
+      // Uses the `in` operator, not `||` or `!== undefined`, because neither of those can
+      // distinguish "caller explicitly cleared this to undefined" from "caller's state
+      // object never had this field at all" — both read as falsy/undefined. That
+      // distinction matters here: server.ts's initTelemetry() does
+      // `state.lastSyncFailedTime = undefined` after a successful sync specifically to
+      // reset the failure-backoff window, and that clear must actually reach disk instead
+      // of silently falling back to the stale value forever. `in` checks for the key's
+      // presence on the object regardless of its value, so an explicit clear is honored
+      // while a caller that never touches the field still preserves whatever's on disk.
+      lastAuthFailedTime: 'lastAuthFailedTime' in memory ? memory.lastAuthFailedTime : base.lastAuthFailedTime,
+      lastSyncFailedTime: 'lastSyncFailedTime' in memory ? memory.lastSyncFailedTime : base.lastSyncFailedTime,
       providers: { ...base.providers }
     };
 
