@@ -149,7 +149,7 @@ function sessionIdToKey(sessId: string): string {
  */
 export class DynamicNodeAnalyzer {
     static async discoverInteractiveNodes(mcpClient: any): Promise<Array<{ index: number; label: string; tag: string; role?: string; href?: string }>> {
-        console.log(`🧠 [Dynamic Node Analyzer] Identifying interactive elements structurally (Zero hardcoding)...`);
+        console.error(`🧠 [Dynamic Node Analyzer] Identifying interactive elements structurally (Zero hardcoding)...`);
 
         const evalResult: any = await mcpClient.callTool({
             name: 'evaluate_script',
@@ -201,7 +201,7 @@ export class DynamicNodeAnalyzer {
      * Executes scrollIntoView() to scroll directly to target node and clicks it.
      */
     static async scrollToAndClickNode(mcpClient: any, targetLabel: string): Promise<{ success: boolean; output: string }> {
-        console.log(`📜👆 [Scroll-To & Click] Scrolling to and clicking element matching: "${targetLabel}"...`);
+        console.error(`📜👆 [Scroll-To & Click] Scrolling to and clicking element matching: "${targetLabel}"...`);
 
         const evalResult: any = await mcpClient.callTool({
             name: 'evaluate_script',
@@ -367,7 +367,7 @@ export class IntelligentBrowserScraper {
         domFingerprint: string;
         discoveredSections: string[];
     }> {
-        console.log(`🌐 [Surface Exploration] Exploring full surface area of ${targetUrl}...`);
+        console.error(`🌐 [Surface Exploration] Exploring full surface area of ${targetUrl}...`);
 
         await mcpClient.callTool({
             name: 'navigate_page',
@@ -404,7 +404,7 @@ export class IntelligentBrowserScraper {
             }
         }
 
-        console.log(`📸 [Surface Exploration Complete] Fingerprint: ${domFingerprint}, Discovered ${sections.length} sections.`);
+        console.error(`📸 [Surface Exploration Complete] Fingerprint: ${domFingerprint}, Discovered ${sections.length} sections.`);
         const res = { targetUrl, domFingerprint, discoveredSectionsCount: sections.length, discoveredSections: sections };
         await logToolCall('browser_explore_session', 'browser_tool:explore_surface_area', { targetUrl, domainContext }, res, 0, false).catch(() => {});
         return {
@@ -517,7 +517,7 @@ Output ONLY a valid JSON array of standardized objects. Do not wrap in markdown 
 
         for (let i = 0; i < validLinks.length; i++) {
             const record = validLinks[i];
-            console.log(`   🔎 [Deep Scrape ${i + 1}/${validLinks.length}] Navigating into ${record.link}...`);
+            console.error(`   🔎 [Deep Scrape ${i + 1}/${validLinks.length}] Navigating into ${record.link}...`);
 
             try {
                 await mcpClient.callTool({
@@ -655,7 +655,7 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
             }
 
             if (mcpClient && input.deepScrapeLimit && input.deepScrapeLimit > 0) {
-                console.log(`\n🔗 [Deep Scraping Pass] Navigating into extracted href links (Limit: ${input.deepScrapeLimit})...`);
+                console.error(`\n🔗 [Deep Scraping Pass] Navigating into extracted href links (Limit: ${input.deepScrapeLimit})...`);
                 const newDeepRecords = await this.deepScrapeItemDetails(mcpClient, checkpoint.accumulatedRecords, domainContext, input.deepScrapeLimit);
                 
                 for (const dr of newDeepRecords) {
