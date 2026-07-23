@@ -34,7 +34,7 @@ async function deriveSessionIdFromArgs(args: Record<string, any> | null | undefi
 
 export async function createMCPServer(): Promise<Server> {
   const server = new Server(
-    { name: 'free-llm-apis', version: '1.0.7' },
+    { name: 'free-llm-apis', version: '1.0.8' },
     { capabilities: { tools: {} } }
   );
 

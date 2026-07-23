@@ -1,6 +1,6 @@
 {
   "name": "free-llm-mcp-server",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "type": "module",
   "description": "MCP server for free LLM APIs",
   "bin": {
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.24.3",
     "@types/multer": "^2.2.0",
     "cohere-ai": "^7.21.0",
     "cors": "^2.8.6",
@@ -41,7 +41,7 @@
     "remark": "^15.0.1",
     "remark-parse": "^11.0.0",
     "unist-util-visit": "^5.1.0",
-    "vectra": "^0.14.0",
+    "vectra": "^0.12.3",
     "zod": "^3.23.8"
   },
   "overrides": {
