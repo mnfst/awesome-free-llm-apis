@@ -8,16 +8,16 @@ import crypto from 'crypto';
 import { LRUCache } from 'lru-cache';
 import { FIELD_LANGUAGE_MAP } from '../../memory/embedded-snippet-scanner.js';
 
-const EMBEDDED_CODE_FIELD_MARKERS = Object.keys(FIELD_LANGUAGE_MAP).map(field => `"${field}"`);
-const containsEmbeddedCodeField = (s: string): boolean => EMBEDDED_CODE_FIELD_MARKERS.some(marker => s.includes(marker));
+const EMBEDDED_CODE_FIELD_PATTERNS = Object.keys(FIELD_LANGUAGE_MAP).map(f => new RegExp(`"${f}"\\s*:`, 'i'));
+const containsEmbeddedCodeField = (s: string): boolean => EMBEDDED_CODE_FIELD_PATTERNS.some(pat => pat.test(s));
 
 /**
  * Robust spawn wrapper for cross-platform command execution.
  */
 function spawnAsync(command: string, args: string[], timeoutMs = 10000): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
-        // Use shell: false to prevent cmd.exe from misinterpreting regex pipes (|) as command pipes
-        const child = spawn(command, args, { shell: false });
+        const useShell = process.platform === 'win32' && command.endsWith('.cmd');
+        const child = spawn(command, args, { shell: useShell });
         let stdout = '';
         let stderr = '';
         
@@ -131,30 +131,49 @@ export class ContextGatherer {
             } catch { }
         }
 
-        // 3. Keyword Extraction
+        // 4. Extract terms from query, with typo correction & security audit expansion
         const terms = new Set<string>();
-        
-        // 3.0. Add explicit keywords if provided
-        if (options.keywords) {
-            options.keywords.forEach(kw => {
-                if (kw.length > 2) terms.add(kw);
+        if (options.keywords && Array.isArray(options.keywords)) {
+            options.keywords.forEach(k => {
+                if (k && typeof k === 'string') terms.add(k.trim());
             });
         }
 
-        // 3a. Extract explicitly quoted terms
-        const quotes = query.match(/["']([^"']+)["']/g) || [];
-        quotes.forEach(q => {
-            const term = q.replace(/["']/g, '').trim();
-            if (term.length > 3) terms.add(term);
-        });
+        // Normalize common typos and abbreviations
+        let normalizedQuery = query.toLowerCase()
+            .replace(/\bcrictial\b|\bcrtical\b/g, 'critical')
+            .replace(/\bvulnerabilites\b|\bvuln\b|\bvulns\b/g, 'vulnerability')
+            .replace(/\boccured\b/g, 'occurred');
 
-        // 3b. Extract code blocks
+        const manifestDependencies = new Set<string>();
+        const vulnerableDeps = new Set<string>();
+        const advisories: AdvisoryInfo[] = [];
+        // Universal Multi-Language Manifest Dependency Resolution: if audit/vulnerability/security & override/dependencies present
+        const isAuditQuery = /\b(audit|vulnerability|security|dependency|dependencies)\b/i.test(normalizedQuery) && /\b(override|node_modules|vendor|deps|site-packages|pkg)\b/i.test(normalizedQuery);
+        if (isAuditQuery) {
+            await Promise.all([
+                resolveManifestDependencies(workspaceRoot, manifestDependencies, vulnerableDeps),
+                resolveAuditVulnerabilities(workspaceRoot, manifestDependencies, vulnerableDeps, advisories)
+            ]);
+        }
+
+        const fileRefMatches = normalizedQuery.match(/\b[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+\b/g) || [];
+        fileRefMatches.forEach(f => terms.add(f.toLowerCase()));
+        
+        const rawTerms = normalizedQuery.match(/\w+/g) || [];
+        const stopwords = new Set(['the', 'and', 'for', 'with', 'from', 'that', 'this', 'have', 'are', 'was', 'were', 'which', 'about', 'into', 'lets', 'see', 'how', 'why', 'could', 'would', 'should']);
+        for (const term of rawTerms) {
+            if (term.length > 2 && !stopwords.has(term)) {
+                terms.add(term);
+            }
+        }
+
+        // 3c. Extract code blocks & inline code
         const codeBlocks = query.match(/```[\s\S]*?```/g) || [];
         codeBlocks.forEach(block => {
             block.split(/\W+/).filter(t => t.length > 5).forEach(t => terms.add(t));
         });
 
-        // 3c. Extract inline code
         const inlineCode = query.match(/`([^`]+)`/g) || [];
         inlineCode.forEach(c => {
             const term = c.replace(/`/g, '').trim();
@@ -168,7 +187,6 @@ export class ContextGatherer {
         if (terms.size === 0) {
             const baseBroadKeywords = ['architecture', 'review', 'implementation', 'system', 'senior', 'software', 'project', 'please', 'could', 'would', 'where', 'how', 'what', 'why'];
             
-            // Dynamically discover top-level folders as broad/organizational keywords
             let dynamicBroadKeywords: string[] = [];
             try {
                 const entries = await fs.readdir(workspaceRoot, { withFileTypes: true });
@@ -187,7 +205,11 @@ export class ContextGatherer {
                 .forEach(t => terms.add(t));
         }
 
-        const finalTerms = Array.from(terms).slice(0, 5);
+        // Real audit-discovered vulnerable package names always survive the term cap so the
+        // grep pass is guaranteed to target the actual culprit, not just generic query words.
+        const auditPkgNames = Array.from(vulnerableDeps);
+        const remainingTermSlots = Math.max(8 - auditPkgNames.length, 0);
+        const finalTerms = Array.from(new Set([...auditPkgNames, ...Array.from(terms).slice(0, remainingTermSlots)]));
         if (finalTerms.length === 0) return [];
 
         // 4. Combine terms into a single regex pattern for efficiency
@@ -200,7 +222,8 @@ export class ContextGatherer {
         const overrideIgnores = /\b(override|all files|gitignored|ignored)\b/i.test(query);
 
         // 5. Rank Candidates with priorityFiles support
-        let candidates = await WorkspaceWalker.findRelevantFiles(workspaceRoot, Array.from(terms), limit, overrideIgnores, isTheoretical, priorityFiles);
+        const candidateLimit = Math.max(limit * 3, 25);
+        let candidates = await WorkspaceWalker.findRelevantFiles(workspaceRoot, Array.from(terms), candidateLimit, overrideIgnores, isTheoretical, priorityFiles, Array.from(manifestDependencies), Array.from(vulnerableDeps));
         let fallbackToRoot = false;
         if (candidates.length === 0) {
             candidates = [workspaceRoot];
@@ -232,8 +255,7 @@ export class ContextGatherer {
             let stdout = '';
             const contextLines = isTheoretical ? '4' : '2';
             const normalizedCandidates = candidates.map(c => c.replace(/\\/g, '/'));
-            // We use a total match limit of 10 per file to prevent bloat. We bump limit to 50 for .log/.json files to ensure compaction triggers.
-            const isLogOrJsonSearch = candidates.some(f => f.endsWith('.log') || f.endsWith('.json'));
+            const isLogOrJsonSearch = candidates.some(f => /\.(log|json|md|txt)$/i.test(f)) || /\.(log|json|md|txt)\b/i.test(query);
             const matchLimit = isLogOrJsonSearch ? '50' : '10';
             
             if (tool === 'rg') {
@@ -256,8 +278,8 @@ export class ContextGatherer {
                 const res = await spawnAsync('grep', args, 15000);
                 stdout = res.stdout;
             } else if (tool === 'powershell') {
-                // Windows PowerShell Get-Content fallback - only run if pattern is safe (alphanumeric, pipes, underscores, hyphens)
-                if (/^[a-zA-Z0-9_\-|]+$/.test(combinedPattern)) {
+                // Windows PowerShell Get-Content fallback - only run if pattern is safe
+                if (/^[a-zA-Z0-9_\-|\.\s\\\/:]+$/.test(combinedPattern)) {
                     let targets = candidates;
                     if (fallbackToRoot) {
                         const files = await WorkspaceWalker.findRelevantFiles(workspaceRoot, [], 15, overrideIgnores, isTheoretical, priorityFiles);
@@ -281,6 +303,19 @@ export class ContextGatherer {
                     }
                 } else {
                     console.warn('[ContextGatherer] Skipping PowerShell search fallback due to potential injection characters in query.');
+                }
+            }
+
+            if (!stdout && candidates.length > 0) {
+                // When keyword search yields no matches, read top candidates directly
+                const topCandidates = candidates.slice(0, 10);
+                for (const file of topCandidates) {
+                    try {
+                        const content = await fs.readFile(file, 'utf-8');
+                        const lines = content.split('\n').slice(0, 50);
+                        const fileMatches = lines.map((line, idx) => `${file}:${idx + 1}:${line}`);
+                        stdout += fileMatches.join('\n') + '\n';
+                    } catch {}
                 }
             }
 
@@ -326,7 +361,15 @@ export class ContextGatherer {
                 }
 
                 // 9. Format final results with Priority Sorting
+                const queryLower = query.toLowerCase();
                 const getPriority = (filePath: string): number => {
+                    const norm = filePath.replace(/\\/g, '/').toLowerCase();
+                    const base = path.basename(norm);
+                    // Explicit filename match in user query -> Priority 0 (highest)
+                    if (queryLower.includes(base)) return 0;
+                    // Main source folder match (src/, lib/, app/) -> Priority 0.5
+                    if (norm.startsWith('src/') || norm.startsWith('lib/') || norm.startsWith('app/')) return 0.5;
+
                     const ext = path.extname(filePath).toLowerCase();
                     const codeExts = ['.ts', '.py', '.js', '.tsx', '.jsx', '.go', '.rs', '.c', '.cpp', '.h', '.hpp', '.java', '.sh', '.rb', '.php', '.cs', '.swift', '.sol', '.kt', '.dart'];
                     const configExts = ['.json', '.yml', '.yaml', '.toml', '.env', '.xml', '.ini'];
@@ -345,14 +388,17 @@ export class ContextGatherer {
                     const lines = grouped.get(file)!.sort((a, b) => a.line - b.line);
                     const ext = path.extname(file).toLowerCase();
                     
-                    if ((ext === '.log' || ext === '.json') && lines.length > 15) {
-                        const threshold = parseFloat(process.env.LOG_COMPACTION_THRESHOLD || '0.82');
+                    if ((ext === '.log' || ext === '.json' || ext === '.md' || ext === '.txt') && lines.length > 8) {
+                        const defaultThreshold = (ext === '.md' || ext === '.txt') ? '0.55' : '0.82';
+                        const threshold = parseFloat(process.env.LOG_COMPACTION_THRESHOLD || defaultThreshold);
                         results.push(`[Context] --- FILE: ${file} ---`);
                         
-                        // 1. Add head (first 5 matches)
-                        const headLines = lines.slice(0, 5);
-                        const middleLines = lines.slice(5, lines.length - 5);
-                        const tailLines = lines.slice(lines.length - 5);
+                        // 1. Add head (first 2-5 matches based on file size)
+                        const headCount = lines.length > 25 ? 5 : (lines.length > 12 ? 3 : 2);
+                        const tailCount = lines.length > 25 ? 5 : (lines.length > 12 ? 3 : 2);
+                        const headLines = lines.slice(0, headCount);
+                        const middleLines = lines.slice(headCount, Math.max(headCount, lines.length - tailCount));
+                        const tailLines = lines.slice(Math.max(headCount, lines.length - tailCount));
 
                         for (const { line, content } of headLines) {
                             const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
@@ -375,7 +421,7 @@ export class ContextGatherer {
                             const isAllSelfContainedJson = currentBlock.every(item => 
                                 item.content.includes('{') && item.content.includes('}')
                             );
-                            const shouldGroup = ext === '.json' && !isAllSelfContainedJson;
+                            const shouldGroup = false;
 
                             if (shouldGroup) {
                                 blocks.push({
@@ -411,7 +457,10 @@ export class ContextGatherer {
 
                         // Helper Jaccard similarity function with word-digit normalization
                         const calculateJaccard = (s1: string, s2: string): number => {
-                            // Preserve embedded code snippet fields (e.g. n8n jsCode/pythonCode) by avoiding collapse
+                            // Preserve markdown headers (#, ##, ###) and embedded code snippet fields
+                            if (s1.trim().startsWith('#') || s2.trim().startsWith('#')) {
+                                return 0;
+                            }
                             if (containsEmbeddedCodeField(s1) || containsEmbeddedCodeField(s2)) {
                                 return 0;
                             }
@@ -434,15 +483,15 @@ export class ContextGatherer {
                                 j++;
                             }
                             const runLength = j - i;
-                            if (runLength > 3) {
+                            const minRunLength = 1;
+                            if (runLength > minRunLength) {
                                 let totalCollapsedLines = 0;
                                 for (let k = i; k < j; k++) {
                                     totalCollapsedLines += blocks[k].lines.length;
                                 }
                                 results.push(`.. (${totalCollapsedLines} similar lines collapsed via semantic matching)`);
-                                // Introduce randomized representation selection to capture progression/variance
-                                const randIdx = i + Math.floor(Math.random() * runLength);
-                                const repBlock = blocks[randIdx];
+                                // Use deterministic first block representation to guarantee anchor presence
+                                const repBlock = blocks[i];
                                 for (const { line, content } of repBlock.lines) {
                                     const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
                                     results.push(`L${line}: ${displayContent}`);
@@ -474,6 +523,17 @@ export class ContextGatherer {
             }
         } catch (e: any) {
             // Handle no matches found error (rg/grep exit code 1)
+        }
+
+        if (advisories.length > 0) {
+            const advisoryBlocks = advisories.map(a => {
+                const lines = [`[Audit-Context] --- ADVISORY: ${a.name} (${a.severity}) ---`, `Title: ${a.title}`];
+                if (a.range) lines.push(`Vulnerable range: ${a.range}`);
+                if (a.url) lines.push(`Reference: ${a.url}`);
+                if (a.path) lines.push(`Dependency path: ${a.path}`);
+                return lines.join('\n');
+            });
+            results.unshift(...advisoryBlocks);
         }
 
         if (!isTheoretical) {
@@ -569,6 +629,209 @@ export async function enrichWithGraph(
         results.push(...injected);
     } catch (err) {
         // repo_graph.json not built or other error, ignore and let grep return directly
+    }
+}
+
+/**
+ * Universal Multi-Language Manifest Dependency Resolver
+ * Dynamically resolves declared dependencies across ecosystems:
+ * - Node.js (package.json)
+ * - Python (requirements.txt, pyproject.toml, Pipfile)
+ * - Rust (Cargo.toml)
+ * - Go (go.mod)
+ * - Ruby (Gemfile)
+ * - PHP (composer.json)
+ */
+async function resolveManifestDependencies(
+    workspaceRoot: string, 
+    manifestDeps: Set<string>,
+    vulnerableDeps?: Set<string>
+): Promise<void> {
+    // 1. Node.js (package.json)
+    try {
+        const pkgPath = path.join(workspaceRoot, 'package.json');
+        const pkgRaw = await fs.readFile(pkgPath, 'utf-8');
+        const pkg = JSON.parse(pkgRaw);
+        const deps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies, ...pkg.peerDependencies });
+        deps.forEach(dep => {
+            const parts = dep.split('/');
+            parts.forEach(part => {
+                const clean = part.replace(/^@/, '');
+                if (clean.length > 2) manifestDeps.add(clean.toLowerCase());
+            });
+        });
+        const overrides = Object.keys({ ...pkg.overrides, ...pkg.resolutions });
+        overrides.forEach(dep => {
+            const parts = dep.split('/');
+            parts.forEach(part => {
+                const clean = part.replace(/^@/, '');
+                if (clean.length > 2) {
+                    manifestDeps.add(clean.toLowerCase());
+                    if (vulnerableDeps) vulnerableDeps.add(clean.toLowerCase());
+                }
+            });
+        });
+    } catch {}
+
+    // 1b. Node.js Lockfile (package-lock.json)
+    try {
+        const lockPath = path.join(workspaceRoot, 'package-lock.json');
+        const lockRaw = await fs.readFile(lockPath, 'utf-8');
+        const lock = JSON.parse(lockRaw);
+        if (lock.packages) {
+            Object.keys(lock.packages).forEach(pkgPath => {
+                const dep = pkgPath.replace(/^node_modules\//, '');
+                if (dep && dep !== workspaceRoot) {
+                    const parts = dep.split('/');
+                    parts.forEach(part => {
+                        const clean = part.replace(/^@/, '');
+                        if (clean.length > 2) manifestDeps.add(clean.toLowerCase());
+                    });
+                }
+            });
+        }
+    } catch {}
+
+    // 2. Python (requirements.txt, pyproject.toml)
+    try {
+        const reqPath = path.join(workspaceRoot, 'requirements.txt');
+        const reqRaw = await fs.readFile(reqPath, 'utf-8');
+        reqRaw.split('\n').forEach(line => {
+            const match = line.trim().match(/^([a-zA-Z0-9_-]+)/);
+            if (match && match[1].length > 2 && !match[1].startsWith('#')) {
+                manifestDeps.add(match[1].toLowerCase());
+            }
+        });
+    } catch {}
+
+    try {
+        const pyprojPath = path.join(workspaceRoot, 'pyproject.toml');
+        const pyprojRaw = await fs.readFile(pyprojPath, 'utf-8');
+        const matches = pyprojRaw.match(/["']([a-zA-Z0-9_-]+)(?:[~=>!<].*)?["']/g) || [];
+        matches.forEach(m => {
+            const clean = m.replace(/["']/g, '').split(/[~=>!<]/)[0].trim();
+            if (clean.length > 2) manifestDeps.add(clean.toLowerCase());
+        });
+    } catch {}
+
+    // 3. Rust (Cargo.toml)
+    try {
+        const cargoPath = path.join(workspaceRoot, 'Cargo.toml');
+        const cargoRaw = await fs.readFile(cargoPath, 'utf-8');
+        const matches = cargoRaw.match(/^([a-zA-Z0-9_-]+)\s*=/gm) || [];
+        matches.forEach(m => {
+            const name = m.split('=')[0].trim();
+            if (name.length > 2 && name !== 'name' && name !== 'version' && name !== 'edition') {
+                manifestDeps.add(name.toLowerCase());
+            }
+        });
+    } catch {}
+
+    // 4. Go (go.mod)
+    try {
+        const goModPath = path.join(workspaceRoot, 'go.mod');
+        const goModRaw = await fs.readFile(goModPath, 'utf-8');
+        const matches = goModRaw.match(/^\s*([a-zA-Z0-9_\-.\/]+)\s+v[0-9]/gm) || [];
+        matches.forEach(m => {
+            const pkg = m.trim().split(/\s+/)[0].split('/').pop();
+            if (pkg && pkg.length > 2) manifestDeps.add(pkg.toLowerCase());
+        });
+    } catch {}
+
+    // 5. Ruby (Gemfile)
+    try {
+        const gemPath = path.join(workspaceRoot, 'Gemfile');
+        const gemRaw = await fs.readFile(gemPath, 'utf-8');
+        const matches = gemRaw.match(/gem\s+["']([a-zA-Z0-9_-]+)["']/g) || [];
+        matches.forEach(m => {
+            const name = m.replace(/gem\s+["']|["']/g, '').trim();
+            if (name.length > 2) manifestDeps.add(name.toLowerCase());
+        });
+    } catch {}
+
+    // 6. PHP (composer.json)
+    try {
+        const compPath = path.join(workspaceRoot, 'composer.json');
+        const compRaw = await fs.readFile(compPath, 'utf-8');
+        const comp = JSON.parse(compRaw);
+        const deps = Object.keys({ ...comp.require, ...comp['require-dev'] });
+        deps.forEach(dep => {
+            const cleanDep = dep.split('/').pop();
+            if (cleanDep && cleanDep.length > 2 && cleanDep !== 'php') manifestDeps.add(cleanDep.toLowerCase());
+        });
+    } catch {}
+}
+
+export interface AdvisoryInfo {
+    name: string;
+    severity: string;
+    title: string;
+    url?: string;
+    range?: string;
+    path?: string;
+}
+
+/**
+ * Runs `npm audit --json` against the workspace and resolves the real, currently-flagged
+ * vulnerable package names + advisory details. No package names are hardcoded — everything
+ * comes from npm's own audit database for whatever is actually installed/locked.
+ */
+async function resolveAuditVulnerabilities(
+    workspaceRoot: string,
+    manifestDeps: Set<string>,
+    vulnerableDeps: Set<string>,
+    advisories: AdvisoryInfo[]
+): Promise<void> {
+    try {
+        const hasPkgJson = await fs.access(path.join(workspaceRoot, 'package.json')).then(() => true).catch(() => false);
+        if (!hasPkgJson) return;
+
+        const useShell = process.platform === 'win32';
+        let stdout = '';
+        try {
+            const res = await spawnAsync(useShell ? 'npm.cmd' : 'npm', ['audit', '--json'], 20000);
+            stdout = res.stdout;
+        } catch (e: any) {
+            // `npm audit` exits non-zero when vulnerabilities are found; spawnAsync only
+            // resolves on 0/1, so any other rejection may still carry usable JSON on stdout
+            // if npm printed before erroring. Nothing else we can do here - bail gracefully.
+            return;
+        }
+
+        if (!stdout) return;
+        const report = JSON.parse(stdout);
+        const vulns = report?.vulnerabilities;
+        if (!vulns || typeof vulns !== 'object') return;
+
+        for (const [pkgName, info] of Object.entries<any>(vulns)) {
+            if (!pkgName) continue;
+            const clean = pkgName.replace(/^@/, '').toLowerCase();
+            vulnerableDeps.add(clean);
+            manifestDeps.add(clean);
+
+            const severity = info?.severity || 'unknown';
+            const range = info?.range;
+            const via = Array.isArray(info?.via) ? info.via : [];
+            const nodePath = Array.isArray(info?.nodes) && info.nodes.length > 0 ? info.nodes[0] : undefined;
+
+            const namedVia = via.filter((v: any) => v && typeof v === 'object');
+            if (namedVia.length > 0) {
+                for (const v of namedVia) {
+                    advisories.push({
+                        name: pkgName,
+                        severity,
+                        title: v.title || `${pkgName} vulnerability`,
+                        url: v.url,
+                        range,
+                        path: nodePath
+                    });
+                }
+            } else {
+                advisories.push({ name: pkgName, severity, title: `${pkgName} vulnerability`, range, path: nodePath });
+            }
+        }
+    } catch {
+        // offline, no lockfile, non-npm project, or malformed JSON - fall back silently to heuristics
     }
 }
 

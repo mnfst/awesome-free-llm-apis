@@ -27,7 +27,9 @@ export class WorkspaceWalker {
         limit: number = 30,
         overrideIgnores: boolean = false,
         isTheoretical: boolean = false,
-        priorityFiles?: string[]
+        priorityFiles?: string[],
+        manifestDependencies?: string[],
+        vulnerableDeps?: string[]
     ): Promise<string[]> {
         const candidates: FileCandidate[] = [];
         const state: WalkState = { filesScanned: 0 };
@@ -52,7 +54,7 @@ export class WorkspaceWalker {
             }
         }
 
-        await this.walk(rootPath, rootPath, keywords, candidates, ig, 0, overrideIgnores, gitignoreRoot, isTheoretical, state, priorityFiles);
+        await this.walk(rootPath, rootPath, keywords, candidates, ig, 0, overrideIgnores, gitignoreRoot, isTheoretical, state, priorityFiles, manifestDependencies, vulnerableDeps);
 
         // Sort by score (descending) and return top paths
         return candidates
@@ -72,19 +74,34 @@ export class WorkspaceWalker {
         gitignoreRoot: string,
         isTheoretical: boolean,
         state: WalkState,
-        priorityFiles?: string[]
+        priorityFiles?: string[],
+        manifestDependencies?: string[],
+        vulnerableDeps?: string[]
     ): Promise<void> {
         if (depth > MAX_DEPTH || state.filesScanned >= MAX_FILES_SCANNED) return;
 
         try {
             const entries = await fs.readdir(currentDir, { withFileTypes: true });
 
-            // Prioritize walking non-ignored directories first to prevent scan budget starvation
+            // Prioritize walking vulnerable dependencies and primary source directories first
             const sortedEntries = [...entries].sort((a, b) => {
-                const aIsIgnoredDir = a.isDirectory() && EXCLUDE_DIRS.includes(a.name);
-                const bIsIgnoredDir = b.isDirectory() && EXCLUDE_DIRS.includes(b.name);
-                if (aIsIgnoredDir && !bIsIgnoredDir) return 1;
-                if (!aIsIgnoredDir && bIsIgnoredDir) return -1;
+                if (vulnerableDeps && vulnerableDeps.length > 0) {
+                    const aIsVuln = a.isDirectory() && vulnerableDeps.some(v => a.name.toLowerCase().includes(v));
+                    const bIsVuln = b.isDirectory() && vulnerableDeps.some(v => b.name.toLowerCase().includes(v));
+                    if (aIsVuln && !bIsVuln) return -1;
+                    if (!aIsVuln && bIsVuln) return 1;
+                }
+                const aIsSrc = a.isDirectory() && ['src', 'lib', 'app'].includes(a.name.toLowerCase());
+                const bIsSrc = b.isDirectory() && ['src', 'lib', 'app'].includes(b.name.toLowerCase());
+                if (aIsSrc && !bIsSrc) return -1;
+                if (!aIsSrc && bIsSrc) return 1;
+
+                if (!overrideIgnores) {
+                    const aIsIgnoredDir = a.isDirectory() && EXCLUDE_DIRS.includes(a.name);
+                    const bIsIgnoredDir = b.isDirectory() && EXCLUDE_DIRS.includes(b.name);
+                    if (aIsIgnoredDir && !bIsIgnoredDir) return 1;
+                    if (!aIsIgnoredDir && bIsIgnoredDir) return -1;
+                }
                 return 0;
             });
 
@@ -105,8 +122,27 @@ export class WorkspaceWalker {
                 }
 
                 if (entry.isDirectory()) {
-                    await this.walk(root, fullPath, keywords, candidates, ig, depth + 1, overrideIgnores, gitignoreRoot, isTheoretical, state, priorityFiles);
+                    // NodeModules Filtering: If we are scanning node_modules, only walk subfolders that are declared manifest dependencies
+                    if (overrideIgnores && fullPath.includes('node_modules') && manifestDependencies && manifestDependencies.length > 0) {
+                        const subPath = fullPath.replace(/\\/g, '/').split('/node_modules/').pop() || '';
+                        const segments = subPath.split('/');
+                        if (segments.length > 0 && segments[0] !== '') {
+                            const hasMatch = segments.some(seg => {
+                                const clean = seg.replace(/^@/, '').toLowerCase();
+                                return manifestDependencies.includes(clean);
+                            });
+                            if (!hasMatch) {
+                                continue;
+                            }
+                        }
+                    }
+                    await this.walk(root, fullPath, keywords, candidates, ig, depth + 1, overrideIgnores, gitignoreRoot, isTheoretical, state, priorityFiles, manifestDependencies, vulnerableDeps);
                 } else if (entry.isFile()) {
+                    // Skip type declaration files when scanning node_modules to avoid scanning thousands of .d.ts files
+                    if (overrideIgnores && fullPath.includes('node_modules') && (entry.name.endsWith('.d.ts') || entry.name.endsWith('.d.mts') || entry.name.endsWith('.d.cts'))) {
+                        continue;
+                    }
+
                     state.filesScanned++;
                     const ext = path.extname(entry.name).toLowerCase();
                     
@@ -116,6 +152,30 @@ export class WorkspaceWalker {
 
                     const relativePath = path.relative(root, fullPath);
                     let score = this.calculateScore(entry.name, relativePath, ext, keywords, isTheoretical);
+                    
+                    const isManifestDep = overrideIgnores && relativePath.includes('node_modules') && manifestDependencies && manifestDependencies.length > 0 && (() => {
+                        const subPath = relativePath.replace(/\\/g, '/').split('/node_modules/').pop() || '';
+                        const segments = subPath.split('/');
+                        return segments.some(seg => {
+                            const clean = seg.replace(/^@/, '').toLowerCase();
+                            return manifestDependencies.includes(clean);
+                        });
+                    })();
+                    
+                    const isVulnerableDep = overrideIgnores && relativePath.includes('node_modules') && vulnerableDeps && vulnerableDeps.length > 0 && (() => {
+                        const subPath = relativePath.replace(/\\/g, '/').split('/node_modules/').pop() || '';
+                        const segments = subPath.split('/');
+                        return segments.some(seg => {
+                            const clean = seg.replace(/^@/, '').toLowerCase();
+                            return vulnerableDeps.includes(clean);
+                        });
+                    })();
+
+                    if (isVulnerableDep) {
+                        score += 150;
+                    } else if (isManifestDep) {
+                        score += 30;
+                    }
                     
                     const isPriority = priorityFiles?.some(pf => {
                         const resolvedPf = path.isAbsolute(pf) ? pf : path.resolve(root, pf);

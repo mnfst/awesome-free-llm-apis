@@ -7,6 +7,7 @@ const MAX_CONTEXT_LOG_CHARS = 4000;
 export class ContextResolver {
     static isWithinWorkspaceScope(filePath: string, workspaceRoot: string): boolean {
         const rel = path.relative(workspaceRoot, filePath);
+        if (path.isAbsolute(rel)) return false; // Cross-drive path on Windows
         const depth = rel.split(path.sep).filter(p => p === '..').length;
         return depth <= 1 && !rel.startsWith(`..${path.sep}..`);
     }
