@@ -25,136 +25,30 @@ import { buildExecutionPlan } from './task-classifier.js';
 import { ProviderRegistry } from '../../providers/registry.js';
 
 
-interface SubtaskHistoryEntry {
-    task: string;
-    taskId?: string;
-    output: string;
-    filesModified: string[];
-    timestamp: number;
-    model?: string;
-    provider?: string;
+import { SubtaskDecomposer, createEmptyQueueState, newQueueTaskId, type QueueTask, type QueueState, type SubtaskHistoryEntry } from './SubtaskDecomposer.js';
+import { ContextResolver } from './ContextResolver.js';
+import { HistoryManager } from './HistoryManager.js';
+
+export { createEmptyQueueState, newQueueTaskId, type QueueTask, type QueueState, type SubtaskHistoryEntry };
+
+export function protectInjectedReferenceBlocks(goal: string): { tokenized: string; placeholders: Map<string, string> } {
+    return ContextResolver.protectInjectedReferenceBlocks(goal);
 }
 
-// A queued subtask. `task` may contain `protected_ref_N` placeholder tokens standing in for
-// injected pdf://file://artifact:// content (see protectInjectedReferenceBlocks) — those are
-// resolved back to full content lazily, once, right before a subtask's prompt is built
-// (executeSingleSubtask), using QueueState.resolvedContext. Everything upstream of that
-// (decomposeGoal, buildExecutionPlan, queue storage, logs, history) only ever sees the short
-// placeholder form.
-interface QueueTask {
-    id: string;
-    task: string;
+export function decomposeGoal(goal: string): { tasks: QueueTask[]; resolvedContext: Record<string, string> } {
+    return SubtaskDecomposer.decomposeGoal(goal);
 }
 
-interface QueueState {
-    nowQueue: QueueTask[];
-    nextQueue: QueueTask[];
-    blockedQueue: QueueTask[];
-    improveQueue: QueueTask[];
-    resolvedContext?: Record<string, string>;
-    history?: SubtaskHistoryEntry[];
-    paused?: boolean;
-    promptId?: string;
-    pausedSubtaskIndex?: number;
-    retrospectionInjections?: number;
-}
-
-export function createEmptyQueueState(): QueueState {
-    return {
-        nowQueue: [],
-        nextQueue: [],
-        blockedQueue: [],
-        improveQueue: [],
-        resolvedContext: {},
-        history: [],
-        paused: false,
-        promptId: undefined,
-        pausedSubtaskIndex: undefined
-    };
-}
-
-let queueTaskIdCounter = 0;
-function newQueueTaskId(): string {
-    queueTaskIdCounter = (queueTaskIdCounter + 1) % 1_000_000;
-    return `t${Date.now().toString(36)}${queueTaskIdCounter.toString(36)}`;
-}
-
-/**
- * Memory Management: Using LRUCache instead of Map to prevent leaks in high-concurrency environments.
- * Max 500 active sessions, 24h TTL.
- */
-const queues = new LRUCache<string, QueueState>({
-    max: 500,
-    ttl: 1000 * 60 * 60 * 24,
-});
-
-/**
- * Stateless-first state recovery: load from disk if cache miss.
- */
 async function getOrLoadState(sessionId: string): Promise<QueueState> {
-    let state = queues.get(sessionId);
-    if (!state) {
-        // Cold start recovery
-        try {
-            const statePath = path.join(PROJECTS_DIR, sessionId, STATE_FILE);
-            const data = await fs.readFile(statePath, 'utf-8');
-            state = JSON.parse(data);
-            if (state) queues.set(sessionId, state);
-        } catch {
-            // No saved state or invalid, start fresh
-        }
-    }
-
-    if (!state) {
-        state = createEmptyQueueState();
-        queues.set(sessionId, state);
-    } else {
-        if (!state.history) state.history = [];
-        if (state.paused === undefined) state.paused = false;
-        if (!state.resolvedContext) state.resolvedContext = {};
-        
-        // Migrate legacy string queues to QueueTask objects
-        const migrateQueue = (q: any[]) => {
-            if (!Array.isArray(q)) return [];
-            return q.map((item, idx) => {
-                if (typeof item === 'string') {
-                    return {
-                        id: `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-                        task: item
-                    };
-                }
-                return item;
-            });
-        };
-        state.nowQueue = migrateQueue(state.nowQueue);
-        state.nextQueue = migrateQueue(state.nextQueue);
-        state.blockedQueue = migrateQueue(state.blockedQueue);
-        state.improveQueue = migrateQueue(state.improveQueue);
-    }
-    return state;
+    return SubtaskDecomposer.getOrLoadState(sessionId);
 }
 
-async function persistState(sessionId: string, projectDir: string) {
-    const state = queues.get(sessionId);
-    if (!state) return;
-
-    const statePath = path.join(projectDir, STATE_FILE);
-    try {
-        await withFileLock(statePath, async () => {
-            await writeFileAtomic(
-                statePath,
-                JSON.stringify(state, null, 2)
-            );
-        });
-    } catch {
-        // non-fatal
-    }
+async function persistState(sessionId: string, projectDir: string): Promise<void> {
+    return SubtaskDecomposer.persistState(sessionId, projectDir);
 }
 
-/**
- * Debounced State Persistence: Batches writes to reduce I/O under high throughput.
- */
-const persistStateDebounced = debounce(persistState, 2000);
+const persistStateDebounced = SubtaskDecomposer.persistStateDebounced;
+
 
 
 /**
@@ -297,235 +191,23 @@ const REFERENCE_MARKER_REGEX = /\[(?<label>[^\]]+)\]\((?<bProto>file|mcp|ctx7|ar
  * the injected block's own internal line structure into bogus one-line "subtasks."
  */
 // Bracketed system sentinels — [NOT_FOUND_HARD_STOP: ...], [PDF-PAGE-DEFERRED: ...], etc.
-// (use-free-llm.ts's resolveFileRefs) — that stand in for a reference when it couldn't be
-// resolved or was deferred. These often carry the original file path verbatim (e.g. a PDF
-// basename with capitalized segments), which leaks into classifyIntent's capital-word
-// heuristic exactly like unprotected PDF page content did — same bug, different source, so
-// it gets the same opaque-placeholder treatment below.
-const SENTINEL_REGEX = /\[[A-Z][A-Z0-9_-]*:[^\]]*\]/g;
-
-export function protectInjectedReferenceBlocks(goal: string): { tokenized: string; placeholders: Map<string, string> } {
-    const placeholders = new Map<string, string>();
-    const matches = [...goal.matchAll(REFERENCE_MARKER_REGEX)];
-
-    let tokenized: string;
-    let placeholderIndex = 0;
-
-    if (matches.length === 0) {
-        tokenized = goal;
-    } else {
-        tokenized = '';
-        let cursor = 0;
-
-        for (let i = 0; i < matches.length; i++) {
-            const match = matches[i];
-            const matchStart = match.index ?? -1;
-            if (matchStart < cursor) continue; // already consumed as part of a prior span
-
-            const markerEnd = matchStart + match[0].length;
-            const rest = goal.slice(markerEnd);
-            const leadingWsLen = rest.length - rest.trimStart().length;
-            const contentStart = markerEnd + leadingWsLen;
-
-            const PDF_CONTEXT_CLOSE = '[/PDF-Context]';
-            let blockEnd: number;
-            if (goal.startsWith('```', contentStart)) {
-                const closeIdx = goal.indexOf('```', contentStart + 3);
-                blockEnd = closeIdx === -1 ? goal.length : closeIdx + 3;
-            } else if (goal.startsWith('[PDF-Context]', contentStart)) {
-                const closeIdx = goal.indexOf(PDF_CONTEXT_CLOSE, contentStart);
-                blockEnd = closeIdx === -1 ? goal.length : closeIdx + PDF_CONTEXT_CLOSE.length;
-            } else {
-                // No known closing delimiter (older/unrecognized injected content shape) —
-                // fall back to running until the next reference marker or end of string.
-                // This can still swallow trailing user text that immediately follows an
-                // unrecognized injected block on the same line; recognized shapes above
-                // avoid that by bounding themselves explicitly.
-                const nextMatch = matches.slice(i + 1).find(m => (m.index ?? -1) >= contentStart);
-                blockEnd = nextMatch ? (nextMatch.index as number) : goal.length;
-            }
-
-            const placeholder = `protected_ref_${placeholderIndex++}`;
-            placeholders.set(placeholder, goal.slice(matchStart, blockEnd));
-            tokenized += goal.slice(cursor, matchStart) + placeholder;
-            cursor = blockEnd;
-        }
-        tokenized += goal.slice(cursor);
-    }
-
-    // Second pass: protect any bracketed system sentinels left over (self-contained, no
-    // "following content" to bound — the whole match is the span).
-    let finalTokenized = '';
-    let sentinelCursor = 0;
-    for (const m of tokenized.matchAll(SENTINEL_REGEX)) {
-        const start = m.index ?? -1;
-        const end = start + m[0].length;
-        const placeholder = `protected_ref_${placeholderIndex++}`;
-        placeholders.set(placeholder, m[0]);
-        finalTokenized += tokenized.slice(sentinelCursor, start) + placeholder;
-        sentinelCursor = end;
-    }
-    finalTokenized += tokenized.slice(sentinelCursor);
-
-    return { tokenized: finalTokenized, placeholders };
-}
-
 // Scans raw (untokenized) message text for [PDF-PAGE-DEFERRED: <path> — ...] sentinels
 // (resolveFileRefs()'s 5-page-per-pass cap) and returns the deferred page references found.
 function extractDeferredPdfPages(text: string): string[] {
-    const regex = /\[PDF-PAGE-DEFERRED:\s*([^—\]]+?)\s*—[^\]]*\]/g;
-    return [...text.matchAll(regex)].map(m => m[1].trim());
+    return ContextResolver.extractDeferredPdfPages(text);
 }
 
-// The model isn't reliably mentioning a deferred page on its own (confirmed live: a 6-page
-// request with one page deferred by the cap produced a response that never mentioned page 6
-// at all, especially once context-budget truncation drops earlier pages too) — so this is
-// appended deterministically rather than left to chance.
-// Context-injected log entries previously only recorded a label (e.g. "File Injected: auth.ts
-// (2400 chars)") — the actual injected text lived only in context.request.messages, which is
-// never persisted, so nothing downstream (dashboard included) could ever show what was really
-// injected. This caps what gets logged (chat-log.json has a rolling 200-entry window — don't
-// bloat it with a full 50KB file), not what a user can see: the dashboard renders a short
-// preview with a click-to-expand for the full (capped) text.
 const MAX_CONTEXT_LOG_CHARS = 4000;
 function excerptForLog(text: string): string {
-    const trimmed = text.trim();
-    return trimmed.length > MAX_CONTEXT_LOG_CHARS
-        ? trimmed.slice(0, MAX_CONTEXT_LOG_CHARS) + '…[truncated]'
-        : trimmed;
+    return ContextResolver.excerptForLog(text);
 }
 
 function appendDeferredPagesNotice(content: string, deferred: string[], maxPages: number): string {
-    if (deferred.length === 0) return content;
-    const list = deferred.map(d => `- \`${d}\``).join('\n');
-    return `${content}\n\n---\n⚠️ **Note:** ${deferred.length} PDF page reference(s) were not processed in this pass (max ${maxPages} pages per request) and are not reflected above:\n${list}\nAsk again in a follow-up request to include them.`;
+    return ContextResolver.appendDeferredPagesNotice(content, deferred, maxPages);
 }
 
 function restoreProtectedReferenceBlocks(text: string, placeholders: Map<string, string>): string {
-    let restored = text;
-    for (const [placeholder, original] of placeholders) {
-        restored = restored.split(placeholder).join(original);
-    }
-    return restored;
-}
-
-// Returns subtasks with `protected_ref_N` placeholder tokens left UNRESOLVED (not restored
-// to raw injected content) — decomposeGoalCore's line-splitting, buildExecutionPlan's
-// dependency/file-extraction heuristics, and queue storage/logs all then operate on short,
-// clean text instead of raw PDF/file page content. `resolvedContext` carries the
-// placeholder -> full-content map for the caller to retain (QueueState.resolvedContext) and
-// resolve lazily, once, at actual subtask-execution time (see executeSingleSubtask).
-export function decomposeGoal(goal: string): { tasks: QueueTask[]; resolvedContext: Record<string, string> } {
-    const { tokenized, placeholders } = protectInjectedReferenceBlocks(goal);
-    const steps = placeholders.size === 0 ? decomposeGoalCore(goal) : decomposeGoalCore(tokenized);
-    const tasks = steps.map(task => ({ id: newQueueTaskId(), task }));
-    const resolvedContext = Object.fromEntries(placeholders);
-    return { tasks, resolvedContext };
-}
-
-function decomposeGoalCore(goal: string): string[] {
-    let items: string[] = [];
-    const lines = goal.split('\n').map(l => l.trim()).filter(Boolean);
-    
-    // Keep track of explicit mode for each line
-    const lineModes = lines.map(line => {
-        if (line.startsWith('>')) {
-            return { text: line.substring(1).trim(), mode: 'parallel' as const };
-        }
-        if (line.startsWith('-')) {
-            return { text: line.substring(1).trim(), mode: 'sequential' as const };
-        }
-        // Strip other bullets for clean text processing
-        const cleanText = line.replace(/^\s*(?:\d+[.)\-]|[-*])\s+/, '').trim();
-        return { text: cleanText, mode: undefined };
-    });
-
-    const listItems = goal.match(/^\s*(?:\d+[.)\-]|[-*])\s+(.+)/gm);
-    const hasExplicitDsl = lines.some(l => l.startsWith('>'));
-
-    if (hasExplicitDsl) {
-        items = lineModes.map(m => m.text).filter(Boolean);
-    } else if (listItems && listItems.length >= 2) {
-        items = listItems.map(l => l.replace(/^\s*(?:\d+[.)\-]|[-*])\s+/, '').trim());
-    } else {
-        items = goal
-            .split(/\n+/)
-            .map(l => l.replace(/^\s*\d+[.)]\s*/, '').trim())
-            .filter(l => l.length > 0);
-    }
-
-    if (items.length === 0) {
-        return [];
-    }
-
-    // Semantic combination of similar/simple tasks
-    let finalTasks: { text: string; mode?: 'parallel' | 'sequential' }[] = [];
-    if (hasExplicitDsl) {
-        finalTasks = lineModes.filter(m => m.text).map(m => ({ text: m.text, mode: m.mode }));
-    } else {
-        const combined: string[] = [];
-        let pendingReads: string[] = [];
-
-        for (const item of items) {
-            const isRead = /\b(?:read|view|inspect|show|print|cat|get|display)\b/i.test(item) &&
-                           (/(?:[a-zA-Z]:)?[\\/]/i.test(item) || /\b[a-zA-Z0-9_\-\/\\\.]+\.[a-zA-Z0-9]+\b/i.test(item));
-            
-            if (isRead) {
-                const fileMatch = item.match(/(?:[a-zA-Z]:)?[\\/][a-zA-Z0-9_\-\/\\\.]+\.[a-zA-Z0-9]+|\b[a-zA-Z0-9_\-\/\\\.]+\.[a-zA-Z0-9]+\b/);
-                if (fileMatch) {
-                    pendingReads.push(fileMatch[0]);
-                    continue;
-                }
-            }
-
-            if (pendingReads.length > 0) {
-                combined.push(`Read and inspect ${pendingReads.join(', ')}`);
-                pendingReads = [];
-            }
-
-            combined.push(item);
-        }
-
-        if (pendingReads.length > 0) {
-            combined.push(`Read and inspect ${pendingReads.join(', ')}`);
-        }
-        finalTasks = combined.map(t => ({ text: t }));
-    }
-
-    // Helper to infer TaskType
-    const inferTaskType = (t: string): string => {
-        const text = t.toLowerCase();
-        const codingExts = /\.(ts|js|py|go|rs|json|html|css|sh|yaml|yml)\b/;
-        const codingTerms = /\b(fix|bug|refactor|compile|build|implement|feature|code|function|class|variable|merge|git|commit|pr|pull request|issue|lint|syntax|type|interface)\b/;
-        const reasoningTerms = /\b(why|explain|reason|prove|analyze|diagnose|debug|verify|logical|math|derivation|theorem|proof)\b/;
-        const searchTerms = /\b(search|find|lookup|query|grep|google|fetch|web|internet)\b/;
-        const summarizationTerms = /\b(summarize|summary|distill|brief|outline|overview)\b/;
-        
-        if (codingExts.test(text) || codingTerms.test(text)) return 'coding';
-        if (reasoningTerms.test(text)) return 'reasoning';
-        if (searchTerms.test(text)) return 'search';
-        if (summarizationTerms.test(text)) return 'summarization';
-        return 'chat';
-    };
-
-    // Same TaskType collision guard for parallel tasks
-    const parallelTasks = finalTasks.filter(t => t.mode === 'parallel');
-    const typeCounts = new Map<string, number>();
-    for (const t of parallelTasks) {
-        const type = inferTaskType(t.text);
-        typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
-    }
-
-    return finalTasks.map(t => {
-        let mode = t.mode;
-        if (mode === 'parallel' && (typeCounts.get(inferTaskType(t.text)) || 0) > 1) {
-            mode = 'sequential';
-        }
-        if (mode) {
-            return `[${mode}] ${t.text}`;
-        }
-        return t.text;
-    });
+    return ContextResolver.restoreProtectedReferenceBlocks(text, placeholders);
 }
 
 
