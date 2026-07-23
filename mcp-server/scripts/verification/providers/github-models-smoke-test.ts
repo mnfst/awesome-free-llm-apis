@@ -1,7 +1,7 @@
 /**
  * @file github-models-smoke-test.ts
  * @description Verifies all models defined in the GitHub Models provider.
- * Usage: tsx scripts/verification/github-models-smoke-test.ts [model-id]
+ * Usage: tsx scripts/verification/providers/github-models-smoke-test.ts [model-id]
  */
 import 'dotenv/config';
 import { ProviderRegistry } from '../../../src/providers/registry.js';

@@ -1,7 +1,7 @@
 /**
  * @file ollama-smoke-test.ts
  * @description Verifies all models defined in the Ollama Cloud provider and identifies which are free.
- * Usage: tsx scripts/verification/ollama-smoke-test.ts
+ * Usage: tsx scripts/verification/providers/ollama-smoke-test.ts
  */
 import 'dotenv/config';
 import { ProviderRegistry } from '../../../src/providers/registry.js';

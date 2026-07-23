@@ -1,5 +1,39 @@
 # Changelog
 
+## v1.0.8 – Dynamic Intelligent Browser Scraper, Cyber Tool Registry, File-Lock Concurrency & Flat Schema Exports (July 2026)
+
+### 🚀 Highlights
+
+- **100% Dynamic Browser Scraper (`browser_tool`)**:
+  - Implemented domain-agnostic `DynamicNodeAnalyzer` to discover interactive ARIA buttons and category tabs with zero hardcoded class strings.
+  - Added quantified scroll depth observation (`0%` to `100%` bottom fold) and state monitoring.
+  - Created `ScrapingSessionCheckpointManager` allowing users to pause, inspect frontend findings, select depth options, and resume sessions across process restarts.
+  - Created `ScriptPersistenceManager` to save generated JS extraction functions to `data/scrapes/scripts/` for 0-token LLM context cost on subsequent runs.
+  - Implemented `UniversalTabularSchemaFlattener` to dynamically flatten deeply nested JSON graphs into flat CSV rows (`startX`, `startY`, `endX`, `endY`, `outcome`).
+
+- **Isolated Cyber Security Tool Registry (`cyber_tool`)**:
+  - Created process-safe `CyberToolsRegistry` storing security binary mappings in userprofile path `~/.free-llm-mcp/cyber-tools-registry.json`.
+  - Enforced atomic file-locking (`.lock`) synchronization to prevent multi-agent race conditions during concurrent tool registration.
+  - Isolated security tool command flags and WAF/IPS troubleshooting logs within the dedicated `global-cyber-tools` wiki namespace.
+
+- **Granular Step Logging & Web Dashboard Integration**:
+  - Integrated Phase 3 `ChatLogger.logToolCall` across every step of `browser_tool` (`explore_surface_area`, `discover_nodes`, `click_node`, `save_checkpoint`, `load_checkpoint`, `list_checkpoints`, `scrape_and_process`) and `cyber_tool` (`list_tools`, `get_tool`, `register_tool`, `wiki_lookup`).
+  - Added `browser_tool` and `cyber_tool` to `src/server.ts` express endpoints (`POST /api/browser_tool`, `POST /api/cyber_tool`), interactive Tool Playground dropdowns, and Quick Start accordions on the Web Dashboard.
+
+- **Unit & Integration Testing Hardening**:
+  - Achieved 100% green test status across 16/16 unit test suites (`npx vitest run`).
+
+### Next Updates (→ v1.0.9)
+
+- ~~`coding_agents` tool~~ **→ Deferred to v1.0.9**: Scope split into:
+  - v1.0.8: `browser_tool` + `cyber_tool` file-locked userprofile registry foundation
+  - v1.0.9: `local_llm_patch` stub (Ollama-driven single-file patching)
+  - v1.1.0: Full `coding_agents` with LSP grounding + diff preview
+- `cyber_agents`: Isolated cyber routing middleware separate from main pipeline.
+- Provider Stream Mode: Optional streaming pass-through for high-throughput endpoints.
+
+---
+
 ## v1.0.7 – Wiki, Log Compaction, Process Locking, Dynamic Tokens, PDF Indexing + Testing Hardening (July 2026)
 
 ### 🚀 Highlights

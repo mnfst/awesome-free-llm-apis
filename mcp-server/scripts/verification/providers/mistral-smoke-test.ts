@@ -1,7 +1,7 @@
 /**
  * @file mistral-smoke-test.ts
  * @description Verifies all models defined in the Mistral provider and identifies which are free.
- * Usage: tsx scripts/verification/mistral-smoke-test.ts
+ * Usage: tsx scripts/verification/providers/mistral-smoke-test.ts
  */
 import 'dotenv/config';
 import { ProviderRegistry } from '../../../src/providers/registry.js';

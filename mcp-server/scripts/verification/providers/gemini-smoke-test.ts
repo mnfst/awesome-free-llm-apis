@@ -1,7 +1,7 @@
 /**
  * @file gemini-smoke-test.ts
  * @description Verifies all models defined in the Gemini provider.
- * Usage: tsx scripts/verification/gemini-smoke-test.ts
+ * Usage: tsx scripts/verification/providers/gemini-smoke-test.ts
  */
 import 'dotenv/config';
 import { ProviderRegistry } from '../../../src/providers/registry.js';
