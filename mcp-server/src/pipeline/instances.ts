@@ -103,6 +103,21 @@ export function getAgenticMiddleware(): AgenticMiddleware {
     return _agenticMiddleware;
 }
 
+/**
+ * Reset all singleton instance references.
+ * Intended for test isolation teardown only.
+ */
+export function resetAllInstances(): void {
+    _structuralMarkdownMiddleware = null;
+    _sharedResponseCache = null;
+    _workspaceContextMiddleware = null;
+    _sharedRouter = null;
+    _sharedImageRouter = null;
+    _agenticMiddleware = null;
+    _sharedExecutor = null;
+}
+
 // Deprecated direct exports have been removed. All callers should use getter functions.
+
 
 

@@ -57,6 +57,11 @@ const contextCache = new LRUCache<string, CacheEntry>({
     ttl: 1000 * 60 * 30, // 30 minutes
 });
 
+/** Test-only: clears the module-level LRU cache to prevent cross-test contamination */
+export function __test_clearCache(): void {
+    contextCache.clear();
+}
+
 export interface ContextGathererOptions {
     workspaceRoot: string;
     query: string;
