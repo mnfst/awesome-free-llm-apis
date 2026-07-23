@@ -447,7 +447,43 @@ export async function createMCPServer(): Promise<Server> {
             workspace_root: { type: 'string', description: 'Optional absolute path to the project root.' },
             sessionId: { type: 'string', description: 'Optional session identifier.' }
           },
+        inputSchema: {
+          type: 'object' as const,
+          properties: {
+            skill: { type: 'string', description: 'Name of the skill directory under .free-llm-mcp/skills/' },
+            input: { type: 'string', description: 'The prompt or instruction to run with the skill.' },
+            model: { type: 'string', description: 'Optional model to use.' },
+            workspace_root: { type: 'string', description: 'Optional absolute path to the project root.' },
+            sessionId: { type: 'string', description: 'Optional session identifier.' }
+          },
           required: ['skill', 'input']
+        }
+      },
+      {
+        name: 'browser_tool',
+        description: '100% Dynamic, domain-agnostic Intelligent Browser Scraper with pausable session checkpointing, 0-token script memory, and flat schema exports.',
+        inputSchema: {
+          type: 'object' as const,
+          properties: {
+            url: { type: 'string', description: 'Target website URL to inspect, explore, or scrape' },
+            userInstructions: { type: 'string', description: 'Prompt or instructions for dynamic extraction' },
+            outputDir: { type: 'string', description: 'Directory to store output datasets and checkpoints' },
+            sessionId: { type: 'string', description: 'Unique session identifier for checkpointing' }
+          },
+          required: ['url']
+        }
+      },
+      {
+        name: 'cyber_tool',
+        description: 'Isolated cyber security tool registry and wiki manager for security binaries (sqlmap, nmap, ffuf) with userprofile storage.',
+        inputSchema: {
+          type: 'object' as const,
+          properties: {
+            action: { type: 'string', enum: ['list_tools', 'get_tool', 'register_tool', 'wiki_lookup'], description: 'Cyber tool action' },
+            toolName: { type: 'string', description: 'Security tool name (e.g. sqlmap, nmap, ffuf)' },
+            githubUrl: { type: 'string', description: 'GitHub repository URL for tool registration' }
+          },
+          required: ['action']
         }
       }
     ],
@@ -527,6 +563,19 @@ export async function createMCPServer(): Promise<Server> {
         const result = await executeSkill(input);
         response = {
           content: [{ type: 'text' as const, text: result.success ? result.response ?? '' : `Error: ${result.error}` }]
+        };
+      } else if (name === 'browser_tool') {
+        const { IntelligentBrowserScraper } = await import('../tools/browser-action.js');
+        const scraper = new IntelligentBrowserScraper();
+        const result = await scraper.scrapeAndProcessWithCheckpoint(args as any, null);
+        response = {
+          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }]
+        };
+      } else if (name === 'cyber_tool') {
+        const { cyberTool } = await import('../tools/cyber-tool.js');
+        const result = await cyberTool(args as any);
+        response = {
+          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }]
         };
       } else {
         throw new Error(`Unknown tool: ${name}`);

@@ -53,6 +53,8 @@ import { visionTool } from './tools/vision-tool.js';
 import { executeSkill } from './tools/execute-skill.js';
 import { manageMemory } from './tools/manage-memory.js';
 import { indexWorkspace } from './tools/index-workspace.js';
+import { IntelligentBrowserScraper } from './tools/browser-action.js';
+import { cyberTool } from './tools/cyber-tool.js';
 import { getSharedRouter } from './pipeline/instances.js';
 import { execSync } from 'child_process';
 import fs, { promises as fsp } from 'fs';
@@ -550,6 +552,29 @@ async function main() {
           res.json(data);
         } catch (err) {
           res.status(500).json({ error: String(err) });
+        }
+      });
+
+      // Browser Tool Scraper API Endpoint
+      app.post('/api/browser_tool', express.json({ limit: '10mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const scraper = new IntelligentBrowserScraper();
+          const result = await scraper.scrapeAndProcessWithCheckpoint(req.body, null);
+          res.json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
+      // Cyber Tool Security Registry & Wiki API Endpoint
+      app.post('/api/cyber_tool', express.json({ limit: '10mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const result = await cyberTool(req.body);
+          res.json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
         }
       });
 

@@ -5,6 +5,7 @@ import { ProviderRegistry } from '../providers/registry.js';
 import { getMessageContent } from '../utils/MessageUtils.js';
 import { ScraperExporter } from '../utils/ScraperExporter.js';
 import { ContextSanitizer, NetworkStateTracker } from '../utils/NetworkStateTracker.js';
+import { logToolCall } from '../utils/ChatLogger.js';
 
 export interface ScrapingSessionCheckpoint {
     sessionId: string;
@@ -80,7 +81,9 @@ export class ScrapingSessionCheckpointManager {
         try {
             const cpPath = ScrapingSessionCheckpointManager.getCheckpointPath(outputDir, sessionId);
             const raw = await fs.readFile(cpPath, 'utf-8');
-            return JSON.parse(raw);
+            const cp = JSON.parse(raw);
+            await logToolCall(sessionId, 'browser_tool:load_checkpoint', { outputDir, sessionId }, { success: true, status: cp.status }, 0, false).catch(() => {});
+            return cp;
         } catch {
             return null;
         }
@@ -92,6 +95,7 @@ export class ScrapingSessionCheckpointManager {
         const cpPath = ScrapingSessionCheckpointManager.getCheckpointPath(outputDir, sessionIdToKey(checkpoint.sessionId));
         checkpoint.lastUpdated = new Date().toISOString();
         await fs.writeFile(cpPath, JSON.stringify(checkpoint, null, 2), 'utf-8');
+        await logToolCall(checkpoint.sessionId, 'browser_tool:save_checkpoint', { sessionId: checkpoint.sessionId, status: checkpoint.status }, { cpPath }, 0, false).catch(() => {});
         return cpPath;
     }
 }
@@ -141,15 +145,17 @@ export class DynamicNodeAnalyzer {
         });
 
         const rawText = evalResult?.content?.[0]?.text || '';
+        let nodes: any[] = [];
         try {
             const match = rawText.match(/```json\n([\s\S]*?)\n```/);
             if (match && match[1]) {
                 const parsed = JSON.parse(match[1]);
-                return typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
+                nodes = typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
             }
         } catch {}
 
-        return [];
+        await logToolCall('browser_node_session', 'browser_tool:discover_nodes', {}, { discoveredNodesCount: nodes.length, nodes }, 0, false).catch(() => {});
+        return nodes;
     }
 
     /**
@@ -177,7 +183,9 @@ export class DynamicNodeAnalyzer {
 
         const text = evalResult?.content?.[0]?.text || '';
         const success = text.includes('Successfully scrolled');
-        return { success, output: text };
+        const res = { success, output: text };
+        await logToolCall('browser_node_session', 'browser_tool:click_node', { targetLabel }, res, 0, !success).catch(() => {});
+        return res;
     }
 }
 
@@ -358,6 +366,8 @@ export class IntelligentBrowserScraper {
         }
 
         console.log(`📸 [Surface Exploration Complete] Fingerprint: ${domFingerprint}, Discovered ${sections.length} sections.`);
+        const res = { targetUrl, domFingerprint, discoveredSectionsCount: sections.length, discoveredSections: sections };
+        await logToolCall('browser_explore_session', 'browser_tool:explore_surface_area', { targetUrl, domainContext }, res, 0, false).catch(() => {});
         return {
             snapshotText,
             domFingerprint,
@@ -635,7 +645,7 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
                 });
             }
 
-            return {
+            const res = {
                 success: true,
                 url: input.url,
                 domainContext,
@@ -651,8 +661,10 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
                 sampleDeepRecords: checkpoint.deepRecords.slice(0, 3),
                 usedPersistedScript: false
             };
+            await logToolCall(sessionId, 'browser_tool:scrape', input, res, 0, false).catch(() => {});
+            return res;
         } catch (err: any) {
-            return {
+            const errRes = {
                 success: false,
                 url: input.url,
                 domainContext: input.domainContext || 'Web Page Data',
@@ -663,6 +675,9 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
                 usedPersistedScript: false,
                 error: err?.message || String(err)
             };
+            const sid = input.sessionId || 'browser_tool_session';
+            await logToolCall(sid, 'browser_tool:scrape', input, errRes, 0, true).catch(() => {});
+            return errRes;
         }
     }
 }

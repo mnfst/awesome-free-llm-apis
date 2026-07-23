@@ -379,6 +379,24 @@ const TOOLS = [
     ]
   },
   {
+    id: 'browser_tool', label: 'browser_tool', icon: '🌐',
+    tag: 'Web Scraping',
+    fields: [
+      { id: 'url', label: 'Target URL', type: 'text', placeholder: 'https://example.com' },
+      { id: 'userInstructions', label: 'Extraction Instructions', type: 'textarea', placeholder: 'Scrape page headlines and stats' },
+      { id: 'sessionId', label: 'Session ID', type: 'text', placeholder: 'browser_session_1' }
+    ]
+  },
+  {
+    id: 'cyber_tool', label: 'cyber_tool', icon: '🛡️',
+    tag: 'Cyber Security',
+    fields: [
+      { id: 'action', label: 'Action', type: 'select', options: ['list_tools', 'get_tool', 'register_tool', 'wiki_lookup'] },
+      { id: 'toolName', label: 'Tool Name', type: 'text', placeholder: 'sqlmap' },
+      { id: 'githubUrl', label: 'GitHub URL (for register)', type: 'text', placeholder: 'https://github.com/sqlmapproject/sqlmap' }
+    ]
+  },
+  {
     id: 'store_workspace_skill', label: 'store_workspace_skill', icon: '💾',
     tag: 'Skill Storage',
     fields: [

@@ -24,6 +24,8 @@ import { validateProvider } from './validate-provider.js';
 import { initWorkspace } from './init-workspace.js';
 import { GlobalWikiManager } from '../utils/GlobalWikiManager.js';
 import { logToolCall } from '../utils/ChatLogger.js';
+export { cyberTool } from './cyber-tool.js';
+export { IntelligentBrowserScraper as browserTool } from './browser-action.js';
 
 // Each pdf:// reference costs a subprocess render plus a vision-classification LLM call
 // (resolvePdfRef) — sequential, uncapped resolution of many pages in one pass would be an
