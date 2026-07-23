@@ -127,6 +127,27 @@ Save structured knowledge and scripts into the workspace.
 
 ---
 
+### `browser_tool` [NEW]
+Universal, 100% dynamic browser scraper with pausable session checkpointing, 0-token script memory, and flat schema tabular exports.
+- **Parameters**:
+  - `url` (required): Target website URL or `'list_checkpoints'`.
+  - `action` (optional): `'scrape'` or `'list_checkpoints'`.
+  - `userInstructions` (optional): Dynamic extraction instructions.
+  - `sessionId` (optional): Unique session identifier for pausable checkpoint persistence.
+- **How it Works**: Uses zero hardcoded domain selectors to discover interactive ARIA nodes, tracks scroll depth (0-100%), persists pausable session state to `data/scrapes/checkpoints/`, re-uses JS script memory, and exports nested data to flat CSV files (`UniversalTabularSchemaFlattener`).
+
+---
+
+### `cyber_tool` [NEW]
+Isolated security binary tool registry and dedicated wiki manager.
+- **Parameters**:
+  - `action` (required): `'list_tools'`, `'get_tool'`, `'register_tool'`, or `'wiki_lookup'`.
+  - `toolName` (optional): Security tool name (e.g. `sqlmap`, `nmap`, `ffuf`).
+  - `githubUrl` (optional): Target GitHub repository URL for registration.
+- **How it Works**: Manages dynamic security binary URL resolution via atomic process-safe `.lock` files in `~/.free-llm-mcp/cyber-tools-registry.json` and stores flag remediations and troubleshooting logs in the isolated `global-cyber-tools` wiki namespace.
+
+---
+
 ### `index_workspace`
 Proactively index all relevant files in the workspace for semantic search.
 

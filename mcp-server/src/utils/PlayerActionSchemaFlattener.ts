@@ -1,1 +1,1 @@
-export { UniversalTabularSchemaFlattener, UniversalTabularSchemaFlattener as PlayerActionSchemaFlattener } from './UniversalTabularSchemaFlattener.js';
+export { UniversalTabularSchemaFlattener, UniversalTabularSchemaFlattener as PlayerActionSchemaFlattener, FlatPlayerActionRecord } from './UniversalTabularSchemaFlattener.js';

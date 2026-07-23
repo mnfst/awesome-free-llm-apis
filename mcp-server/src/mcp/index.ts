@@ -447,15 +447,6 @@ export async function createMCPServer(): Promise<Server> {
             workspace_root: { type: 'string', description: 'Optional absolute path to the project root.' },
             sessionId: { type: 'string', description: 'Optional session identifier.' }
           },
-        inputSchema: {
-          type: 'object' as const,
-          properties: {
-            skill: { type: 'string', description: 'Name of the skill directory under .free-llm-mcp/skills/' },
-            input: { type: 'string', description: 'The prompt or instruction to run with the skill.' },
-            model: { type: 'string', description: 'Optional model to use.' },
-            workspace_root: { type: 'string', description: 'Optional absolute path to the project root.' },
-            sessionId: { type: 'string', description: 'Optional session identifier.' }
-          },
           required: ['skill', 'input']
         }
       },

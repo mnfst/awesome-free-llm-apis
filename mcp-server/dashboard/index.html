@@ -595,12 +595,14 @@
               <tr><td><code>force</code></td><td>boolean</td><td></td><td>Re-index even if a cache is present</td></tr>
             </tbody>
           </table>
+        </details>
         <details class="qs-tool-card">
           <summary><span class="qs-tool-name">browser_tool</span><span class="qs-tool-desc">100% Dynamic browser scraper with pausable checkpoints, 0-token script memory & flat schema exports</span></summary>
           <table class="qs-table">
             <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
             <tbody>
-              <tr><td><code>url</code></td><td>string</td><td>✓</td><td>Target website URL</td></tr>
+              <tr><td><code>action</code></td><td>string</td><td></td><td>scrape | list_checkpoints</td></tr>
+              <tr><td><code>url</code></td><td>string</td><td>✓</td><td>Target website URL (or list_checkpoints)</td></tr>
               <tr><td><code>userInstructions</code></td><td>string</td><td></td><td>Dynamic extraction prompt</td></tr>
               <tr><td><code>sessionId</code></td><td>string</td><td></td><td>Unique session identifier for checkpointing</td></tr>
             </tbody>

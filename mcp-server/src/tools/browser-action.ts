@@ -11,7 +11,7 @@ export interface ScrapingSessionCheckpoint {
     sessionId: string;
     targetUrl: string;
     domainContext: string;
-    status: 'INITIALIZED' | 'SURFACE_EXPLORED' | 'NODES_DISCOVERED' | 'PAUSED' | 'RESUMED' | 'COMPLETED';
+    status: 'INITIALIZED' | 'SURFACE_EXPLORED' | 'NODES_DISCOVERED' | 'PLAYER_CARDS_DISCOVERED' | 'AWAITING_USER_SELECTION' | 'EXECUTING_SELECTED_OPTION' | 'PAUSED' | 'RESUMED' | 'COMPLETED' | string;
     currentPage: number;
     visitedUrls: string[];
     pendingUrlQueue: string[];
@@ -26,6 +26,7 @@ export interface ScrapingSessionCheckpoint {
 
 export interface BrowserScrapeInput {
     url: string;
+    action?: string;
     domainContext?: string;
     userInstructions?: string;
     outputDir?: string;
@@ -97,6 +98,44 @@ export class ScrapingSessionCheckpointManager {
         await fs.writeFile(cpPath, JSON.stringify(checkpoint, null, 2), 'utf-8');
         await logToolCall(checkpoint.sessionId, 'browser_tool:save_checkpoint', { sessionId: checkpoint.sessionId, status: checkpoint.status }, { cpPath }, 0, false).catch(() => {});
         return cpPath;
+    }
+
+    static async listCheckpoints(outputDir: string): Promise<Array<{
+        sessionId: string;
+        targetUrl: string;
+        domainContext: string;
+        status: string;
+        accumulatedRecordsCount: number;
+        lastUpdated: string;
+    }>> {
+        try {
+            const checkpointDir = path.join(outputDir, 'checkpoints');
+            await fs.mkdir(checkpointDir, { recursive: true });
+            const files = await fs.readdir(checkpointDir);
+            const checkpoints: any[] = [];
+
+            for (const f of files) {
+                if (f.endsWith('_checkpoint.json')) {
+                    try {
+                        const raw = await fs.readFile(path.join(checkpointDir, f), 'utf-8');
+                        const cp = JSON.parse(raw);
+                        checkpoints.push({
+                            sessionId: cp.sessionId,
+                            targetUrl: cp.targetUrl,
+                            domainContext: cp.domainContext,
+                            status: cp.status,
+                            accumulatedRecordsCount: cp.accumulatedRecords?.length || 0,
+                            lastUpdated: cp.lastUpdated
+                        });
+                    } catch {}
+                }
+            }
+
+            await logToolCall('browser_checkpoint_session', 'browser_tool:list_checkpoints', { outputDir }, { count: checkpoints.length, checkpoints }, 0, false).catch(() => {});
+            return checkpoints;
+        } catch {
+            return [];
+        }
     }
 }
 
@@ -559,9 +598,24 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
 
     async scrapeAndProcessWithCheckpoint(input: BrowserScrapeInput, devtoolsEvalResponse: any, mcpClient?: any): Promise<ScrapeResult> {
         try {
+            const outputDir = input.outputDir || path.join(process.cwd(), 'data', 'scrapes');
+
+            if (input.action === 'list_checkpoints' || input.url === 'list_checkpoints') {
+                const checkpoints = await ScrapingSessionCheckpointManager.listCheckpoints(outputDir);
+                return {
+                    success: true,
+                    url: 'list_checkpoints',
+                    domainContext: 'Checkpoint Manager',
+                    recordCount: checkpoints.length,
+                    totalAccumulatedRecords: checkpoints.length,
+                    deepRecordCount: 0,
+                    sampleRecords: checkpoints as any,
+                    usedPersistedScript: false
+                };
+            }
+
             const rawItems = IntelligentBrowserScraper.parseDevToolsEvalOutput(devtoolsEvalResponse) || [];
             const domainContext = input.domainContext || 'Web Page Data';
-            const outputDir = input.outputDir || path.join(process.cwd(), 'data', 'scrapes');
             const sessionId = input.sessionId || `session_${domainContext.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
 
             let checkpoint = await ScrapingSessionCheckpointManager.loadCheckpoint(outputDir, sessionId);
@@ -681,3 +735,5 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
         }
     }
 }
+
+export const PlayerCardExplorerEngine = DynamicNodeAnalyzer;

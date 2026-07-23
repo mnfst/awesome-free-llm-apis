@@ -20,7 +20,7 @@ describe('ScraperExporter', () => {
 
     it('sanitizes CSV cells and prevents formula injection', () => {
         expect(ScraperExporter.sanitizeCsvCell('=SUM(A1:A10)')).toBe('"\'=SUM(A1:A10)"');
-        expect(ScraperExporter.sanitizeCsvCell('+123')).toBe('"\'=123"' ? '"\'+123"' : '"\'+123"');
+        expect(ScraperExporter.sanitizeCsvCell('+123')).toBe('"\'+123"');
         expect(ScraperExporter.sanitizeCsvCell('Normal Text')).toBe('"Normal Text"');
         expect(ScraperExporter.sanitizeCsvCell('Text with "quotes"')).toBe('"Text with ""quotes"""');
     });

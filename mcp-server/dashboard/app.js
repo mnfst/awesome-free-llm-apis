@@ -382,7 +382,8 @@ const TOOLS = [
     id: 'browser_tool', label: 'browser_tool', icon: '🌐',
     tag: 'Web Scraping',
     fields: [
-      { id: 'url', label: 'Target URL', type: 'text', placeholder: 'https://example.com' },
+      { id: 'action', label: 'Action', type: 'select', options: ['scrape', 'list_checkpoints'] },
+      { id: 'url', label: 'Target URL', type: 'text', placeholder: 'https://example.com (or list_checkpoints)' },
       { id: 'userInstructions', label: 'Extraction Instructions', type: 'textarea', placeholder: 'Scrape page headlines and stats' },
       { id: 'sessionId', label: 'Session ID', type: 'text', placeholder: 'browser_session_1' }
     ]

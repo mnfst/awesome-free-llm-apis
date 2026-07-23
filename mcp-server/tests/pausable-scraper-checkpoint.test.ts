@@ -20,6 +20,7 @@ describe('Pausable/Resumable Scraping Session Checkpoint Tests', () => {
             accumulatedRecords: [{ id: 1, title: 'Team A vs Team B' }],
             deepRecords: [],
             discoveredSections: ['Matches', 'Trending'],
+            discoveredNodes: [],
             lastUpdated: new Date().toISOString()
         };
 
@@ -42,6 +43,12 @@ describe('Pausable/Resumable Scraping Session Checkpoint Tests', () => {
         const reloaded = await ScrapingSessionCheckpointManager.loadCheckpoint(outputDir, sessionId);
         expect(reloaded?.status).toBe('PAUSED');
         expect(reloaded?.accumulatedRecords).toHaveLength(2);
+
+        // 5. Test listCheckpoints
+        const checkpointsList = await ScrapingSessionCheckpointManager.listCheckpoints(outputDir);
+        expect(checkpointsList).toHaveLength(1);
+        expect(checkpointsList[0].sessionId).toBe(sessionId);
+        expect(checkpointsList[0].status).toBe('PAUSED');
 
         // Cleanup test dir
         await fs.rm(outputDir, { recursive: true, force: true });

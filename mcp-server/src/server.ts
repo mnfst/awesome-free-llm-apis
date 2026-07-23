@@ -678,6 +678,21 @@ async function main() {
         }
       });
 
+      // Helper to read and normalize chat log format (chat-logs.json or chat-log.json)
+      async function readNormalizedChatLog(dirPath: string): Promise<any[]> {
+        try {
+          const raw = await fsp.readFile(path.join(dirPath, 'chat-logs.json'), 'utf-8');
+          return JSON.parse(raw);
+        } catch {
+          try {
+            const raw = await fsp.readFile(path.join(dirPath, 'chat-log.json'), 'utf-8');
+            return JSON.parse(raw);
+          } catch {
+            return [];
+          }
+        }
+      }
+
       // ─── Chat Log API ─────────────────────────────────────────────────────────
       // Resolve workspace path → stable session ID (same hash the agentic tools use)
       // Isolated per CWD: each MCP server instance has its own data/projects/ tree.
@@ -727,7 +742,7 @@ async function main() {
 
           const q = ((req.query.q as string) || '').toLowerCase().trim();
           const filtered = q
-            ? log.filter(m => (m.content || '').toLowerCase().includes(q) || (m.tool || '').toLowerCase().includes(q))
+            ? log.filter((m: any) => (m.content || '').toLowerCase().includes(q) || (m.tool || '').toLowerCase().includes(q))
             : log;
           res.json({ sessionId, log: filtered.slice(-200), workspace });
         } catch (err) {

@@ -55,7 +55,7 @@ async function main() {
         ['cyber', 'sqlmap', 'sqli', 'flags']
     );
 
-    console.log(`   Created sqlmap Wiki Page: file:///${(sqlmapPage.path || '').replace(/\\/g, '/')}`);
+    console.log(`   Created sqlmap Wiki Page: file:///${((sqlmapPage as any).path || '').replace(/\\/g, '/')}`);
 
     // STEP 3: Validate Wiki Creation & Flag Documentation for Tool 2 (ffuf)
     console.log(`\n==================================================`);
@@ -86,7 +86,7 @@ async function main() {
         ['cyber', 'ffuf', 'fuzzing', 'flags']
     );
 
-    console.log(`   Created ffuf Wiki Page: file:///${(ffufPage.path || '').replace(/\\/g, '/')}`);
+    console.log(`   Created ffuf Wiki Page: file:///${((ffufPage as any).path || '').replace(/\\/g, '/')}`);
 
     // STEP 4: Execution Log Tracking & Confidence Score Reinforcement
     console.log(`\n==================================================`);

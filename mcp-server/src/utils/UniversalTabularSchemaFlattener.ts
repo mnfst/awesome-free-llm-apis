@@ -99,7 +99,15 @@ export class UniversalTabularSchemaFlattener {
 
         return flatRows;
     }
+
+    static flattenPlayerActions(
+        playerName: string,
+        playerId: string,
+        rawPayload: Record<string, any>
+    ): Record<string, any>[] {
+        return this.flattenPayloadToRows(playerName, playerId, rawPayload);
+    }
 }
 
-// Export alias for backward compatibility
+export type FlatPlayerActionRecord = Record<string, any>;
 export const PlayerActionSchemaFlattener = UniversalTabularSchemaFlattener;

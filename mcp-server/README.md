@@ -62,7 +62,7 @@ graph TD
 | `manage_memory` | Workspace-scoped memory: search/list/stats/clear | `action` | `workspace_root`, `query`, `limit` |
 | `store_workspace_skill` | Explicitly save structured knowledge and generated scripts | `name`, `what` | `workspace_root` |
 | `index_workspace` | Proactively index workspace files for semantic search | `workspace_root` | `force` |
-| `browser_tool` | 100% Dynamic browser scraper with pausable checkpoints, 0-token script memory & flat schema exports | `url` | `userInstructions`, `sessionId`, `outputDir` |
+| `browser_tool` | 100% Dynamic browser scraper with pausable checkpoints, 0-token script memory & flat schema exports | `url` | `action`, `userInstructions`, `sessionId`, `outputDir` |
 | `cyber_tool` | Isolated security tool registry & wiki manager for security binaries (`sqlmap`, `nmap`, `ffuf`) | `action` | `toolName`, `githubUrl` |
 
 ---

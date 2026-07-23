@@ -31,10 +31,17 @@
 ## 🛠️ Usage Example
 
 ```typescript
+// 1. Execute live dynamic scraping session
 await client.callTool('browser_tool', {
   url: 'https://www.sofascore.com/football/match/coritiba-palmeiras/nOsHO#id:15237982',
   userInstructions: 'Explore match statistics and player lineups',
   sessionId: 'match_exploration_v1',
   outputDir: 'data/scrapes'
+});
+
+// 2. List all active and paused scraping checkpoints on disk
+await client.callTool('browser_tool', {
+  action: 'list_checkpoints',
+  url: 'list_checkpoints'
 });
 ```
