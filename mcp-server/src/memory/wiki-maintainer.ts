@@ -57,11 +57,12 @@ async function readJsonSafe(filePath: string): Promise<any | null> {
 async function computeFileFingerprint(wsHash: string): Promise<string> {
   const keys = await memoryManager.longTerm.list();
   const mtimeKeys = keys.filter(k => k.startsWith(`file:${wsHash}:`) && k.endsWith(':mtime')).sort();
-  const pairs: string[] = [];
-  for (const key of mtimeKeys) {
-    const mtime = await memoryManager.longTerm.load(key);
-    pairs.push(`${key}:${mtime}`);
-  }
+  const pairs = await Promise.all(
+   mtimeKeys.map(async (key) => {
+      const mtime = await memoryManager.longTerm.load(key);
+      return key + ':' + mtime;
+    })
+  );
   return crypto.createHash('md5').update(pairs.join('|')).digest('hex');
 }
 

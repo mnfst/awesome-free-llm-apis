@@ -27,20 +27,23 @@ export class GithubRepoScanner {
   /**
    * Retrieves raw content of a file from a GitHub repository.
    */
-  static async fetchRawContent(owner: string, repo: string, path: string, branch?: string): Promise<string> {
+    static async fetchRawContent(owner: string, repo: string, path: string, branch?: string): Promise<string> {
     const branches = branch ? [branch] : ['main', 'master'];
     for (const b of branches) {
-      const url = `https://raw.githubusercontent.com/${owner}/${repo}/${b}/${path}`;
+      const url = 'https://raw.githubusercontent.com/' + owner + '/' + repo + '/' + b + '/' + path;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (response.ok) {
           return await response.text();
         }
       } catch (e) {
-        // Continue
+        clearTimeout(timeoutId);
       }
     }
-    throw new Error(`Failed to fetch raw content for ${owner}/${repo}/${path} (tried branches: ${branches.join(', ')})`);
+    throw new Error('Failed to fetch raw content for ' + owner + '/' + repo + '/' + path);
   }
 
   /**
