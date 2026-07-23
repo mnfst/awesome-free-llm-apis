@@ -6,6 +6,10 @@ import fs from 'fs/promises';
 import { DiffScanner } from './diff-scanner.js';
 import crypto from 'crypto';
 import { LRUCache } from 'lru-cache';
+import { FIELD_LANGUAGE_MAP } from '../../memory/embedded-snippet-scanner.js';
+
+const EMBEDDED_CODE_FIELD_MARKERS = Object.keys(FIELD_LANGUAGE_MAP).map(field => `"${field}"`);
+const containsEmbeddedCodeField = (s: string): boolean => EMBEDDED_CODE_FIELD_MARKERS.some(marker => s.includes(marker));
 
 /**
  * Robust spawn wrapper for cross-platform command execution.
@@ -191,8 +195,12 @@ export class ContextGatherer {
         const overrideIgnores = /\b(override|all files|gitignored|ignored)\b/i.test(query);
 
         // 5. Rank Candidates with priorityFiles support
-        const candidates = await WorkspaceWalker.findRelevantFiles(workspaceRoot, Array.from(terms), limit, overrideIgnores, isTheoretical, priorityFiles);
-        if (candidates.length === 0) return [];
+        let candidates = await WorkspaceWalker.findRelevantFiles(workspaceRoot, Array.from(terms), limit, overrideIgnores, isTheoretical, priorityFiles);
+        let fallbackToRoot = false;
+        if (candidates.length === 0) {
+            candidates = [workspaceRoot];
+            fallbackToRoot = true;
+        }
 
         // 6. Tool Detection
         let tool: 'rg' | 'grep' | 'powershell' | 'none' = 'none';
@@ -216,27 +224,41 @@ export class ContextGatherer {
         const results: string[] = [];
         let sortedFiles: string[] = [];
         try {
-            const normalizedCandidates = candidates.map(c => c.replace(/\\/g, '/'));
             let stdout = '';
             const contextLines = isTheoretical ? '4' : '2';
+            const normalizedCandidates = candidates.map(c => c.replace(/\\/g, '/'));
+            // We use a total match limit of 10 per file to prevent bloat. We bump limit to 50 for .log/.json files to ensure compaction triggers.
+            const isLogOrJsonSearch = candidates.some(f => f.endsWith('.log') || f.endsWith('.json'));
+            const matchLimit = isLogOrJsonSearch ? '50' : '10';
             
-            // We use a total match limit of 10 per file to prevent bloat
             if (tool === 'rg') {
-                const args = ['-m', '10', '-n', '-i', '-C', contextLines, '--no-heading'];
+                const args = ['-m', matchLimit, '-n', '-i', '-C', contextLines, '--no-heading', '-H'];
                 if (overrideIgnores) args.push('-u');
+                if (fallbackToRoot) {
+                    args.push('-g', '!node_modules', '-g', '!.git', '-g', '!dist', '-g', '!build', '-g', '!venv', '-g', '!.venv', '-g', '!.free-llm-mcp', '-g', '!.gemini');
+                }
                 args.push('-e', `(${combinedPattern})`);
                 args.push(...normalizedCandidates);
                 
                 const res = await spawnAsync('rg', args, 15000);
                 stdout = res.stdout;
             } else if (tool === 'grep') {
-                const args = ['-n', '-E', '-i', '-m', '10', '-C', contextLines, `(${combinedPattern})`].concat(normalizedCandidates);
+                const extraArgs = fallbackToRoot ? ['-r', '--exclude-dir={node_modules,.git,dist,build,venv,.venv}'] : [];
+                const args = ['-n', '-E', '-i', '-m', matchLimit, '-C', contextLines, '--with-filename']
+                    .concat(extraArgs)
+                    .concat([`(${combinedPattern})`])
+                    .concat(normalizedCandidates);
                 const res = await spawnAsync('grep', args, 15000);
                 stdout = res.stdout;
             } else if (tool === 'powershell') {
                 // Windows PowerShell Get-Content fallback - only run if pattern is safe (alphanumeric, pipes, underscores, hyphens)
                 if (/^[a-zA-Z0-9_\-|]+$/.test(combinedPattern)) {
-                    for (const file of candidates) {
+                    let targets = candidates;
+                    if (fallbackToRoot) {
+                        const files = await WorkspaceWalker.findRelevantFiles(workspaceRoot, [], 15, overrideIgnores, isTheoretical, priorityFiles);
+                        targets = files;
+                    }
+                    for (const file of targets) {
                         try {
                             const cleanPattern = combinedPattern;
                             const cleanPath = file.replace(/"/g, '`"');
@@ -271,7 +293,7 @@ export class ContextGatherer {
                         const cleanMatch = match.replace(/\r$/, '');
                         // Handle formatting: path/to/file:line:content or path/to/file-line-content
                         // Use regex to split reliably even if path contains colons or dashes
-                        const parts = cleanMatch.match(/^(.+?)[:|-](\d+)[:|-](.*)$/);
+                        const parts = cleanMatch.match(/^((?:[A-Za-z]:)?[^:|]+?)[:|-](\d+)[:|-](.*)$/);
                         if (parts) {
                             const rawFilePath = parts[1];
                             const lineNum = parseInt(parts[2]);
@@ -316,10 +338,132 @@ export class ContextGatherer {
                 });
                 for (const file of sortedFiles) {
                     const lines = grouped.get(file)!.sort((a, b) => a.line - b.line);
-                    results.push(`[Context] --- FILE: ${file} ---`);
-                    for (const { line, content } of lines) {
-                        const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
-                        results.push(`L${line}: ${displayContent}`);
+                    const ext = path.extname(file).toLowerCase();
+                    
+                    if ((ext === '.log' || ext === '.json') && lines.length > 15) {
+                        const threshold = parseFloat(process.env.LOG_COMPACTION_THRESHOLD || '0.82');
+                        results.push(`[Context] --- FILE: ${file} ---`);
+                        
+                        // 1. Add head (first 5 matches)
+                        const headLines = lines.slice(0, 5);
+                        const middleLines = lines.slice(5, lines.length - 5);
+                        const tailLines = lines.slice(lines.length - 5);
+
+                        for (const { line, content } of headLines) {
+                            const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
+                            results.push(`L${line}: ${displayContent}`);
+                        }
+
+                        // Group middle lines into logical blocks (supporting multi-line braces like JSON objects or single lines)
+                        interface Block {
+                            lines: Array<{ line: number; content: string }>;
+                            combinedContent: string;
+                        }
+                        
+                        const blocks: Block[] = [];
+                        let currentBlock: Array<{ line: number; content: string }> | null = null;
+                        let lastLineNum = -1;
+
+                        const flushCurrentBlock = () => {
+                            if (!currentBlock) return;
+                            // Only group contiguous lines as a single block if we are in a JSON file and the block is not composed entirely of self-contained single-line objects
+                            const isAllSelfContainedJson = currentBlock.every(item => 
+                                item.content.includes('{') && item.content.includes('}')
+                            );
+                            const shouldGroup = ext === '.json' && !isAllSelfContainedJson;
+
+                            if (shouldGroup) {
+                                blocks.push({
+                                    lines: currentBlock,
+                                    combinedContent: currentBlock.map(l => l.content).join('\n')
+                                });
+                            } else {
+                                for (const item of currentBlock) {
+                                    blocks.push({
+                                        lines: [item],
+                                        combinedContent: item.content
+                                    });
+                                }
+                            }
+                            currentBlock = null;
+                        };
+
+                        for (const item of middleLines) {
+                            const content = item.content;
+                            const isGap = lastLineNum !== -1 && item.line > lastLineNum + 1;
+                            
+                            if (isGap) {
+                                flushCurrentBlock();
+                                currentBlock = [item];
+                            } else if (currentBlock) {
+                                currentBlock.push(item);
+                            } else {
+                                currentBlock = [item];
+                            }
+                            lastLineNum = item.line;
+                        }
+                        flushCurrentBlock();
+
+                        // Helper Jaccard similarity function with word-digit normalization
+                        const calculateJaccard = (s1: string, s2: string): number => {
+                            // Preserve embedded code snippet fields (e.g. n8n jsCode/pythonCode) by avoiding collapse
+                            if (containsEmbeddedCodeField(s1) || containsEmbeddedCodeField(s2)) {
+                                return 0;
+                            }
+                            const norm1 = s1.replace(/[a-zA-Z0-9]*\d+[a-zA-Z0-9]*/g, '#');
+                            const norm2 = s2.replace(/[a-zA-Z0-9]*\d+[a-zA-Z0-9]*/g, '#');
+                            const tokenize = (s: string) => new Set(s.toLowerCase().match(/[a-z0-9_#]+/g) || []);
+                            const set1 = tokenize(norm1);
+                            const set2 = tokenize(norm2);
+                            if (set1.size === 0 && set2.size === 0) return 1;
+                            const intersection = new Set([...set1].filter(x => set2.has(x)));
+                            const union = new Set([...set1, ...set2]);
+                            return intersection.size / union.size;
+                        };
+
+                        // 2. Collapse middle blocks semantically
+                        let i = 0;
+                        while (i < blocks.length) {
+                            let j = i + 1;
+                            while (j < blocks.length && calculateJaccard(blocks[i].combinedContent, blocks[j].combinedContent) >= threshold) {
+                                j++;
+                            }
+                            const runLength = j - i;
+                            if (runLength > 3) {
+                                let totalCollapsedLines = 0;
+                                for (let k = i; k < j; k++) {
+                                    totalCollapsedLines += blocks[k].lines.length;
+                                }
+                                results.push(`.. (${totalCollapsedLines} similar lines collapsed via semantic matching)`);
+                                // Introduce randomized representation selection to capture progression/variance
+                                const randIdx = i + Math.floor(Math.random() * runLength);
+                                const repBlock = blocks[randIdx];
+                                for (const { line, content } of repBlock.lines) {
+                                    const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
+                                    results.push(`L${line}: ${displayContent}`);
+                                }
+                            } else {
+                                for (let k = i; k < j; k++) {
+                                    for (const { line, content } of blocks[k].lines) {
+                                        const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
+                                        results.push(`L${line}: ${displayContent}`);
+                                    }
+                                }
+                            }
+                            i = j;
+                        }
+
+                        // 3. Add tail
+                        for (const { line, content } of tailLines) {
+                            const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
+                            results.push(`L${line}: ${displayContent}`);
+                        }
+                    } else {
+                        results.push(`[Context] --- FILE: ${file} ---`);
+                        for (const { line, content } of lines) {
+                            const displayContent = content.length > 400 ? `${content.slice(0, 400)}... (truncated)` : content;
+                            results.push(`L${line}: ${displayContent}`);
+                        }
                     }
                 }
             }

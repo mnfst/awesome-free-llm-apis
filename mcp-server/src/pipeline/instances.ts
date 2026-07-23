@@ -4,6 +4,7 @@ import { AgenticMiddleware } from './middlewares/AgenticMiddleware.js';
 import { WorkspaceContextMiddleware } from './middlewares/WorkspaceContextMiddleware.js';
 import { ResponseCacheMiddleware } from './middlewares/ResponseCacheMiddleware.js';
 import { StructuralMarkdownMiddleware } from './middlewares/StructuralMiddleware.js';
+import { LLMExecutor } from '../utils/LLMExecutor.js';
 
 /**
  * Pipeline Instance Registry (Hardened)
@@ -20,6 +21,27 @@ let _workspaceContextMiddleware: WorkspaceContextMiddleware | null = null;
 let _sharedRouter: TextRouterMiddleware | null = null;
 let _sharedImageRouter: ImageRouterMiddleware | null = null;
 let _agenticMiddleware: AgenticMiddleware | null = null;
+let _sharedExecutor: LLMExecutor | null = null;
+
+/**
+ * Gets the singleton LLMExecutor shared by every middleware that can make a live
+ * LLM call (TextRouterMiddleware, AgenticMiddleware, ImageRouterMiddleware).
+ * Each of those middlewares used to construct its own private `new LLMExecutor()`
+ * when none was passed in, which meant request/token counters accumulated in
+ * whichever instance actually handled the call — but the dashboard's
+ * /api/provider-stats and /api/token-stats routes only ever read
+ * getSharedRouter().getExecutor() (TextRouterMiddleware's instance). Since agentic
+ * calls (the common case once a workspace is set) are handled entirely by
+ * AgenticMiddleware's own separate executor, its usage was invisible to the
+ * dashboard — showing 0 requests/tokens for every provider regardless of real
+ * traffic. Sharing one executor instance across all three fixes that.
+ */
+export function getSharedExecutor(): LLMExecutor {
+    if (!_sharedExecutor) {
+        _sharedExecutor = new LLMExecutor();
+    }
+    return _sharedExecutor;
+}
 
 /**
  * Gets the singleton instance of StructuralMarkdownMiddleware.
@@ -56,7 +78,7 @@ export function getWorkspaceContextMiddleware(): WorkspaceContextMiddleware {
  */
 export function getSharedRouter(): TextRouterMiddleware {
     if (!_sharedRouter) {
-        _sharedRouter = new TextRouterMiddleware();
+        _sharedRouter = new TextRouterMiddleware(getSharedExecutor());
     }
     return _sharedRouter;
 }
@@ -66,7 +88,7 @@ export function getSharedRouter(): TextRouterMiddleware {
  */
 export function getSharedImageRouter(): ImageRouterMiddleware {
     if (!_sharedImageRouter) {
-        _sharedImageRouter = new ImageRouterMiddleware();
+        _sharedImageRouter = new ImageRouterMiddleware(getSharedExecutor());
     }
     return _sharedImageRouter;
 }
@@ -76,7 +98,7 @@ export function getSharedImageRouter(): ImageRouterMiddleware {
  */
 export function getAgenticMiddleware(): AgenticMiddleware {
     if (!_agenticMiddleware) {
-        _agenticMiddleware = new AgenticMiddleware();
+        _agenticMiddleware = new AgenticMiddleware(getSharedExecutor());
     }
     return _agenticMiddleware;
 }

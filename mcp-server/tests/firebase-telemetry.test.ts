@@ -5,7 +5,7 @@ import os from 'os';
 
 // Import our encryption and firebase modules
 import { encrypt, decrypt } from '../src/utils/encryption.js';
-import { initFirebase, syncStats, logErrorTelemetry, getLeaderboard } from '../src/utils/firebase.js';
+import { initFirebase, syncStats, logErrorTelemetry, getLeaderboard, getUserStats } from '../src/utils/firebase.js';
 import { PersistenceManager, PersistentUsage } from '../src/utils/PersistenceManager.js';
 
 describe('Firebase & Telemetry Encryption Phase 0 Tests', () => {
@@ -133,6 +133,11 @@ describe('Firebase & Telemetry Encryption Phase 0 Tests', () => {
             const clean = sanitize(dirtyPrompt);
             expect(clean).not.toContain('AIzaSy');
             expect(clean).toContain('[REDACTED_API_KEY]');
+        });
+
+        it('getUserStats() returns null when offline, instead of throwing (dashboard falls back to local totals)', async () => {
+            const result = await getUserStats('some-uid');
+            expect(result).toBeNull();
         });
 
         it('Firebase offline → local UUID fallback, no crash', async () => {

@@ -49,27 +49,37 @@ graph TD
 ---
  
 #### Phase 3: Routing & LLM Execution
-Finally, the request is routed depending on whether it contains images, scored using the quantum router, and dispatched to the LLM.
+Finally, the request is routed depending on whether it contains images, scored using the quantum router, and dispatched to the LLM. If a confused user state is detected, fallback trial ordering is reversed and a guiding system note is appended — this no longer affects indexing (see note below).
  
 ```mermaid
 graph TD
     A["Phase 3 Entry"] --> B["5. ImageRouterMiddleware<br/>(Checks for images/multimodal)"]
-    B -->|Contains Images| C["Route to Vision Model (VLM)<br/>via LLMExecutor"]
-    B -->|Text Only| D["6. TextRouterMiddleware<br/>(Classifies TaskType)"]
-    D --> E["Quantum Scoring<br/>(Scores models by capability & telemetry)"]
-    E --> F["State Collapse<br/>(Selects best available model)"]
-    F --> G["LLMExecutor<br/>(Dispatches request to LLM Provider)"]
-    C --> H["Return Final Response"]
-    G --> H
+    B -->|Contains Images| C["ImageRouter Exec"]
+    C --> D{isUserConfused?}
+    D -->|Yes| E["Reverse Order: Try Cheapest VLM First<br/>Append Guiding System Note"]
+    D -->|No| F["Sort Descending: Try S-Tier VLM First<br/>Pass prompt as-is"]
+    B -->|Text Only| G["6. TextRouterMiddleware<br/>(Classifies TaskType)"]
+    G --> H{isUserConfused?}
+    H -->|Yes| I["Reverse Order: Try Cheapest LLM First<br/>Append Guiding System Note"]
+    H -->|No| J["Quantum Scoring<br/>(Scores models by capability & context)"]
+    J --> K["State Collapse<br/>(Selects best available model)"]
+    E --> L["LLMExecutor<br/>(Dispatches request to LLM Provider)"]
+    F --> L
+    I --> L
+    K --> L
+    L --> M["Return Final Response"]
 ```
 
-### Pipeline Order (v1.0.6)
+### Pipeline Order (v1.0.7 Update)
 1. **`StructuralMarkdownMiddleware`**: Resolves `file://` and `artifact://` URIs with security boundary checks.
 2. **`ResponseCacheMiddleware`**: Checks if a result exists in the persistent workspace-aware cache.
-3. **`WorkspaceContextMiddleware`**: Injects vector-searched memory, grep context, and intelligent system prompts.
-4. **`AgenticMiddleware`**: Decomposes tasks into subtasks and manages the subtask execution and retrospection loop.
-5. **`ImageRouterMiddleware`**: Intercepts base64/local image files and routes them to VLMs.
-6. **`TextRouterMiddleware`**: Routes text prompts to the optimal model based on task type.
+3. **`WorkspaceContextMiddleware`**: Injects vector-searched memory and system prompts. Backgrounds (via `setImmediate`, non-blocking) a pre-emptive workspace re-index followed by wiki maintenance, gated on `agentic: true` + a `workspace_root`. **Bypassed only if the caller sets `skipIndexing: true` on the request itself** — see note below.
+4. **`AgenticMiddleware`**: Decomposes tasks into subtasks and manages execution loops.
+5. **`ImageRouterMiddleware`**: Intercepts local/remote image files, checks for confused/empty prompts (image-only), reverses model trial order to save token budget, and appends a guiding system note.
+6. **`TextRouterMiddleware`**: Routes text prompts. Reverses model trial order and appends a guiding system note for file-only/generic confused queries.
+
+> [!NOTE]
+> **`skipIndexing` is caller-set only.** `WorkspaceContextMiddleware` runs *before* `AgenticMiddleware`/`ImageRouterMiddleware`/`TextRouterMiddleware` in the pipeline and reads `skipIndexing` before calling `next()`, so none of those downstream middlewares can set it in time to have any effect — it must already be `true` on the incoming request (see `use_free_llm`'s `skipIndexing` parameter in `SKILL.md`). Earlier versions had the confused-user branches in `ImageRouterMiddleware`/`TextRouterMiddleware` also set this flag; that was dead code (set too late to matter) and was removed. PDF/image content reaching the workspace wiki is unaffected either way — see §8, which runs independently of this gate.
 
 ---
 
@@ -134,7 +144,9 @@ Interface for the persistent, workspace-aware memory system.
 
 The optional **Agentic Middleware** (`src/pipeline/middlewares/AgenticMiddleware.ts`) adds a structured, self-improving execution layer on top of the existing pipeline.
 
-### What it does
+### Relevance of the `agentic` Flag
+*   **`agentic: false` (One-Pass, default)**: Bypasses the subtask queue decomposition entirely. The request is processed as a standard one-shot chat message, saving tokens and processing time for straightforward requests.
+*   **`agentic: true` (Multi-Step queue loop)**: Decomposes the user's prompt into discrete subtasks. It seeds momentum queues and runs a verification check loop after each subtask, allowing the agent to self-correct and execute long-running features.
 
 | Feature | Description |
 |---------|-------------|
@@ -147,8 +159,89 @@ The optional **Agentic Middleware** (`src/pipeline/middlewares/AgenticMiddleware
 ### Enabling the middleware
 You can opt-in on a per-call basis by passing `"agentic": true` in the request body along with a **`workspace_root`** or **`sessionId`**.
 
-## 6. Firebase for debugging and telemetry
+---
+
+## 6. Context Injection & GitHub Repository Scanner
+
+`WorkspaceContextMiddleware` automatically gathers and injects rich structural context into the LLM prompt.
+
+### 🌐 Context Injection Types
+1.  **Semantic Search (RAG)**: Searches the vector store for document chunks matching the user's prompt keywords.
+2.  **Directory Structure**: Injects a 2-level directory tree of the active workspace.
+3.  **Active File Contexts**: Extracts open files and cursor placements.
+4.  **Code Symbol Hierarchies**: Maps classes, functions, and import dependencies.
+
+### 🐙 GitHub Repository Scanner
+If a user prompt contains a public GitHub URL (e.g., `https://github.com/owner/repo`), the `WorkspaceContextMiddleware` automatically triggers the **`GithubRepoScanner`** to pull remote context dynamically:
+
+```mermaid
+graph TD
+    A["User Prompt with GitHub URL"] --> B["GithubRepoScanner.parseUrl()"]
+    B --> C["Fetch README.md & analyze code imports"]
+    C --> D["Fetch repository tree nodes via GitHub API"]
+    D --> E["Extract usage, commands, and function flows"]
+    E --> F["Inject dynamically as 'GITHUB REPOSITORY CONTEXT' into LLM prompt"]
+    F --> G["Index discovered tools into global namespace memory ('global-cyber-tools')"]
+```
+
+---
+
+## 7. Firebase for debugging and telemetry
 
 The firebase integration is used for telemetry and debugging purposes. It collects anonymized usage data, error logs, and performance metrics to help improve the system. You can view the collected data in the Firebase console.<br>
 
 You can disable Firebase telemetry by setting `FIREBASE_API_KEY` to an empty string in the `.env` file. The server will then skip telemetry initialization and logging.<br>
+
+---
+
+## 8. PDF-Wiki RAG & Vision Indexing Pipeline (v1.0.7)
+
+To support semantic search and indexing over complex document types, the system implements an incremental **PDF-Wiki RAG Pipeline** equipped with high-DPI visual rendering, layout heuristics, and dynamic token allocations.
+
+> [!NOTE]
+> This pipeline fires fire-and-forget from `resolvePdfRef()` on every `pdf://` reference, keyed by `workspaceRoot` → `wsHash`. It is completely independent of `agentic`, `WorkspaceContextMiddleware`'s indexing gate, and `skipIndexing` — a plain one-shot `pdf://` request (no `agentic: true`, no `workspace_root` re-indexing) still gets indexed into the wiki.
+
+### 🔄 Incremental PDF Indexing Flow
+
+```mermaid
+graph TD
+    A["PDF File Registered / Uploaded"] --> B["Render Page & extract text/drawings via pdf_screenshot.py"]
+    B --> C{Verify Page Visual Objects}
+    C -->|Has Figures / Sparse Text| D["Trigger Vision descriptions"]
+    C -->|Text-only / Dense text| E["Store standard text chunks in Vector database"]
+    
+    D --> F["Ignore tiny logos & thin divider lines (<40pt)"]
+    F --> G["Upscale graphics to 300 DPI for details"]
+    G --> H["describePageVision (Injects previous context + max_tokens dynamically)"]
+    H --> I["Augment page text with visual descriptions"]
+    I --> E
+    
+    E --> J["Accumulate 5 pages (Incremental triggers)"]
+    J --> K["RAG query built locally via TF-IDF sentence extraction"]
+    K --> L["Fetch semantically related wiki chunks"]
+    L --> M["Build rolling-summary LLM prompt"]
+    M --> N["Proportional per-page budget truncation<br/>(batchRawMaxChars / numPages)"]
+    N --> O["Generate/Update Wiki Pages<br/>(max_tokens dynamically adjusted for create vs update)"]
+```
+
+### 📊 Token Budget Adjustments
+
+1.  **Per-Page Proportional Budget**: When batch text exceeds maximum bounds, the budget is split equally across pages (`batchRawMaxChars / numPages`) rather than front-loading page 1 and dropping later pages.
+2.  **Dynamic Vision Tokens**:
+    *   Full-page sweeps: `500` tokens on the first pass (for primary layout schema), `300` tokens on delta passes.
+    *   Sub-block cropped images: Scaled between `100` and `200` tokens based on region area.
+3.  **Dynamic Wiki Update Tokens**: Creation passes start at a base of `2400` tokens, update passes start at `1400` tokens, plus a `80` token batch bonus and a summary length retention floor.
+
+---
+
+## 9. File Lock Safety (v1.0.7)
+
+To prevent corruption and race conditions during concurrent workspace indexing or database writes, the system employs process-safe **exclusive file locking** (`src/utils/file-lock.ts`).
+
+### 🔒 Exclusion & Recovery Mechanics
+
+*   **Atomic Lock Creation**: Locks are acquired via atomic file writing (`flag: 'wx'`) recording the active process PID.
+*   **Automatic Stale Reaping**: If a lock is requested but already held, the system attempts to reap it if:
+    1.  The recorded holder PID is no longer alive in the OS.
+    2.  The lock file age (`mtime`) exceeds the `STALE_LOCK_MS` (30 seconds) timeout.
+*   **Timeout & Retries**: Requests poll every 50ms and throw a timeout error if the lock cannot be acquired within `timeoutMs`.

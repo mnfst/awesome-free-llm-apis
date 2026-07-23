@@ -105,4 +105,197 @@ describe('Persistence Layer Hardening', () => {
         expect(loaded.dailyTotalRequests).toBe(0); // Reset
         expect(loaded.lifetimeTotalRequests).toBe(1000); // Preserved
     });
+
+    it('recovers the Firebase identity from the .bak file when the primary file is corrupted', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        const stateWithIdentity: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 3,
+            dailyTotalTokens: 300,
+            lifetimeTotalRequests: 3,
+            lifetimeTotalTokens: 300,
+            firebaseUid: 'uid-should-survive',
+            firebaseRefreshToken: 'refresh-should-survive',
+            providers: {}
+        };
+        await pm.save(stateWithIdentity);
+
+        // Corrupt only the primary file — the .bak written alongside save() should still be intact.
+        await fs.writeFile(testFile, 'not-valid-encrypted-json', 'utf8');
+
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const recovered = await pm.load();
+        errorSpy.mockRestore();
+
+        expect(recovered.firebaseUid).toBe('uid-should-survive');
+        expect(recovered.firebaseRefreshToken).toBe('refresh-should-survive');
+    });
+
+    it('serializes concurrent save() calls so a Firebase-identity save is never clobbered by a racing counter-only save', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // Seed disk with no identity yet, matching a fresh install.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 0, dailyTotalTokens: 0, lifetimeTotalRequests: 0, lifetimeTotalTokens: 0,
+            providers: {}
+        });
+
+        // Force the exact interleaving that reproduces the bug without the lock: delay the
+        // FIRST writeFile call (the counter-only save's tmp write) so it lands AFTER the
+        // identity save's own read-merge-write has fully completed — the counter-only save
+        // already read a stale (no-identity) disk snapshot before that point, so its delayed
+        // write clobbers the identity the other save just persisted.
+        const originalWriteFile = fs.writeFile.bind(fs);
+        let writeCount = 0;
+        const writeFileSpy = vi.spyOn(fs, 'writeFile').mockImplementation(async (...args: any[]) => {
+            writeCount++;
+            if (writeCount === 1) {
+                await new Promise(r => setTimeout(r, 150));
+            }
+            return (originalWriteFile as any)(...args);
+        });
+
+        const counterOnlySave = pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 5, dailyTotalTokens: 500, lifetimeTotalRequests: 5, lifetimeTotalTokens: 500,
+            providers: {}
+        });
+        // Give counterOnlySave time to finish its read+merge and reach its (now-delayed) write.
+        await new Promise(r => setTimeout(r, 10));
+        const identitySave = pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 0, dailyTotalTokens: 0, lifetimeTotalRequests: 0, lifetimeTotalTokens: 0,
+            firebaseUid: 'uid-must-survive',
+            firebaseRefreshToken: 'refresh-must-survive',
+            providers: {}
+        });
+
+        await Promise.all([counterOnlySave, identitySave]);
+        writeFileSpy.mockRestore();
+
+        const finalRaw = await fs.readFile(testFile, 'utf8');
+        const finalState = JSON.parse(await decrypt(finalRaw));
+        expect(finalState.firebaseUid).toBe('uid-must-survive');
+        expect(finalState.firebaseRefreshToken).toBe('refresh-must-survive');
+    });
+
+    it('logs loudly (console.error) and loses identity only when both primary and backup are unreadable', async () => {
+        const pm = new PersistenceManager(testFile);
+        await fs.writeFile(testFile, 'not-valid-encrypted-json', 'utf8');
+        // No .bak file exists at all in this scenario.
+
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const result = await pm.load();
+
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('INCLUDING FIREBASE IDENTITY'));
+        expect(result.firebaseUid).toBeUndefined();
+        errorSpy.mockRestore();
+    });
+
+    it('saves and loads lastAuthFailedTime and lastSyncFailedTime properties correctly', async () => {
+        const pm = new PersistenceManager(testFile);
+        const state: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1,
+            dailyTotalTokens: 100,
+            lifetimeTotalRequests: 1,
+            lifetimeTotalTokens: 100,
+            lastAuthFailedTime: 123456789,
+            lastSyncFailedTime: 987654321,
+            providers: {}
+        };
+        await pm.save(state);
+
+        const loaded = await pm.load();
+        expect(loaded.lastAuthFailedTime).toBe(123456789);
+        expect(loaded.lastSyncFailedTime).toBe(987654321);
+    });
+
+    it('preserves lastAuthFailedTime/lastSyncFailedTime through merge() when a later save omits them entirely', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // First save establishes both failure timestamps on disk.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1, dailyTotalTokens: 100, lifetimeTotalRequests: 1, lifetimeTotalTokens: 100,
+            lastAuthFailedTime: 111,
+            lastSyncFailedTime: 222,
+            providers: {}
+        });
+
+        // A second save (e.g. LLMExecutor.persistStats()'s counter-only object) never
+        // references these fields at all — merge() must fall back to disk, not drop them.
+        const counterOnlyState: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 2, dailyTotalTokens: 200, lifetimeTotalRequests: 2, lifetimeTotalTokens: 200,
+            providers: {}
+        };
+        expect('lastAuthFailedTime' in counterOnlyState).toBe(false);
+        expect('lastSyncFailedTime' in counterOnlyState).toBe(false);
+        await pm.save(counterOnlyState);
+
+        const loaded = await pm.load();
+        expect(loaded.lastAuthFailedTime).toBe(111);
+        expect(loaded.lastSyncFailedTime).toBe(222);
+    });
+
+    it('honors an explicit clear (lastSyncFailedTime = undefined) instead of restoring the stale disk value', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // Seed a prior failure on disk.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1, dailyTotalTokens: 100, lifetimeTotalRequests: 1, lifetimeTotalTokens: 100,
+            lastSyncFailedTime: 999,
+            providers: {}
+        });
+
+        // Mirrors server.ts's initTelemetry(): after a successful sync, explicitly clears
+        // the failure timestamp by assigning undefined (not by omitting the key).
+        const clearedState: PersistentUsage = {
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 1, dailyTotalTokens: 100, lifetimeTotalRequests: 1, lifetimeTotalTokens: 100,
+            lastSyncFailedTime: undefined,
+            providers: {}
+        };
+        expect('lastSyncFailedTime' in clearedState).toBe(true);
+        await pm.save(clearedState);
+
+        const loaded = await pm.load();
+        expect(loaded.lastSyncFailedTime).toBeUndefined();
+    });
+
+    it('resetBaseline() zeroes the delta baseline so a post-reset save correctly re-accumulates from zero instead of going negative', async () => {
+        const pm = new PersistenceManager(testFile);
+
+        // Simulate LLMExecutor accumulating a large amount of usage this process run.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 100, dailyTotalTokens: 10000,
+            lifetimeTotalRequests: 100, lifetimeTotalTokens: 10000,
+            providers: { p1: { lastSyncTime: Date.now(), localTotalRequests: 100, localTotalTokens: 10000 } }
+        });
+
+        // Periodic local-persist-and-reset: in-memory counters just got zeroed by the caller
+        // (mirrors LLMExecutor.periodicPersistAndReset), so the baseline must reset too.
+        pm.resetBaseline();
+
+        // A small amount of new usage accumulates after the reset.
+        await pm.save({
+            lastResetDate: new Date().toISOString().split('T')[0],
+            dailyTotalRequests: 3, dailyTotalTokens: 300,
+            lifetimeTotalRequests: 3, lifetimeTotalTokens: 300,
+            providers: { p1: { lastSyncTime: Date.now(), localTotalRequests: 3, localTotalTokens: 300 } }
+        });
+
+        const finalRaw = await fs.readFile(testFile, 'utf8');
+        const finalState = JSON.parse(await decrypt(finalRaw));
+        // Without resetBaseline(), delta = max(0, 3 - 100) = 0 → disk total would stay at 100.
+        // With it, delta = max(0, 3 - 0) = 3, added on top of disk's existing 100 base.
+        expect(finalState.lifetimeTotalRequests).toBe(103);
+        expect(finalState.lifetimeTotalTokens).toBe(10300);
+        expect(finalState.providers.p1.localTotalRequests).toBe(103);
+    });
 });

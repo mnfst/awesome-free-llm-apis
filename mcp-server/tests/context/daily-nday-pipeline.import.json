@@ -1,0 +1,465 @@
+[
+  {
+    "id": "19R3X0gXXrJQaaEG",
+    "name": "N-Day Research AI - Daily CVE Pipeline V5 (Sequential Loop) - FINAL",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "trigger-sequential-v5",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "webhook-v5",
+        "name": "Manual Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -2500,
+          -100
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "manual-trigger-v5",
+        "name": "When clicking Execute",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -2500,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "interval": 1
+              }
+            ]
+          }
+        },
+        "id": "trigger-v5",
+        "name": "Daily Trigger (Hourly)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -2500,
+          50
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://rag-service:9000/cve/ingest",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"reset\": {{ $execution.mode === 'manual' }},\n  \"force\": {{ $execution.mode === 'manual' }}\n}",
+          "options": {}
+        },
+        "id": "ingest-http",
+        "name": "CVE Ingest",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -2200,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $json;\nconst ingest_run_id = data.ingest_run_id || \"\";\nconst cves = data.cves || [];\n\nif (cves.length === 0) {\n  return [{ json: { skip: true, cve_id: 'NONE', ingest_run_id } }];\n}\n\nreturn cves.map(cve => ({\n  json: {\n    ...cve,\n    skip: false,\n    ingest_run_id: ingest_run_id\n  }\n}));"
+        },
+        "id": "prepare_loop",
+        "name": "Prepare Loop",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1900,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        },
+        "id": "loop",
+        "name": "Loop Node",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 1,
+        "position": [
+          -1600,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "boolean": [
+              {
+                "value1": "={{$json.skip}}",
+                "value2": true
+              }
+            ]
+          }
+        },
+        "id": "filter-skip",
+        "name": "Filter Skip",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          -1450,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://rag-service:9000/cve/mine",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { cve: $json, force: false } }}",
+          "options": {
+            "response": {
+              "responseFormat": "json",
+              "putResponseInProperty": true,
+              "responsePropertyName": "mine_result"
+            }
+          }
+        },
+        "id": "intelligence-miner",
+        "name": "Intelligence Miner",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -1375,
+          250
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://rag-service:9000/report/skill",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { cve_id: $json.cve_id, cve_data: $json, top_k: 5 } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json",
+                "putResponseInProperty": true,
+                "responsePropertyName": "rag_data"
+              }
+            }
+          }
+        },
+        "id": "rag_loader",
+        "name": "RAG Loader",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -1300,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "boolean": [
+              {
+                "value1": "={{ $json.rag_data?.zero_day }}",
+                "value2": true
+              }
+            ]
+          }
+        },
+        "id": "if-zero-day",
+        "name": "If Zero Day",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          -1150,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://ollama:11435/api/chat",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { model: 'qwen3:4b-q4_K_M', messages: [ { role: 'system', content: 'You are an expert N-Day researcher. Generate a detailed report. End with a confidence score like \"Confidence: 0.8\".' }, { role: 'user', content: $json.rag_data?.prompt || $json.rag_data?.llm_prompt || 'Analyze raw CVE: ' + JSON.stringify($json) } ], options: { num_ctx: 16384, temperature: 0.2 }, stream: false } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json",
+                "putResponseInProperty": true,
+                "responsePropertyName": "ollama_raw"
+              }
+            }
+          }
+        },
+        "id": "ollama-code",
+        "name": "Ollama Analysis",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -1000,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $json;\nconst loopItem = $(\"Loop Node\").first().json || {};\n\nconst cve_id = input.cve_id || loopItem.cve_id || 'UNKNOWN';\nconst cvss_score = input.cvss_score || loopItem.cvss_score || 0;\nconst ingest_run_id = input.ingest_run_id || loopItem.ingest_run_id || '';\n\nlet ollama_text = '';\nlet confidence = 0.5;\n\nconst is_zero_day = input.rag_data?.zero_day === true;\n\nif (is_zero_day) {\n  ollama_text = `# Zero-Day Vulnerability Analysis: ${cve_id}\\n\\nThis vulnerability has been flagged as a Zero-Day (no patch available). Standard LLM N-Day analysis is skipped.`;\n  confidence = 1.0;\n} else {\n  const ollama_raw = input.ollama_raw || input || {};\n  ollama_text = ollama_raw.message?.content || ollama_raw.response || '';\n  \n  if (ollama_text) {\n    const confidenceMatch = ollama_text.match(/Confidence:\\\\s*(0\\\\.\\\\d+|1\\\\.0|1|\\\\.\\\\d+)/i);\n    if (confidenceMatch) {\n      confidence = parseFloat(confidenceMatch[1]);\n    } else {\n      const fallbackMatch = ollama_text.match(/(\\\\d+(\\\\.\\\\d+)?)%?\\\\s*confidence/i);\n      if (fallbackMatch) confidence = parseFloat(fallbackMatch[1]) / (fallbackMatch[1].includes('%') || parseFloat(fallbackMatch[1]) > 1 ? 100 : 1);\n    }\n  } else {\n    ollama_text = 'Error: Analysis returned empty.';\n  }\n}\n\nreturn [{\n  json: {\n    cve_id,\n    cvss_score,\n    confidence,\n    llm_report: ollama_text,\n    ingest_run_id\n  }\n}];"
+        },
+        "id": "extract-meta",
+        "name": "Extract Metadata",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -850,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://rag-service:9000/report/save",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { cve_id: $json.cve_id, cvss_score: $json.cvss_score, confidence: $json.confidence, report_text: $json.llm_report, ingest_run_id: $json.ingest_run_id } }}",
+          "options": {}
+        },
+        "id": "save-http",
+        "name": "Save Report",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -700,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 5
+        },
+        "id": "wait",
+        "name": "Wait (5s)",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -400,
+          100
+        ]
+      },
+      {
+        "id": "summary",
+        "name": "Final Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -100,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const allProcessed = [];\ntry {\n  const results = $items(\"Save Report\");\n  results.forEach(item => {\n    if (item.json && item.json.cve_id) {\n      allProcessed.push({\n        cve_id: item.json.cve_id,\n        score: item.json.cvss_score || 0,\n        confidence: item.json.confidence || 0,\n        path: (item.json.paths && item.json.paths.length > 0) ? item.json.paths[0] : \"\"\n      });\n    }\n  });\n} catch (e) {\n  console.error('Summary error:', e);\n}\n\nconst ingest_run_id = $(\"CVE Ingest\").first().json.ingest_run_id || \"\";\nconst highCount = allProcessed.filter(c => c.score >= 8.0 || c.confidence >= 0.8).length;\n\nreturn [{\n  json: {\n    date: new Date().toISOString().split('T')[0],\n    total_processed: allProcessed.length,\n    high_confidence: highCount,\n    ingest_run_id: ingest_run_id,\n    successful_ids: allProcessed.map(c => c.cve_id),\n    reports: allProcessed\n  }\n}];"
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://rag-service:9000/cve/ingest/commit",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"ingest_run_id\": \"{{ $json.ingest_run_id }}\",\n  \"processed_count\": {{ $json.total_processed }},\n  \"successful_ids\": {{ JSON.stringify($json.successful_ids) }},\n  \"allow_partial\": true\n}",
+          "options": {}
+        },
+        "id": "commit-ingest",
+        "name": "Commit Ingest",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          100,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Manual Webhook": {
+        "main": [
+          [
+            {
+              "node": "CVE Ingest",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Daily Trigger (Hourly)": {
+        "main": [
+          [
+            {
+              "node": "CVE Ingest",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking Execute": {
+        "main": [
+          [
+            {
+              "node": "CVE Ingest",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CVE Ingest": {
+        "main": [
+          [
+            {
+              "node": "Prepare Loop",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Loop": {
+        "main": [
+          [
+            {
+              "node": "Loop Node",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Node": {
+        "main": [
+          [
+            {
+              "node": "Filter Skip",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Final Summary",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Skip": {
+        "main": [
+          [
+            {
+              "node": "Wait (5s)",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Intelligence Miner",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Intelligence Miner": {
+        "main": [
+          [
+            {
+              "node": "RAG Loader",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "RAG Loader": {
+        "main": [
+          [
+            {
+              "node": "If Zero Day",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Zero Day": {
+        "main": [
+          [
+            {
+              "node": "Extract Metadata",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Ollama Analysis",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ollama Analysis": {
+        "main": [
+          [
+            {
+              "node": "Extract Metadata",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Metadata": {
+        "main": [
+          [
+            {
+              "node": "Save Report",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Report": {
+        "main": [
+          [
+            {
+              "node": "Wait (5s)",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Final Summary": {
+        "main": [
+          [
+            {
+              "node": "Commit Ingest",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait (5s)": {
+        "main": [
+          [
+            {
+              "node": "Loop Node",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "executionTimeout": 3600
+    }
+  }
+]

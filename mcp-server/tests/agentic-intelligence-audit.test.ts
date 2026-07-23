@@ -31,7 +31,11 @@ vi.mock('../src/pipeline/middlewares/context-gatherer.js', () => ({
 
 vi.mock('../src/memory/index.js', () => ({
     memoryManager: {
-        search: vi.fn().mockResolvedValue([])
+        search: vi.fn().mockResolvedValue([]),
+        getWiki: vi.fn().mockReturnValue({
+            search: vi.fn().mockResolvedValue([]),
+            write: vi.fn().mockResolvedValue({}),
+        })
     }
 }));
 

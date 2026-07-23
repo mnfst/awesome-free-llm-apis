@@ -10,34 +10,65 @@ function getKeyPath(): string {
     return path.join(os.homedir(), '.free-llm-mcp', '.key');
 }
 
+// Memoized in-process so repeated encrypt()/decrypt() calls don't re-read
+// disk each time — also avoids two calls within the same process ever
+// disagreeing on which key is in use.
+let cachedKey: Buffer | null = null;
+let keyLoadPromise: Promise<Buffer> | null = null;
+
 // Get or create the secret key
 async function getSecretKey(): Promise<Buffer> {
-    let keyBuffer: Buffer;
+    if (cachedKey) return cachedKey;
+    if (keyLoadPromise) return keyLoadPromise;
 
-    if (process.env.MCP_SECRET_KEY) {
-        keyBuffer = Buffer.from(process.env.MCP_SECRET_KEY, 'hex');
-    } else {
-        const keyPath = getKeyPath();
-        if (await fs.pathExists(keyPath)) {
-            const hexKey = await fs.readFile(keyPath, 'utf8');
-            keyBuffer = Buffer.from(hexKey.trim(), 'hex');
+    keyLoadPromise = (async () => {
+        let keyBuffer: Buffer;
+
+        if (process.env.MCP_SECRET_KEY) {
+            keyBuffer = Buffer.from(process.env.MCP_SECRET_KEY, 'hex');
         } else {
-            // Generate a random 32-byte key
-            const key = crypto.randomBytes(32);
-            const hexKey = key.toString('hex');
-            
-            await fs.ensureDir(path.dirname(keyPath));
-            await fs.writeFile(keyPath, hexKey, { mode: 0o600, encoding: 'utf8' });
-            
-            keyBuffer = key;
+            const keyPath = getKeyPath();
+            if (await fs.pathExists(keyPath)) {
+                const hexKey = await fs.readFile(keyPath, 'utf8');
+                keyBuffer = Buffer.from(hexKey.trim(), 'hex');
+            } else {
+                // Generate a random 32-byte key, written via a uniquely-named tmp
+                // file + rename. fs.move's overwrite:false guard is a check-then-act
+                // (stat, then rename) — not atomic — so two processes racing on a
+                // still-missing key file can both pass that check and both rename;
+                // the loser's promise won't necessarily reject. Rather than trust
+                // whichever branch we took, always read back whatever bytes are
+                // actually on disk after the write, so every racing process
+                // converges on the one value that ultimately landed there.
+                const key = crypto.randomBytes(32);
+                const hexKey = key.toString('hex');
+
+                await fs.ensureDir(path.dirname(keyPath));
+                const tmpPath = `${keyPath}.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;
+                await fs.writeFile(tmpPath, hexKey, { mode: 0o600, encoding: 'utf8' });
+                try {
+                    await fs.move(tmpPath, keyPath, { overwrite: false });
+                } catch {
+                    await fs.remove(tmpPath).catch(() => {});
+                }
+                const hexKeyOnDisk = await fs.readFile(keyPath, 'utf8');
+                keyBuffer = Buffer.from(hexKeyOnDisk.trim(), 'hex');
+            }
         }
-    }
 
-    if (keyBuffer.length !== 32) {
-        throw new Error(`Invalid secret key length: Expected 32 bytes, got ${keyBuffer.length} bytes.`);
-    }
+        if (keyBuffer.length !== 32) {
+            throw new Error(`Invalid secret key length: Expected 32 bytes, got ${keyBuffer.length} bytes.`);
+        }
 
-    return keyBuffer;
+        cachedKey = keyBuffer;
+        return keyBuffer;
+    })();
+
+    try {
+        return await keyLoadPromise;
+    } finally {
+        keyLoadPromise = null;
+    }
 }
 
 export async function encrypt(plaintext: string): Promise<string> {

@@ -2,6 +2,7 @@ import { Middleware, PipelineContext, NextFunction } from '../middleware.js';
 import { LLMExecutor } from '../../utils/LLMExecutor.js';
 import { ProviderRegistry } from '../../providers/registry.js';
 import { getModelCapability } from '../../config/models.js';
+import { isUserConfused, getMessageContent, appendToMessageContent } from '../../utils/MessageUtils.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -188,6 +189,30 @@ export class ImageRouterMiddleware implements Middleware {
         const workspaceRoot = context.workspaceRoot || (context.request as any)?.workspace_root;
         context.request.messages = await this.processImageMessages(context.request.messages, workspaceRoot);
 
+        // Detect if user is confused (e.g. image-only upload, or default boilerplate instructions)
+        let userPrompt = '';
+        if (context.request.messages && Array.isArray(context.request.messages)) {
+            for (const msg of context.request.messages) {
+                if (msg.role === 'user' && msg.content) {
+                    userPrompt += getMessageContent(msg) + ' ';
+                }
+            }
+        }
+        const confused = isUserConfused(userPrompt);
+
+        if (confused) {
+            console.debug('[ImageRouter] Confused user state detected (no clear prompt or boilerplate prompt).');
+
+            // Prepend system note to inform the model and ask it to guide the user
+            const confusedInstruction = "\n[System Note: The user has not provided a clear request or instructions. They might be confused or just uploading/sharing files. Please guide them on what they can do next with these files/images, summarize the contents briefly, and ask what they would like to do.]";
+            if (context.request.messages && context.request.messages.length > 0) {
+                const userMsg = context.request.messages.find(m => m.role === 'user');
+                if (userMsg) {
+                    appendToMessageContent(userMsg, confusedInstruction);
+                }
+            }
+        }
+
         // Standalone testing mode: resolve paths but skip routing overrides to allow direct targeting of individual models
         if (context.bypassImageRouter) {
             console.debug('[ImageRouter] Bypassing routing fallback selection because bypassImageRouter is active.');
@@ -195,18 +220,10 @@ export class ImageRouterMiddleware implements Middleware {
         }
 
         const requestedModel = context.request.model;
-        const availableProviders = ProviderRegistry.getInstance().getAvailableProviders();
+        const registry = ProviderRegistry.getInstance();
+        const availableProviders = registry.getAvailableProviders();
 
-        // Build candidate models from each provider's declared visionModels list
-        const visionModelSet = new Set<string>();
-        for (const provider of availableProviders) {
-            if (provider.visionModels && provider.visionModels.length > 0) {
-                for (const vm of provider.visionModels) {
-                    visionModelSet.add(vm.id);
-                }
-            }
-        }
-        let candidateModels = Array.from(visionModelSet);
+        let candidateModels = [...new Set(registry.getAvailableVisionModels().map(({ model }) => model.id))];
 
         // Prioritize requested model if it's a known vision model
         if (requestedModel && requestedModel !== 'any') {
@@ -244,11 +261,14 @@ export class ImageRouterMiddleware implements Middleware {
         }
 
         // Sort candidates based on capability score: descending (try best first) for large images (> 50KB),
-        // and ascending (try faster/cheaper first) for small images.
+        // and ascending (try faster/cheaper first) for small images. Try cheaper/faster models first if confused.
         const thresholdBytes = 50 * 1024;
         candidateModels.sort((a, b) => {
             const scoreA = getModelCapability(a);
             const scoreB = getModelCapability(b);
+            if (confused) {
+                return scoreA - scoreB; // Ascending capability score (cheaper first)
+            }
             return totalImageSize > thresholdBytes ? scoreB - scoreA : scoreA - scoreB;
         });
 

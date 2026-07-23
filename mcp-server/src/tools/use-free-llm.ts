@@ -1,17 +1,12 @@
 import crypto from 'node:crypto';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
-
-const execAsync = promisify(exec);
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 import { ProviderRegistry } from '../providers/registry.js';
 import { getMessageContent } from '../utils/MessageUtils.js';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'fs-extra';
 import { WorkspaceScanner } from '../cache/workspace.js';
+import { renderPdfPage } from '../utils/PdfRenderer.js';
+import { getModelCapability } from '../config/models.js';
 import type { ChatRequest, ChatResponse } from '../providers/types.js';
 import {
   PipelineExecutor,
@@ -27,6 +22,17 @@ import { indexWorkspace } from './index-workspace.js';
 import { getTokenStats } from './get-token-stats.js';
 import { validateProvider } from './validate-provider.js';
 import { initWorkspace } from './init-workspace.js';
+import { GlobalWikiManager } from '../utils/GlobalWikiManager.js';
+import { logToolCall } from '../utils/ChatLogger.js';
+
+// Each pdf:// reference costs a subprocess render plus a vision-classification LLM call
+// (resolvePdfRef) — sequential, uncapped resolution of many pages in one pass would be an
+// unbounded-sequential-cost pattern that can exhaust a provider's rate limit. Cap to 5
+// pdf:// references per pass (matches wikiConfig.pageBatchThreshold's existing precedent
+// of 5 for the same reason, in the separate wiki-indexing system). Exported so every
+// resolution path — resolveFileRefs()'s top-level intake AND AgenticMiddleware's
+// subtask-local proactive resolution — enforces the same real limit, not just the first one.
+export const MAX_PDF_PAGES_PER_PASS = 5;
 
 export interface UseFreeLLMInput {
   model?: string;
@@ -44,6 +50,11 @@ export interface UseFreeLLMInput {
   isOnePass?: boolean;
   keywords?: string[];
   skill?: string;
+  // Skip the pre-emptive full-workspace re-index + wiki-maintenance pass that
+  // normally runs on every agentic call with a workspace_root. Useful when the
+  // request is narrowly about a specific file/PDF reference and doesn't need (or
+  // shouldn't pay the latency/provider-budget cost of) a full codebase re-scan.
+  skipIndexing?: boolean;
 }
 
 const workspaceScanner = new WorkspaceScanner(process.cwd());
@@ -138,17 +149,25 @@ export async function resolveFileRefs(
     if (textPart) content = textPart.text || '';
   }
 
-  const uriRegex = /(?:\[([^\]]+)\]\()?(file|mcp|ctx7|artifact|pdf):\/\/([^\s)]+)(?:\))?/gi;
+  // Two alternatives: a markdown-link form `[label](proto://path with spaces)`, where the
+  // closing `)` unambiguously terminates the path (so spaces inside are fine — real project
+  // files/uploads legitimately have them, e.g. "SQL Injection Based on Reinforcement
+  // Learning.pdf"), and a bare `proto://path` form embedded directly in prose, where a
+  // path can't contain spaces without becoming ambiguous with the surrounding sentence.
+  const uriRegex = /\[(?<label>[^\]]+)\]\((?<bProto>file|mcp|ctx7|artifact|pdf):\/\/(?<bPath>[^)]+)\)|(?<proto>file|mcp|ctx7|artifact|pdf):\/\/(?<path>[^\s)]+)/gi;
   let newContent = content;
   const matches = [...content.matchAll(uriRegex)];
 
   const wsRoot = (workspaceRoot && workspaceRoot.trim()) ? path.resolve(workspaceRoot) : undefined;
   const imageAttachments: string[] = [];
 
+  let pdfPagesResolved = 0;
+
   for (const match of matches) {
     const fullMatch = match[0];
-    const protocol = match[2].toLowerCase();
-    const uriPath = match[3];
+    const g = match.groups!;
+    const protocol = (g.bProto ?? g.proto)!.toLowerCase();
+    const uriPath = (g.bPath ?? g.path)!;
     let resolvedContent: string | null = null;
     let sourceLabel = '';
 
@@ -221,7 +240,14 @@ export async function resolveFileRefs(
         console.error(`[v1.0.4][resolveRefs] UNRESOLVED — injecting sentinel for ${baseName}`);
       }
     } else if (protocol === 'pdf') {
+      if (pdfPagesResolved >= MAX_PDF_PAGES_PER_PASS) {
+        const sentinel = `[PDF-PAGE-DEFERRED: ${uriPath} — resolve in a follow-up request; max ${MAX_PDF_PAGES_PER_PASS} PDF pages per pass.]`;
+        newContent = newContent.replace(fullMatch, sentinel);
+        console.error(`[v1.0.4][resolveRefs] PDF page cap reached (${MAX_PDF_PAGES_PER_PASS}) — deferring ${uriPath}`);
+        continue;
+      }
       const res = await resolvePdfRef(uriPath, workspaceRoot);
+      pdfPagesResolved++;
       if (res) {
         resolvedContent = res.resolvedContent;
         newContent = newContent.replace(fullMatch, `${fullMatch}\n\n${resolvedContent}`);
@@ -282,9 +308,12 @@ export async function resolvePdfRef(
   uriPath: string,
   workspaceRoot?: string
 ): Promise<{ resolvedContent: string; imagePath: string | null; imageBase64: string | null } | null> {
-  const parts = uriPath.split(':');
-  const relativePdfPath = parts[0];
-  const pageNumStr = parts[1] || '1';
+  // Split off only a trailing `:<pageNum>` suffix — a naive uriPath.split(':') breaks on
+  // absolute Windows paths, which have their own colon after the drive letter (e.g.
+  // "C:/Users/.../Resume.pdf:1" would split into "C", "/Users/.../Resume.pdf", "1").
+  const pageMatch = uriPath.match(/^(.*):(\d+)$/);
+  const relativePdfPath = pageMatch ? pageMatch[1] : uriPath;
+  const pageNumStr = pageMatch ? pageMatch[2] : '1';
   const pageNum = parseInt(pageNumStr, 10) || 1;
 
   const wsRoot = (workspaceRoot && workspaceRoot.trim()) ? path.resolve(workspaceRoot) : process.cwd();
@@ -296,51 +325,28 @@ export async function resolvePdfRef(
     return null;
   }
 
-  // 1. Check if index/offset is cached
+  const currentMtimeMs = (await fs.stat(absPdfPath)).mtimeMs;
+
+  // 1. Check if index/offset is cached, and whether the PDF has changed since it was cached
   const memoryKey = `pdf:index:${pdfName}`;
   const { memoryManager } = await import('../memory/index.js');
   const savedIndex = await memoryManager.longTerm.load(memoryKey) as any;
+  const isStale = !!savedIndex && savedIndex.mtimeMs !== currentMtimeMs;
 
   let physicalPage = pageNum;
-  if (savedIndex && typeof savedIndex.offset === 'number') {
+  if (savedIndex && !isStale && typeof savedIndex.offset === 'number') {
     if (pageNum !== savedIndex.index_page) {
       physicalPage = pageNum + savedIndex.offset;
     }
   }
 
   // 2. Run the python renderer script
-  const serverRoot = path.resolve(__dirname, '../..');
-  const hasServerVenv = await fs.pathExists(path.join(serverRoot, 'venv'));
-  const pythonPath = process.platform === 'win32'
-    ? path.join(hasServerVenv ? serverRoot : process.cwd(), 'venv', 'Scripts', 'python.exe')
-    : path.join(hasServerVenv ? serverRoot : process.cwd(), 'venv', 'bin', 'python');
-
-  let scriptPath = path.join(serverRoot, 'scripts', 'utils', 'pdf_screenshot.py');
-  if (!await fs.pathExists(scriptPath)) {
-    scriptPath = path.join(serverRoot, 'scripts', 'pdf_screenshot.py');
-  }
-  if (!await fs.pathExists(scriptPath)) {
-    scriptPath = path.join(process.cwd(), 'scripts', 'utils', 'pdf_screenshot.py');
-    if (!await fs.pathExists(scriptPath)) {
-      scriptPath = path.join(process.cwd(), 'scripts', 'pdf_screenshot.py');
-    }
-  }
-
-  let renderResult: any;
-  try {
-    const cmd = `"${pythonPath}" "${scriptPath}" "${absPdfPath}" ${physicalPage}`;
-    const { stdout } = await execAsync(cmd);
-    renderResult = JSON.parse(stdout);
-    if (renderResult.error) {
-      console.error(`[resolvePdfRef] Python script error: ${renderResult.error}`);
-      return null;
-    }
-  } catch (err) {
-    console.error(`[resolvePdfRef] Failed to execute Python script:`, err);
+  const renderResult = await renderPdfPage(absPdfPath, physicalPage);
+  if (!renderResult) {
     return null;
   }
 
-  const textContent = (renderResult.text || '').trim();
+  const textContent = renderResult.text;
 
   let imageBase64: string | null = null;
   if (renderResult.image_path) {
@@ -354,13 +360,44 @@ export async function resolvePdfRef(
     }
   }
 
-  // 3. If not cached, detect if this is an index page via multimodal LLM call
-  if (!savedIndex) {
+  // 2b. Fire-and-forget: keep the workspace wiki in sync with this PDF's content.
+  setImmediate(() => {
+    import('../memory/pdf-wiki.js')
+      .then(({ maybeIndexPdfIntoWiki }) => maybeIndexPdfIntoWiki({
+        workspaceRoot: wsRoot,
+        absPdfPath,
+        relativePdfPath,
+        totalPages: renderResult.total_pages,
+        pageNum: physicalPage,   // reuse already-rendered page, no extra subprocess
+        pageText: textContent,
+        imageCoverageRatio: renderResult.image_coverage_ratio,
+        imagePath: renderResult.image_path,
+        imageBlocks: renderResult.image_blocks,
+      }))
+      .catch(err => console.error('[resolvePdfRef] PDF wiki indexing failed:', err));
+  });
+
+  // 3. If not cached (or the PDF changed since it was cached), detect if this is an
+  // index page via multimodal LLM call
+  if (!savedIndex || isStale) {
     try {
+      // This call sends a multimodal `image_url` content part (OpenAI-style, base64 data
+      // URI), unlike the plain-text provider-selection calls elsewhere in this codebase —
+      // it needs providers whose declared vision capability is real, not "whichever's
+      // first and isn't siliconflow". Reuse the same source of truth ImageRouterMiddleware
+      // uses (ProviderRegistry.getAvailableVisionModels(), backed by each provider's own
+      // `visionModels` — BaseProvider, computed from the centralized `isVisionSupported()`
+      // config) rather than a hand-maintained duplicate list — and try every candidate in
+      // order rather than picking one and giving up, so a single provider being down or
+      // rate-limited doesn't silently kill classification.
       const registry = ProviderRegistry.getInstance();
-      const provider = registry.getAvailableProviders().find(p => p.id !== 'siliconflow') || registry.getProvider('gemini');
-      if (provider) {
-        const promptForLLM = `Analyze the attached screenshot from the PDF page.
+      // Cheapest-capability-first: this is a small, low-stakes classification call
+      // (max_tokens: 150), not a task that needs the strongest available model.
+      const orderedCandidates = registry.getAvailableVisionModels()
+        .sort((a, b) => getModelCapability(a.model.id) - getModelCapability(b.model.id))
+        .map(({ provider, model }) => ({ provider, model: model.id }));
+
+      const promptForLLM = `Analyze the attached screenshot from the PDF page.
 Determine if this page is a Table of Contents (TOC) / Index of the document.
 Return ONLY a valid JSON object matching this structure:
 {
@@ -368,62 +405,83 @@ Return ONLY a valid JSON object matching this structure:
   "offset": <number or 0>,
   "explanation": "Why or why not"
 }
-Note: 'offset' is defined as the difference (physical_page_number - printed_page_number). 
+Note: 'offset' is defined as the difference (physical_page_number - printed_page_number).
 For example:
 - If this page is physical page 2, and the printed page number on the page is '2', the offset is 0.
 - If this page is physical page 5, but the printed page number on it is '1', the offset is 4.
 - If it is not an index page, set offset to 0.`;
 
-        const response = await provider.chat({
-          model: provider.models[0]?.id,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: promptForLLM },
-                {
-                  type: 'image_url',
-                  image_url: { url: imageBase64 || '' }
-                }
-              ]
-            }
-          ],
-          temperature: 0.1,
-          max_tokens: 150
-        });
-
-        const choice = response.choices?.[0];
-        const content = getMessageContent(choice?.message) || '';
-        let parsed: any = null;
+      let attemptSucceeded = false;
+      let parsed: any = null;
+      for (const { provider, model } of orderedCandidates) {
         try {
-          parsed = JSON.parse(content.replace(/```json|```/g, '').trim());
-        } catch {
-          const match = content.match(/\{[\s\S]*?\}/);
-          if (match) parsed = JSON.parse(match[0]);
-        }
+          const response = await provider.chat({
+            model,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: promptForLLM },
+                  {
+                    type: 'image_url',
+                    image_url: { url: imageBase64 || '' }
+                  }
+                ]
+              }
+            ],
+            temperature: 0.1,
+            max_tokens: 150
+          });
 
+          const choice = response.choices?.[0];
+          const content = getMessageContent(choice?.message) || '';
+          try {
+            parsed = JSON.parse(content.replace(/```json|```/g, '').trim());
+          } catch {
+            const match = content.match(/\{[\s\S]*?\}/);
+            if (match) parsed = JSON.parse(match[0]);
+          }
+          attemptSucceeded = true;
+          break;
+        } catch (err) {
+          console.error(`[resolvePdfRef] Vision classification attempt via ${provider.id}/${model} failed:`, err);
+        }
+      }
+
+      if (attemptSucceeded) {
         if (parsed && parsed.is_index) {
           await memoryManager.longTerm.save(memoryKey, {
             is_index: true,
             index_page: pageNum,
-            offset: parsed.offset || 0
+            offset: parsed.offset || 0,
+            mtimeMs: currentMtimeMs
           });
-          console.log(`[resolvePdfRef] Saved index mapping for ${pdfName}: page ${pageNum}, offset ${parsed.offset}`);
+          console.error(`[resolvePdfRef] Saved index mapping for ${pdfName}: page ${pageNum}, offset ${parsed.offset}`);
         } else {
           await memoryManager.longTerm.save(memoryKey, {
             is_index: false,
             index_page: pageNum,
-            offset: 0
+            offset: 0,
+            mtimeMs: currentMtimeMs
           });
         }
+      } else {
+        console.error(`[resolvePdfRef] All vision classification attempts failed for ${pdfName}; will retry on next reference.`);
       }
     } catch (err) {
       console.error(`[resolvePdfRef] LLM classification failed:`, err);
     }
   }
 
+  // Closing sentinel matters: resolveFileRefs() splices this in right after the pdf://
+  // marker with no separator from whatever text originally followed it in the same
+  // message (e.g. "pdf://x.pdf:1 summarize this page" -> "...page text... summarize this
+  // page"). Without an explicit end marker, downstream consumers that need to treat this
+  // block as one opaque unit (decomposeGoal, classifyIntent) can't tell where injected
+  // content ends and the user's real trailing instruction begins.
   const finalContent = `[PDF-Context] --- FILE: ${pdfName} physical_page:${physicalPage} ---\n` +
-    `Page Text:\n${textContent || '(No extractable text found. Vision analysis screenshot attached.)'}`;
+    `Page Text:\n${textContent || '(No extractable text found. Vision analysis screenshot attached.)'}` +
+    `\n[/PDF-Context]`;
 
   return {
     resolvedContent: finalContent,
@@ -447,6 +505,7 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     workspace_root: workspaceRoot,
     keywords,
     skill,
+    skipIndexing,
   } = input;
 
   const promptInput = (input as any).prompt;
@@ -456,6 +515,10 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
   } else if (!messages) {
     messages = [];
   }
+
+  // Capture the original user prompt for persona detection to avoid false positives from resolved/injected file contents
+  const originalUserMessage = messages.find(m => m.role === 'user');
+  const originalUserContent = originalUserMessage ? (typeof originalUserMessage.content === 'string' ? originalUserMessage.content : JSON.stringify(originalUserMessage.content)) : '';
 
   if (skill) {
     const loadedSkill = await loadSkillPrompt({ skill, type: 'load' });
@@ -473,45 +536,50 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     }
   }
 
-  // v1.0.4 Resolution Pass: Resolve file, artifact, ctx7, pdf references in user messages
-  if (agentic) {
-    if (workspaceRoot) {
-      setImmediate(() => {
-        initWorkspace(workspaceRoot).catch(err => {
-          console.error('[free-llm-mcp] Failed to initialize workspace config:', err);
-        });
+  // v1.0.4 Resolution Pass: Resolve file, artifact, ctx7, pdf references in user messages.
+  // Previously gated behind `agentic` — but resolveFileRefs()/resolvePdfRef() (and by
+  // extension PDF-to-wiki indexing, which only ever fires from inside resolvePdfRef) both
+  // already degrade gracefully with no workspace_root, so there's no real reason a plain
+  // one-shot chat couldn't reference a pdf://, file://, or artifact:// URI too. Gating this
+  // meant a one-shot request with a pdf:// reference (e.g. the dashboard's file-upload flow
+  // in one-shot mode) silently never resolved it — the raw "pdf://..." text just got sent
+  // to the model as-is, and PDF-to-wiki indexing never ran at all.
+  if (workspaceRoot) {
+    setImmediate(() => {
+      initWorkspace(workspaceRoot).catch(err => {
+        console.error('[free-llm-mcp] Failed to initialize workspace config:', err);
       });
-    }
+    });
+  }
 
-    for (const msg of messages) {
-      if (msg.role === 'user' && (typeof msg.content === 'string' || Array.isArray(msg.content))) {
-        await resolveFileRefs(msg, messages, workspaceRoot);
-      }
+  for (const msg of messages) {
+    if (msg.role === 'user' && (typeof msg.content === 'string' || Array.isArray(msg.content))) {
+      await resolveFileRefs(msg, messages, workspaceRoot);
     }
+  }
 
-    // v1.0.4 Hard Stop Gate: If any sentinel is present after resolution, short-circuit
-    // the entire pipeline and return a structured error. The LLM is never called.
-    const sentinelPattern = /\[NOT_FOUND_HARD_STOP:[^\]]+\]/g;
-    const allSentinels: string[] = [];
-    for (const msg of messages) {
-      if (typeof msg.content === 'string') {
-        const found = msg.content.match(sentinelPattern);
-        if (found) allSentinels.push(...found);
-      }
+  // v1.0.4 Hard Stop Gate: If any sentinel is present after resolution, short-circuit
+  // the entire pipeline and return a structured error. The LLM is never called.
+  const sentinelPattern = /\[NOT_FOUND_HARD_STOP:[^\]]+\]/g;
+  const allSentinels: string[] = [];
+  for (const msg of messages) {
+    if (typeof msg.content === 'string') {
+      const found = msg.content.match(sentinelPattern);
+      if (found) allSentinels.push(...found);
     }
-    if (allSentinels.length > 0) {
-      const detail = allSentinels.join('\n');
-      const errorMsg = `❌ **File Not Found — Request Aborted**\n\nThe following file URI(s) could not be resolved. The request was not forwarded to the model to prevent hallucination:\n\n${detail}\n\nPlease provide the correct absolute path(s) and try again.`;
-      console.error(`[v1.0.4][useFreeLLM] Hard Stop — ${allSentinels.length} unresolved URI(s), aborting pipeline.`);
-      return {
-        id: 'middleware-gate',
-        object: 'chat.completion',
-        created: Math.floor(Date.now() / 1000),
-        model: 'middleware-gate',
-        choices: [{ index: 0, message: { role: 'assistant', content: errorMsg }, finish_reason: 'stop' }],
-        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
-      };
-    }
+  }
+  if (allSentinels.length > 0) {
+    const detail = allSentinels.join('\n');
+    const errorMsg = `❌ **File Not Found — Request Aborted**\n\nThe following file URI(s) could not be resolved. The request was not forwarded to the model to prevent hallucination:\n\n${detail}\n\nPlease provide the correct absolute path(s) and try again.`;
+    console.error(`[v1.0.4][useFreeLLM] Hard Stop — ${allSentinels.length} unresolved URI(s), aborting pipeline.`);
+    return {
+      id: 'middleware-gate',
+      object: 'chat.completion',
+      created: Math.floor(Date.now() / 1000),
+      model: 'middleware-gate',
+      choices: [{ index: 0, message: { role: 'assistant', content: errorMsg }, finish_reason: 'stop' }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    };
   }
 
   const request: ChatRequest = {
@@ -522,6 +590,7 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     top_p,
     stream,
     agentic,
+    skipIndexing,
   };
 
   const pipeline = new PipelineExecutor();
@@ -556,7 +625,13 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     agentic,
     sessionId: effectiveSessionId,
     keywords,
-    isOnePass: input.isOnePass || false
+    // Defaults to true whenever this isn't an agentic call, so WorkspaceContextMiddleware's
+    // `allowMemory = context.isOnePass ? !!context.workspaceRoot : true` gate actually engages
+    // for plain one-shot chats too — previously only vision_tool ever set this explicitly, so
+    // every non-agentic use_free_llm call (workspace or not) always allowed memory injection,
+    // and with no workspaceRoot it fell back to the single shared '__no_ws__' namespace —
+    // leaking unrelated memory/wiki content from every other one-shot conversation into this one.
+    isOnePass: input.isOnePass ?? !agentic
   };
 
   let finalContext = await pipeline.execute(context);
@@ -570,7 +645,22 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     if (!parsedCall) break;
     toolCallDepth++;
 
-    const toolOutput = await executeServerToolCall(parsedCall, workspaceRoot);
+    const _tcStart = Date.now();
+    let toolOutput: any;
+    let toolCallIsError = false;
+    try {
+      toolOutput = await executeServerToolCall(parsedCall, workspaceRoot);
+    } catch (err: any) {
+      toolOutput = { error: err?.message || String(err) };
+      toolCallIsError = true;
+    }
+    const _tcMs = Date.now() - _tcStart;
+    if (effectiveSessionId) {
+      logToolCall(effectiveSessionId, parsedCall.tool, parsedCall.args, toolOutput, _tcMs, toolCallIsError)
+        .catch(() => {}); // fire-and-forget — must never gate the pipeline
+    }
+    if (toolCallIsError) throw new Error(toolOutput.error);
+
     context.request.messages.push(
       { role: 'assistant', content: assistantContent },
       {
@@ -637,34 +727,49 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
     const { detectPersona } = await import('../utils/persona-detector.js');
     const userMessage = messages.find(m => m.role === 'user');
     const userContent = userMessage ? (typeof userMessage.content === 'string' ? userMessage.content : JSON.stringify(userMessage.content)) : '';
-    const persona = detectPersona(userContent, workspaceRoot);
+    const persona = detectPersona(originalUserContent, workspaceRoot);
 
-    if (persona === 'debugger') {
+    if (context.taskType !== TaskType.Vision && persona === 'debugger') {
       const isWindows = os.platform() === 'win32';
-      const queryLower = userContent.toLowerCase();
+      const queryLower = originalUserContent.toLowerCase();
+
+      // Parse referenced files from the prompt
+      const mdFiles = originalUserContent.match(/\b[\w\-./\\]+\.md\b/gi) || [];
+      const jsonFiles = originalUserContent.match(/\b[\w\-./\\]+\.json\b/gi) || [];
+      const logFiles = originalUserContent.match(/\b[\w\-./\\]+\.(log|txt)\b/gi) || [];
+      
+      const targetMd = mdFiles[0] ? path.basename(mdFiles[0]) : 'file.md';
+      const targetJson = jsonFiles[0] ? path.basename(jsonFiles[0]) : 'file.json';
+      const targetLog = logFiles[0] ? path.basename(logFiles[0]) : 'large_file.bin';
+
       const tips: string[] = [];
+
+      // Exclusive category filtering
+      const hasMdMention = mdFiles.length > 0;
+      const hasJsonMention = jsonFiles.length > 0;
+      const hasLogMention = logFiles.length > 0;
 
       // 1. Search category
       const wantsSearch = /\b(search|find|grep|rg|read|line|section|heading|match|code)\b/i.test(queryLower);
-      if (wantsSearch || tips.length === 0) {
+      if (wantsSearch && (!hasJsonMention && !hasLogMention)) {
         if (isWindows) {
           tips.push(
             '### 🪟 Document/Source Code Search (Windows PowerShell)',
             '```powershell',
-            'Get-Content file.md | Select-String "^#{1,6}\\s"                      # Get headings',
-            'Get-Content file.md | Select-Object -Skip 41 -First 33                # Read lines 42-75',
-            'Get-Content file.md | Select-String \'\\*\\*.*\\*\\*\'                        # Find bold text',
+            `Get-Content ${targetMd} | Select-String "^#{1,6}\\s"                      # Get headings`,
+            `Get-Content ${targetMd} | Select-Object -Skip 41 -First 33                # Read lines 42-75`,
+            `Get-Content ${targetMd} | Select-String '\\*\\*.*\\*\\*'                        # Find bold text`,
             '```'
           );
         } else {
           tips.push(
             '### 📄 Document/Source Code Search (Unix/Bash)',
             '```bash',
-            'grep -nE "^#{1,6}\\s" file.md               # Get all headings with line numbers',
-            'grep -n "^## Target Section" file.md        # Find exact heading line',
-            'sed -n "42,75p" file.md                    # Read specific lines 42-75 only',
-            'grep -nE "\\*\\*.*\\*\\*" file.md              # Extract bold/highlighted text',
-            'grep -nE "^\\s*\\|" file.md                  # Extract markdown table rows',
+            `grep -nE "^#{1,6}\\s" ${targetMd}               # Get all headings with line numbers`,
+            `grep -n "^## Target Section" ${targetMd}        # Find exact heading line`,
+            `sed -n "42,75p" ${targetMd}                    # Read specific lines 42-75 only`,
+            `grep -nE "\\*\\*.*\\*\\*" ${targetMd}              # Extract bold/highlighted text`,
+            `grep -nE "^\\s*\\|" ${targetMd}                  # Extract markdown table rows`,
             '```'
           );
         }
@@ -672,43 +777,43 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
 
       // 2. JSON / Tool Output Extraction category
       const wantsJson = /\b(json|result|error|output|field|extract|parse|jq|format|api)\b/i.test(queryLower);
-      if (wantsJson) {
+      if (wantsJson && (!hasMdMention && !hasLogMention)) {
         if (isWindows) {
           tips.push(
             '### 📊 JSON / Tool Output Extraction (Windows PowerShell)',
             '```powershell',
-            '(Get-Content file.json | ConvertFrom-Json).key.subkey                  # Raw value',
-            '(Get-Content file.json | ConvertFrom-Json) | Where-Object { $_.type -eq "error" } | Select-Object -ExpandProperty message # Filter + extract',
+            `(Get-Content ${targetJson} | ConvertFrom-Json).key.subkey                  # Raw value`,
+            `(Get-Content ${targetJson} | ConvertFrom-Json) | Where-Object { $_.type -eq "error" } | Select-Object -ExpandProperty message # Filter + extract`,
             '```'
           );
         } else {
           tips.push(
             '### 📊 JSON / Tool Output Extraction (Unix/Bash)',
             '```bash',
-            'jq -r \'.key.subkey\' file.json              # Raw value, no quotes',
-            'jq \'.[] | select(.type=="error") | .message\' file.json  # Filter + extract',
-            'grep -oE \'"error":"[^"]+"\' file.json       # Regex extract error fields only',
+            `jq -r '.key.subkey' ${targetJson}              # Raw value, no quotes`,
+            `jq '.[] | select(.type=="error") | .message' ${targetJson}  # Filter + extract`,
+            `grep -oE '"error":"[^"]+"' ${targetJson}       # Regex extract error fields only`,
             '```'
           );
         }
       }
 
       // 3. Binary & Large File Safety category
-      const wantsBinary = /\b(binary|large|file|token|limit|config|key|secret|strings)\b/i.test(queryLower);
-      if (wantsBinary) {
+      const wantsBinary = /\b(binary|large|file|token|limit|config|key|secret|strings|log)\b/i.test(queryLower);
+      if (wantsBinary && (!hasMdMention && !hasJsonMention)) {
         if (isWindows) {
           tips.push(
             '### 🛡️ Binary & Large File Safety (Windows PowerShell)',
             '```powershell',
-            'Select-String -Path large_file.bin -Pattern \'config\',\'key\',\'token\'  # Safe search',
+            `Select-String -Path ${targetLog} -Pattern 'config','key','token'  # Safe search`,
             '```'
           );
         } else {
           tips.push(
             '### 🛡️ Binary & Large File Safety (Unix/Bash)',
             '```bash',
-            'strings large_file.bin | grep -i "config\\|key\\|token"  # Safe text extraction',
-            'file unknown_file                          # Identify type before reading',
+            `strings ${targetLog} | grep -i "config\\|key\\|token"  # Safe text extraction`,
+            `file ${targetLog}                          # Identify type before reading`,
             '```'
           );
         }
@@ -738,14 +843,53 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
         finalChoice.content += debugTips;
       }
     }
+
+    // Wikiv2 write side: persist durable knowledge from agentic sessions and reinforce/penalize
+    // the wiki pages that were surfaced into context this turn based on the outcome.
+    if (agentic) {
+      try {
+        const { memoryManager } = await import('../memory/index.js');
+        const { GLOBAL_CYBER_WIKI_NS } = await import('../utils/GithubRepoScanner.js');
+        const isCyber = context.taskType === TaskType.Cyber;
+        const wiki = isCyber
+          ? memoryManager.getWiki(GLOBAL_CYBER_WIKI_NS)
+          : memoryManager.getWiki(context.wsHash || context.sessionId || 'global', context.workspaceRoot);
+        const failureLanguage = /\b(didn't work|did not work|failed to|failure|error occurred|unsuccessful|not working)\b/i;
+        const isFailure = failureLanguage.test(finalChoice.content);
+
+        const wikiPagesUsed: string[] = (finalContext as any).wikiPagesUsed || [];
+        for (const title of wikiPagesUsed) {
+          if (isFailure) {
+            await wiki.recordFailure(title, 'Follow-up response indicated the referenced knowledge did not work.');
+          } else {
+            await wiki.reinforce(title);
+          }
+        }
+
+        const WIKI_WORTHY_PATTERNS = [/decided to/i, /chose\s+.*\s+over\s+.*/i, /we\s+use\s+.*\s+because/i, /decision:/i, /solution:/i, /root cause:/i, /fixed by/i];
+        if (!isFailure && WIKI_WORTHY_PATTERNS.some(p => p.test(finalChoice.content))) {
+          const title = userContent.split(/\s+/).slice(0, 8).join(' ').trim() || `Session ${new Date().toISOString()}`;
+          await wiki.write(title, finalChoice.content, isCyber ? ['cyber'] : [], []);
+        }
+
+        await GlobalWikiManager.flushToWiki(wiki);
+      } catch (err) {
+        console.error(`[useFreeLLM] Wiki write failed: ${err}`);
+      }
+    }
   }
 
   return finalContext.response;
 }
 
-export function flushSystem(): void {
+export async function flushSystem(): Promise<void> {
   getSharedResponseCache().flush();
-  getSharedRouter().flush();
+  // Persist pending usage counters before exit — deductTokens() only schedules a
+  // debounced disk write, so shutting down without this (or clearing in-memory
+  // state via getSharedRouter().flush() first, as this used to do) silently
+  // drops the last batch of request/token counts, which looked like usage
+  // "resetting" on every restart.
+  await getSharedRouter().persistNow();
 }
 
 interface ParsedToolCall {
@@ -784,28 +928,43 @@ function tryExtractToolCall(content: string): ParsedToolCall | null {
   return null;
 }
 
-async function executeServerToolCall(call: ParsedToolCall, workspaceRoot?: string): Promise<any> {
+export async function executeServerToolCall(call: ParsedToolCall, workspaceRoot?: string): Promise<any> {
   const tool = call.tool.trim();
   const args = call.args || {};
 
-  if (tool === 'read_file') {
-    const rawPath = args.path || args.file_path;
-    if (!rawPath || typeof rawPath !== 'string') {
-      throw new Error('read_file requires `path`.');
+  try {
+    let result;
+    if (tool === 'read_file') {
+      const rawPath = args.path || args.file_path;
+      if (!rawPath || typeof rawPath !== 'string') {
+        throw new Error('read_file requires `path`.');
+      }
+      const resolved = path.resolve(workspaceRoot || process.cwd(), rawPath);
+      if (workspaceRoot && !resolved.startsWith(path.resolve(workspaceRoot))) {
+        throw new Error('read_file path is outside workspace_root.');
+      }
+      const content = await fs.readFile(resolved, 'utf-8');
+      result = { path: resolved, content };
+    } else if (tool === 'manage_memory') {
+      result = await manageMemory(args as any);
+    } else if (tool === 'index_workspace') {
+      result = await indexWorkspace(args as any);
+    } else if (tool === 'get_token_stats') {
+      result = await getTokenStats();
+    } else if (tool === 'validate_provider') {
+      result = await validateProvider(args.providerId);
+    } else if (tool === 'load_skill_prompt') {
+      result = await loadSkillPrompt({ skill: args.skill, type: 'load' });
+    } else if (tool === 'wiki_search' || tool === 'wiki_write') {
+      result = await manageMemory({ action: tool, ...args } as any);
+    } else {
+      throw new Error(`Unsupported tool call: ${tool}`);
     }
-    const resolved = path.resolve(workspaceRoot || process.cwd(), rawPath);
-    if (workspaceRoot && !resolved.startsWith(path.resolve(workspaceRoot))) {
-      throw new Error('read_file path is outside workspace_root.');
-    }
-    const content = await fs.readFile(resolved, 'utf-8');
-    return { path: resolved, content };
+
+    GlobalWikiManager.logSuccess(tool);
+    return result;
+  } catch (err: any) {
+    GlobalWikiManager.logFailure(tool);
+    throw err;
   }
-
-  if (tool === 'manage_memory') return await manageMemory(args as any);
-  if (tool === 'index_workspace') return await indexWorkspace(args as any);
-  if (tool === 'get_token_stats') return await getTokenStats();
-  if (tool === 'validate_provider') return await validateProvider(args.providerId);
-  if (tool === 'load_skill_prompt') return await loadSkillPrompt({ skill: args.skill, type: 'load' });
-
-  throw new Error(`Unsupported tool call: ${tool}`);
 }

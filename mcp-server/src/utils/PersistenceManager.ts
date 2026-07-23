@@ -17,10 +17,17 @@ export interface PersistentUsage {
   sessionToken?: string;
   sessionExpiresAt?: number;
   lastSyncTime?: number;
+  // Separate from lastSyncTime (which gates the ~24h Firebase sync, firebase.ts/server.ts's
+  // initTelemetry): stamps the last time this local usage-stats.json was itself flushed to
+  // disk by the periodic local-persist interval, independent of whether/when that data was
+  // ever synced to Firebase.
+  lastLocalPersistTime?: number;
   optOutTelemetry?: boolean;
   firebaseUid?: string;
   firebaseRefreshToken?: string;
   fallbackUid?: string;
+  lastAuthFailedTime?: number;
+  lastSyncFailedTime?: number;
   providers: Record<string, {
     lastSyncTime: number;
     localTotalRequests: number;
@@ -37,29 +44,76 @@ export interface PersistentUsage {
 
 export class PersistenceManager {
   private filePath: string;
-  private isLocal: boolean = false;
+  private backupPath: string;
+  private lockPath: string;
   private lastSavedState: PersistentUsage | null = null;
 
   constructor(customPath?: string) {
     this.filePath = customPath || this.resolvePath();
+    this.backupPath = `${this.filePath}.bak`;
+    this.lockPath = `${this.filePath}.lock`;
   }
 
   /**
-   * Resolves the persistence path:
-   * 1. Check current directory for .mcp-usage.json
-   * 2. Fallback to ~/.free-llm-mcp/usage-stats.json
+   * Serializes save()'s read-merge-write cycle. Without this, two concurrent saves (e.g.
+   * firebase.ts's initFirebase() persisting a fresh firebaseUid, racing against
+   * LLMExecutor's debounced/shutdown persistStats() — which saves a state object that
+   * omits firebaseUid entirely, relying on merge()'s disk-fallback) can interleave: the
+   * second save reads disk BEFORE the first's write lands, so its merge falls back to a
+   * stale (or absent) firebaseUid/firebaseRefreshToken and then overwrites the first
+   * save's fresh identity. Observed live: the Firebase UID silently changed on every
+   * server restart because this race kept discarding the just-persisted identity.
+   * Mirrors DiffScanner's acquireLock()/releaseLock() pattern (diff-scanner.ts), but waits
+   * for the lock instead of skipping — a save must never be silently dropped.
+   */
+  private async acquireLock(timeoutMs = 5000): Promise<() => Promise<void>> {
+    const start = Date.now();
+    while (true) {
+      try {
+        // fs-extra promisifies the callback-style fs.open, which yields a raw fd
+        // number (not a fs/promises FileHandle) — close via fs.close(fd).
+        const fd = await fs.open(this.lockPath, 'wx');
+        await fs.close(fd);
+        return async () => { await fs.remove(this.lockPath).catch(() => {}); };
+      } catch (err: any) {
+        if (err?.code !== 'EEXIST') {
+          // Unexpected error acquiring the lock (e.g. permissions) — proceed without
+          // it rather than hang or drop the save.
+          return async () => {};
+        }
+        // Stale-lock override: a process that crashed mid-save shouldn't wedge every
+        // future save forever.
+        try {
+          const stat = await fs.stat(this.lockPath);
+          if (Date.now() - stat.mtimeMs > 10000) {
+            await fs.remove(this.lockPath).catch(() => {});
+            continue;
+          }
+        } catch { /* lock file vanished between checks — just retry the acquire */ }
+
+        if (Date.now() - start > timeoutMs) {
+          // Waited long enough — proceed without the lock rather than hang indefinitely.
+          // Losing exclusivity here is strictly better than losing the save entirely.
+          return async () => {};
+        }
+        await new Promise(r => setTimeout(r, 25));
+      }
+    }
+  }
+
+  /**
+   * Resolves the persistence path. Always the canonical global location unless
+   * explicitly overridden via MCP_USAGE_PATH — this file holds the Firebase
+   * identity (firebaseUid/firebaseRefreshToken), so it must resolve to the same
+   * path regardless of the process's current working directory. Previously this
+   * probed `cwd()` for a local `.mcp-usage.json` and silently preferred it when
+   * present, which meant launching the server from a different directory (e.g.
+   * different MCP client configs) would read/write a different state file —
+   * appearing as the server "creating a new user" and losing quota history.
    */
   private resolvePath(): string {
-    const localPath = path.join(process.cwd(), '.mcp-usage.json');
-    try {
-      if (fs.existsSync(localPath)) {
-        // Test writability
-        fs.accessSync(localPath, fs.constants.W_OK);
-        this.isLocal = true;
-        return localPath;
-      }
-    } catch (e) {
-      // Not writable or doesn't exist
+    if (process.env.MCP_USAGE_PATH) {
+      return process.env.MCP_USAGE_PATH;
     }
 
     const homeDir = os.homedir();
@@ -74,9 +128,7 @@ export class PersistenceManager {
    */
   async ensureStorage(): Promise<boolean> {
     try {
-      if (!this.isLocal) {
-        await fs.ensureDir(path.dirname(this.filePath));
-      }
+      await fs.ensureDir(path.dirname(this.filePath));
       return true;
     } catch (e) {
       console.error('Failed to ensure storage directory:', e);
@@ -106,8 +158,26 @@ export class PersistenceManager {
         this.lastSavedState = JSON.parse(JSON.stringify(resetData));
         return resetData;
       }
-    } catch (e) {
-      console.warn('[PersistenceManager] Telemetry/Usage file tampered or corrupted! resetting state...');
+    } catch (primaryError) {
+      // Primary file is corrupted/undecryptable. Before giving up the Firebase
+      // identity (firebaseUid/firebaseRefreshToken — losing these re-registers
+      // the user as a brand new anonymous account), try the backup written
+      // alongside the last successful save().
+      try {
+        if (await fs.pathExists(this.backupPath)) {
+          const rawBackup = await fs.readFile(this.backupPath, 'utf8');
+          const decryptedBackup = await decrypt(rawBackup);
+          const data = JSON.parse(decryptedBackup);
+          const resetData = this.handleDailyReset(data);
+          this.lastSavedState = JSON.parse(JSON.stringify(resetData));
+          console.error(`[PersistenceManager] Primary usage state at ${this.filePath} was corrupted/undecryptable (${(primaryError as Error)?.message || primaryError}) — recovered Firebase identity and usage stats from backup at ${this.backupPath}.`);
+          return resetData;
+        }
+      } catch (backupError) {
+        console.error(`[PersistenceManager] Backup usage state at ${this.backupPath} was also corrupted/undecryptable: ${(backupError as Error)?.message || backupError}`);
+      }
+
+      console.error(`[PersistenceManager] Failed to read/decrypt usage state at ${this.filePath} and no usable backup was found — resetting state, INCLUDING FIREBASE IDENTITY (a new anonymous account will be created). Cause: ${(primaryError as Error)?.message || primaryError}`);
     }
 
     this.lastSavedState = JSON.parse(JSON.stringify(emptyState));
@@ -134,6 +204,7 @@ export class PersistenceManager {
    * Saves usage stats to disk using Read-Merge-Write for atomicity
    */
   async save(memoryState: PersistentUsage): Promise<void> {
+    const releaseLock = await this.acquireLock();
     try {
       await this.ensureStorage();
       const today = new Date().toISOString().split('T')[0];
@@ -160,7 +231,7 @@ export class PersistenceManager {
       }
 
       const merged = this.merge(diskState, memoryState);
-      
+
       // Atomic write: encrypt merged data, write to tmp, then rename
       const tmpPath = `${this.filePath}.tmp`;
       const serialized = JSON.stringify(merged);
@@ -168,11 +239,44 @@ export class PersistenceManager {
       await fs.writeFile(tmpPath, encrypted, 'utf8');
       await fs.rename(tmpPath, this.filePath);
 
+      // Best-effort backup copy so load() can recover the Firebase identity
+      // if the primary file is later found corrupted/undecryptable.
+      try {
+        const backupTmpPath = `${this.backupPath}.tmp`;
+        await fs.writeFile(backupTmpPath, encrypted, 'utf8');
+        await fs.rename(backupTmpPath, this.backupPath);
+      } catch (backupErr) {
+        console.error('Failed to write usage stats backup:', backupErr);
+      }
+
       // Update baseline for next delta calculation
       this.lastSavedState = JSON.parse(JSON.stringify(memoryState));
     } catch (e) {
       console.error('Error saving usage stats:', e);
+    } finally {
+      await releaseLock();
     }
+  }
+
+  /**
+   * Zeroes the counter fields (but not identity/session fields) on the in-memory delta
+   * baseline (lastSavedState), so the next save()'s merge() computes deltas relative to
+   * zero instead of the pre-reset totals. Must be called immediately after a caller resets
+   * its own in-memory usage counters (e.g. LLMExecutor's periodic local-persist-and-reset),
+   * and only after that reset data has already been persisted — otherwise the next delta
+   * calculation (`memory.X - prev.X`) goes negative, gets clamped to 0 by merge(), and the
+   * next batch of real usage silently fails to be added to the disk total.
+   */
+  resetBaseline(): void {
+    if (!this.lastSavedState) return;
+    this.lastSavedState = {
+      ...this.lastSavedState,
+      dailyTotalRequests: 0,
+      dailyTotalTokens: 0,
+      lifetimeTotalRequests: 0,
+      lifetimeTotalTokens: 0,
+      providers: {}
+    };
   }
 
   /**
@@ -212,10 +316,22 @@ export class PersistenceManager {
       sessionToken: memory.sessionToken || base.sessionToken,
       sessionExpiresAt: memory.sessionExpiresAt || base.sessionExpiresAt,
       lastSyncTime: Math.max(base.lastSyncTime || 0, memory.lastSyncTime || 0),
+      lastLocalPersistTime: Math.max(base.lastLocalPersistTime || 0, memory.lastLocalPersistTime || 0),
       optOutTelemetry: memory.optOutTelemetry !== undefined ? memory.optOutTelemetry : base.optOutTelemetry,
       firebaseUid: memory.firebaseUid || base.firebaseUid,
       firebaseRefreshToken: memory.firebaseRefreshToken || base.firebaseRefreshToken,
       fallbackUid: memory.fallbackUid || base.fallbackUid,
+      // Uses the `in` operator, not `||` or `!== undefined`, because neither of those can
+      // distinguish "caller explicitly cleared this to undefined" from "caller's state
+      // object never had this field at all" — both read as falsy/undefined. That
+      // distinction matters here: server.ts's initTelemetry() does
+      // `state.lastSyncFailedTime = undefined` after a successful sync specifically to
+      // reset the failure-backoff window, and that clear must actually reach disk instead
+      // of silently falling back to the stale value forever. `in` checks for the key's
+      // presence on the object regardless of its value, so an explicit clear is honored
+      // while a caller that never touches the field still preserves whatever's on disk.
+      lastAuthFailedTime: 'lastAuthFailedTime' in memory ? memory.lastAuthFailedTime : base.lastAuthFailedTime,
+      lastSyncFailedTime: 'lastSyncFailedTime' in memory ? memory.lastSyncFailedTime : base.lastSyncFailedTime,
       providers: { ...base.providers }
     };
 

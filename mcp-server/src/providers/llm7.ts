@@ -8,12 +8,11 @@ export class LLM7Provider extends BaseProvider {
   envVar = 'LLM7_API_KEY';
   rateLimits: RateLimits = { rpm: 30 };
   models: ProviderModel[] = [
-    { id: 'qwen3-235b', name: 'Qwen 3 235B' },
+    { id: 'gpt-oss:20b', name: 'GPT-OSS 20B' },
     { id: 'kimi-k2.6', name: 'Kimi K2.6' },
     { id: 'codestral-latest', name: 'Codestral Latest' },
     { id: 'minimax-m2.7', name: 'MiniMax M2.7' },
     { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash' },
     { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini (Vision)' },
-    { id: 'devstral-small-2:24b', name: 'DevStral Small 2 (Vision)' },
   ];
 }

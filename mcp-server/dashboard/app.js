@@ -5,6 +5,12 @@
 'use strict';
 
 // ─── Utility ────────────────────────────────────────────────────
+function modelBadge(model, provider) {
+  if (!model && !provider) return '';
+  const label = provider && model ? `${provider}/${model}` : (provider || model);
+  return `<span class="latency-badge model-badge" style="display:inline-flex;" title="Model used for this call">🧬 ${esc(label)}</span>`;
+}
+
 function esc(str) {
   if (!str) return '';
   const d = document.createElement('div');
@@ -15,6 +21,25 @@ function esc(str) {
 function fmt(n) {
   if (n == null) return '0';
   return Number(n).toLocaleString();
+}
+
+// Renders one "contextInjected" entry — server sends "<label>\n<excerpt>" (excerpt optional).
+// Shows a 400-char preview inline; if the excerpt is longer, a <details> reveals the rest,
+// same click-to-expand pattern used elsewhere in this file (history entries, tool-call bubbles).
+const CONTEXT_PREVIEW_CHARS = 400;
+function renderContextEntry(raw) {
+  const nlIdx = raw.indexOf('\n');
+  const label = nlIdx === -1 ? raw : raw.slice(0, nlIdx);
+  const excerpt = nlIdx === -1 ? '' : raw.slice(nlIdx + 1).trim();
+  if (!excerpt) return `<li>${esc(label)}</li>`;
+  const isLong = excerpt.length > CONTEXT_PREVIEW_CHARS;
+  const preview = isLong ? excerpt.slice(0, CONTEXT_PREVIEW_CHARS) + '…' : excerpt;
+  const excerptStyle = "white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:.68rem;opacity:.85;margin-top:3px;";
+  return `<li>
+    <div>${esc(label)}</div>
+    <div style="${excerptStyle}">${esc(preview)}</div>
+    ${isLong ? `<details style="margin-top:3px;"><summary style="cursor:pointer;font-size:.66rem;color:var(--accent-cyan);">Show full (${excerpt.length} chars)</summary><div style="${excerptStyle}">${esc(excerpt)}</div></details>` : ''}
+  </li>`;
 }
 
 // JSON syntax highlighter — XSS-safe: escape HTML first
@@ -70,6 +95,10 @@ async function renderMarkdown(text) {
       .replace(/\*\*([^*]+)\*\*/g, (_, t) => `<strong>${t}</strong>`)
       // Italic
       .replace(/\*([^*]+)\*/g, (_, t) => `<em>${t}</em>`)
+      // Wiki-style internal links: [[Title]] — text here is already HTML-escaped by the esc(part) pass above
+      .replace(/\[\[([^\]]+)\]\]/g, (_, title) => `<a href="#" class="wiki-link" data-title="${title.replace(/"/g, '&quot;')}">${title}</a>`)
+      // Markdown links: [text](url) — only http(s) URLs become real links, everything else stays plain text
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, text, url) => `<a href="${url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer">${text}</a>`)
       // H1-H3
       .replace(/^### (.+)$/gm, '<h3 style="font-size:.85rem;color:var(--text-primary);margin:10px 0 4px;">$1</h3>')
       .replace(/^## (.+)$/gm, '<h2 style="font-size:.95rem;color:var(--text-primary);margin:12px 0 6px;">$1</h2>')
@@ -88,21 +117,29 @@ async function renderMarkdown(text) {
   return `<div class="md-body" style="line-height:1.6;font-size:.82rem;color:var(--text-secondary);">${rendered.join('')}</div>`;
 }
 
-// Smart response renderer: detect markdown vs JSON
+// Smart response renderer: extracts the actual message text (result / result.content)
+// and renders it as markdown regardless of whether it "looks like" markdown — the
+// markdown-indicator regex used to gate this, so plain short replies (e.g. "OK", "9")
+// fell through to a raw JSON dump of the whole result object, which meant metadata
+// fields like `model`/`provider` (added for the UI badges, never meant to be shown as
+// message text) ended up printed inline in the chat bubble. Falls back to a JSON dump
+// only when there's genuinely no string content field to render.
 async function renderResponse(data) {
   const result = data.result ?? data;
-  // If result is a plain string with markdown indicators
-  if (typeof result === 'string' && /[#*`\n]|```/.test(result)) {
+  // Plain string result
+  if (typeof result === 'string') {
     return await renderMarkdown(result);
   }
-  // Nested content field (common MCP response shape)
-  if (result?.content && typeof result.content === 'string' && /[#*`\n]|```/.test(result.content)) {
-    return await renderMarkdown(result.content);
+  // Nested text field — different tools use different keys (use_free_llm/vision_tool
+  // use `content`/`response`, execute_skill uses `response`, etc.)
+  const nestedText = result?.content ?? result?.response;
+  if (typeof nestedText === 'string') {
+    return await renderMarkdown(nestedText);
   }
   const SIZE_THRESHOLD = 100 * 1024; // 100KB
   const jsonStr = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
   if (jsonStr.length > SIZE_THRESHOLD) {
-    return `<span style="color:var(--text-muted);font-size:.78rem;">Response too large to render (${(jsonStr.length/1024).toFixed(0)}KB). </span><button onclick="navigator.clipboard.writeText(this.dataset.v);this.textContent='Copied!'" data-v="${esc(jsonStr)}" class="btn btn-outline btn-sm" style="margin-left:8px;">Copy Raw</button>`;
+    return `<span style="color:var(--text-muted);font-size:.78rem;">Response too large to render (${(jsonStr.length/1024).toFixed(0)}KB). </span><button class="copy-raw-btn btn btn-outline btn-sm" data-v="${esc(jsonStr)}" style="margin-left:8px;">Copy Raw</button>`;
   }
   return highlightJSON(result);
 }
@@ -125,6 +162,7 @@ tabBtns.forEach(btn => {
     if (target === 'providers') fetchStats();
     if (target === 'playground') ensureModels();
     if (target === 'profile')  { fetchUserConfig(); fetchLeaderboard(); }
+    if (target === 'wiki')     { initWikiTab(); }
   });
 });
 
@@ -175,7 +213,13 @@ async function fetchStats() {
     const totals = data.serverTotals || {};
     document.getElementById('stat-daily-req').textContent = fmt(totals.dailyRequests);
     document.getElementById('stat-daily-tok').textContent = fmt(totals.dailyTokens);
-    document.getElementById('stat-lifetime').textContent  = fmt(totals.lifetimeRequests);
+    const lifetimeEl = document.getElementById('stat-lifetime');
+    lifetimeEl.textContent = fmt(totals.lifetimeRequests);
+    // Lifetime totals reset in-memory on a small interval now, so the server prefers a
+    // Firebase-synced read for this figure — surface which source it actually came from.
+    lifetimeEl.title = data.lifetimeSource === 'firebase'
+      ? `Synced from Firebase${data.lastSyncTime ? ' (last sync: ' + new Date(data.lastSyncTime).toLocaleString() + ')' : ''}`
+      : 'Local count (Firebase sync unavailable/offline)';
 
     renderProviders(data.stats || [], provStats);
   } catch (err) {
@@ -236,27 +280,42 @@ function renderProviders(providers, provStats) {
   }).join('');
 
   document.getElementById('stat-providers').textContent = activeCount;
-
-  // Bind verify buttons
-  providersGrid.querySelectorAll('.verify-btn').forEach(btn => {
-    btn.addEventListener('click', () => verifyProvider(btn.dataset.pid, btn));
-  });
 }
 
-async function verifyProvider(providerId, btn) {
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Verifying…';
+// Delegated: bound once (not re-bound per render), since providersGrid.innerHTML
+// gets fully replaced by fetchStats() every 5s — a per-render addEventListener
+// binding is harmless here, but the button element itself can be swapped out
+// from under an in-flight click, so verifyProvider() below re-queries the live
+// node by data-pid at each step instead of trusting the one it started with.
+providersGrid?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.verify-btn');
+  if (btn) verifyProvider(btn.dataset.pid);
+});
+
+const VERIFY_BTN_MARKUP = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Verify`;
+
+function getVerifyBtn(providerId) {
+  return providersGrid?.querySelector(`.verify-btn[data-pid="${CSS.escape(providerId)}"]`) || null;
+}
+
+async function verifyProvider(providerId) {
+  const setState = (html, color, disabled) => {
+    const live = getVerifyBtn(providerId); // periodic refresh may have replaced the node
+    if (!live) return;
+    live.innerHTML = html;
+    live.style.color = color;
+    live.disabled = disabled;
+  };
+  setState('<span class="spinner"></span> Verifying…', '', true);
   try {
     const r  = await fetch('/api/validate-provider', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ providerId }) });
     const d  = await r.json();
-    btn.innerHTML = d.success ? '✓ OK' : '✗ Failed';
-    btn.style.color = d.success ? 'var(--accent-green)' : 'var(--accent-red)';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.color=''; btn.disabled=false; fetchStats(); }, 2000);
+    setState(d.success ? '✓ OK' : '✗ Failed', d.success ? 'var(--accent-green)' : 'var(--accent-red)', true);
+    setTimeout(() => { setState(VERIFY_BTN_MARKUP, '', false); fetchStats(); }, 2000);
   } catch {
-    btn.innerHTML = '✗ Error';
-    btn.style.color = 'var(--accent-red)';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.color=''; btn.disabled=false; }, 2000);
+    setState('✗ Error', 'var(--accent-red)', true);
+    setTimeout(() => { setState(VERIFY_BTN_MARKUP, '', false); }, 2000);
   }
 }
 
@@ -577,12 +636,153 @@ const pgClearBtn    = document.getElementById('pg-clear-btn');
 const pgStatus      = document.getElementById('pg-status');
 const pgLatency     = document.getElementById('pg-latency');
 const pgWorkspace   = document.getElementById('pg-workspace');
+const pgAgenticToggle = document.getElementById('pg-agentic-toggle');
 const convList      = document.getElementById('pg-conv-list');
 const convSearch    = document.getElementById('pg-conv-search');
+
+// Delegated click handling for buttons rendered into chat bubbles (Copy / Copy Raw).
+// The dashboard's CSP sets `script-src-attr: 'none'` (Helmet default, never overridden),
+// which silently blocks inline onclick="..." attributes — these buttons used to rely on
+// that and simply did nothing when clicked. Delegating from the container (loaded via the
+// external, CSP-allowed /app.js) works correctly.
+chatLog?.addEventListener('click', (e) => {
+  const copyRaw = e.target.closest('.copy-raw-btn');
+  if (copyRaw) {
+    navigator.clipboard.writeText(copyRaw.dataset.v || '');
+    copyRaw.textContent = 'Copied!';
+    return;
+  }
+  const copyChat = e.target.closest('.chat-copy-btn');
+  if (copyChat) {
+    const text = copyChat.closest('.chat-msg')?.querySelector('.chat-bubble')?.innerText || '';
+    navigator.clipboard.writeText(text);
+    copyChat.textContent = 'Copied!';
+    setTimeout(() => { copyChat.textContent = 'Copy'; }, 1500);
+  }
+});
 
 // In-memory cache of current conversation (avoids re-fetching for every append)
 let chatHistory = [];
 let activeSessionId = '__no_ws__';
+
+// ─── FILE ATTACHMENTS ───────────────────────────────────────────
+const pgAttachBtn   = document.getElementById('pg-attach-btn');
+const pgFileInput   = document.getElementById('pg-file-input');
+const pgAttachments = document.getElementById('pg-attachments');
+
+let attachments = []; // { id, kind, fileUri, relativePath, filename, page, targetFieldId }
+let attachIdSeq = 0;
+
+function getPrimaryTextFieldId(tool) {
+  const f = tool?.fields?.find(f => f.type === 'textarea');
+  return f ? f.id : null;
+}
+
+function insertTokenIntoField(fieldId, token) {
+  const el = document.getElementById(`pg-field-${fieldId}`);
+  if (!el) return;
+  const sep = el.value && !el.value.endsWith('\n') && !el.value.endsWith(' ') ? ' ' : '';
+  el.value = `${el.value}${sep}${token}`;
+}
+
+function replaceTokenInField(fieldId, oldToken, newToken) {
+  const el = document.getElementById(`pg-field-${fieldId}`);
+  if (!el) return;
+  el.value = el.value.replace(oldToken, newToken);
+}
+
+function removeTokenFromField(fieldId, token) {
+  const el = document.getElementById(`pg-field-${fieldId}`);
+  if (!el) return;
+  el.value = el.value.replace(token, '').replace(/\s{2,}/g, ' ').trim();
+}
+
+function renderAttachments() {
+  pgAttachments.innerHTML = attachments.map(a => `
+    <span class="attach-chip" data-attach-id="${a.id}">
+      📎 ${esc(a.filename)}
+      ${a.kind === 'pdf' ? `<input type="number" min="1" value="${a.page}" class="attach-page-input" data-attach-id="${a.id}" title="PDF page number">` : ''}
+      <span class="attach-remove" data-attach-id="${a.id}">×</span>
+    </span>
+  `).join('');
+
+  pgAttachments.querySelectorAll('.attach-remove').forEach(btn => {
+    btn.addEventListener('click', () => removeAttachment(btn.dataset.attachId));
+  });
+  pgAttachments.querySelectorAll('.attach-page-input').forEach(inp => {
+    inp.addEventListener('change', () => updateAttachmentPage(inp.dataset.attachId, inp.value));
+  });
+}
+
+function updateAttachmentPage(id, newPageStr) {
+  const a = attachments.find(a => a.id === id);
+  if (!a) return;
+  const newPage = Math.max(1, parseInt(newPageStr, 10) || 1);
+  const oldToken = a.token;
+  a.token = a.token.replace(/:\d+$/, `:${newPage}`);
+  a.page = newPage;
+  if (a.targetFieldId) replaceTokenInField(a.targetFieldId, oldToken, a.token);
+}
+
+function removeAttachment(id) {
+  const a = attachments.find(a => a.id === id);
+  if (!a) return;
+  if (a.targetFieldId) {
+    if (a.isDirectFieldValue) {
+      const el = document.getElementById(`pg-field-${a.targetFieldId}`);
+      if (el && el.value === a.token) el.value = '';
+    } else {
+      removeTokenFromField(a.targetFieldId, a.token);
+    }
+  }
+  attachments = attachments.filter(x => x.id !== id);
+  renderAttachments();
+}
+
+async function handleFileSelected(file) {
+  if (!file) return;
+  const ws = pgWorkspace.value.trim();
+  const formData = new FormData();
+  formData.append('file', file);
+  if (ws) formData.append('workspace_root', ws);
+
+  pgAttachBtn.disabled = true;
+  try {
+    const r = await fetch('/api/upload', { method: 'POST', body: formData });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Upload failed');
+
+    const id = `att-${++attachIdSeq}`;
+    const isVisionTool = activeTool.id === 'vision_tool';
+
+    if (d.kind === 'image' && isVisionTool) {
+      // Fill image_path directly — that field already exists on vision_tool
+      const el = document.getElementById('pg-field-image_path');
+      if (el) el.value = d.fileUri;
+      attachments.push({ id, kind: 'image', filename: file.name, token: d.fileUri, targetFieldId: 'image_path', isDirectFieldValue: true });
+    } else if (d.kind === 'image') {
+      const fieldId = getPrimaryTextFieldId(activeTool);
+      if (fieldId) insertTokenIntoField(fieldId, d.fileUri);
+      attachments.push({ id, kind: 'image', filename: file.name, token: d.fileUri, targetFieldId: fieldId });
+    } else {
+      // PDF — embed as pdf://<relativePath>:<page>, page editable via the chip
+      const ref = d.relativePath || d.absPath.replace(/\\/g, '/');
+      const token = `pdf://${ref}:1`;
+      const fieldId = getPrimaryTextFieldId(activeTool);
+      if (fieldId) insertTokenIntoField(fieldId, token);
+      attachments.push({ id, kind: 'pdf', filename: file.name, token, page: 1, targetFieldId: fieldId });
+    }
+    renderAttachments();
+  } catch (err) {
+    alert(`Upload failed: ${err.message}`);
+  } finally {
+    pgAttachBtn.disabled = false;
+    pgFileInput.value = '';
+  }
+}
+
+pgAttachBtn?.addEventListener('click', () => pgFileInput.click());
+pgFileInput?.addEventListener('change', () => handleFileSelected(pgFileInput.files[0]));
 
 // ─── Session ID resolution (server-side, so all instances agree) ──
 async function resolveSessionId(ws) {
@@ -659,14 +859,16 @@ function appendBubbleFromRecord(msg) {
     const el = addSpinnerBubble(msg.tool);
     renderMarkdown(msg.content).then(html => {
       if (!el.isConnected) return;
-      replaceSpinnerWithResponse(el, html, msg.latencyMs, msg.tool, msg.ts, false);
+      replaceSpinnerWithResponse(el, html, msg.latencyMs, msg.tool, msg.ts, false, msg.model, msg.provider, msg.contextInjected);
     });
   } else if (msg.role === 'error') {
     addErrorBubbleEl(msg.content, msg.tool, msg.ts);
   } else if (msg.role === 'subtask_start') {
     addSubtaskStartBubble(msg.content, msg.ts);
   } else if (msg.role === 'subtask_response') {
-    addSubtaskResponseBubble(msg.content, msg.output, msg.ts, msg.contextInjected);
+    addSubtaskResponseBubble(msg.content, msg.output, msg.ts, msg.contextInjected, msg.model, msg.provider);
+  } else if (msg.role === 'tool_call') {
+    addToolCallBubble(msg.tool, msg.args, msg.result, msg.ts, msg.latencyMs, msg.isError);
   }
 }
 
@@ -688,7 +890,7 @@ function addSubtaskStartBubble(taskText, ts) {
   return div;
 }
 
-function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected) {
+function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected, model, provider) {
   chatEmpty.style.display = 'none';
   
   // Remove any active spinner for this subtask to keep the flow clean
@@ -713,7 +915,7 @@ function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected) {
           <span>📂</span> <span>View Injected Context (${contextInjected.length})</span>
         </summary>
         <ul style="margin-top:6px; padding-left:16px; font-size:.7rem; color:var(--text-muted); display:flex; flex-direction:column; gap:4px; list-style-type:circle;">
-          ${contextInjected.map(c => `<li>${esc(c)}</li>`).join('')}
+          ${contextInjected.map(renderContextEntry).join('')}
         </ul>
        </details>`
     : '';
@@ -735,10 +937,66 @@ function addSubtaskResponseBubble(taskText, outputText, ts, contextInjected) {
       ${contextHtml}
     </div>
     <div class="chat-meta" style="margin-left: 16px;">
-      <span>Subagent Execution</span>
+      ${modelBadge(model, provider)}<span>Subagent Execution</span>
       <span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
     </div>`;
   
+  chatLog.appendChild(div);
+  scrollChatBottom();
+  return div;
+}
+
+/**
+ * Renders a collapsed tool-call bubble for retrospect rendering.
+ * Follows the same <details>/<summary> pattern as addSubtaskResponseBubble.
+ * Called from appendBubbleFromRecord when role === 'tool_call'.
+ */
+function addToolCallBubble(tool, args, result, ts, latencyMs, isError) {
+  chatEmpty.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant subtask-collapse-card';
+  div.style.margin = '4px 0 4px 16px';
+  div.style.opacity = '0.80';
+
+  let parsedArgs = args;
+  let parsedResult = result;
+  try { if (typeof args === 'string') parsedArgs = JSON.parse(args); } catch {}
+  try { if (typeof result === 'string') parsedResult = JSON.parse(result); } catch {}
+
+  const resultPreview = (() => {
+    const s = typeof result === 'string' ? result : JSON.stringify(result ?? '');
+    return s.slice(0, 80) + (s.length > 80 ? '…' : '');
+  })();
+
+  const borderColor = isError ? 'var(--accent-red, #ef4444)' : 'var(--accent-cyan)';
+  const icon = isError ? '⚠️' : '🔧';
+
+  div.innerHTML = `
+    <div class="chat-bubble" style="padding:8px 12px; background:rgba(255,255,255,0.02); border-left:3px solid ${borderColor};">
+      <details>
+        <summary style="cursor:pointer; font-size:.76rem; font-weight:600; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center; outline:none; list-style:none;">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <span>${icon}</span>
+            <span style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">${esc(tool || '?')}</span>
+            <span style="color:var(--text-muted); font-size:.7rem;">${esc(resultPreview)}</span>
+          </span>
+          <span style="font-size:.68rem; color:var(--text-muted); white-space:nowrap; margin-left:8px;">${latencyMs != null ? latencyMs + 'ms' : ''} · ${new Date(ts || Date.now()).toLocaleTimeString()}</span>
+        </summary>
+        <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05); font-size:.73rem;">
+          <div style="margin-bottom:6px; color:var(--text-muted);"><strong>Args:</strong><br>
+            <pre style="font-family:'JetBrains Mono',monospace; white-space:pre-wrap; overflow-x:auto; max-height:120px;">${esc(JSON.stringify(parsedArgs, null, 2))}</pre>
+          </div>
+          <div style="color:var(--text-muted);"><strong>Result:</strong><br>
+            <pre style="font-family:'JetBrains Mono',monospace; white-space:pre-wrap; overflow-x:auto; max-height:120px;">${esc(JSON.stringify(parsedResult, null, 2))}</pre>
+          </div>
+        </div>
+      </details>
+    </div>
+    <div class="chat-meta" style="margin-left:16px;">
+      <span>Tool Call</span>
+      <span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
+    </div>`;
+
   chatLog.appendChild(div);
   scrollChatBottom();
   return div;
@@ -787,16 +1045,29 @@ function addSpinnerBubble(tool) {
   return div;
 }
 
-function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save = true) {
+function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save = true, model, provider, contextInjected) {
   const div = document.createElement('div');
   div.className = 'chat-msg assistant';
   const latBadge = latencyMs != null
     ? `<span class="latency-badge${latencyMs > 3000 ? ' slow' : ''}" style="display:inline-flex;">${latencyMs}ms</span>`
     : '';
+  // Same <details>/<summary> pattern as addSubtaskResponseBubble's "View Injected Context" —
+  // QUESTION/CONFUSED-routed turns (which never went through subtask decomposition) can also
+  // have resolved references / memory / wiki context injected, and it shouldn't be a blind spot.
+  const contextHtml = Array.isArray(contextInjected) && contextInjected.length > 0
+    ? `<details style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.06);">
+        <summary style="cursor:pointer; font-size:.7rem; color:var(--accent-cyan); display:flex; align-items:center; gap:4px; outline:none; list-style:none;">
+          <span>📂</span> <span>View Injected Context (${contextInjected.length})</span>
+        </summary>
+        <ul style="margin-top:6px; padding-left:16px; font-size:.7rem; color:var(--text-muted); display:flex; flex-direction:column; gap:4px; list-style-type:circle;">
+          ${contextInjected.map(renderContextEntry).join('')}
+        </ul>
+       </details>`
+    : '';
   div.innerHTML = `
-    <div class="chat-bubble">${html}</div>
-    <div class="chat-meta">${latBadge}<span>${esc(tool)}</span><span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
-      <button class="chat-copy-btn" onclick="navigator.clipboard.writeText(this.closest('.chat-msg').querySelector('.chat-bubble').innerText);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500);">Copy</button>
+    <div class="chat-bubble">${html}${contextHtml}</div>
+    <div class="chat-meta">${latBadge}${modelBadge(model, provider)}<span>${esc(tool)}</span><span>${new Date(ts || Date.now()).toLocaleTimeString()}</span>
+      <button class="chat-copy-btn">Copy</button>
     </div>`;
   spinnerEl.replaceWith(div);
   if (save) scrollChatBottom();
@@ -805,16 +1076,23 @@ function replaceSpinnerWithResponse(spinnerEl, html, latencyMs, tool, ts, save =
 // ─── Update workspace header badges ──────────────────────────────
 function updateWorkspaceUI() {
   const ws = pgWorkspace.value.trim();
+  const agentic = !!pgAgenticToggle?.checked;
   if (ws) {
     chatLabel.textContent = ws.split(/[\\\/]/).pop() || ws;
-    chatBadge.textContent = '🧠 Agentic';
-    chatBadge.className = 'badge badge-purple';
+    if (agentic) {
+      chatBadge.textContent = '🧠 Agentic';
+      chatBadge.className = 'badge badge-purple';
+    } else {
+      chatBadge.textContent = '📂 Grounded';
+      chatBadge.className = 'badge badge-cyan';
+    }
   } else {
     chatLabel.textContent = 'No workspace — one-shot mode';
     chatBadge.textContent = '⚡ One-shot';
     chatBadge.className = 'badge badge-amber';
   }
 }
+pgAgenticToggle?.addEventListener('change', updateWorkspaceUI);
 
 // ─── Conversation list panel ──────────────────────────────────────
 let _convSearchTimer = null;
@@ -950,7 +1228,14 @@ pgRunBtn.addEventListener('click', async () => {
   if (ws) {
     params.workspace_root = ws;
     params.sessionId = activeSessionId;
-    if (activeTool.id === 'use_free_llm') {
+    // Agentic is an explicit opt-in (see the checkbox next to the workspace input) —
+    // it used to be auto-enabled just because a workspace was set, which forced every
+    // grounded request (including simple pdf://file:// reference lookups, which already
+    // work via workspace memory/context alone) through subtask decomposition. That
+    // decomposition has no way to distinguish injected reference content from
+    // user-authored task lists, so it could shred a resolved PDF-context block into
+    // bogus one-line "subtasks".
+    if (activeTool.id === 'use_free_llm' && pgAgenticToggle?.checked) {
       params.agentic = true;
     }
   }
@@ -964,7 +1249,8 @@ pgRunBtn.addEventListener('click', async () => {
   saveTurn(activeSessionId, userTurn);
   addUserBubbleEl(userText, activeTool.id, ts);
 
-  const spinnerEl = addSpinnerBubble(activeTool.id);
+  let spinnerEl = addSpinnerBubble(activeTool.id);
+  let requestDone = false;
 
   pgRunBtn.disabled = true;
   pgRunBtn.innerHTML = '<span class="spinner"></span>';
@@ -978,6 +1264,14 @@ pgRunBtn.addEventListener('click', async () => {
       if (log.length !== chatHistory.length) {
         chatHistory = log;
         rebuildChatLog();
+        // rebuildChatLog() wipes chatLog.innerHTML, which destroys the spinner
+        // bubble appended below — without re-adding it, the spinner silently
+        // disappears (and the later spinnerEl.replaceWith() below becomes a
+        // no-op on a detached node) as soon as any mid-flight server-side turn
+        // (a tool call, an agentic subtask) lands before the final response.
+        if (!requestDone) {
+          spinnerEl = addSpinnerBubble(activeTool.id);
+        }
       }
     } catch {}
   }, 800);
@@ -998,11 +1292,15 @@ pgRunBtn.addEventListener('click', async () => {
     } else {
       const html    = await renderResponse(data);
       const rawText = (data.result ?? data);
-      const content = typeof rawText === 'string' ? rawText : JSON.stringify(rawText, null, 2);
-      const assistantTurn = { role: 'assistant', tool: activeTool.id, content, latencyMs, ts: replyTs };
+      const nestedText = rawText?.content ?? rawText?.response;
+      const content = typeof rawText === 'string' ? rawText
+        : (typeof nestedText === 'string' ? nestedText : JSON.stringify(rawText, null, 2));
+      const respModel = data.result?.model;
+      const respProvider = data.result?.provider;
+      const assistantTurn = { role: 'assistant', tool: activeTool.id, content, latencyMs, ts: replyTs, model: respModel, provider: respProvider };
       chatHistory.push(assistantTurn);
       saveTurn(activeSessionId, assistantTurn);
-      replaceSpinnerWithResponse(spinnerEl, html, latencyMs, activeTool.id, replyTs);
+      replaceSpinnerWithResponse(spinnerEl, html, latencyMs, activeTool.id, replyTs, true, respModel, respProvider);
       if (latencyMs != null) {
         pgLatency.textContent = `${latencyMs}ms`;
         pgLatency.className = `latency-badge${latencyMs > 3000 ? ' slow' : ''}`;
@@ -1018,6 +1316,7 @@ pgRunBtn.addEventListener('click', async () => {
     spinnerEl.replaceWith(addErrorBubbleEl(errMsg, activeTool.id, Date.now()));
     pgStatus.textContent = '✗ Error'; pgStatus.style.color = 'var(--accent-red)';
   } finally {
+    requestDone = true;
     clearInterval(pollInterval);
     // Do one final sync to ensure everything is matched up
     try {
@@ -1027,6 +1326,8 @@ pgRunBtn.addEventListener('click', async () => {
     pgRunBtn.disabled = false;
     pgRunBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
     refreshConvList(); // update message count in sidebar
+    attachments = [];
+    renderAttachments();
   }
 });
 
@@ -1039,6 +1340,8 @@ pgClearBtn.addEventListener('click', async () => {
   chatEmpty.style.display = 'flex';
   pgStatus.textContent = '';
   pgLatency.style.display = 'none';
+  attachments = [];
+  renderAttachments();
   refreshConvList();
 });
 
@@ -1081,32 +1384,62 @@ async function fetchMemory(sid) {
     const d = await r.json();
     memKnowledge.value = d.knowledge || '';
     memSessionLabel.textContent = ` — ${sid}`;
-    renderQueue('queue-now',     d.queues?.nowQueue);
-    renderQueue('queue-next',    d.queues?.nextQueue);
-    renderQueue('queue-blocked', d.queues?.blockedQueue);
+    const resolvedContext = d.queues?.resolvedContext || {};
+    renderQueue('queue-now',     d.queues?.nowQueue,     resolvedContext);
+    renderQueue('queue-next',    d.queues?.nextQueue,    resolvedContext);
+    renderQueue('queue-blocked', d.queues?.blockedQueue, resolvedContext);
+    renderQueue('queue-improve', d.queues?.improveQueue, resolvedContext);
     renderHistory(d.queues?.history);
+    renderPausedBanner(d.queues?.paused, d.queues?.promptId);
     memUpdated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
   } catch (err) {
     memKnowledge.value = `Fetch error: ${err.message}`;
   }
 }
 
-function renderQueue(id, items) {
+function renderQueue(id, items, resolvedContext) {
   const el = document.getElementById(id);
   if (!el) return;
   if (!items?.length) {
     el.innerHTML = '<div class="queue-empty">—</div>';
     return;
   }
-  el.innerHTML = items.map(item => `
+  el.innerHTML = items.map(item => {
+    // Queue entries are {id, task} objects; the `typeof` check keeps this working against
+    // state.json files persisted before this shape existed.
+    let text = typeof item === 'string' ? item : (item?.task ?? String(item));
+    // Task text may still contain unresolved protected_ref_N placeholders
+    // (lazy-resolution design) — swap in the actual content from
+    // resolvedContext at display time so raw placeholder tokens aren't shown.
+    if (resolvedContext) {
+      text = text.replace(/protected_ref_[A-Za-z0-9_]+/g, m => resolvedContext[m] ?? m);
+    }
+    return `
     <div class="queue-item">
       <span class="queue-chevron">›</span>
-      <span>${esc(String(item))}</span>
-    </div>`).join('');
+      <span>${esc(text)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderPausedBanner(paused, promptId) {
+  const banner = document.getElementById('mem-paused-banner');
+  if (!banner) return;
+  if (paused) {
+    const idEl = document.getElementById('mem-paused-promptid');
+    if (idEl) idEl.textContent = `continue ${promptId || ''}`;
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 let _historyData = [];
-let _historyExpanded = false;
+let _historyExpanded = false; // drives the "Expand All / Collapse All" button label
+let _expandedIndices = new Set(); // per-entry state, since the Memory tab polls every 3s and
+                                   // used to fully rebuild the list from a single shared flag —
+                                   // discarding whatever the user had just manually expanded on
+                                   // the very next poll tick, making the dropdown look broken.
 
 function renderHistory(history) {
   const el = document.getElementById('queue-history');
@@ -1139,15 +1472,18 @@ function _applyHistoryFilter(q) {
     const filesStr = h.filesModified?.length
       ? `<div style="font-size:.7rem;color:var(--accent-cyan);margin-top:4px;">Files: ${h.filesModified.map(f => `<code style="font-size:.7rem;">${esc(f)}</code>`).join(', ')}</div>`
       : '';
-    const expanded = _historyExpanded;
+    const expanded = _expandedIndices.has(globalIdx);
     return `
       <div class="queue-item hist-entry" data-idx="${globalIdx}" style="flex-direction:column;align-items:stretch;gap:0;border-left:3px solid ${borderColor};padding-left:10px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:6px 0;" onclick="toggleHistEntry(${globalIdx})">
+        <div class="hist-entry-toggle" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:6px 0;">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${isError ? 'var(--accent-red)' : 'var(--accent-purple)'};color:#fff;font-size:.65rem;font-weight:700;flex-shrink:0;">${globalIdx + 1}</span>
             <span style="font-weight:600;color:var(--text-primary);font-size:.82rem;">${esc(h.task || 'Untitled step')}</span>
+            ${h.taskId ? `<code style="font-size:.65rem;color:var(--text-muted);">${esc(h.taskId)}</code>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            ${h.provider ? `<span style="font-size:.68rem;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--accent-cyan);">${esc(h.provider)}</span>` : ''}
+            ${h.model ? `<span style="font-size:.68rem;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--text-muted);">${esc(h.model)}</span>` : ''}
             ${dateStr ? `<span style="font-size:.68rem;color:var(--text-muted);">${dateStr}</span>` : ''}
             <span id="hist-chevron-${globalIdx}" style="color:var(--text-muted);transition:transform .2s;transform:${expanded ? 'rotate(90deg)' : 'rotate(0deg)'};">&rsaquo;</span>
           </div>
@@ -1169,14 +1505,28 @@ function _applyHistoryFilter(q) {
   });
 }
 
-window.toggleHistEntry = function(idx) {
+function toggleHistEntry(idx) {
   const body = document.getElementById(`hist-out-${idx}`);
   const chevron = document.getElementById(`hist-chevron-${idx}`);
   if (!body) return;
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
   if (chevron) chevron.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
-};
+  // Persist so the next 3s poll's full re-render doesn't silently collapse this again.
+  if (open) _expandedIndices.delete(idx);
+  else _expandedIndices.add(idx);
+}
+
+// Delegated click for individual subtask rows — the CSP's `script-src-attr: 'none'`
+// (Helmet default) silently blocks inline onclick="..." attributes, so this can't be
+// bound inline; delegate from the container instead (same fix as the copy buttons above).
+document.getElementById('queue-history')?.addEventListener('click', (e) => {
+  const row = e.target.closest('.hist-entry-toggle');
+  if (!row) return;
+  const entry = row.closest('.hist-entry');
+  if (!entry) return;
+  toggleHistEntry(parseInt(entry.dataset.idx, 10));
+});
 
 // History filter input
 document.getElementById('history-filter')?.addEventListener('input', e => {
@@ -1187,6 +1537,11 @@ document.getElementById('history-filter')?.addEventListener('input', e => {
 document.getElementById('history-toggle-all')?.addEventListener('click', function() {
   _historyExpanded = !_historyExpanded;
   this.textContent = _historyExpanded ? 'Collapse All' : 'Expand All';
+  if (_historyExpanded) {
+    _historyData.forEach((_, i) => _expandedIndices.add(i));
+  } else {
+    _expandedIndices.clear();
+  }
   _applyHistoryFilter(document.getElementById('history-filter')?.value || '');
 });
 
@@ -1328,3 +1683,100 @@ setInterval(() => {
   const memActive = document.getElementById('panel-memory')?.classList.contains('active');
   if (memActive) fetchSessions();
 }, 10000);
+
+// ─── WIKI TAB ───────────────────────────────────────────────────
+const wikiWorkspaceInput = document.getElementById('wiki-workspace-input');
+const wikiLoadBtn        = document.getElementById('wiki-load-btn');
+const wikiPageList       = document.getElementById('wiki-page-list');
+const wikiPageTitle      = document.getElementById('wiki-page-title');
+const wikiPageBody       = document.getElementById('wiki-page-body');
+const wikiRelated        = document.getElementById('wiki-related');
+
+let wikiInitialized = false;
+let wikiActiveTitle = null;
+
+function initWikiTab() {
+  if (!wikiInitialized) {
+    wikiInitialized = true;
+    const savedWs = localStorage.getItem('mcp-workspace');
+    if (savedWs) {
+      wikiWorkspaceInput.value = savedWs;
+      loadWikiList();
+    }
+  }
+}
+
+async function callManageMemory(params) {
+  const r = await fetch('/api/tool', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tool: 'manage_memory', params: { ...params, workspace_root: wikiWorkspaceInput.value.trim() } })
+  });
+  const d = await r.json();
+  if (!r.ok || d.ok === false) throw new Error(d.error || 'Request failed');
+  return d.result;
+}
+
+async function loadWikiList() {
+  wikiPageList.innerHTML = '<div class="conv-empty">Loading…</div>';
+  try {
+    const result = await callManageMemory({ action: 'wiki_list' });
+    const pages = result.pages || [];
+    if (!pages.length) {
+      wikiPageList.innerHTML = '<div class="conv-empty">No wiki pages yet for this workspace.</div>';
+      return;
+    }
+    wikiPageList.innerHTML = pages.map(p => `
+      <div class="wiki-page-item${p.title === wikiActiveTitle ? ' active' : ''}" data-title="${esc(p.title)}">
+        <span>${esc(p.title)}</span>
+        <span class="badge ${p.tier === 'semantic' ? 'badge-green' : 'badge-amber'}" style="width:fit-content;font-size:.62rem;">${esc(p.tier)} · ${Math.round((p.confidence||0)*100)}%</span>
+      </div>
+    `).join('');
+    wikiPageList.querySelectorAll('.wiki-page-item').forEach(el => {
+      el.addEventListener('click', () => loadWikiPage(el.dataset.title));
+    });
+  } catch (err) {
+    wikiPageList.innerHTML = `<div class="conv-empty">Failed to load: ${esc(err.message)}</div>`;
+  }
+}
+
+async function loadWikiPage(title) {
+  wikiActiveTitle = title;
+  wikiPageTitle.textContent = title;
+  wikiPageBody.innerHTML = '<div class="conv-empty">Loading…</div>';
+  wikiRelated.innerHTML = '';
+  wikiPageList.querySelectorAll('.wiki-page-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.title === title);
+  });
+  try {
+    const result = await callManageMemory({ action: 'wiki_read', title });
+    const page = result.page;
+    if (!page) {
+      wikiPageBody.innerHTML = '<div class="conv-empty">Page not found.</div>';
+      return;
+    }
+    wikiPageBody.innerHTML = await renderMarkdown(page.content);
+    if (page.links && page.links.length) {
+      wikiRelated.innerHTML = page.links.map(l => `<span class="wiki-link-chip" data-title="${esc(l)}">${esc(l)}</span>`).join('');
+      wikiRelated.querySelectorAll('.wiki-link-chip').forEach(el => {
+        el.addEventListener('click', () => loadWikiPage(el.dataset.title));
+      });
+    }
+  } catch (err) {
+    wikiPageBody.innerHTML = `<div class="conv-empty">Failed to load page: ${esc(err.message)}</div>`;
+  }
+}
+
+// Delegated click handler for [[wiki links]] rendered inline by renderMarkdown()
+wikiPageBody?.addEventListener('click', (e) => {
+  const a = e.target.closest('.wiki-link');
+  if (a) {
+    e.preventDefault();
+    loadWikiPage(a.dataset.title);
+  }
+});
+
+wikiLoadBtn?.addEventListener('click', loadWikiList);
+wikiWorkspaceInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') loadWikiList();
+});

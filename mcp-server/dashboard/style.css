@@ -438,6 +438,7 @@ select option { background: var(--bg-elevated); }
   border: 1px solid rgba(16,185,129,.2);
 }
 .latency-badge.slow { background: rgba(245,158,11,.1); color: var(--accent-amber); border-color: rgba(245,158,11,.2); }
+.model-badge { background: rgba(6,182,212,.1); color: var(--accent-cyan); border-color: rgba(6,182,212,.2); }
 
 /* ─── Memory Tab ─────────────────────────────────────────────── */
 .memory-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
@@ -494,20 +495,30 @@ select option { background: var(--bg-elevated); }
 }
 .copy-btn:hover { background: rgba(124,58,237,.2); color: var(--accent-purple); border-color: var(--accent-purple); }
 
-.pipeline-phases { display: flex; flex-direction: column; gap: 12px; }
-.phase-row {
-  display: flex; align-items: flex-start; gap: 14px;
-  padding: 12px 16px; border-radius: var(--radius-sm);
+/* Quick Start: provider/tool/prompting reference tables + cards */
+.qs-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.qs-table th, .qs-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--glass-border); vertical-align: top; }
+.qs-table th { color: var(--text-muted); font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; }
+.qs-table td { color: var(--text-secondary); }
+.qs-table tr:last-child td { border-bottom: none; }
+.qs-table a { color: var(--accent-cyan); }
+.qs-table code { background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: .85em; }
+
+.qs-tool-list { display: flex; flex-direction: column; gap: 10px; }
+.qs-tool-card {
   background: var(--glass-bg); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 4px 0; overflow: hidden;
 }
-.phase-num {
-  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
-  background: rgba(124,58,237,.2); color: var(--accent-purple); border: 1px solid rgba(124,58,237,.3);
+.qs-tool-card summary {
+  cursor: pointer; list-style: none; outline: none;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 16px;
 }
-.phase-name { font-size: .875rem; font-weight: 600; margin-bottom: 2px; }
-.phase-desc { font-size: .78rem; color: var(--text-muted); }
+.qs-tool-card summary::-webkit-details-marker { display: none; }
+.qs-tool-name { font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: .82rem; color: var(--accent-purple); }
+.qs-tool-desc { font-size: .78rem; color: var(--text-muted); }
+.qs-tool-card table.qs-table { margin: 0 16px 14px; width: calc(100% - 32px); }
+.qs-guide-body { margin: 0 16px 16px; font-size: .82rem; line-height: 1.6; color: var(--text-secondary); }
 
 /* ─── Section Titles ─────────────────────────────────────────── */
 .section-title {
@@ -638,6 +649,78 @@ select option { background: var(--bg-elevated); }
   background: rgba(0,0,0,.1);
   flex-shrink: 0;
 }
+
+/* Attachments row */
+.pg-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px;
+}
+.pg-attachments:empty { display: none; }
+.attach-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--glass-border);
+  font-size: .72rem;
+  color: var(--text-secondary);
+}
+.attach-chip input[type="number"] {
+  width: 48px;
+  font-size: .72rem;
+  padding: 2px 4px;
+}
+.attach-chip .attach-remove {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.attach-chip .attach-remove:hover { color: var(--accent-red); }
+
+/* Wiki tab */
+.wiki-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.wiki-sidebar { max-height: 620px; display: flex; flex-direction: column; }
+.wiki-page-list { overflow-y: auto; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.wiki-page-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .78rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wiki-page-item:hover { background: rgba(255,255,255,.05); }
+.wiki-page-item.active { background: rgba(255,255,255,.08); color: var(--text-primary); }
+.wiki-content-pane { min-height: 400px; }
+.wiki-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px 16px;
+}
+.wiki-related:empty { display: none; }
+.wiki-link-chip {
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--glass-border);
+  font-size: .72rem;
+  color: var(--accent-cyan);
+  cursor: pointer;
+}
+.wiki-link-chip:hover { background: rgba(255,255,255,.1); }
+.wiki-link { color: var(--accent-cyan); cursor: pointer; text-decoration: underline; }
 
 /* ─── Chat Bubbles ─────────────────────────────────────────────── */
 .chat-msg {

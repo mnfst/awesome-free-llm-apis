@@ -83,10 +83,13 @@ export class StructuralMarkdownMiddleware implements Middleware {
         if (stateRes) {
             try {
                 const state = JSON.parse(stateRes);
+                // Queue entries are `{id, task}` objects; `typeof e === 'string'` fallback
+                // handles state.json files persisted before this schema migration.
+                const renderQueue = (q: any[] | undefined) => (q || []).map(e => typeof e === 'string' ? e : e.task).join(', ');
                 const queueBlock = [
-                    state.nowQueue?.length ? `**Current:**   ${state.nowQueue.join(', ')}` : null,
-                    state.nextQueue?.length ? `**Upcoming:**  ${state.nextQueue.join(', ')}` : null,
-                    state.blockedQueue?.length ? `**Blocked:**   ${state.blockedQueue.join(', ')}` : null,
+                    state.nowQueue?.length ? `**Current:**   ${renderQueue(state.nowQueue)}` : null,
+                    state.nextQueue?.length ? `**Upcoming:**  ${renderQueue(state.nextQueue)}` : null,
+                    state.blockedQueue?.length ? `**Blocked:**   ${renderQueue(state.blockedQueue)}` : null,
                 ].filter(Boolean).join('\n');
                 if (queueBlock) {
                     sections.push(`### QUEUE DIAGNOSTICS\n${queueBlock}`);

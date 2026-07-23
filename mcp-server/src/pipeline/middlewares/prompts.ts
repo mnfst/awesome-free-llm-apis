@@ -1,6 +1,7 @@
 import { promises as fsp } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findAgentsMdPath } from '../../utils/agents-md-locator.js';
 
 /**
  * Calculates Jaccard similarity between a set of tokens and a string.
@@ -246,6 +247,100 @@ export interface PromptOptions {
     workspace?: string;
     isSubtask?: boolean;
     mainPrompt?: string;
+    workspaceRoot?: string;
+}
+
+async function getRelevantAgentsGuide(workspaceRoot: string, subtaskQuery: string): Promise<string> {
+    try {
+        const agentsPaths = [
+            findAgentsMdPath(workspaceRoot),
+            path.join(workspaceRoot, 'AGENTS.md')
+        ].filter((p): p is string => !!p);
+
+        let filePath = '';
+        for (const p of agentsPaths) {
+            try {
+                const stat = await fsp.stat(p);
+                if (stat.isFile()) {
+                    filePath = p;
+                    break;
+                }
+            } catch {}
+        }
+        
+        if (!filePath) return '';
+        
+        const content = await fsp.readFile(filePath, 'utf-8');
+        
+        // Split AGENTS.md into sections based on headers
+        const lines = content.split('\n');
+        interface Section {
+            title: string;
+            content: string;
+        }
+        
+        const sections: Section[] = [];
+        let currentSection: Section | null = null;
+        
+        for (const line of lines) {
+            if (line.startsWith('#')) {
+                if (currentSection) {
+                    sections.push(currentSection);
+                }
+                currentSection = {
+                    title: line.replace(/^#+\s+/, '').trim(),
+                    content: line + '\n'
+                };
+            } else if (currentSection) {
+                currentSection.content += line + '\n';
+            }
+        }
+        if (currentSection) {
+            sections.push(currentSection);
+        }
+        
+        if (sections.length === 0) return '';
+        
+        // Semantic selection using Jaccard/keyword overlap with the subtaskQuery
+        const queryTokens = new Set(subtaskQuery.toLowerCase().split(/\W+/).filter(t => t.length >= 3));
+        if (queryTokens.size === 0) {
+            // Default to first section (usually structural summary or introduction)
+            return `### 📋 Target Project Guide (${path.basename(filePath)})\n${sections[0].content.slice(0, 2000)}\n`;
+        }
+        
+        const scoredSections = sections.map(sec => {
+            const words = sec.content.toLowerCase().split(/\W+/).filter(Boolean);
+            const uniqueWords = new Set(words);
+            let matchCount = 0;
+            uniqueWords.forEach(w => {
+                if (queryTokens.has(w)) matchCount++;
+            });
+            const jaccard = matchCount / (queryTokens.size + uniqueWords.size - matchCount);
+            return { sec, score: jaccard };
+        });
+        
+        // Sort and select top matching sections (score > 0.02)
+        const relevant = scoredSections
+            .filter(item => item.score > 0.02)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 2) // Limit to top 2 sections to avoid context bloat
+            .map(item => item.sec);
+            
+        if (relevant.length === 0) {
+            // Default to introduction section if no specific match
+            return `### 📋 Target Project Guide (Introduction)\n${sections[0].content.slice(0, 2000)}\n`;
+        }
+        
+        let output = `### 📋 Target Project Guide (Contextually Filtered from ${path.basename(filePath)})\n`;
+        for (const sec of relevant) {
+            const sectionContent = sec.content.length > 3000 ? sec.content.slice(0, 3000) + '\n... [section truncated]' : sec.content;
+            output += `\n#### ${sec.title}\n${sectionContent}\n`;
+        }
+        
+        return output;
+    } catch {
+        return '';
+    }
 }
 
 /**
@@ -261,6 +356,7 @@ export async function getIntelligentSystemPrompt(
     let context = "";
     let workspaceContext: string | undefined;
     let mainPrompt: string | undefined;
+    let workspaceRoot: string | undefined;
     if (typeof contextOrOptions === 'object') {
         context = contextOrOptions.context || "";
         explicitKeywords = contextOrOptions.keywords;
@@ -268,6 +364,7 @@ export async function getIntelligentSystemPrompt(
         workspaceContext = contextOrOptions.workspace;
         isSubtask = contextOrOptions.isSubtask || false;
         mainPrompt = contextOrOptions.mainPrompt;
+        workspaceRoot = contextOrOptions.workspaceRoot;
     } else {
         context = contextOrOptions;
     }
@@ -296,6 +393,12 @@ export async function getIntelligentSystemPrompt(
     if (memoryContext) {
         const cappedMemory = memoryContext.length > 2000 ? memoryContext.slice(0, 2000) + "\n... (truncated)" : memoryContext;
         assembled = `## 🧠 WORKSPACE MEMORY\n<memory_context_isolation_gate>\nRelevant prior knowledge for this workspace:\n${cappedMemory}\n</memory_context_isolation_gate>\n\n` + assembled;
+    }
+    if (workspaceRoot) {
+        const agentsGuide = await getRelevantAgentsGuide(workspaceRoot, context);
+        if (agentsGuide) {
+            assembled = `## 📋 TARGET PROJECT GUIDELINES\n<target_project_guidelines_isolation_gate>\n${agentsGuide}\n</target_project_guidelines_isolation_gate>\n\n` + assembled;
+        }
     }
 
     if (!context && (!explicitKeywords || explicitKeywords.length === 0)) {

@@ -2,6 +2,7 @@ import os from 'os';
 import { promises as fs } from 'fs';
 import { existsSync, readdirSync, realpathSync, statSync } from 'fs';
 import path from 'path';
+import { findAgentsMdPath } from '../utils/agents-md-locator.js';
 
 /**
  * Helper utilities that can be spied on in tests.
@@ -105,10 +106,27 @@ export async function initWorkspace(workspaceRoot: string): Promise<boolean> {
     return false;
   }
 
-  // 4. Already exists guard
-  const agentsPath = path.join(resolvedPath, 'AGENTS.md');
-  if (existsSync(agentsPath)) {
-    return false;
+  // 4. Already-initialized guard: skip if the canonical .agents/AGENTS.md for
+  // this workspace already carries our auto-generated marker (idempotency
+  // check, since initWorkspace fires on every request with a workspaceRoot).
+  // Walk up from resolvedPath first — in a monorepo, a subproject's
+  // workspaceRoot may be nested under the directory that actually owns
+  // .agents/AGENTS.md (e.g. this repo: mcp-server/ is a workspace root, but
+  // .agents/AGENTS.md lives one level up at the repo root). Reusing that
+  // parent file avoids creating an orphaned duplicate inside the subproject.
+  const foundPath = findAgentsMdPath(resolvedPath);
+  const agentsPath = foundPath || path.join(resolvedPath, '.agents', 'AGENTS.md');
+  const AUTO_MARKER = 'Auto-initialized by free-llm-mcp';
+  let existingContent: string | null = null;
+  if (foundPath) {
+    try {
+      existingContent = await fs.readFile(agentsPath, 'utf-8');
+    } catch {
+      existingContent = null;
+    }
+    if (existingContent && existingContent.includes(AUTO_MARKER)) {
+      return false;
+    }
   }
 
   // 5. File count guard (>10,000 files)
@@ -163,12 +181,21 @@ export async function initWorkspace(workspaceRoot: string): Promise<boolean> {
 - node_modules/, .git/, dist/, build/
 `;
 
+  // If a human-authored .agents/AGENTS.md already exists (no auto marker),
+  // never overwrite it — prepend the template ahead of the existing content.
+  const finalContent = existingContent !== null
+    ? `${content}\n---\n\n${existingContent}`
+    : content;
+
   try {
     // Atomic write using .tmp + rename
+    await fs.mkdir(path.dirname(agentsPath), { recursive: true });
     const tmpPath = `${agentsPath}.${Date.now()}.${Math.random().toString(36).substring(7)}.tmp`;
-    await fs.writeFile(tmpPath, content, 'utf-8');
+    await fs.writeFile(tmpPath, finalContent, 'utf-8');
     await fs.rename(tmpPath, agentsPath);
-    console.log(`[free-llm-mcp] Created AGENTS.md in your workspace. This file guides how the AI assistant understands your project. Edit it to customize behavior.`);
+    console.error(existingContent !== null
+      ? `[free-llm-mcp] Prepended auto-generated template to existing .agents/AGENTS.md (human content preserved).`
+      : `[free-llm-mcp] Created .agents/AGENTS.md in your workspace. This file guides how the AI assistant understands your project. Edit it to customize behavior.`);
     return true;
   } catch (err) {
     // Fallback to ~/.free-llm-mcp/agents-config.json when workspace is read-only

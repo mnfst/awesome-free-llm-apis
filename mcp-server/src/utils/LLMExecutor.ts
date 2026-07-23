@@ -34,6 +34,14 @@ export class LLMExecutor {
     }
     private persistence = persistence;
     private saveStats = debounce(() => this.persistStats(), 2000);
+    private localPersistInterval: ReturnType<typeof setInterval> | null = null;
+
+    // Small-interval local disk sync, separate from Firebase's ~24h sync (server.ts's
+    // initTelemetry, gated on state.lastSyncTime). Keeps usage-stats.json current without
+    // waiting on the 2s write-debounce alone, and is the point at which in-memory usage
+    // counters get reset — the dashboard should not rely on these local counters staying
+    // authoritative between resets (see getUserStats()-backed /api/token-stats).
+    private static readonly LOCAL_PERSIST_INTERVAL_MS = parseInt(process.env.LOCAL_PERSIST_INTERVAL_MS || '', 10) || 60_000;
 
     private static readonly CIRCUIT_THRESHOLD = 2; // Fail over faster
     private static readonly CIRCUIT_COOLDOWN = 45000; // Longer cooldown for 429s
@@ -149,6 +157,47 @@ export class LLMExecutor {
 
         // Global daily counters are managed via the persistence manager internally
         // but we can expose them if needed for the dashboard summary.
+
+        if (!this.localPersistInterval) {
+            this.localPersistInterval = setInterval(() => {
+                this.periodicPersistAndReset().catch(err => {
+                    console.error('[LLMExecutor] Periodic local persist failed:', err);
+                });
+            }, LLMExecutor.LOCAL_PERSIST_INTERVAL_MS);
+            if (typeof this.localPersistInterval.unref === 'function') {
+                this.localPersistInterval.unref();
+            }
+        }
+    }
+
+    /**
+     * Flushes current usage counters to usage-stats.json, then resets the in-memory
+     * accumulator counters to zero (not the live rate-limit fields — remainingRequests/
+     * remainingTokens/lastSuccessTime stay intact, since routing decisions depend on those
+     * staying current). persistence.resetBaseline() must run right after, in the same tick,
+     * so the next delta computation starts from zero instead of going negative against the
+     * pre-reset baseline (see resetBaseline()'s doc comment).
+     */
+    private async periodicPersistAndReset(): Promise<void> {
+        await this.persistStats();
+        for (const tracker of Object.values(this.tokenTracking)) {
+            tracker.localTotalRequests = 0;
+            tracker.localTotalTokens = 0;
+            tracker.dailyTotalRequests = 0;
+            tracker.dailyTotalTokens = 0;
+        }
+        this.persistence.resetBaseline();
+    }
+
+    /**
+     * Immediately persists current usage stats to disk, bypassing the debounce.
+     * Must be called before process exit — deductTokens() only schedules a
+     * debounced save (2s), so a shutdown that doesn't wait for it (or that
+     * discards in-memory state via flush() first) silently drops the last
+     * batch of usage counters, which looks like "usage keeps resetting".
+     */
+    async persistNow(): Promise<void> {
+        await this.persistStats();
     }
 
     /**
@@ -161,6 +210,7 @@ export class LLMExecutor {
             dailyTotalTokens: 0,
             lifetimeTotalRequests: 0,
             lifetimeTotalTokens: 0,
+            lastLocalPersistTime: Date.now(),
             providers: {}
         };
 
@@ -524,6 +574,7 @@ export class LLMExecutor {
         // Record success for circuit breaker
         this.recordProviderSuccess(providerId);
 
+        if (response) response._providerId = providerId;
         return response;
     }
 

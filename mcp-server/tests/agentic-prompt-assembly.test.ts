@@ -99,4 +99,45 @@ describe('Agentic Prompt Assembly Logic', () => {
         expect(promptArch).toContain('ARCHITECTURE');
         expect(promptReliability).toContain('RELIABILITY');
     });
+
+    it('should inject target project AGENTS.md guidelines contextually filtered by query', async () => {
+        const tempWs = path.join(__dirname, 'temp_prompt_agents_ws');
+        await fs.promises.rm(tempWs, { recursive: true, force: true });
+        await fs.promises.mkdir(path.join(tempWs, '.agents'), { recursive: true });
+
+        const agentsContent = `# Project Guidelines
+This is the root introduction.
+
+## Git Workflow
+Section Content: Use git commit -m "feat(scope): message"
+
+## Monorepo Testing
+Section Content: Run pytest using uv run pytest -v
+`;
+        await fs.promises.writeFile(path.join(tempWs, '.agents', 'AGENTS.md'), agentsContent, 'utf-8');
+
+        // Test with git query -> should select Git Workflow
+        const promptGit = await getIntelligentSystemPrompt({
+            context: 'Commit changes to git',
+            isSubtask: true,
+            workspaceRoot: tempWs
+        });
+
+        expect(promptGit).toContain('TARGET PROJECT GUIDELINES');
+        expect(promptGit).toContain('Git Workflow');
+        expect(promptGit).not.toContain('Monorepo Testing');
+
+        // Test with test query -> should select Monorepo Testing
+        const promptTest = await getIntelligentSystemPrompt({
+            context: 'Run unit tests',
+            isSubtask: true,
+            workspaceRoot: tempWs
+        });
+
+        expect(promptTest).toContain('TARGET PROJECT GUIDELINES');
+        expect(promptTest).toContain('Monorepo Testing');
+        expect(promptTest).not.toContain('Git Workflow');
+
+        await fs.promises.rm(tempWs, { recursive: true, force: true });
+    });
 });

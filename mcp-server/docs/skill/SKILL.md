@@ -59,6 +59,25 @@ When `"agentic": true` is enabled, the pipeline decomposes the user's goal into 
 }
 ```
 
+#### Working with `pdf://`/`file://` references that aren't a workspace task
+`pdf://`, `file://`, and `artifact://` reference resolution — including PDF-to-wiki indexing — works regardless of `agentic`. It does **not** require workspace mode. So for a request that's narrowly about a document (e.g. "summarize this PDF") and doesn't touch the codebase, the simplest and cheapest option is to just **not** set `"agentic": true` at all:
+```json
+{
+  "messages": [{ "role": "user", "content": "[notes](pdf://docs/manual.pdf:12) summarize this page" }]
+}
+```
+This resolves the reference and indexes it into the wiki (under a workspace-scoped `pdf/` subdirectory, kept separate from codebase-architecture pages) with none of the overhead below.
+
+If you genuinely need *both* — e.g. "read this PDF spec and implement it in `src/routes.ts`" — you still want `"agentic": true` for the coding half. In that mixed case only, every agentic call with a `workspace_root` also backgrounds (non-blocking) a pre-emptive full-workspace re-index followed by a wiki-maintenance pass (regenerating general codebase-architecture wiki pages). That's the right default when the task is genuinely about the codebase, but you can opt out of it with `"skipIndexing": true` if you know this particular call doesn't need it — this flag must be set on the initial request itself; it cannot be toggled mid-pipeline:
+```json
+{
+  "messages": [{ "role": "user", "content": "[notes](pdf://docs/manual.pdf:12) summarize this page" }],
+  "agentic": true,
+  "workspace_root": "c:/Users/mahes/project",
+  "skipIndexing": true
+}
+```
+
 ---
 
 ### `load_skill_prompt` [NEW]
@@ -110,6 +129,64 @@ Save structured knowledge and scripts into the workspace.
 
 ### `index_workspace`
 Proactively index all relevant files in the workspace for semantic search.
+
+---
+
+## 🧭 Prompting & Steering Directives
+
+These are the mechanisms that change how a prompt is processed. They're independent of each other — a single request can use all four at once.
+
+### 1. The `override` keyword (in-prompt, bypasses `.gitignore`)
+Typing the literal word **`override`** (or `all files`, `gitignored`, `ignored`) anywhere in your prompt text tells the workspace context gatherer to **scan every file, including `.gitignore`d ones**, instead of the default tracked-files-only scan. Use this when you need the agent to see build output, `node_modules` config, `.env` templates, or other normally-excluded files.
+
+```
+"Check the override — read all files under dist/ for the compiled output"
+```
+
+This only affects which files are visible to context-gathering; it does not change model choice, persona, or task type.
+
+### 2. Task-lane DSL prefixes (in-prompt, controls sequential vs. parallel subtasks)
+Prefix individual lines of a multi-step prompt to force execution order — this takes precedence over the automatic planner's heuristics:
+- `>` — run this subtask **in parallel** with others (auto-downgraded to sequential if two parallel tasks share the same classified `TaskType`, to avoid race conditions).
+- `-`, `*`, or `1.` — run this subtask **sequentially**.
+
+```
+> read auth.ts
+> search for API keys
+- implement new middleware
+```
+
+### 3. Persona auto-detection (in-prompt phrasing, changes context ranking and response style)
+The server classifies every prompt into a **persona** by scanning its raw text for phrase patterns (first match wins, checked in this order):
+
+| Persona | Triggered by phrases like... |
+|---|---|
+| `debugger` | error, exception, bug, crash, stack trace, leak, broken, "why does", type error, undefined, null, failed, issue, schema, variable, parameter |
+| `researcher` | `pdf://`, paper, citation, arxiv, research, study, thesis, literature |
+| `student` | "explain how", "how to", tutorial, "what is", learn, teaching, concept |
+| `marketer` | seo, marketing, campaign, keyword, traffic, ad |
+| `planner` | plan, roadmap, timeline, milestone, phase, step |
+| `coder` | implement, refactor, class, function, method, interface, module, compile, run, build, test, package.json, tsconfig.json |
+| `generic` | (fallback — none of the above matched) |
+
+`debugger` is checked first (its patterns are broad on purpose — debugging sessions need the widest context), `coder` last before the fallback. The detected persona re-ranks which workspace files/wiki entries are considered relevant (e.g. `researcher`/`student` favor theoretical/reference material over implementation files) and, for `debugger`, appends token-efficient CLI-reading tips to the response.
+
+**Pin a persona explicitly** by adding a line to your workspace's `AGENTS.md` — this always wins over heuristic detection:
+```
+preferred persona: coder
+```
+
+### 4. The `keywords` parameter (API param, steers *documentation section* selection — not persona)
+`keywords` is a `string[]` field on `use_free_llm` (and `load_skill_prompt`'s search mode) — **not** something you type inside the prompt text. It's a separate, explicit steering signal that boosts which sections of injected reference documentation get prioritized/kept when the system prompt is assembled (each matching section gets a scoring boost). It has no effect on persona or task-lane routing.
+
+```json
+{
+  "messages": [{ "role": "user", "content": "Add rate limiting to the login endpoint" }],
+  "keywords": ["security", "jwt", "rate-limit"],
+  "agentic": true,
+  "workspace_root": "c:/Users/mahes/project"
+}
+```
 
 ---
 

@@ -17,10 +17,24 @@ import { getTokenStats } from '../tools/get-token-stats.js';
 import { validateProvider } from '../tools/validate-provider.js';
 import { indexWorkspace } from '../tools/index-workspace.js';
 import { toMarkdownResponse } from '../utils/markdown.js';
+import { logToolCall } from '../utils/ChatLogger.js';
+import { WorkspaceScanner } from '../cache/workspace.js';
+
+/** Derive a stable ws-<hash> session ID from tool args, falling back to __no_ws__. */
+async function deriveSessionIdFromArgs(args: Record<string, any> | null | undefined): Promise<string> {
+  const ws: string = (args?.workspace_root || args?.workspaceDir || '').toString().trim();
+  if (!ws) return '__no_ws__';
+  try {
+    const hash = await new WorkspaceScanner(process.cwd()).getWorkspaceHash(ws);
+    return `ws-${hash.substring(0, 16)}`;
+  } catch {
+    return '__no_ws__';
+  }
+}
 
 export async function createMCPServer(): Promise<Server> {
   const server = new Server(
-    { name: 'free-llm-apis', version: '1.0.6' },
+    { name: 'free-llm-apis', version: '1.0.7' },
     { capabilities: { tools: {} } }
   );
 
@@ -97,37 +111,14 @@ export async function createMCPServer(): Promise<Server> {
             workspace_root: { type: 'string', description: 'Workspace path for cache-keying and auto-sessionId derivation' },
             google_search: { type: 'boolean', description: 'Enable Google search for Gemini models (default false)' },
             skill: { type: 'string', description: 'Optional skill id/name loaded dynamically from remote skill index' },
+            skipIndexing: {
+              type: 'boolean',
+              description: 'Skip the pre-emptive full-workspace re-index + wiki-maintenance pass that agentic mode normally runs on every call with workspace_root. Set true for requests narrowly about a specific file/PDF reference that don\'t need (or shouldn\'t pay the latency/provider-budget cost of) a full codebase re-scan — otherwise that unrelated indexing work can starve the actual request of provider quota.'
+            },
           },
           required: ['messages'],
         },
       },
-      // {
-      //   name: 'free_llm_api',
-      //   description: 'Backward-compatible alias for use_free_llm. Returns Markdown text.',
-      //   inputSchema: {
-      //     type: 'object' as const,
-      //     properties: {
-      //       messages: {
-      //         type: 'array',
-      //         items: {
-      //           type: 'object',
-      //           properties: {
-      //             role: { type: 'string', enum: ['system', 'user', 'assistant'] },
-      //             content: { type: 'string' },
-      //           },
-      //           required: ['role', 'content'],
-      //         },
-      //       },
-      //       model: { type: 'string' },
-      //       keywords: { type: 'array', items: { type: 'string' } },
-      //       agentic: { type: 'boolean' },
-      //       sessionId: { type: 'string' },
-      //       workspace_root: { type: 'string' },
-      //       skill: { type: 'string', description: 'Optional dynamic skill id/name from awesome-antigravity-skills index' },
-      //     },
-      //     required: ['messages'],
-      //   },
-      // },
       {
         name: 'vision_tool',
         description: 'Analyze a local image using a vision-capable model via use_free_llm.',
@@ -464,6 +455,9 @@ export async function createMCPServer(): Promise<Server> {
 
   server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
     const { name, arguments: args } = request.params;
+    const _start = Date.now();
+
+    let response: { content: Array<{ type: 'text'; text: string }>; isError?: boolean };
 
     try {
       if (name === 'use_free_llm' || name === 'free_llm_api') {
@@ -485,99 +479,72 @@ export async function createMCPServer(): Promise<Server> {
             ? texts[0]  // single response — return as-is, no label overhead
             : texts.map((t, i) => `AGENT RESPONSE ${i + 1}\n\n${t}`).join('\n\n');
 
-        return {
+        response = {
           content: [{ type: 'text' as const, text: toMarkdownResponse(responseText) }],
         };
-      }
-
-      if (name === 'vision_tool') {
+      } else if (name === 'vision_tool') {
         const result = await visionTool(args as any);
-        return {
+        response = {
           content: [{ type: 'text' as const, text: toMarkdownResponse(result.response) }],
         };
-      }
-
-      if (name === 'load_skill_prompt') {
+      } else if (name === 'load_skill_prompt') {
         const result = await loadSkillPrompt(args as any);
-        return {
+        response = {
           content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         };
-      }
-
-      // Deprecated (To be removed in future)
-      // if (name === 'list_available_free_models') {
-      //   const input = args as Parameters<typeof listAvailableFreeModels>[0];
-      //   const result = await listAvailableFreeModels(input ?? {});
-      //   return {
-      //     content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
-      //   };
-      // }
-
-      // v1.0.5 Deprecated: Unnecessary feature (DO NOT REMOVE THE CODE COMMENT)
-      // if (name === 'code_mode') {
-      //   const input = args as unknown as Parameters<typeof runCodeMode>[0];
-      //   const result = await runCodeMode(input);
-      //   return {
-      //     content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
-      //   };
-      // }
-
-      if (name === 'manage_memory') {
+      } else if (name === 'manage_memory') {
         const input = args as unknown as Parameters<typeof manageMemory>[0];
         const result = await manageMemory(input);
-        return {
+        response = {
           content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         };
-      }
-
-      if (name === 'store_workspace_skill') {
+      } else if (name === 'store_workspace_skill') {
         const { storeWorkspaceSkill } = await import('../tools/store-workspace-skill.js');
         const input = args as any;
         const result = await storeWorkspaceSkill(input);
-        return {
+        response = {
           content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         };
-      }
-
-
-      if (name === 'get_token_stats') {
+      } else if (name === 'get_token_stats') {
         const result = await getTokenStats();
-        return {
+        response = {
           content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         };
-      }
-
-      if (name === 'validate_provider') {
+      } else if (name === 'validate_provider') {
         const { providerId } = args as { providerId: string };
         const result = await validateProvider(providerId);
-        return {
+        response = {
           content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         };
-      }
-
-      if (name === 'index_workspace') {
+      } else if (name === 'index_workspace') {
         const input = args as any;
         const result = await indexWorkspace(input);
-        return {
+        response = {
           content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         };
-      }
-
-      if (name === 'execute_skill') {
+      } else if (name === 'execute_skill') {
         const input = args as any;
         const result = await executeSkill(input);
-        return {
+        response = {
           content: [{ type: 'text' as const, text: result.success ? result.response ?? '' : `Error: ${result.error}` }]
         };
+      } else {
+        throw new Error(`Unknown tool: ${name}`);
       }
-
-      throw new Error(`Unknown tool: ${name}`);
     } catch (err) {
-      return {
+      response = {
         content: [{ type: 'text' as const, text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
         isError: true,
       };
     }
+
+    // Fire-and-forget logging — never delays the MCP response
+    deriveSessionIdFromArgs(args as any).then(sessionId =>
+      logToolCall(sessionId, name, args, response, Date.now() - _start, !!response.isError)
+        .catch(() => {})
+    ).catch(() => {});
+
+    return response;
   });
 
   return server;

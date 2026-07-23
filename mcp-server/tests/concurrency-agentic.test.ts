@@ -16,7 +16,7 @@ describe('AgenticMiddleware - Concurrency Stress Test', () => {
             sessionId,
             paused: true,
             promptId: 'TESTID',
-            nowQueue: ['Please run the build script `npm run build` in the workspace.'],
+            nowQueue: [{ id: 'seed1', task: 'Please run the build script `npm run build` in the workspace.' }],
             nextQueue: [],
             blockedQueue: [],
             history: []

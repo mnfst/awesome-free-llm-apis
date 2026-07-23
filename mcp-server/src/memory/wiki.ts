@@ -2,6 +2,11 @@ import os from 'os';
 import { promises as fs } from 'fs';
 import { existsSync, readdirSync } from 'fs';
 import path from 'path';
+import { withFileLock } from '../utils/file-lock.js';
+import { wikiConfig } from '../config/wiki-config.js';
+
+// See long-term.ts/vector.ts for the same rationale.
+const LOCK_WAIT_MS = 30000;
 
 export interface WikiPage {
   title: string;
@@ -22,7 +27,8 @@ const PERSONA_TAGS: Record<string, string[]> = {
   seo: ['seo', 'marketing', 'campaign', 'strategy', 'keyword'],
   student: ['study', 'explain', 'textbook', 'learning'],
   planner: ['plan', 'roadmap', 'milestone', 'task', 'phase'],
-  debugger: ['debug', 'error', 'exception', 'stacktrace', 'leak', 'crash', 'issue', 'ts', 'schema', 'venv', 'node_modules', 'variables']
+  debugger: ['debug', 'error', 'exception', 'stacktrace', 'leak', 'crash', 'issue', 'ts', 'schema', 'venv', 'node_modules', 'variables'],
+  cyber: ['cyber', 'security', 'exploit', 'cve', 'pentest', 'nmap', 'owasp', 'ctf', 'vulnerability', 'malware']
 };
 
 const DECISION_PATTERNS = [
@@ -31,9 +37,6 @@ const DECISION_PATTERNS = [
   /we\s+use\s+.*\s+because/i,
   /decision:/i
 ];
-
-const MAX_WIKI_PAGES = 500;
-const MAX_PAGE_SIZE = 4096; // 4KB
 
 function getFilename(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9_-]/g, '_') + '.md';
@@ -129,9 +132,22 @@ export class WikiMemory {
     await fs.mkdir(this.wikiDir, { recursive: true });
   }
 
+  // Keyed by title alone (not the full per-tags path) so every writer targeting the
+  // same logical page contends for the same lock regardless of its `study` tag routing.
+  private lockPathForTitle(title: string): string {
+    return path.join(this.wikiDir, `${getFilename(title)}.opslock`);
+  }
+
   private getPathForTitle(title: string, tags: string[] = []): string {
     const filename = getFilename(title);
-    if (tags.map(t => t.toLowerCase()).includes('study')) {
+    const lowerTags = tags.map(t => t.toLowerCase());
+    // PDF-derived pages (maybeIndexPdfIntoWiki always tags with 'pdf') live in their own
+    // subdir — keeps document-derived content visibly separate from codebase-architecture
+    // pages (the general workspace wiki root) rather than interleaving them by filename.
+    if (lowerTags.includes('pdf')) {
+      return path.join(this.wikiDir, 'pdf', filename);
+    }
+    if (lowerTags.includes('study')) {
       return path.join(this.wikiDir, 'study', filename);
     }
     return path.join(this.wikiDir, filename);
@@ -163,7 +179,8 @@ export class WikiMemory {
     const filename = getFilename(title);
     const paths = [
       path.join(this.wikiDir, filename),
-      path.join(this.wikiDir, 'study', filename)
+      path.join(this.wikiDir, 'study', filename),
+      path.join(this.wikiDir, 'pdf', filename)
     ];
 
     for (const p of paths) {
@@ -188,6 +205,29 @@ export class WikiMemory {
       }
     }
     return null;
+  }
+
+  async list(): Promise<Array<Pick<WikiPage, 'title' | 'tier' | 'confidence' | 'tags' | 'updated' | 'links'>>> {
+    const files = await this.getWikiFiles();
+    const pages: Array<Pick<WikiPage, 'title' | 'tier' | 'confidence' | 'tags' | 'updated' | 'links'>> = [];
+    for (const f of files) {
+      try {
+        const raw = await fs.readFile(f, 'utf-8');
+        const { frontmatter } = parseFrontmatter(raw);
+        pages.push({
+          title: frontmatter.title || path.basename(f, '.md'),
+          tier: frontmatter.tier || 'episodic',
+          confidence: typeof frontmatter.confidence === 'number' ? frontmatter.confidence : 0.5,
+          tags: frontmatter.tags || [],
+          updated: frontmatter.updated || '',
+          links: (frontmatter.links || []).map((l: string) => l.replace(/^\[\[|\]\]$/g, ''))
+        });
+      } catch {
+        // ignore
+      }
+    }
+    pages.sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
+    return pages;
   }
 
   private async writePage(
@@ -217,8 +257,8 @@ export class WikiMemory {
     }
 
     const raw = stringifyFrontmatter(frontmatter, content);
-    if (Buffer.byteLength(raw, 'utf-8') > MAX_PAGE_SIZE) {
-      throw new Error(`Wiki page exceeds maximum size of ${MAX_PAGE_SIZE} bytes.`);
+    if (Buffer.byteLength(raw, 'utf-8') > wikiConfig.maxPageSizeBytes) {
+      throw new Error(`Wiki page exceeds maximum size of ${wikiConfig.maxPageSizeBytes} bytes.`);
     }
 
     const targetPath = this.getPathForTitle(title, tags);
@@ -244,27 +284,55 @@ export class WikiMemory {
     };
   }
 
+  // write()/reinforce()/recordFailure() are all read-modify-write cycles keyed on the
+  // page's *current* confidence (e.g. "+0.15 from whatever it is now") — two concurrent
+  // calls to the same title (plausible: multiple subtask completions touching the same
+  // page, or agentic + wiki-maintainer both writing it around the same time) that both
+  // read before either writes lose one of the two updates entirely (last writer wins,
+  // silently). Locking the whole read-compute-write cycle per title serializes that.
+
   async write(title: string, content: string, tags: string[] = [], links: string[] = []): Promise<WikiPage> {
     await this.ensureDir();
+    return withFileLock(this.lockPathForTitle(title), async () => {
+      const existing = await this.read(title);
+      let confidence = existing ? Math.min(1.0, existing.confidence + 0.15) : 0.5;
 
-    const existing = await this.read(title);
-    let confidence = existing ? Math.min(1.0, existing.confidence + 0.15) : 0.5;
-
-    // Check if decision pattern is detected to auto-trigger ADR
-    let adr_ref = existing?.adr_ref;
-    if (confidence >= 0.85 && !adr_ref) {
-      const hasDecisionPattern = DECISION_PATTERNS.some(pat => pat.test(content));
-      if (hasDecisionPattern) {
-        adr_ref = await this.createADR(title, content);
+      // Check if decision pattern is detected to auto-trigger ADR
+      let adr_ref = existing?.adr_ref;
+      if (confidence >= 0.85 && !adr_ref) {
+        const hasDecisionPattern = DECISION_PATTERNS.some(pat => pat.test(content));
+        if (hasDecisionPattern) {
+          adr_ref = await this.createADR(title, content);
+        }
       }
-    }
 
-    return this.writePage(title, content, tags, links, confidence, adr_ref);
+      return this.writePage(title, content, tags, links, confidence, adr_ref);
+    }, LOCK_WAIT_MS);
+  }
+
+  async reinforce(title: string, delta = 0.15): Promise<WikiPage | null> {
+    return withFileLock(this.lockPathForTitle(title), async () => {
+      const existing = await this.read(title);
+      if (!existing) return null;
+      const confidence = Math.min(1.0, existing.confidence + delta);
+      return this.writePage(title, existing.content, existing.tags, existing.links, confidence, existing.adr_ref);
+    }, LOCK_WAIT_MS);
+  }
+
+  async recordFailure(title: string, reason: string, delta = 0.15): Promise<WikiPage | null> {
+    return withFileLock(this.lockPathForTitle(title), async () => {
+      const existing = await this.read(title);
+      if (!existing) return null;
+      const confidence = Math.max(0, existing.confidence - delta);
+      const failureNote = `\n\n> ⚠️ Failure recorded (${new Date().toISOString().split('T')[0]}): ${reason}`;
+      const content = existing.content.includes(failureNote.trim()) ? existing.content : existing.content + failureNote;
+      return this.writePage(title, content, existing.tags, existing.links, confidence, existing.adr_ref);
+    }, LOCK_WAIT_MS);
   }
 
   private async enforcePageLimit(): Promise<void> {
     const files = await this.getWikiFiles();
-    if (files.length <= MAX_WIKI_PAGES) return;
+    if (files.length <= wikiConfig.maxWikiPages) return;
 
     const pages: Array<{ path: string; confidence: number; updated: number }> = [];
     for (const f of files) {
@@ -290,7 +358,7 @@ export class WikiMemory {
     });
 
     // Evict all excess pages
-    const excessCount = files.length - MAX_WIKI_PAGES;
+    const excessCount = files.length - wikiConfig.maxWikiPages;
     const toEvict = pages.slice(0, excessCount);
     for (const p of toEvict) {
       try {

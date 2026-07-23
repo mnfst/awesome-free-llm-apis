@@ -4,7 +4,15 @@ import { RepositoryGraph } from '../../memory/dependency-scanner.js';
 
 export type ExecutionLane = 'sequential' | 'parallel';
 
+// Structurally compatible with AgenticMiddleware.ts's QueueTask — defined locally to avoid a
+// circular import (AgenticMiddleware.ts imports buildExecutionPlan from this file).
+export interface TaskInput {
+    id: string;
+    task: string;
+}
+
 export interface ClassifiedTask {
+    id: string;
     task: string;
     lane: ExecutionLane;
     slot: 1 | 2 | 3;
@@ -30,12 +38,12 @@ function extractFiles(task: string): string[] {
  * Builds an execution plan for a set of subtasks using the repository dependency graph.
  */
 export async function buildExecutionPlan(
-    tasks: string[], 
+    tasks: TaskInput[],
     workspaceRoot: string
 ): Promise<ExecutionPlan> {
     const mcpDir = path.join(workspaceRoot, '.free-llm-mcp');
     const graphPath = path.join(mcpDir, 'repo_graph.json');
-    
+
     let graph: RepositoryGraph | null = null;
     try {
         const graphData = JSON.parse(await fs.readFile(graphPath, 'utf-8'));
@@ -44,8 +52,25 @@ export async function buildExecutionPlan(
         // Fallback: graph is empty/null if file doesn't exist
     }
 
+    // Ensure all tasks are normalized to TaskInput objects (guard against legacy string[] queues)
+    const normalizedTasks: TaskInput[] = tasks.map((t, idx) => {
+        if (typeof t === 'string') {
+            return {
+                id: `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+                task: t
+            };
+        }
+        if (!t || typeof t.task !== 'string') {
+            return {
+                id: t?.id || `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+                task: String(t?.task || t || '')
+            };
+        }
+        return t;
+    });
+
     // Limit to max 3 subtasks as per constraints
-    const rawActiveTasks = tasks.slice(0, 3);
+    const rawActiveTasks = normalizedTasks.slice(0, 3);
     if (rawActiveTasks.length === 0) {
         return {
             userBrief: 'No tasks to plan.',
@@ -55,16 +80,26 @@ export async function buildExecutionPlan(
 
     // Parse user-specified modes from task prefixes
     const parsedTasks = rawActiveTasks.map(t => {
-        if (t.startsWith('[parallel] ')) {
-            return { raw: t, task: t.substring(11), userHint: 'parallel' as const };
+        if (t.task.startsWith('[parallel] ')) {
+            return { id: t.id, raw: t.task, task: t.task.substring(11), userHint: 'parallel' as const };
         }
-        if (t.startsWith('[sequential] ')) {
-            return { raw: t, task: t.substring(13), userHint: 'sequential' as const };
+        if (t.task.startsWith('[sequential] ')) {
+            return { id: t.id, raw: t.task, task: t.task.substring(13), userHint: 'sequential' as const };
         }
-        return { raw: t, task: t, userHint: undefined };
+        return { id: t.id, raw: t.task, task: t.task, userHint: undefined };
     });
 
     const activeTasks = parsedTasks.map(p => p.task);
+    // Builds a ClassifiedTask carrying the originating id, so overrideLanes and any
+    // downstream id-based correlation (history, dequeue) work correctly even if two
+    // subtasks happen to have identical task text.
+    const mk = (idx: number, lane: ExecutionLane, slot: 1 | 2 | 3, dependsOn?: string[]): ClassifiedTask => ({
+        id: parsedTasks[idx].id,
+        task: activeTasks[idx],
+        lane,
+        slot,
+        ...(dependsOn ? { dependsOn } : {})
+    });
 
     // Extract files referenced by each task
     const taskFiles = activeTasks.map(t => extractFiles(t));
@@ -115,30 +150,17 @@ export async function buildExecutionPlan(
     const phase2: ClassifiedTask[] = [];
 
     if (activeTasks.length === 1) {
-        phase1.push({
-            task: activeTasks[0],
-            lane: parsedTasks[0].userHint || 'sequential',
-            slot: 1
-        });
+        phase1.push(mk(0, parsedTasks[0].userHint || 'sequential', 1));
     } else if (activeTasks.length === 2) {
         const dep1_2 = hasDependency(0, 1);
         if (dep1_2) {
-            phase1.push({
-                task: activeTasks[0],
-                lane: parsedTasks[0].userHint || 'sequential',
-                slot: 1
-            });
-            phase2.push({
-                task: activeTasks[1],
-                lane: parsedTasks[1].userHint || 'sequential',
-                slot: 2,
-                dependsOn: [activeTasks[0]]
-            });
+            phase1.push(mk(0, parsedTasks[0].userHint || 'sequential', 1));
+            phase2.push(mk(1, parsedTasks[1].userHint || 'sequential', 2, [activeTasks[0]]));
         } else {
             // Independent, run in parallel in Phase 1
             phase1.push(
-                { task: activeTasks[0], lane: parsedTasks[0].userHint || 'parallel', slot: 1 },
-                { task: activeTasks[1], lane: parsedTasks[1].userHint || 'parallel', slot: 2 }
+                mk(0, parsedTasks[0].userHint || 'parallel', 1),
+                mk(1, parsedTasks[1].userHint || 'parallel', 2)
             );
         }
     } else { // Exactly 3 tasks
@@ -148,95 +170,58 @@ export async function buildExecutionPlan(
 
         if (dep1_2 && dep2_3) {
             // Fully sequential: T1 -> T2 -> T3
-            phase1.push({
-                task: activeTasks[0],
-                lane: 'sequential',
-                slot: 1
-            });
-            phase2.push({
-                task: activeTasks[1],
-                lane: 'sequential',
-                slot: 2,
-                dependsOn: [activeTasks[0]]
-            });
+            phase1.push(mk(0, 'sequential', 1));
+            phase2.push(mk(1, 'sequential', 2, [activeTasks[0]]));
             // We can add T3 to a third phase or put it sequentially in phase2 (drained after T2)
             // For simplicity, let's keep phase1 vs phase2.
             // We can place T3 in phase2 as sequential with dependsOn T2
-            phase2.push({
-                task: activeTasks[2],
-                lane: 'sequential',
-                slot: 3,
-                dependsOn: [activeTasks[1]]
-            });
+            phase2.push(mk(2, 'sequential', 3, [activeTasks[1]]));
         } else if (dep1_2 && !dep2_3 && !dep1_3) {
             // T1 -> T2, T3 is independent.
             // Run T1 and T3 in parallel in Phase 1, T2 in Phase 2
             phase1.push(
-                { task: activeTasks[0], lane: 'parallel', slot: 1 },
-                { task: activeTasks[2], lane: 'parallel', slot: 2 }
+                mk(0, 'parallel', 1),
+                mk(2, 'parallel', 2)
             );
-            phase2.push({
-                task: activeTasks[1],
-                lane: 'sequential',
-                slot: 3,
-                dependsOn: [activeTasks[0]]
-            });
+            phase2.push(mk(1, 'sequential', 3, [activeTasks[0]]));
         } else if (dep1_2 && !dep2_3 && dep1_3) {
             // T1 -> T2, T1 -> T3, T2 ⊥ T3.
             // Run T1 in Phase 1, T2 and T3 in parallel in Phase 2
-            phase1.push({
-                task: activeTasks[0],
-                lane: 'sequential',
-                slot: 1
-            });
+            phase1.push(mk(0, 'sequential', 1));
             phase2.push(
-                { task: activeTasks[1], lane: 'parallel', slot: 2, dependsOn: [activeTasks[0]] },
-                { task: activeTasks[2], lane: 'parallel', slot: 3, dependsOn: [activeTasks[0]] }
+                mk(1, 'parallel', 2, [activeTasks[0]]),
+                mk(2, 'parallel', 3, [activeTasks[0]])
             );
         } else if (!dep1_2 && dep2_3 && !dep1_3) {
             // T2 -> T3, T1 is independent.
             // Run T1 and T2 in parallel in Phase 1, T3 in Phase 2
             phase1.push(
-                { task: activeTasks[0], lane: 'parallel', slot: 1 },
-                { task: activeTasks[1], lane: 'parallel', slot: 2 }
+                mk(0, 'parallel', 1),
+                mk(1, 'parallel', 2)
             );
-            phase2.push({
-                task: activeTasks[2],
-                lane: 'sequential',
-                slot: 3,
-                dependsOn: [activeTasks[1]]
-            });
+            phase2.push(mk(2, 'sequential', 3, [activeTasks[1]]));
         } else if (!dep1_2 && !dep2_3 && dep1_3) {
             // T1 -> T3, T2 is independent.
             // Run T1 and T2 in parallel in Phase 1, T3 in Phase 2
             phase1.push(
-                { task: activeTasks[0], lane: 'parallel', slot: 1 },
-                { task: activeTasks[1], lane: 'parallel', slot: 2 }
+                mk(0, 'parallel', 1),
+                mk(1, 'parallel', 2)
             );
-            phase2.push({
-                task: activeTasks[2],
-                lane: 'sequential',
-                slot: 3,
-                dependsOn: [activeTasks[0]]
-            });
+            phase2.push(mk(2, 'sequential', 3, [activeTasks[0]]));
         } else {
             // Fully independent! Run T1 & T2 in parallel in Phase 1, T3 sequentially in Phase 2 (due to max 2 parallel limit)
             phase1.push(
-                { task: activeTasks[0], lane: 'parallel', slot: 1 },
-                { task: activeTasks[1], lane: 'parallel', slot: 2 }
+                mk(0, 'parallel', 1),
+                mk(1, 'parallel', 2)
             );
-            phase2.push({
-                task: activeTasks[2],
-                lane: 'sequential',
-                slot: 3
-            });
+            phase2.push(mk(2, 'sequential', 3));
         }
     }
 
     // Override lanes based on user-specified hints
     const overrideLanes = (list: ClassifiedTask[]) => {
         list.forEach(t => {
-            const parsed = parsedTasks.find(p => p.task === t.task);
+            const parsed = parsedTasks.find(p => p.id === t.id);
             if (parsed && parsed.userHint) {
                 t.lane = parsed.userHint;
             }

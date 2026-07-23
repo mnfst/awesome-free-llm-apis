@@ -26,6 +26,13 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error(`[CRITICAL] Unhandled Rejection at: ${promise}, reason: ${reason}`);
 });
 
+import dns from 'dns';
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {
+  // Safe fallback if ran on older unsupported Node engines
+}
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -35,6 +42,7 @@ import { createMCPServer } from './mcp/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import helmet from 'helmet';
+import multer from 'multer';
 import crypto from 'crypto';
 import os from 'os';
 import { getTokenStats } from './tools/get-token-stats.js';
@@ -49,9 +57,11 @@ import { getSharedRouter } from './pipeline/instances.js';
 import { execSync } from 'child_process';
 import fs, { promises as fsp } from 'fs';
 import { persistence } from './utils/PersistenceManager.js';
-import { initFirebase, syncStats, getLeaderboard } from './utils/firebase.js';
+import { initFirebase, syncStats, getLeaderboard, getUserStats } from './utils/firebase.js';
 import { withFileLock } from './utils/file-lock.js';
 import { writeFileAtomic } from './utils/FileUtils.js';
+import { WorkspaceScanner } from './cache/workspace.js';
+import { STATE_FILE } from './pipeline/middlewares/constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,9 +111,14 @@ async function validateSandboxDependencies() {
 
 }
 
-async function initTelemetry() {
+async function initTelemetry(force = false) {
   try {
     const state = await persistence.load();
+    if (force) {
+      state.lastAuthFailedTime = undefined;
+      state.lastSyncFailedTime = undefined;
+      await persistence.save(state);
+    }
     
     // Ensure userId is established (authenticate anonymously) and aligned with the active Firebase session
     const uid = await initFirebase();
@@ -121,12 +136,18 @@ async function initTelemetry() {
       await persistence.save(state);
     }
     
-    // Sync if more than 24 hours have passed since lastSyncTime
+    // Sync if more than 24 hours have passed since lastSyncTime, and at least 1 hour since last failure
     const hoursSinceSync = (now - (state.lastSyncTime || 0)) / (1000 * 60 * 60);
-    if (hoursSinceSync >= 24 && !state.optOutTelemetry) {
+    const msSinceFailure = now - (state.lastSyncFailedTime || 0);
+    if (hoursSinceSync >= 24 && msSinceFailure >= 60 * 60 * 1000 && !state.optOutTelemetry) {
       const success = await syncStats(state.userId, state);
       if (success) {
         state.lastSyncTime = now;
+        state.lastSyncFailedTime = undefined;
+        await persistence.save(state);
+      } else {
+        // Explicitly record failure time to trigger a 1-hour retry backoff
+        state.lastSyncFailedTime = now;
         await persistence.save(state);
       }
     }
@@ -145,7 +166,19 @@ async function main() {
     await getSharedRouter().init();
     
     // Initialize telemetry / session manager
-    await initTelemetry();
+    await initTelemetry(true);
+
+    // Periodically check/sync telemetry every hour (supports continuous server runs)
+    const telemetryInterval = setInterval(async () => {
+      try {
+        await initTelemetry();
+      } catch (err) {
+        // Silent warning
+      }
+    }, 60 * 60 * 1000);
+    if (typeof telemetryInterval.unref === 'function') {
+      telemetryInterval.unref();
+    }
     
     const isSse = process.argv.includes('--sse');
     if (isSse) {
@@ -270,7 +303,30 @@ async function main() {
 
       app.get('/api/token-stats', async (req, res) => {
         try {
-          const stats = await getTokenStats();
+          const stats: any = await getTokenStats();
+          // Per-provider live fields (isAvailable, remainingRequests/Tokens) have no Firebase
+          // equivalent and must stay local. But lifetime totals get reset in-memory on a
+          // small interval now (LLMExecutor's periodic local-persist-and-reset), so they're
+          // no longer reliable to sum from local state for display — overlay the durable
+          // Firebase-synced lifetime totals when available, falling back to the local sum
+          // (already in `stats`) if offline or not yet synced.
+          try {
+            const state = await persistence.load();
+            if (state.userId) {
+              const fbStats = await getUserStats(state.userId);
+              if (fbStats) {
+                stats.serverTotals = {
+                  ...stats.serverTotals,
+                  lifetimeRequests: fbStats.lifetimeRequests,
+                  lifetimeTokens: fbStats.lifetimeTokens
+                };
+                stats.lifetimeSource = 'firebase';
+                stats.lastSyncTime = fbStats.lastSyncTime;
+              }
+            }
+          } catch {
+            // Firebase read unavailable — leave the local-sum serverTotals already in `stats`.
+          }
           res.json(stats);
         } catch (err) {
           res.status(500).json({ error: String(err) });
@@ -328,10 +384,15 @@ async function main() {
                 ? params.messages
                 : [{ role: 'user', content: String(params.messages || params.prompt || '') }];
               
-              // Resolve sessionId from workspace_root if not provided
+              // Resolve sessionId from workspace_root using the same algorithm as the real pipeline
               let sid = params.sessionId;
               if (!sid && params.workspace_root) {
-                sid = Buffer.from(params.workspace_root).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
+                try {
+                  const hash = await new WorkspaceScanner(process.cwd()).getWorkspaceHash(params.workspace_root);
+                  sid = `ws-${hash.substring(0, 16)}`;
+                } catch {
+                  sid = '__no_ws__';
+                }
               }
 
               const r = await useFreeLLM({
@@ -341,8 +402,9 @@ async function main() {
                 agentic: !!params.agentic,
                 workspace_root: params.workspace_root,
                 sessionId: sid || '__no_ws__',
+                skipIndexing: !!params.skipIndexing,
               });
-              result = { content: r?.choices?.[0]?.message?.content ?? '' };
+              result = { content: r?.choices?.[0]?.message?.content ?? '', model: r?.model, provider: r?._providerId };
               break;
             }
             case 'vision_tool':
@@ -367,6 +429,10 @@ async function main() {
                 workspace_root: params.workspace_root,
                 query: params.query,
                 limit: params.limit,
+                title: params.title,
+                content: params.content,
+                tags: params.tags,
+                links: params.links,
               });
               break;
             case 'index_workspace':
@@ -407,6 +473,76 @@ async function main() {
         }
       });
 
+      // File upload for the Tool Playground chatbox — image/PDF attachments.
+      // Stored under the selected workspace so vision_tool's boundary check and
+      // use-free-llm's file:// resolver (both scoped to workspace_root) can read them back.
+      const uploadStorage = multer.memoryStorage();
+      const upload = multer({
+        storage: uploadStorage,
+        limits: { fileSize: 20 * 1024 * 1024 },
+        fileFilter: (_req, file, cb) => {
+          if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+            cb(null, true);
+          } else {
+            cb(new Error('Only image and PDF files are allowed'));
+          }
+        },
+      });
+
+      app.post('/api/upload', upload.single('file'), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const file = (req as any).file as Express.Multer.File | undefined;
+          if (!file) {
+            res.status(400).json({ error: 'No file uploaded' });
+            return;
+          }
+          const workspaceRoot = (req.body?.workspace_root || '').toString().trim();
+          const safeName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+          let destDir: string;
+          let relativePath: string | undefined;
+          if (workspaceRoot) {
+            const wsAbs = path.resolve(workspaceRoot);
+            
+            // Path traversal safety gate: restrict allowed roots
+            const normAbs = wsAbs.replace(/\\/g, '/');
+            const allowedPrefixes = [
+              process.cwd().replace(/\\/g, '/'),
+              os.homedir().replace(/\\/g, '/'),
+              path.join(os.homedir(), '.anthropic', 'artifacts').replace(/\\/g, '/'),
+              path.join(os.homedir(), '.openai', 'artifacts').replace(/\\/g, '/'),
+              path.join(os.homedir(), '.codex', 'artifacts').replace(/\\/g, '/'),
+              path.join(os.homedir(), '.gemini', 'antigravity').replace(/\\/g, '/'),
+            ];
+            const isSafe = allowedPrefixes.some(prefix => {
+              const normPrefix = prefix.replace(/\/$/, '') + '/';
+              return normAbs === prefix || normAbs.startsWith(normPrefix);
+            });
+            
+            if (!isSafe) {
+              res.status(400).json({ error: 'workspace_root path traversal check failed (Security Gate)' });
+              return;
+            }
+
+            destDir = path.join(wsAbs, '.mcp-uploads');
+            relativePath = path.join('.mcp-uploads', safeName);
+          } else {
+            destDir = path.join(os.tmpdir(), 'mcp-uploads');
+          }
+
+          await fsp.mkdir(destDir, { recursive: true });
+          const absPath = path.join(destDir, safeName);
+          await fsp.writeFile(absPath, file.buffer);
+
+          const fileUri = 'file:///' + absPath.replace(/\\/g, '/');
+          const kind = file.mimetype === 'application/pdf' ? 'pdf' : 'image';
+          res.json({ absPath, fileUri, relativePath: relativePath?.replace(/\\/g, '/'), kind });
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
       // Expose available model IDs for the playground model picker
       app.get('/api/models', async (_req, res) => {
         try {
@@ -424,6 +560,9 @@ async function main() {
           const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
           try { await fsp.access(projectsBase); } catch { return res.json({ sessions: [] }); }
 
+          // Denylist: exclude test/benchmark/fixture directories that pollute the sidebar
+          const DENYLIST_PREFIXES = ['test-', 'bench-', 'smoke-', 'stress-', 'full-stress-', 'e2e-', 'simulation-', 'study-'];
+
           const entries = await fsp.readdir(projectsBase);
           const MAX_CONCURRENT = 20;
           type SessionMeta = { id: string; msgCount: number; lastTs: number };
@@ -432,6 +571,8 @@ async function main() {
           for (let i = 0; i < entries.length; i += MAX_CONCURRENT) {
             const batch = entries.slice(i, i + MAX_CONCURRENT);
             const results = await Promise.all(batch.map(async d => {
+              // Skip test/benchmark artifact directories
+              if (DENYLIST_PREFIXES.some(prefix => d.startsWith(prefix))) return null;
               const full = path.resolve(projectsBase, d);
               if (path.dirname(full) !== path.resolve(projectsBase)) return null;
               try {
@@ -488,10 +629,14 @@ async function main() {
           // Phase 3 Optimization: Parallelize knowledge and queue reads
           const [knowledgeRes, queuesRes] = await Promise.all([
             fsp.readFile(path.join(projectDir, 'knowledge.md'), 'utf-8').catch(() => 'No memory yet – session not started.'),
-            fsp.readFile(path.join(projectDir, 'queues.json'), 'utf-8').catch(() => null)
+            fsp.readFile(path.join(projectDir, STATE_FILE), 'utf-8').catch(() => null)  // Bug fix: was 'queues.json', real writer uses STATE_FILE (state.json)
           ]);
 
-          let queues: Record<string, string[]> = {
+          // Queue entries are `{id, task}` objects as of the Phase 2 schema migration
+          // (AgenticMiddleware.ts's QueueTask) — this endpoint just proxies parsed state.json
+          // straight to the dashboard, so `any[]` here (not a duplicated empty-state literal
+          // importing AgenticMiddleware.ts) is intentional; it never constructs real entries.
+          let queues: Record<string, any[]> = {
             nowQueue: [], nextQueue: [], blockedQueue: [], improveQueue: []
           };
           if (queuesRes) {
@@ -516,8 +661,9 @@ async function main() {
         try {
           const ws: string = (req.body?.workspace || '').toString().trim();
           if (!ws) return res.json({ sessionId: '__no_ws__' });
-          // Same algorithm as MemoryManager: first 8 chars of base64(workspacePath)
-          const sessionId = Buffer.from(ws).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
+          // Bug fix: use the real WorkspaceScanner hash algorithm, not base64 (was producing wrong IDs)
+          const hash = await new WorkspaceScanner(process.cwd()).getWorkspaceHash(ws);
+          const sessionId = `ws-${hash.substring(0, 16)}`;
           res.json({ sessionId });
         } catch (err) {
           res.status(500).json({ error: String(err) });
@@ -707,7 +853,7 @@ async function main() {
 
         // Flush persistence
         try {
-          flushSystem();
+          await flushSystem();
           console.error('Persistence flushed');
         } catch (err) {
           console.error('Failed to flush persistence:', err);
@@ -729,6 +875,20 @@ async function main() {
       const transport = new StdioServerTransport();
       await server.connect(transport);
       console.error('MCP server running on stdio');
+
+      // Same usage-persistence gap as the SSE path: without this, every stdio
+      // session teardown (the common case for real MCP clients like Claude
+      // Desktop) drops any usage counters still sitting in the 2s debounce window.
+      const stdioShutdown = async () => {
+        try {
+          await flushSystem();
+        } catch (err) {
+          console.error('Failed to flush persistence:', err);
+        }
+        process.exit(0);
+      };
+      process.on('SIGTERM', stdioShutdown);
+      process.on('SIGINT', stdioShutdown);
     }
   } catch (err: any) {
     console.error(`[FATAL] Startup failed: ${err.message}`);

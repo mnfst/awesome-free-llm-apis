@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LLMExecutor } from '../src/utils/LLMExecutor.js';
+import { persistence } from '../src/utils/PersistenceManager.js';
 import type { PipelineContext } from '../src/pipeline/index.js';
 import { TaskType } from '../src/pipeline/index.js';
 import { ProviderRegistry } from '../src/providers/registry.js';
@@ -64,5 +65,44 @@ describe('Usage Tracking Hardening', () => {
 
         const state = executor.getTokenState()['mock-provider'];
         expect(state.localTotalRequests).toBe(2);
+    });
+
+    it('periodicPersistAndReset() zeroes accumulator counters but preserves live rate-limit fields', async () => {
+        const context: PipelineContext = {
+            request: { messages: [{ role: 'user', content: 'test' }] },
+            taskType: TaskType.Chat
+        };
+        await executor.tryProvider(context, 'mock-provider', 'mock-model');
+
+        // Manually set fields that should survive a reset — live rate-limit state used for
+        // routing decisions must not be wiped just because usage counters got flushed.
+        const before = executor.getTokenState()['mock-provider'];
+        before.remainingRequests = 42;
+        before.remainingTokens = 4200;
+        before.lastSuccessTime = Date.now();
+
+        // persistStats()/save() touch real disk via the shared singleton — stub both so this
+        // test stays isolated and fast, and to prove periodicPersistAndReset() always calls
+        // resetBaseline() right after persisting (see PersistenceManager.resetBaseline doc).
+        const persistStatsSpy = vi.spyOn(executor as any, 'persistStats').mockResolvedValue(undefined);
+        const resetBaselineSpy = vi.spyOn(persistence, 'resetBaseline').mockImplementation(() => {});
+
+        await (executor as any).periodicPersistAndReset();
+
+        expect(persistStatsSpy).toHaveBeenCalled();
+        expect(resetBaselineSpy).toHaveBeenCalled();
+
+        const after = executor.getTokenState()['mock-provider'];
+        expect(after.localTotalRequests).toBe(0);
+        expect(after.localTotalTokens).toBe(0);
+        expect(after.dailyTotalRequests || 0).toBe(0);
+        expect(after.dailyTotalTokens || 0).toBe(0);
+        // Live fields must survive — routing decisions depend on these staying current.
+        expect(after.remainingRequests).toBe(42);
+        expect(after.remainingTokens).toBe(4200);
+        expect(after.lastSuccessTime).toBe(before.lastSuccessTime);
+
+        persistStatsSpy.mockRestore();
+        resetBaselineSpy.mockRestore();
     });
 });

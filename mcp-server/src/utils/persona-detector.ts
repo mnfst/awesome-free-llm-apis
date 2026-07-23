@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { findAgentsMdPath } from './agents-md-locator.js';
 
 /**
  * Heuristically detects the user/agent persona based on the query text
@@ -8,20 +9,30 @@ import path from 'path';
  * Precedence: AGENTS.md preferred persona > heuristic detection > 'generic'
  */
 export function detectPersona(query: string, workspaceRoot?: string): string {
-  // 1. Precedence: Check AGENTS.md override
+  // 1. Precedence: Check AGENTS.md override.
+  // .agents/AGENTS.md is the canonical location, resolved via the same
+  // parent-walking search used to write it (findAgentsMdPath), so a
+  // monorepo subproject workspaceRoot still finds the root-level file;
+  // fall back to legacy root AGENTS.md if neither exists.
   if (workspaceRoot) {
-    try {
-      const agentsMdPath = path.join(workspaceRoot, 'AGENTS.md');
-      if (fs.existsSync(agentsMdPath)) {
-        const content = fs.readFileSync(agentsMdPath, 'utf-8');
-        const match = content.match(/preferred\s+persona:\s*(\w+)/i) || 
-                      content.match(/persona:\s*(\w+)/i);
-        if (match) {
-          return match[1].toLowerCase().trim();
+    const agentsMdPaths = [
+      findAgentsMdPath(workspaceRoot),
+      path.join(workspaceRoot, 'AGENTS.md')
+    ].filter((p): p is string => !!p);
+    for (const agentsMdPath of agentsMdPaths) {
+      try {
+        if (fs.existsSync(agentsMdPath)) {
+          const content = fs.readFileSync(agentsMdPath, 'utf-8');
+          const match = content.match(/preferred\s+persona:\s*(\w+)/i) ||
+                        content.match(/persona:\s*(\w+)/i);
+          if (match) {
+            return match[1].toLowerCase().trim();
+          }
+          break;
         }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
     }
   }
 

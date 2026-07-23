@@ -2,7 +2,7 @@ import { Middleware, PipelineContext, NextFunction, TaskType } from '../middlewa
 import { LLMExecutor } from '../../utils/LLMExecutor.js';
 import { ContextManager } from '../../utils/ContextManager.js';
 import { PromptCompressor } from '../../utils/PromptCompressor.js';
-import { getMessageContent, prependToMessageContent } from '../../utils/MessageUtils.js';
+import { getMessageContent, prependToMessageContent, appendToMessageContent, isUserConfused } from '../../utils/MessageUtils.js';
 import { TaskClassifier } from '../../utils/TaskClassifier.js';
 import { calculateModelWeightedMaxTokens } from '../../utils/model-tokens.js';
 import { ProviderRegistry } from '../../providers/registry.js';
@@ -43,6 +43,10 @@ export class TextRouterMiddleware implements Middleware {
         this.executor.flush();
     }
 
+    public async persistNow(): Promise<void> {
+        await this.executor.persistNow();
+    }
+
     public static readonly taskRouteMap: Record<TaskType, string[]> = {
         [TaskType.Reasoning]: [
             'deepseek/deepseek-r1',
@@ -80,7 +84,7 @@ export class TextRouterMiddleware implements Middleware {
             'qwen/qwen3-coder:free',
             'deepseek-ai/deepseek-r1-distill-qwen-32b',
             'openai/gpt-oss-120b',
-            'qwen/qwen3-32b',
+            'qwen/qwen3.6-27b',
             'google/gemma-4-26b-a4b-it:free',
             'google/gemma-4-31b-it:free',
             'google/gemma-4-31B-it',
@@ -116,6 +120,7 @@ export class TextRouterMiddleware implements Middleware {
             'cohere/north-mini-code:free',
         ],
         [TaskType.Vision]: [
+            'qwen/qwen3.6-27b',
             'nvidia/nemotron-nano-12b-v2-vl:free',
             'gemma-4-31b-it',
             'gemma-4-26b-a4b-it',
@@ -185,14 +190,13 @@ export class TextRouterMiddleware implements Middleware {
             'arcee-ai/trinity-large-preview:free',
             'qwen/qwen3-next-80b-a3b-instruct:free',
             'Qwen/Qwen2.5-72B-Instruct',
-            'meta-llama/llama-4-scout-17b-16e-instruct',
+            'qwen/qwen3.6-27b',
             'command-r-plus-08-2024',
             'gemini-3.1-flash-lite',
             'mistral-large-latest',
             'openai/gpt-oss-120b:free',
             'llama-3.3-70b-versatile',
             'z-ai/glm-4.5-air:free',
-            'qwen3-235b',
             'openai/gpt-4o',
             'openai/gpt-5-mini',
             'deepseek-v4-flash',
@@ -274,7 +278,6 @@ export class TextRouterMiddleware implements Middleware {
             'openai/gpt-oss-120b:free',
             'z-ai/glm-4.5-air:free',
             'mistral-medium-latest',
-            'qwen3-235b',
             'openai/gpt-4o',
             'openai/gpt-5-mini',
             'deepseek-v4-flash',
@@ -282,8 +285,21 @@ export class TextRouterMiddleware implements Middleware {
             'openai/gpt-4.1-mini',
             'deepseek/deepseek-v3-0324',
             '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
-            'nvidia/nemotron-3-super-120b-a12b:free',
             'zai-org/GLM-4.7-Flash',
+        ],
+        [TaskType.Cyber]: [
+            'deepseek/deepseek-r1',
+            'deepseek/deepseek-v3-0324',
+            'deepseek-v4-flash',
+            'qwen3-coder:480b',
+            'qwen/qwen3-coder-480b-a35b:free',
+            'mistral-ai/codestral-2501',
+            'devstral-2:123b',
+            'devstral-small-2:24b',
+            'openai/gpt-5-mini',
+            'openai/gpt-4o',
+            'gemma4:31b',
+            'mistral-ai/mistral-small-2503',
         ],
         [TaskType.Chat]: [
             'deepseek/deepseek-r1',
@@ -315,7 +331,6 @@ export class TextRouterMiddleware implements Middleware {
             'gemini-3.1-flash-lite',
             'gemma-4-26b-a4b-it',
             'open-mistral-nemo',
-            'qwen3-235b',
             'microsoft/phi-4-mini-reasoning',
             'openai/gpt-5-mini',
             'gpt-oss:20b',
@@ -537,6 +552,20 @@ export class TextRouterMiddleware implements Middleware {
             : '';
         const lowerPrompt = rawLastMsg.toLowerCase();
         
+        const confused = isUserConfused(rawLastMsg);
+        if (confused) {
+            console.debug('[TextRouter] Confused user state detected (no clear prompt or only file references).');
+
+            // Prepend system note to inform the model and ask it to guide the user
+            const confusedInstruction = "\n[System Note: The user has not provided a clear request or instructions. They might be confused or just sharing/uploading. Please guide them on what they can do next with these files/images, summarize the contents briefly, and ask what they would like to do.]";
+            if (context.request.messages && context.request.messages.length > 0) {
+                const userMsg = context.request.messages.find(m => m.role === 'user');
+                if (userMsg) {
+                    appendToMessageContent(userMsg, confusedInstruction);
+                }
+            }
+        }
+
         const hasCodeExtensions = /\.(ts|js|py|go|rs|cpp|h|java|sh|rb|php|cs|swift|json|yml|yaml|toml)\b/i.test(lowerPrompt) ||
             (context.keywords && context.keywords.some(kw => /\.(ts|js|py|go|rs|cpp|h|java|sh|rb|php|cs|swift|json|yml|yaml|toml)\b/i.test(kw)));
         const hasCodingTerms = /\b(code|function|class|method|implement|implementation|refactor|debug|compile|build|test|git|repo|syntax|develop|program|script|rust|python|javascript|golang|cpp|c\+\+|java|ruby|php|html|css|sql)\b/i.test(lowerPrompt);
@@ -564,7 +593,7 @@ export class TextRouterMiddleware implements Middleware {
             return { modelId, score };
         })
         .filter(c => c.score >= 0)
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => confused ? a.score - b.score : b.score - a.score);
 
         finalTierModels = scoredCandidates.slice(0, 15).map(c => c.modelId);
 
@@ -595,7 +624,7 @@ export class TextRouterMiddleware implements Middleware {
             }
             const probA = quantumProbabilities.find(qp => qp.modelId === a)?.probability || 0;
             const probB = quantumProbabilities.find(qp => qp.modelId === b)?.probability || 0;
-            return probB - probA;
+            return confused ? probA - probB : probB - probA;
         });
 
         console.error(`[Router][Quantum] Top sorted candidates by collapse probability:`);

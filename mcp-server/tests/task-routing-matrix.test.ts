@@ -155,6 +155,14 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
         );
     });
 
+    it('should route Cyber security tasks correctly', async () => {
+        await verifyRouting(
+            'We need to write an exploit to solve this buffer overflow ctf vulnerability.',
+            TaskType.Cyber,
+            'deepseek/deepseek-r1'
+        );
+    });
+
     it('should prioritize explicit keywords even with conflicting content', async () => {
         const context: PipelineContext = {
             request: {
@@ -168,5 +176,25 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
 
         expect(context.taskType).toBe(TaskType.Coding);
         expect(trySpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'qwen/qwen3-coder-480b-a35b:free', expect.any(Number));
+    });
+
+    it('should reverse model preference and append system note for a confused user query', async () => {
+        const context: PipelineContext = {
+            request: {
+                // Just a file path with no actual prompt
+                messages: [{ role: 'user', content: 'file:///c:/project/test.png' }]
+            }
+        };
+
+        const trySpy = vi.spyOn(executor, 'tryProvider').mockResolvedValue({ id: 'ok' } as any);
+        await router.execute(context, async () => { });
+
+        // Confused user check should append System Note to prompt
+        const content = context.request.messages[0].content;
+        expect(content).toContain('[System Note: The user has not provided a clear request');
+
+        // Confused user should try the cheapest/fastest model first (lowest capability)
+        // Among the mock models, gemini-3.1-flash-lite has the lowest capability score.
+        expect(trySpy.mock.calls[0][2]).toBe('gemini-3.1-flash-lite');
     });
 });

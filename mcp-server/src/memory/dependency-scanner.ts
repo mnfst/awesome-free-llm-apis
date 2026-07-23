@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { extractEmbeddedSnippets, extractDefinedSymbols } from './embedded-snippet-scanner.js';
 
 export interface Node {
     id: string;
@@ -17,6 +18,12 @@ export interface Edge {
     source: string;
     target: string;
     type: 'imports' | 'references' | 'links' | 'invokes';
+    /**
+     * 'low' marks edges inferred without a literal import/require to anchor on (e.g.
+     * calls between sibling embedded snippets, matched purely by symbol name within
+     * the same parent file). Absent means the normal import-anchored precision applies.
+     */
+    confidence?: 'low';
 }
 
 export class RepositoryGraph {
@@ -41,16 +48,16 @@ export class RepositoryGraph {
         return Array.from(this.nodes.values());
     }
 
-    addEdge(source: string, target: string, type: 'imports' | 'references' | 'links' | 'invokes') {
+    addEdge(source: string, target: string, type: 'imports' | 'references' | 'links' | 'invokes', options?: { confidence?: 'low' }) {
         const normSource = this.normalizeNodeId(source);
         const normTarget = this.normalizeNodeId(target);
-        
+
         // Prevent duplicate edges
         const exists = this.edges.some(
             e => e.source === normSource && e.target === normTarget && e.type === type
         );
         if (!exists) {
-            this.edges.push({ source: normSource, target: normTarget, type });
+            this.edges.push({ source: normSource, target: normTarget, type, ...(options?.confidence ? { confidence: options.confidence } : {}) });
         }
     }
 
@@ -160,9 +167,21 @@ export class RepositoryGraph {
     }
 }
 
+/** Identifiers that are too common to be trustworthy invokes-edge signals without type/scope resolution. */
+const CALL_SITE_KEYWORD_EXCLUSIONS = new Set([
+    'if', 'for', 'while', 'switch', 'catch', 'function', 'return', 'typeof', 'new', 'await', 'async',
+    'const', 'let', 'var', 'class', 'import', 'export', 'require', 'this', 'super', 'console',
+    'map', 'filter', 'reduce', 'forEach', 'then', 'push', 'pop', 'join', 'slice', 'split',
+    'get', 'set', 'run', 'test', 'describe', 'it', 'expect', 'print', 'len', 'str', 'int', 'dict', 'list',
+]);
+
 export class WorkspaceDependencyScanner {
     private workspaceRoot: string;
     private workspaceFiles: Set<string> = new Set();
+    /** Populated during scanFile() for JS/TS/Python files, reused by the invokes-edge pass to avoid re-reading files. */
+    private fileContentCache: Map<string, string> = new Map();
+    /** Populated during scanFile() for embedded snippets (snippetId -> code), reused by the snippet-family invokes pass. */
+    private snippetContentCache: Map<string, string> = new Map();
 
     constructor(workspaceRoot: string) {
         this.workspaceRoot = workspaceRoot;
@@ -184,13 +203,17 @@ export class WorkspaceDependencyScanner {
         const currentDir = path.dirname(filePath);
 
         if (ext === '.ts' || ext === '.js' || ext === '.tsx' || ext === '.jsx') {
-            graph.addNode(relativePath, 'code', { language: 'js/ts', size: stats.size, commands: [] });
+            const exports = WorkspaceDependencyScanner.generateSemanticProfile(fileContent, ext).exports;
+            graph.addNode(relativePath, 'code', { language: 'js/ts', size: stats.size, commands: [], exports });
             this.extractJsTsImports(fileContent, currentDir, relativePath, graph);
             this.extractCommandDocstrings(fileContent, relativePath, graph, ext);
+            this.fileContentCache.set(relativePath, fileContent);
         } else if (ext === '.py') {
-            graph.addNode(relativePath, 'code', { language: 'python', size: stats.size, commands: [] });
+            const exports = WorkspaceDependencyScanner.generateSemanticProfile(fileContent, ext).exports;
+            graph.addNode(relativePath, 'code', { language: 'python', size: stats.size, commands: [], exports });
             this.extractPythonImports(fileContent, currentDir, relativePath, graph);
             this.extractCommandDocstrings(fileContent, relativePath, graph, ext);
+            this.fileContentCache.set(relativePath, fileContent);
         } else if (ext === '.go') {
             graph.addNode(relativePath, 'code', { language: 'go', size: stats.size, commands: [] });
             this.extractGoImports(fileContent, currentDir, relativePath, graph);
@@ -202,6 +225,34 @@ export class WorkspaceDependencyScanner {
         } else if (ext === '.md') {
             graph.addNode(relativePath, 'doc', { size: stats.size });
             this.extractMarkdownLinks(fileContent, relativePath, graph);
+        } else if (ext === '.json' || ext === '.yml' || ext === '.yaml') {
+            graph.addNode(relativePath, 'doc', { size: stats.size });
+            this.extractEmbeddedSnippetNodes(fileContent, relativePath, graph, ext);
+        }
+    }
+
+    private extractEmbeddedSnippetNodes(content: string, fileRelPath: string, graph: RepositoryGraph, ext: string) {
+        let snippets;
+        try {
+            snippets = extractEmbeddedSnippets(content, ext as '.json' | '.yml' | '.yaml');
+        } catch {
+            return;
+        }
+        for (const snippet of snippets) {
+            const snippetId = `${fileRelPath}#${snippet.fieldPath}`;
+            // "exports" here means "top-level symbols this snippet defines" (see
+            // extractDefinedSymbols) — snippet bodies are evaluated scripts, not
+            // modules, so a real `export` scan would almost always come back empty.
+            const exports = extractDefinedSymbols(snippet.code, snippet.language);
+            graph.addNode(snippetId, 'code', {
+                language: snippet.language,
+                embeddedIn: fileRelPath,
+                parentContext: snippet.parentContext,
+                size: snippet.code.length,
+                exports,
+            });
+            graph.addEdge(fileRelPath, snippetId, 'references');
+            this.snippetContentCache.set(snippetId, snippet.code);
         }
     }
 
@@ -448,11 +499,120 @@ export class WorkspaceDependencyScanner {
     async scanWorkspace(graph: RepositoryGraph) {
         // Collect all files in workspace first
         this.workspaceFiles.clear();
+        this.fileContentCache.clear();
+        this.snippetContentCache.clear();
         await this.collectWorkspaceFiles(this.workspaceRoot);
 
         for (const file of this.workspaceFiles) {
             const fullPath = path.join(this.workspaceRoot, file);
             await this.scanFile(fullPath, graph);
+        }
+
+        this.addInvokesEdges(graph);
+        this.addSnippetInvokesEdges(graph);
+
+        // Evacuate caches to free memory after scanning completes
+        this.fileContentCache.clear();
+        this.snippetContentCache.clear();
+        this.workspaceFiles.clear();
+    }
+
+    /**
+     * Heuristic cross-file call-edge builder: for each caller file, look for call-site
+     * identifiers matching a known exported symbol. To keep the false-positive rate
+     * manageable without type/scope resolution, an edge is only added when the defining
+     * file is already a 1-hop import-neighbor of the caller (i.e. it's plausible the
+     * symbol was actually imported, not just a same-named function elsewhere).
+     */
+    private addInvokesEdges(graph: RepositoryGraph) {
+        const exportedSymbolToFiles = new Map<string, string[]>();
+        for (const node of graph.getAllNodes()) {
+            const exports: string[] = node.metadata?.exports || [];
+            for (const sym of exports) {
+                if (!exportedSymbolToFiles.has(sym)) exportedSymbolToFiles.set(sym, []);
+                exportedSymbolToFiles.get(sym)!.push(node.id);
+            }
+        }
+        if (exportedSymbolToFiles.size === 0) return;
+
+        for (const [relativePath, content] of this.fileContentCache.entries()) {
+            const callSiteRegex = /\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g;
+            const importedFiles = new Set(
+                graph.getEdgesFrom(relativePath).filter(e => e.type === 'imports').map(e => e.target)
+            );
+            if (importedFiles.size === 0) continue;
+
+            const seen = new Set<string>();
+            let match;
+            while ((match = callSiteRegex.exec(content)) !== null) {
+                const symbol = match[1];
+                if (CALL_SITE_KEYWORD_EXCLUSIONS.has(symbol) || seen.has(symbol)) continue;
+                seen.add(symbol);
+
+                const definingFiles = exportedSymbolToFiles.get(symbol);
+                if (!definingFiles) continue;
+
+                for (const defFile of definingFiles) {
+                    if (defFile !== relativePath && importedFiles.has(defFile)) {
+                        graph.addEdge(relativePath, defFile, 'invokes');
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Same idea as addInvokesEdges(), but for embedded snippets (n8n Code nodes, CI
+     * `run:` blocks). These have no import statements to anchor precision on, so
+     * instead of a 1-hop-neighbor restriction, edges are scoped to the same "family"
+     * — snippets embedded in the same parent config file — and tagged low-confidence
+     * since a name match alone is weaker evidence than a literal import.
+     */
+    private addSnippetInvokesEdges(graph: RepositoryGraph) {
+        if (this.snippetContentCache.size === 0) return;
+
+        const familyMembers = new Map<string, string[]>();
+        for (const node of graph.getAllNodes()) {
+            const embeddedIn = node.metadata?.embeddedIn;
+            if (embeddedIn && this.snippetContentCache.has(node.id)) {
+                if (!familyMembers.has(embeddedIn)) familyMembers.set(embeddedIn, []);
+                familyMembers.get(embeddedIn)!.push(node.id);
+            }
+        }
+
+        for (const members of familyMembers.values()) {
+            if (members.length < 2) continue;
+
+            const exportedSymbolToMembers = new Map<string, string[]>();
+            for (const id of members) {
+                const exports: string[] = graph.getNode(id)?.metadata?.exports || [];
+                for (const sym of exports) {
+                    if (!exportedSymbolToMembers.has(sym)) exportedSymbolToMembers.set(sym, []);
+                    exportedSymbolToMembers.get(sym)!.push(id);
+                }
+            }
+            if (exportedSymbolToMembers.size === 0) continue;
+
+            for (const callerId of members) {
+                const callSiteRegex = /\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g;
+                const content = this.snippetContentCache.get(callerId)!;
+                const seen = new Set<string>();
+                let match;
+                while ((match = callSiteRegex.exec(content)) !== null) {
+                    const symbol = match[1];
+                    if (CALL_SITE_KEYWORD_EXCLUSIONS.has(symbol) || seen.has(symbol)) continue;
+                    seen.add(symbol);
+
+                    const definers = exportedSymbolToMembers.get(symbol);
+                    if (!definers) continue;
+
+                    for (const defId of definers) {
+                        if (defId !== callerId) {
+                            graph.addEdge(callerId, defId, 'invokes', { confidence: 'low' });
+                        }
+                    }
+                }
+            }
         }
     }
 

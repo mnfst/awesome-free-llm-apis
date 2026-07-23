@@ -1,5 +1,39 @@
 # Changelog
 
+## v1.0.7 – Wiki, Log Compaction, Process Locking, Dynamic Tokens, PDF Indexing + Testing Hardening (July 2026)
+
+### 🚀 Highlights
+
+- **Semantic Log & JSON Compaction**: Implemented a Jaccard-similarity-based compactor in context gathering middleware for large `.log` and `.json` files. Anchors the first 5 lines (head) and last 5 lines (tail), grouping intermediate lines/JSON blocks and collapsing identical or highly-similar entries using a Jaccard threshold (configured via `LOG_COMPACTION_THRESHOLD`).
+- **Code Block Preservation**: Enhanced Jaccard calculations to explicitly bypass and preserve code elements like `jsCode` and `pythonCode` fields inside nested workflow JSON files.
+- **Strict Vision Task Debugger Bypass**: Resolved issues where prompts with error keywords routed to vision models triggered debugger diagnostics, strictly restricting the injection of local PowerShell/Bash diagnostics to non-vision tasks.
+- **Dynamic Search Limit Adjustments**: Bumped the search match limit to `50` for `.log`/`.json` files (from a default of `10`) to guarantee compaction logic is triggered.
+- **Search Robustness**: Appended `-H` to `rg` and `--with-filename` to `grep` calls inside the search executor to ensure stable filename path-splitting on both Windows and POSIX environments.
+- **Process-Safe Exclusive File Locking**: Implemented atomic concurrency control in `src/utils/file-lock.ts` holding exclusive `wx` lock files with OS-level PID existence checks and 30-second stale age reaping to prevent database corruption during parallel indexing.
+- **Incremental PDF-Wiki RAG & Vision Indexing Pipeline**: Added a pipeline that renders pages, filters out small logos or thin divider lines (<40pt), upscales diagrams to 300 DPI, and injects rolling context into vision calls.
+- **Proportional Per-Page Budget Truncation**: Replaced heuristic markdown-based semantic compression with a deterministic proportional budget divider (`batchRawMaxChars / numPages`) to balance prompt space fairly across pages.
+- **Dynamic Output Token Budgeting**: Implemented model output `max_tokens` scaling based on first-pass creation/update states, batch page multipliers, and existing summary retention floors. Bounded vision calls dynamically between 100 and 500 tokens based on region size and context.
+- **Confused User Query Interception**: Automatically detects empty/boilerplate prompts or file-only attachments to:
+  - Reverse model fallback order (testing cheaper/faster models first like `gemini-3.1-flash-lite` to save budget).
+  - Append guiding system instructions.
+  - Set `skipIndexing = true` to bypass wiki maintenance and indexing runs.
+- **Project-Scoped Wiki & RAG Integration**: Developed a persistent repository-scoped wiki system (`src/memory/wiki.ts`) integrated with vector semantic storage (`src/memory/vector.ts`) to maintain structured knowledge and documentation.
+- **GitHub Repository Scanner & Analyzer**: Implemented `src/utils/GithubRepoScanner.ts` to fetch remote repository nodes, parse dependencies/imports, trace function flow, and dynamically index discovered tools.
+- **Global Wiki Namespace for Cyber Tools**: Standardized the `global-cyber-tools` shared wiki namespace across workspaces, gating tool validation via known cyber binaries (`sqlmap`, `nmap`, `wireshark`, etc.).
+- **Automatic Wiki Maintenance & Graph-Diff Linkage**: Built an event-driven maintainer (`src/memory/wiki-maintainer.ts`) that listens to repository file diff changes and parses import dependencies to automatically mark wiki pages stale when referencing code symbols are deleted.
+- **Robust Integration Test Suite**: Created `tests/log-compaction.test.ts` (unstructured logs/metrics JSON), `tests/file-lock.test.ts` (concurrency/stale PID/timeout rules), `tests/wiki-memory.test.ts` (confidence promotion/eviction limits), and updated `tests/pdf-vision-helper.test.ts`, `tests/pdf-wiki.test.ts`, and `tests/task-routing-matrix.test.ts`.
+
+### Next Updates
+
+- `browser_action` tool to be integrated with `use_free_llm` for browser automation tasks, leveraging `chrome-devtools-mcp` for headless browser control. Github scraping should be used to extract relevant information from repositories, and the tool should be able to handle dynamic content loading and pagination.
+- Migrate the firebase debugging to the 'chat-logs.json' instead of separate files.
+- Assess migration to stream mode for supported providers to reduce latency and token wastage on long responses.
+- `coding_agents` tool(not a one shot) which uses ollama driven local coding agents which has middleware acess to the workspace and can be used to generate code snippets, refactor code, and also to be able to understand the codebase and apply patches and preview diffs based on quantum based reasoning loops with lsp server integration for code understanding.
+- Present cyber library indexing should be retained but is misleading, it should be dynamic for all library and the wiki should be updated based on success and feedback from the tool runs.
+- `cyber_agents`tool a separate cyber routing middleware, which is isolated from the main routing middleware and can be used to handle cyber security related tasks. Dynamic tool dictionary(key: tool name, value: github_url) rather than a list of commonly used tools.
+
+---
+
 ## v1.0.6 – Vision, Skill Loading, Privacy Hardening + Provider/Routing Updates (May 2026)
 
 ### 🚀 Highlights
@@ -29,10 +63,15 @@
 
 ### Next updates
 - `AGENTS.md` should be injected during the decomposition phase(only / custom reading certain lines based on semantic understanding for subtasks) to provide agents with a reference of available tools and their usage.
-- Dashboard refactors to include tool call history and conversation history in a single view with filtering and search capabilities.
-- Assess migration to stream mode for supported providers to reduce latency and token wastage on long responses.
+- Dashboard refactors to include tool call history and conversation history in a single view with filtering and search capabilities.(Implemented)
 - Reassess our architecture and apply fixes if required to make the system more robust and resilient to failures and also to make it more scalable and maintainable.
-- LLM Wikiv2 full integration with `use_free_llm` and also other tools.
+- Integrate a new TaskType 'cyber' to handle cyber security related tasks and also to be able to use the tools and models available in the `cyber_plan.md` to handle cyber security related tasks and also to be able to use the tools and models available in the `cyber_plan.md` to handle cyber security related tasks. (But tight keyword matching should be used to avoid false positives and also to avoid routing non-cyber tasks to the cyber models and tools.)
+- Github repo scanning in middleware(if github urls are present) using githubusercontent and github api(Similar to the one implemented in `skill_loader`) to understand the working of the repo and also to be able to identify the dependencies between files and also to be able to identify the function calls across multiple files in a project and also to be able to identify the variable/dataflow across multiple files in a project.
+- For cyber tools available in github we can maintain global wiki and update it based on sucess rate.
+- Intelligent context extraction needs to corellate variable/dataflow or function calls across files and also to be able to identify the dependencies between. (eg. `jsCode` and `pythonCode` in n8n workflow json files [Our context extraction should know that it is a JavaScript code snippet that is a part of a workflow], or function calls across multiple files in a project,github actions workflow etc.)
+- Wiki maintenance and update mechanism to be added to the middleware to keep the wiki up to date with the latest changes in the project and also to be able to add and relate them using a rag based mechanism.
+- Wiki rendering with link clicking and also to be able to add and apply entanglement to the wiki as required.
+- Conversation mechanism for all tools to be displayed in the dashboard with filtering and search capabilities.
 
 ---
 

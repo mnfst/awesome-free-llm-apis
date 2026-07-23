@@ -7,7 +7,10 @@ import { WorkspaceScanner } from '../../cache/workspace.js';
 import { getIntelligentSystemPrompt } from './prompts.js';
 import { ContextGatherer } from './context-gatherer.js';
 import { WorkspaceIndexer } from '../../memory/indexer.js';
-import { getMessageContent, prependToMessageContent } from '../../utils/MessageUtils.js';
+import { getMessageContent, prependToMessageContent, appendToMessageContent } from '../../utils/MessageUtils.js';
+import { GithubRepoScanner, GLOBAL_CYBER_WIKI_NS } from '../../utils/GithubRepoScanner.js';
+import { CYBER_TERMS_REGEX } from '../../utils/TaskClassifier.js';
+import { taskTypeToPersona } from '../../utils/PersonaMapper.js';
 
 const workspaceScanner = new WorkspaceScanner(process.cwd());
 
@@ -33,6 +36,145 @@ async function getDirectoryTree(dirPath: string, maxDepth = 2, currentDepth = 0)
     }
 }
 
+function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractUsageAndDocstrings(content: string, commands: string[]): string {
+    const lines = content.split('\n');
+    let output = '';
+    
+    // 1. Identify and extract lines with specific options/examples
+    const examples: string[] = [];
+    const commandRegexes = commands.map(cmd => new RegExp(`\\b${escapeRegExp(cmd)}\\b.*?(?:-[a-zA-Z]|--[a-z])`, 'i'));
+    
+    for (const line of lines) {
+        if (/(license|copyright|copyrighted|download|mailing list|installing|contributing|build status)/i.test(line)) {
+            continue;
+        }
+        for (const regex of commandRegexes) {
+            if (regex.test(line)) {
+                examples.push(line.trim());
+                break;
+            }
+        }
+    }
+    
+    if (examples.length > 0) {
+        output += `### Command Usage Examples:\n` + examples.slice(0, 10).map(e => `  - ${e}`).join('\n') + '\n';
+    }
+
+    // 2. Identify sections related to Usage, Examples, or Options
+    let currentSection = '';
+    let captureSection = false;
+    let sectionLines: string[] = [];
+    
+    for (const line of lines) {
+        const isHeader = line.startsWith('#');
+        if (isHeader) {
+            if (captureSection && sectionLines.length > 0) {
+                output += `\n### Section: ${currentSection}\n` + sectionLines.slice(0, 15).join('\n') + '\n';
+            }
+            currentSection = line.replace(/^#+\s*/, '').trim();
+            captureSection = /(usage|example|option|argument|parameter|flag|help|syntax)/i.test(currentSection) && 
+                             !/(license|download|installation|building|compil)/i.test(currentSection);
+            sectionLines = [];
+        } else if (captureSection) {
+            if (line.trim()) {
+                sectionLines.push(line.trim());
+            }
+        }
+    }
+    if (captureSection && sectionLines.length > 0) {
+        output += `\n### Section: ${currentSection}\n` + sectionLines.slice(0, 15).join('\n') + '\n';
+    }
+
+    // 3. Extract code blocks with the commands
+    const codeBlockRegex = /```[a-zA-Z]*\n([\s\S]*?)```/g;
+    let match;
+    const blocks: string[] = [];
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+        const blockContent = match[1];
+        if (commands.some(cmd => new RegExp(`\\b${escapeRegExp(cmd)}\\b`, 'i').test(blockContent))) {
+            blocks.push(blockContent.trim());
+        }
+    }
+    if (blocks.length > 0) {
+        output += `\n### Usage Code Blocks:\n` + blocks.slice(0, 3).map(b => `\`\`\`\n${b}\n\`\`\``).join('\n\n') + '\n';
+    }
+
+    return output;
+}
+
+function extractProjectDescription(readme: string): string {
+    const lines = readme.split('\n');
+    let description = '';
+    let foundTitle = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('#') || line.startsWith('===')) {
+            foundTitle = true;
+            continue;
+        }
+        
+        if (foundTitle && line.length > 5) {
+            if (/badge\.svg|travis-ci|github\.com\/.*\/actions/i.test(line)) continue;
+            if (/copyright|license|released under|compatible with GPL|free usage|commercial license/i.test(line)) continue;
+            if (/install|download|mailing list|support/i.test(line)) continue;
+            
+            description = line;
+            let j = i + 1;
+            while (j < lines.length && lines[j].trim().length > 0 && !lines[j].trim().startsWith('#')) {
+                description += ' ' + lines[j].trim();
+                j++;
+            }
+            break;
+        }
+    }
+    
+    return description.trim();
+}
+
+function extractCommandsFromPrompt(prompt: string, repo: string): string[] {
+    const commands = new Set<string>();
+    commands.add(repo.toLowerCase());
+    
+    const knownCommands = ['nmap', 'sqlmap', 'hydra', 'gobuster', 'nikto', 'hashcat', 'john', 'pytest', 'git', 'curl', 'wget'];
+    const promptLower = prompt.toLowerCase();
+    for (const cmd of knownCommands) {
+        if (new RegExp(`\\b${escapeRegExp(cmd)}\\b`, 'i').test(promptLower)) {
+            commands.add(cmd);
+        }
+    }
+    
+    const words = prompt.split(/\s+/);
+    for (const word of words) {
+        const clean = word.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        if (clean.length > 2 && !['and', 'for', 'run', 'the', 'use', 'git', 'github'].includes(clean)) {
+            if (/^[a-z0-9_-]+$/.test(clean)) {
+                if (promptLower.includes(`run ${clean}`) || 
+                    promptLower.includes(`${clean} scan`) || 
+                    promptLower.includes(`${clean} test`) ||
+                    promptLower.includes(`${clean} command`)) {
+                    commands.add(clean);
+                }
+            }
+        }
+    }
+    return [...commands];
+}
+
+function getCleanUserPrompt(content: string): string {
+    let clean = content;
+    clean = clean.replace(/## 🧠 WORKSPACE MEMORY[\s\S]*?<\/memory_context_isolation_gate>/g, '');
+    clean = clean.replace(/## 📋 TARGET PROJECT GUIDELINES[\s\S]*?<\/target_project_guidelines_isolation_gate>/g, '');
+    clean = clean.replace(/## 📂 WORKSPACE CONTEXT[\s\S]*?<\/workspace_context_isolation_gate>/g, '');
+    clean = clean.replace(/## 🌐 GITHUB REPOSITORY CONTEXT[\s\S]*?<\/github_repo_context_gate>/g, '');
+    clean = clean.replace(/## 🛠️ CODEBASE COMMAND USAGES[\s\S]*/g, '');
+    return clean;
+}
+
 /**
  * WorkspaceContextMiddleware - Handles workspace-aware context injection.
  * 
@@ -49,8 +191,163 @@ export class WorkspaceContextMiddleware implements Middleware {
         const startMs = Date.now();
         const sessionId = context.sessionId;
         const userMessage = context.request.messages.find(m => m.role === 'user');
-        const userContent = userMessage ? (typeof userMessage.content === 'string' ? userMessage.content : JSON.stringify(userMessage.content)) : '';
+        let userContent = userMessage ? (typeof userMessage.content === 'string' ? userMessage.content : JSON.stringify(userMessage.content)) : '';
         const isAgentic = context.request.agentic === true;
+
+        // Check if this is a vision/multimodal task (contains images or is routed as vision)
+        const isVision = context.taskType === 'vision' || context.request.messages.some(m => 
+            Array.isArray(m.content) && m.content.some((item: any) => item && typeof item === 'object' && item.type === 'image_url')
+        );
+
+        if (isVision) {
+            console.debug(`[WorkspaceContextMiddleware] Vision/multimodal task detected. Skipping workspace text context injection to prevent context bloat.`);
+            await next();
+            return;
+        }
+
+        // Check for Github URL in user prompt
+        if (userContent) {
+            const cleanPrompt = getCleanUserPrompt(userContent);
+            const githubUrlRegex = /https?:\/\/(?:www\.)?github\.com\/([^/\s]+)\/([^/\s#?]+)/;
+            const match = githubUrlRegex.exec(cleanPrompt);
+            if (match) {
+                const url = match[0];
+                try {
+                    const { owner, repo, branch } = GithubRepoScanner.parseUrl(url);
+                    const readme = await GithubRepoScanner.fetchRawContent(owner, repo, 'README.md', branch);
+                    const analysis = GithubRepoScanner.analyzeCode(readme);
+                    
+                    const commands = extractCommandsFromPrompt(cleanPrompt, repo);
+                    const usageDocs = extractUsageAndDocstrings(readme, commands.length > 0 ? commands : [repo]);
+
+                    // Perform remote tree scan and code analysis
+                    const repoScan = await GithubRepoScanner.scanRepoCode(owner, repo, branch, commands, cleanPrompt);
+
+                    const isCodeAnalysisQuery = /(analyze|trace|dataflow|dependencies|architecture|code|function|flow|structure|how it works)/i.test(cleanPrompt);
+                    const isTreeRequested = /(tree|files|structure|directory|list files)/i.test(cleanPrompt);
+
+                    let githubContext = `\n\n## 🌐 GITHUB REPOSITORY CONTEXT\n`;
+                    githubContext += `Repository: ${owner}/${repo}\n`;
+                    if (usageDocs) {
+                        githubContext += `${usageDocs}\n`;
+                    } else {
+                        const description = extractProjectDescription(readme);
+                        if (description && description.length > 20) {
+                            githubContext += `Description: ${description}\n`;
+                        } else {
+                            githubContext += `Description: Remote repository tree and command flags scanned dynamically below.\n`;
+                        }
+                    }
+
+                    if (repoScan.treeSummary.length > 0 && (isCodeAnalysisQuery || isTreeRequested)) {
+                        githubContext += `\n### Repository Files Tree (Subset):\n${repoScan.treeSummary.map(p => `  - ${p}`).join('\n')}\n`;
+                    }
+
+                    if (repoScan.scannedFiles.length > 0) {
+                        githubContext += `\n### Scanned Files Analysis:\n`;
+                        for (const sf of repoScan.scannedFiles) {
+                            githubContext += `#### File: ${sf.path}\n`;
+                            
+                            if (sf.flags && sf.flags.length > 0) {
+                                githubContext += `  - Flags: ${sf.flags.join(', ')}\n`;
+                            }
+
+                            if (isCodeAnalysisQuery) {
+                                if (sf.dependencies.length > 0) {
+                                    githubContext += `  - Dependencies: ${sf.dependencies.join(', ')}\n`;
+                                }
+                                if (sf.functions.length > 0) {
+                                    githubContext += `  - Functions: ${sf.functions.join(', ')}\n`;
+                                }
+                                if (sf.flow.length > 0) {
+                                    githubContext += `  - Flow:\n${sf.flow.map(f => `    * ${f}`).join('\n')}\n`;
+                                }
+                            }
+                        }
+                    }
+
+                    if (isCodeAnalysisQuery) {
+                        if (analysis.dependencies.length > 0) {
+                            githubContext += `README Dependencies: ${analysis.dependencies.join(', ')}\n`;
+                        }
+                        if (analysis.functions.length > 0) {
+                            githubContext += `README Functions: ${analysis.functions.join(', ')}\n`;
+                        }
+                        if (analysis.flow.length > 0) {
+                            githubContext += `README Flow:\n${analysis.flow.map(f => `  - ${f}`).join('\n')}\n`;
+                        }
+                    }
+
+                    // Check for matched commands inside readme
+                    const commandUsages: string[] = [];
+                    for (const cmd of commands) {
+                        const lines = readme.split('\n');
+                        const matches = lines.filter(l => {
+                            const trimmed = l.trim();
+                            if (!new RegExp(`\\b${escapeRegExp(cmd)}\\b`, 'i').test(trimmed)) return false;
+                            if (/(license|copyright|copyrighted|download|mailing list|installing|contributing|build status|badge\.svg)/i.test(trimmed)) return false;
+                            return true;
+                        });
+                        if (matches.length > 0) {
+                            commandUsages.push(`Command '${cmd}' in README:\n` + matches.slice(0, 3).map(m => `  - ${m.trim()}`).join('\n'));
+                        }
+                    }
+                    if (commandUsages.length > 0) {
+                        githubContext += `\n### Command Usages in Repo:\n${commandUsages.join('\n')}\n`;
+                    }
+
+                    // Cyber tools global wiki: persist discovered GitHub security tools into a
+                    // shared, cross-workspace wiki namespace so knowledge isn't siloed per project.
+                    if (CYBER_TERMS_REGEX.test(cleanPrompt)) {
+                        try {
+                            const summary = usageDocs || extractProjectDescription(readme) || `GitHub repository ${owner}/${repo}.`;
+                            await memoryManager.getWiki(GLOBAL_CYBER_WIKI_NS).write(
+                                `${owner}/${repo}`,
+                                summary,
+                                ['cyber', 'github-tool', repo.toLowerCase()],
+                                [url]
+                            );
+                        } catch (err) {
+                            console.error(`[WorkspaceContextMiddleware] Cyber wiki write failed: ${err}`);
+                        }
+                    }
+
+                    if (userMessage) {
+                        appendToMessageContent(userMessage, githubContext);
+                        userContent = getMessageContent(userMessage);
+                    }
+                } catch (err) {
+                    console.error(`[WorkspaceContextMiddleware] Github scan failed: ${err}`);
+                }
+            }
+
+            // Codebase tree scanning for command usages
+            const commandRegex = /\b(nmap|sqlmap|hydra|gobuster|nikto|hashcat|john|pytest)\b/gi;
+            const commands = [...new Set(cleanPrompt.match(commandRegex))];
+            if (commands.length > 0 && context.workspaceRoot) {
+                let usagesContext = `\n\n## 🛠️ CODEBASE COMMAND USAGES\n`;
+                let hasUsages = false;
+                for (const cmd of commands) {
+                    try {
+                        const results = await ContextGatherer.gatherContext({
+                            workspaceRoot: context.workspaceRoot,
+                            query: `"${cmd}"` || cmd,
+                            limit: 5
+                        });
+                        if (results && results.length > 0) {
+                            hasUsages = true;
+                            usagesContext += `### Usages of '${cmd}':\n`;
+                            usagesContext += results.join('\n') + '\n';
+                        }
+                    } catch {}
+                }
+                if (hasUsages && userMessage) {
+                    appendToMessageContent(userMessage, usagesContext);
+                    userContent = getMessageContent(userMessage);
+                }
+            }
+        }
+
 
         // Dynamic budget calculation based on model capacity
         const { getModelContextLimit } = await import('../../utils/model-tokens.js');
@@ -75,18 +372,6 @@ export class WorkspaceContextMiddleware implements Middleware {
             grepCharLimit = 1500;
         }
 
-        // 0. Pre-emptive Memory Update for Agentic Requests
-        if (isAgentic && context.workspaceRoot && !(context.request as any).skipIndexing) {
-            try {
-                console.debug(`[WorkspaceContextMiddleware] Pre-emptive indexing for agentic task in ${context.workspaceRoot}`);
-                const indexer = new WorkspaceIndexer(context.workspaceRoot);
-                // Run indexer with force=false to respect caches but ensure latest files are present
-                await indexer.indexWorkspace(context.workspaceRoot, false);
-            } catch (err) {
-                console.error(`[WorkspaceContextMiddleware] Pre-emptive indexing failed: ${err}`);
-            }
-        }
-
         // 1. Resolve Workspace Hash
         if (context.workspaceRoot && !context.wsHash) {
             try {
@@ -94,6 +379,32 @@ export class WorkspaceContextMiddleware implements Middleware {
             } catch (err) {
                 console.error(`[WorkspaceContextMiddleware] Failed to derive workspace hash: ${err}`);
             }
+        }
+
+        // 0+1b. Pre-emptive workspace indexing followed by wiki maintenance, backgrounded
+        // together so neither adds latency to the response. Wiki maintenance depends on
+        // indexing having already refreshed repo_graph.json, so they run in this order
+        // inside one setImmediate rather than as two separately-scheduled passes.
+        if (isAgentic && context.workspaceRoot && !(context.request as any).skipIndexing) {
+            const workspaceRoot = context.workspaceRoot;
+            const wsHash = context.wsHash;
+            setImmediate(async () => {
+                try {
+                    console.debug(`[WorkspaceContextMiddleware] Pre-emptive indexing for agentic task in ${workspaceRoot}`);
+                    const indexer = new WorkspaceIndexer(workspaceRoot);
+                    // Run indexer with force=false to respect caches but ensure latest files are present
+                    await indexer.indexWorkspace(workspaceRoot, false);
+                } catch (err) {
+                    console.error(`[WorkspaceContextMiddleware] Pre-emptive indexing failed: ${err}`);
+                }
+
+                try {
+                    const { runWikiMaintenance } = await import('../../memory/wiki-maintainer.js');
+                    await runWikiMaintenance(workspaceRoot, wsHash);
+                } catch (err) {
+                    console.error(`[WorkspaceContextMiddleware] Wiki maintenance failed: ${err}`);
+                }
+            });
         }
 
         // 2. Gather Grep Context (TF-IDF style) and Directory Structure
@@ -133,7 +444,7 @@ export class WorkspaceContextMiddleware implements Middleware {
                     const getPriority = (filePath?: string): number => {
                         if (!filePath) return 3;
                         const ext = path.extname(filePath).toLowerCase();
-                        const codeExts = ['.ts', '.py', '.js', '.tsx', '.jsx', '.go', '.rs', '.c', '.cpp', '.h', '.hpp', '.java', '.sh', '.rb', '.php', '.cs', '.swift'];
+                        const codeExts = ['.ts', '.py', '.js', '.tsx', '.jsx', '.go', '.rs', '.c', '.cpp', '.cc', '.h', '.hpp', '.lua', '.java', '.sh', '.rb', '.php', '.cs', '.swift'];
                         const configExts = ['.json', '.yml', '.yaml', '.toml', '.env', '.xml', '.ini'];
                         if (codeExts.includes(ext)) return 1;
                         if (configExts.includes(ext)) return 2;
@@ -164,6 +475,28 @@ export class WorkspaceContextMiddleware implements Middleware {
             }
         }
     }
+
+        // 3b. Wiki Lookup - surface previously-learned, confidence-scored knowledge
+        let wikiContext: string | undefined;
+        let wikiPagesUsed: string[] = [];
+        if (userContent) {
+            try {
+                const persona = taskTypeToPersona(context.taskType);
+                const wikiNamespace = context.wsHash || context.sessionId;
+                const wiki = memoryManager.getWiki(wikiNamespace || 'global', context.workspaceRoot);
+                const pages = await wiki.search(userContent, persona);
+                if (pages.length > 0) {
+                    const topPages = pages.slice(0, 3);
+                    wikiPagesUsed = topPages.map(p => p.title);
+                    wikiContext = topPages
+                        .map(p => `### ${p.title}\n${p.content.slice(0, 500)}`)
+                        .join('\n\n');
+                }
+            } catch (err) {
+                console.error(`[WorkspaceContextMiddleware] Wiki lookup failed: ${err}`);
+            }
+        }
+        (context as any).wikiPagesUsed = wikiPagesUsed;
 
         // 4. Grounding Gate check
         let groundingGate = '';
@@ -200,6 +533,9 @@ export class WorkspaceContextMiddleware implements Middleware {
                 currentLen += snippet.length + 1; // +1 for newline
             }
             workspaceContextStr += `\nRelevant File Snippets:\n${prioritizedSnippets.join('\n')}\n`;
+        }
+        if (wikiContext) {
+            workspaceContextStr += `\n<wiki_context_isolation_gate>\n## 📚 WIKI KNOWLEDGE\n${wikiContext}\n</wiki_context_isolation_gate>\n`;
         }
         (context as any).grepContext = workspaceContextStr || undefined;
 

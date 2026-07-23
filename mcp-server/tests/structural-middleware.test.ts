@@ -61,6 +61,33 @@ describe('StructuralMarkdownMiddleware Unit Tests', () => {
         expect(lastMessage.content).toContain('### SESSION DISTILLATION');
     });
 
+    it('renders {id, task} queue entries (current state.json schema) the same as legacy plain-string entries', async () => {
+        const mockFiles: Record<string, string> = {
+            'state.json': JSON.stringify({
+                nowQueue: [{ id: 't1', task: 'task1' }],
+                nextQueue: [{ id: 't2', task: 'task2' }]
+            }),
+            'knowledge.md': '# Session Knowledge\n- This is a substantive piece of knowledge that should be extracted by the distillation logic because it is long enough.',
+        };
+
+        (fs.pathExists as any).mockImplementation(async (p: string) => {
+            const basename = path.basename(p);
+            return !!mockFiles[basename];
+        });
+
+        (fs.readFile as any).mockImplementation(async (p: string) => {
+            const basename = path.basename(p);
+            return mockFiles[basename];
+        });
+
+        await middleware.execute(mockContext, async () => {});
+
+        const lastMessage = mockContext.request.messages[mockContext.request.messages.length - 1];
+        expect(lastMessage.content).toContain('**Current:**   task1');
+        expect(lastMessage.content).toContain('**Upcoming:**  task2');
+        expect(lastMessage.content).not.toContain('[object Object]');
+    });
+
     it('should ignore empty scaffolds and fallback', async () => {
         const mockFiles: Record<string, string> = {
             'knowledge.md': '# MISSION PLAN', // Too short to pass the > 50 char threshold (sections.length will be 0)

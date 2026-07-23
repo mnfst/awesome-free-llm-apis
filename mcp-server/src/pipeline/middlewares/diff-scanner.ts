@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import crypto from 'crypto';
+import { WorkspaceScanner } from '../../cache/workspace.js';
 
 export interface DiffScanResult {
   changedFiles: string[];
@@ -98,7 +98,12 @@ export class DiffScanner {
   }
 
   static async scan(workspaceRoot: string): Promise<DiffScanResult> {
-    const wsHash = crypto.createHash('md5').update(workspaceRoot).digest('hex');
+    // Use the same ws-<hash16> directory-naming scheme as every other
+    // subsystem (WorkspaceScanner.getWorkspaceHash), so this project directory
+    // is the same one the dashboard resolves for a given workspace — a
+    // standalone hash here previously created a second, disconnected directory.
+    const hash = await new WorkspaceScanner(workspaceRoot).getWorkspaceHash(workspaceRoot);
+    const wsHash = `ws-${hash.substring(0, 16)}`;
     const projectDir = path.join(os.homedir(), '.free-llm-mcp', 'projects', wsHash);
     const lockPath = path.join(projectDir, 'scan.lock');
 

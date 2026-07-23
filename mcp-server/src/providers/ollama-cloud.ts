@@ -33,6 +33,33 @@ export class OllamaCloudProvider extends BaseProvider {
   { id: 'devstral-2:123b', name: 'Devstral 2 (123B)' }
 ];
 
+  /**
+   * Ollama's native /api/chat expects `content` as a plain string with images passed
+   * separately as raw base64 (no data: URL prefix) in a per-message `images` array —
+   * it does not understand OpenAI-style content arrays with `image_url` blocks.
+   */
+  private toNativeMessages(messages: ChatRequest['messages']): Array<{ role: string; content: string; images?: string[] }> {
+    return messages.map((msg: any) => {
+      if (!Array.isArray(msg.content)) {
+        return { role: msg.role, content: msg.content ?? '' };
+      }
+      const textParts: string[] = [];
+      const images: string[] = [];
+      for (const item of msg.content) {
+        if (item?.type === 'text' && typeof item.text === 'string') {
+          textParts.push(item.text);
+        } else if (item?.type === 'image_url' && typeof item.image_url?.url === 'string') {
+          const url = item.image_url.url;
+          const base64 = url.startsWith('data:') ? url.slice(url.indexOf(',') + 1) : url;
+          images.push(base64);
+        }
+      }
+      const native: { role: string; content: string; images?: string[] } = { role: msg.role, content: textParts.join('\n') };
+      if (images.length > 0) native.images = images;
+      return native;
+    });
+  }
+
   async chat(request: ChatRequest): Promise<ChatResponse> {
     this.checkRateLimit();
     this.recordRequest();
@@ -46,7 +73,7 @@ export class OllamaCloudProvider extends BaseProvider {
       },
       body: JSON.stringify({
         model: request.model,
-        messages: request.messages,
+        messages: this.toNativeMessages(request.messages),
         stream: false,
         options: {
           temperature: request.temperature,
