@@ -64,34 +64,39 @@ describe('ChatLogger', () => {
 
   // ── logChatTurn ────────────────────────────────────────────────────────────
 
-  it('writes a turn with a ts field and the supplied role/content', async () => {
+  it('writes a turn with a timestamp field and the supplied role/content', async () => {
     const before = Date.now();
-    await logChatTurn(uniqueSession(), { role: 'user', content: 'hello' });
+    const sess = uniqueSession();
+    await logChatTurn(sess, { role: 'user', content: 'hello' });
     const after = Date.now();
 
     expect(writeFileMock).toHaveBeenCalledOnce();
     const log = lastWritten();
     expect(Array.isArray(log)).toBe(true);
     expect(log.length).toBe(1);
-    expect(log[0].role).toBe('user');
-    expect(log[0].content).toBe('hello');
-    expect(log[0].ts).toBeGreaterThanOrEqual(before);
-    expect(log[0].ts).toBeLessThanOrEqual(after);
+    expect(log[0].sessionId).toBe(sess);
+    expect(log[0].type).toBe('chat');
+    expect(log[0].payload.role).toBe('user');
+    expect(log[0].payload.content).toBe('hello');
+    expect(log[0].timestamp).toBeGreaterThanOrEqual(before);
+    expect(log[0].timestamp).toBeLessThanOrEqual(after);
   });
 
   it('enforces rolling 200-entry window: 201 existing entries → trimmed to 200', async () => {
-    // Pre-seed readFile to return 200 entries
-    const existing = Array.from({ length: 200 }, (_, i) => ({ role: 'user', content: `msg-${i}`, ts: i }));
+    const existing = Array.from({ length: 200 }, (_, i) => ({
+      sessionId: 'test',
+      timestamp: i,
+      type: 'chat',
+      payload: { role: 'user', content: `msg-${i}` }
+    }));
     readFileMock.mockResolvedValueOnce(JSON.stringify(existing));
 
     await logChatTurn(uniqueSession(), { role: 'user', content: 'overflow' });
 
     const log = lastWritten();
     expect(log.length).toBe(200);
-    // Last entry must be the new one
-    expect(log[199].content).toBe('overflow');
-    // First entry of the original 200 was msg-0, which got evicted
-    expect(log[0].content).toBe('msg-1');
+    expect(log[199].payload.content).toBe('overflow');
+    expect(log[0].payload.content).toBe('msg-1');
   });
 
   it('is non-fatal when writeFileAtomic throws', async () => {
@@ -100,15 +105,15 @@ describe('ChatLogger', () => {
   });
 
   it('appends to an existing log on disk when readFile succeeds', async () => {
-    const existing = [{ role: 'assistant', content: 'prior', ts: 1000 }];
+    const existing = [{ sessionId: 'test', timestamp: 1000, type: 'chat', payload: { role: 'assistant', content: 'prior' } }];
     readFileMock.mockResolvedValueOnce(JSON.stringify(existing));
 
     await logChatTurn(uniqueSession(), { role: 'user', content: 'new' });
 
     const log = lastWritten();
     expect(log.length).toBe(2);
-    expect(log[0].content).toBe('prior');
-    expect(log[1].content).toBe('new');
+    expect(log[0].payload.content).toBe('prior');
+    expect(log[1].payload.content).toBe('new');
   });
 
   // ── logToolCall ────────────────────────────────────────────────────────────
@@ -119,13 +124,14 @@ describe('ChatLogger', () => {
     expect(writeFileMock).toHaveBeenCalledOnce();
     const log = lastWritten();
     const entry = log[log.length - 1]; // most recent entry
-    expect(entry.role).toBe('tool_call');
-    expect(entry.tool).toBe('read_file');
-    expect(entry.latencyMs).toBe(42);
-    expect(entry.isError).toBe(false);
-    expect(typeof entry.args).toBe('string');   // serialized+possibly truncated
-    expect(typeof entry.result).toBe('string'); // serialized+possibly truncated
-    expect(entry.ts).toBeDefined();
+    expect(entry.type).toBe('tool');
+    expect(entry.payload.role).toBe('tool_call');
+    expect(entry.payload.tool).toBe('read_file');
+    expect(entry.payload.latencyMs).toBe(42);
+    expect(entry.payload.isError).toBe(false);
+    expect(typeof entry.payload.args).toBe('string');   // serialized+possibly truncated
+    expect(typeof entry.payload.result).toBe('string'); // serialized+possibly truncated
+    expect(entry.timestamp).toBeDefined();
   });
 
   it('truncates large args/result to avoid dumping base64 payloads', async () => {
@@ -134,18 +140,17 @@ describe('ChatLogger', () => {
 
     const log = lastWritten();
     const entry = log[log.length - 1];
-    // Both must be <= 400 chars + '[truncated]' suffix (= at most 414 chars)
-    expect(entry.args.length).toBeLessThanOrEqual(414);
-    expect(entry.result.length).toBeLessThanOrEqual(414);
-    expect(entry.args).toContain('[truncated]');
-    expect(entry.result).toContain('[truncated]');
+    expect(entry.payload.args.length).toBeLessThanOrEqual(414);
+    expect(entry.payload.result.length).toBeLessThanOrEqual(414);
+    expect(entry.payload.args).toContain('[truncated]');
+    expect(entry.payload.result).toContain('[truncated]');
   });
 
   it('records isError: true for failing tool calls', async () => {
     await logToolCall(uniqueSession(), 'read_file', {}, { error: 'not found' }, 5, true);
 
     const log = lastWritten();
-    expect(log[log.length - 1].isError).toBe(true);
+    expect(log[log.length - 1].payload.isError).toBe(true);
   });
 
   it('falls back gracefully when sessionId is __no_ws__', async () => {

@@ -681,15 +681,12 @@ async function main() {
             return res.status(400).json({ error: 'Invalid sessionId' });
           }
           const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
-          const logPath = path.resolve(projectsBase, sessionId, 'chat-log.json');
+          const dirPath = path.resolve(projectsBase, sessionId);
           // Path traversal guard: must stay within projectsBase
-          if (!logPath.startsWith(path.resolve(projectsBase) + path.sep)) {
+          if (!dirPath.startsWith(path.resolve(projectsBase) + path.sep) && dirPath !== path.resolve(projectsBase, '__no_ws__')) {
             return res.status(400).json({ error: 'Invalid sessionId' });
           }
-           let log: any[] = [];
-          try {
-            log = JSON.parse(await fsp.readFile(logPath, 'utf-8'));
-          } catch { /* file doesn't exist yet — empty log */ }
+          const log = await readNormalizedChatLog(dirPath);
 
           let workspace = '';
           if (sessionId !== '__no_ws__') {
@@ -705,7 +702,7 @@ async function main() {
 
           const q = ((req.query.q as string) || '').toLowerCase().trim();
           const filtered = q
-            ? log.filter(m => (m.content || '').toLowerCase().includes(q))
+            ? log.filter(m => (m.content || '').toLowerCase().includes(q) || (m.tool || '').toLowerCase().includes(q))
             : log;
           res.json({ sessionId, log: filtered.slice(-200), workspace });
         } catch (err) {
@@ -725,21 +722,8 @@ async function main() {
           const { role, tool, content, latencyMs, ts } = req.body || {};
           if (!role || !content) return res.status(400).json({ error: 'role and content required' });
 
-          const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
-          const dir = path.resolve(projectsBase, sessionId);
-          if (!dir.startsWith(path.resolve(projectsBase) + path.sep) && dir !== path.resolve(projectsBase, '__no_ws__')) {
-            return res.status(400).json({ error: 'Invalid sessionId' });
-          }
-          const logPath = path.join(dir, 'chat-log.json');
-
-          await withFileLock(logPath, async () => {
-            await fsp.mkdir(dir, { recursive: true });
-            let log: any[] = [];
-            try { log = JSON.parse(await fsp.readFile(logPath, 'utf-8')); } catch {}
-            log.push({ role, tool, content, latencyMs: latencyMs ?? null, ts: ts || Date.now() });
-            if (log.length > 200) log = log.slice(-200); // rolling 200-turn window
-            await writeFileAtomic(logPath, JSON.stringify(log));
-          });
+          const { logChatTurn } = await import('./utils/ChatLogger.js');
+          await logChatTurn(sessionId, { role, tool, content, latencyMs: latencyMs ?? null, ts: ts || Date.now() });
 
           res.json({ ok: true });
         } catch (err) {
@@ -755,20 +739,19 @@ async function main() {
           if (!/^(?!\.\..?)([\w\-\.]{1,64}|__no_ws__)$/.test(sessionId)) {
             return res.status(400).json({ error: 'Invalid sessionId' });
           }
-          const logPath = path.resolve(
-            path.join(os.homedir(), '.free-llm-mcp', 'projects'), sessionId, 'chat-log.json'
-          );
+          const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
+          const dir = path.resolve(projectsBase, sessionId);
+          const logPath = path.join(dir, 'chat-logs.json');
+          const legacyLogPath = path.join(dir, 'chat-log.json');
           await withFileLock(logPath, async () => {
             await writeFileAtomic(logPath, '[]');
+            try { await writeFileAtomic(legacyLogPath, '[]'); } catch {}
           });
           res.json({ ok: true });
         } catch (err) {
           res.status(500).json({ error: String(err) });
         }
       });
-
-      // GET /api/sessions — enhanced with chat-log message counts
-      // (replaces the existing handler below)
 
       // v1.0.4 Memory Hardening: Use LRUCache for sessions to prevent memory leaks
       const sessionMap = new LRUCache<string, { server: any, transport: StreamableHTTPServerTransport }>({
