@@ -384,6 +384,20 @@ export function extractCues(text: string): string[] {
         if (v.length > 3) cues.add(v);
     }
 
+    // 7. Kebab-case dependency/package names (e.g., serve-static, ip-address, body-parser)
+    const kebabPattern = /\b[a-z0-9]+(?:-[a-z0-9]+)+\b/g;
+    const kebabs = text.match(kebabPattern) || [];
+    for (const k of kebabs) {
+        if (k.length > 3) cues.add(k);
+    }
+
+    // 8. Vulnerability IDs (e.g. CVE-2024-39338, GHSA-c2qf-rxjj-qqgw)
+    const vulnPattern = /\b(?:CVE-\d{4}-\d+|GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4})\b/gi;
+    const vulns = text.match(vulnPattern) || [];
+    for (const v of vulns) {
+        cues.add(v);
+    }
+
     return Array.from(cues);
 }
 
