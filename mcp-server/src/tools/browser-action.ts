@@ -11,7 +11,7 @@ export interface ScrapingSessionCheckpoint {
     sessionId: string;
     targetUrl: string;
     domainContext: string;
-    status: 'INITIALIZED' | 'SURFACE_EXPLORED' | 'NODES_DISCOVERED' | 'PLAYER_CARDS_DISCOVERED' | 'AWAITING_USER_SELECTION' | 'EXECUTING_SELECTED_OPTION' | 'PAUSED' | 'RESUMED' | 'COMPLETED' | string;
+    status: 'INITIALIZED' | 'SURFACE_EXPLORED' | 'NODES_DISCOVERED' | 'PLAYER_CARDS_DISCOVERED' | 'AWAITING_USER_SELECTION' | 'EXECUTING_SELECTED_OPTION' | 'PAUSED' | 'RESUMED' | 'COMPLETED';
     currentPage: number;
     visitedUrls: string[];
     pendingUrlQueue: string[];
@@ -75,7 +75,7 @@ export class DomStateFingerprinter {
 export class ScrapingSessionCheckpointManager {
     static getCheckpointPath(outputDir: string, sessionId: string): string {
         const checkpointDir = path.join(outputDir, 'checkpoints');
-        return path.join(checkpointDir, `${sessionId}_checkpoint.json`);
+        return path.join(checkpointDir, `${sessionIdToKey(sessionId)}_checkpoint.json`);
     }
 
     static async loadCheckpoint(outputDir: string, sessionId: string): Promise<ScrapingSessionCheckpoint | null> {
@@ -93,7 +93,7 @@ export class ScrapingSessionCheckpointManager {
     static async saveCheckpoint(outputDir: string, checkpoint: ScrapingSessionCheckpoint): Promise<string> {
         const checkpointDir = path.join(outputDir, 'checkpoints');
         await fs.mkdir(checkpointDir, { recursive: true });
-        const cpPath = ScrapingSessionCheckpointManager.getCheckpointPath(outputDir, sessionIdToKey(checkpoint.sessionId));
+        const cpPath = ScrapingSessionCheckpointManager.getCheckpointPath(outputDir, checkpoint.sessionId);
         checkpoint.lastUpdated = new Date().toISOString();
         await fs.writeFile(cpPath, JSON.stringify(checkpoint, null, 2), 'utf-8');
         await logToolCall(checkpoint.sessionId, 'browser_tool:save_checkpoint', { sessionId: checkpoint.sessionId, status: checkpoint.status }, { cpPath }, 0, false).catch(() => {});
@@ -291,7 +291,7 @@ export class SemanticDomCompressor {
 export class ScriptPersistenceManager {
     static getScriptPath(outputDir: string, sessionId: string): string {
         const scriptsDir = path.join(outputDir, 'scripts');
-        return path.join(scriptsDir, `${sessionId}_script.js`);
+        return path.join(scriptsDir, `${sessionIdToKey(sessionId)}_script.js`);
     }
 
     static async loadPersistedScript(outputDir: string, sessionId: string): Promise<string | null> {

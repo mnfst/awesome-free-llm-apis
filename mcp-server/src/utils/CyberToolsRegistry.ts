@@ -88,7 +88,7 @@ export class CyberToolsRegistry {
                 const parsed = JSON.parse(content);
                 return { ...this.DEFAULT_REGISTRY, ...parsed };
             } catch (err) {
-                console.warn(`[CyberToolsRegistry] Failed to load registry from ${filePath}, using defaults:`, err);
+                console.warn(`[CyberToolsRegistry] Failed to load registry from ${filePath}, falling back to defaults:`, err);
                 return { ...this.DEFAULT_REGISTRY };
             }
         });
@@ -108,7 +108,12 @@ export class CyberToolsRegistry {
             try {
                 const content = await fs.readFile(filePath, 'utf-8');
                 current = { ...current, ...JSON.parse(content) };
-            } catch {}
+            } catch (err: any) {
+                if (err.code !== 'ENOENT') {
+                    console.error(`[CyberToolsRegistry] Failed to read existing registry at ${filePath}:`, err);
+                    throw new Error(`Cannot register tool '${toolName}': existing registry at ${filePath} is unreadable or corrupted (${err.message}). Aborting write to prevent data loss.`);
+                }
+            }
 
             current[toolName.toLowerCase()] = githubUrl;
             await fs.writeFile(filePath, JSON.stringify(current, null, 2), 'utf-8');

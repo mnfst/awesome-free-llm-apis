@@ -456,7 +456,8 @@ export async function createMCPServer(): Promise<Server> {
         inputSchema: {
           type: 'object' as const,
           properties: {
-            url: { type: 'string', description: 'Target website URL to inspect, explore, or scrape' },
+            url: { type: 'string', description: 'Target website URL to inspect, explore, or scrape (or "list_checkpoints")' },
+            action: { type: 'string', enum: ['scrape', 'list_checkpoints'], description: 'Action to perform ("scrape" or "list_checkpoints")' },
             userInstructions: { type: 'string', description: 'Prompt or instructions for dynamic extraction' },
             outputDir: { type: 'string', description: 'Directory to store output datasets and checkpoints' },
             sessionId: { type: 'string', description: 'Unique session identifier for checkpointing' }
