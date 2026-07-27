@@ -142,6 +142,16 @@ Base URL: `https://models.github.ai/inference`
 | Mistral-Small-3.1         | 128K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
 | + 35 more models          | Varies  | Varies     | Text / Image     | Varies by tier  |
 
+### [Gracestack Chat](https://tools.gracestack.se/chat.html) 🇸🇪
+
+Free tier, no login required. Self-hosted Qwen3-32B on Azure A100 GPUs. 10 free messages/day. OpenAI SDK-compatible. No API key needed — just send requests.
+
+Base URL: `https://tools.gracestack.se/api/chat`
+
+| Model Name               | Context | Max Output | Modality | Rate Limit    |
+| ------------------------ | ------- | ---------- | -------- | ------------- |
+| Qwen3-32B (A100-hosted)  | 32K     | 4K         | Text     | 10 msg/day    |
+
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
 Free tier, no credit card. Ultra-fast LPU inference. [^2]
