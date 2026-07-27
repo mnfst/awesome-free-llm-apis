@@ -144,13 +144,13 @@ Base URL: `https://models.github.ai/inference`
 
 ### [Gracestack Chat](https://tools.gracestack.se/chat.html) 🇸🇪
 
-Free tier, no login required. Self-hosted Qwen3-32B on Azure A100 GPUs. 10 free messages/day. OpenAI SDK-compatible. No API key needed — just send requests.
+Free tier, no login required. Self-hosted Qwen3-32B on Azure A100 GPUs. 3 free messages/day, OpenAI SDK-compatible. No API key needed — just send requests. ⚡ Power Pack: 100 calls for 9kr (~$1).
 
 Base URL: `https://tools.gracestack.se/api/chat`
 
 | Model Name               | Context | Max Output | Modality | Rate Limit    |
 | ------------------------ | ------- | ---------- | -------- | ------------- |
-| Qwen3-32B (A100-hosted)  | 32K     | 4K         | Text     | 10 msg/day    |
+| Qwen3-32B (A100-hosted)  | 32K     | 4K         | Text     | 3 msg/day     |
 
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
