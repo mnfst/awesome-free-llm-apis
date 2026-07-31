@@ -467,13 +467,29 @@ export async function createMCPServer(): Promise<Server> {
       },
       {
         name: 'cyber_tool',
-        description: 'Isolated cyber security tool registry and wiki manager for security binaries (sqlmap, nmap, ffuf) with userprofile storage.',
+        description: 'Educational cyber security coach plus registry/wiki manager for security binaries (sqlmap, nmap, ffuf). Never executes commands — it teaches the exact commands, explains why, tracks CTF decision graphs, and remembers per-tool run suggestions across sessions so the learner can resume where they left off.',
         inputSchema: {
           type: 'object' as const,
           properties: {
-            action: { type: 'string', enum: ['list_tools', 'get_tool', 'register_tool', 'wiki_lookup'], description: 'Cyber tool action' },
+            action: { type: 'string', enum: ['list_tools', 'get_tool', 'register_tool', 'wiki_lookup', 'learn', 'coach', 'save_graph', 'load_graph', 'tool_memory'], description: 'Cyber tool action' },
             toolName: { type: 'string', description: 'Security tool name (e.g. sqlmap, nmap, ffuf)' },
-            githubUrl: { type: 'string', description: 'GitHub repository URL for tool registration' }
+            githubUrl: { type: 'string', description: 'GitHub repository URL for tool registration' },
+            sessionId: { type: 'string', description: 'Session/CTF-challenge id; keys the progress record and decision graph for learn/coach/save_graph/load_graph' },
+            goal: { type: 'string', description: 'Natural-language objective for the learn action, e.g. "find SQLi on a lab web app"' },
+            level: { type: 'string', enum: ['beginner', 'intermediate', 'advanced'], description: 'Learner skill level; defaults to beginner' },
+            observation: { type: 'string', description: 'For coach: what the learner ran and what they observed' },
+            graphNode: {
+              type: 'object',
+              description: 'For save_graph: a decision-graph node to add, optionally linked from a prior node',
+              properties: {
+                id: { type: 'string' },
+                label: { type: 'string' },
+                type: { type: 'string', enum: ['goal', 'hypothesis', 'action', 'finding', 'deadend'] },
+                from: { type: 'string', description: 'id of the node this one follows from' }
+              }
+            },
+            memoryOp: { type: 'string', enum: ['read', 'write'], description: 'For tool_memory: read or append to that tool\'s run-suggestion memory' },
+            note: { type: 'string', description: 'For tool_memory write: the run suggestion/note to append' }
           },
           required: ['action']
         }

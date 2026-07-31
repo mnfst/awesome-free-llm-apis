@@ -465,6 +465,9 @@ async function main() {
               });
               break;
             }
+            case 'cyber_tool':
+              result = await cyberTool(params);
+              break;
             default:
               res.status(400).json({ error: `Unknown tool: ${tool}` });
               return;

@@ -139,12 +139,22 @@ Universal, 100% dynamic browser scraper with pausable session checkpointing, 0-t
 ---
 
 ### `cyber_tool` [NEW]
-Isolated security binary tool registry and dedicated wiki manager.
+Educational cyber security coach plus isolated security binary tool registry and dedicated wiki manager. **Never executes commands** — `learn`/`coach` only teach the exact command, why, expected output, and safety notes for the human to run themselves.
 - **Parameters**:
-  - `action` (required): `'list_tools'`, `'get_tool'`, `'register_tool'`, or `'wiki_lookup'`.
+  - `action` (required): `'list_tools'`, `'get_tool'`, `'register_tool'`, `'wiki_lookup'`, `'learn'`, `'coach'`, `'save_graph'`, `'load_graph'`, or `'tool_memory'`.
   - `toolName` (optional): Security tool name (e.g. `sqlmap`, `nmap`, `ffuf`).
   - `githubUrl` (optional): Target GitHub repository URL for registration.
-- **How it Works**: Manages dynamic security binary URL resolution via atomic process-safe `.lock` files in `~/.free-llm-mcp/cyber-tools-registry.json` and stores flag remediations and troubleshooting logs in the isolated `global-cyber-tools` wiki namespace.
+  - `sessionId` (optional): Session/CTF-challenge id — keys the progress record and decision graph for `learn`/`coach`/`save_graph`/`load_graph`.
+  - `goal` (optional): Natural-language objective for `learn`, e.g. `"find SQLi on a lab web app"`.
+  - `level` (optional): `'beginner' | 'intermediate' | 'advanced'` — defaults to `'beginner'`.
+  - `observation` (optional): For `coach` — what the learner ran and what they observed.
+  - `graphNode` (optional): For `save_graph` — `{ id, label, type?: 'goal'|'hypothesis'|'action'|'finding'|'deadend', from? }` to add a decision-graph node, optionally linked from a prior node.
+  - `memoryOp` (optional): For `tool_memory` — `'read'` or `'write'`.
+  - `note` (optional): For `tool_memory` write — the run suggestion to append.
+- **How it Works (registry/wiki)**: Manages dynamic security binary URL resolution via atomic process-safe `.lock` files in `~/.free-llm-mcp/cyber-tools-registry.json` and stores flag remediations and troubleshooting logs in the isolated `cyber-tools` wiki namespace.
+- **How it Works (coach)**: `learn` calls the security-tuned `TaskType.Cyber` model/persona (via `use_free_llm`'s routing) to generate a numbered walkthrough, and seeds a progress record plus a CTF decision-graph root node. `coach` explicitly loads and injects the saved progress, decision graph, and (if `toolName` is given) that tool's run-suggestion memory into the LLM call — so a challenge resumes with its full reasoning trail — then returns the single next command and extends the graph (marking a `deadend` node on failure-sounding observations).
+- **Decision graph**: `save_graph`/`load_graph` persist/reload a CTF reasoning graph as wiki page `ctf-graph/{sessionId}` (node/edge JSON body, with the page's `links` field mirroring the edges), so a challenge's decision trail can be saved and dynamically reloaded across sessions.
+- **Per-tool memory**: `tool_memory` reads/writes a per-CLI-tool "library" of run suggestions (wiki page `{toolName}/run_suggestions`), separate from the static `{toolName}/flags_and_troubleshooting` page, plus reliability stats from `GlobalWikiManager`.
 
 ---
 
