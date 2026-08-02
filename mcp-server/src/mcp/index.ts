@@ -135,7 +135,7 @@ export async function createMCPServer(): Promise<Server> {
       },
        {
          name: 'load_skill_prompt',
-         description: 'Search for or load a dynamic skill from the awesome-antigravity-skills index. Skills are saved locally to the workspace or home directory.',
+         description: 'Search for or load a dynamic skill from the agentic-awesome-skills index. Skills are saved locally to the workspace or home directory.',
          inputSchema: {
            type: 'object' as const,
            properties: {
