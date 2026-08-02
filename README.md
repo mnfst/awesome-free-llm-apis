@@ -85,7 +85,7 @@ Base URL: `https://generativelanguage.googleapis.com/v1beta`
 | Gemini 3.5 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 500 RPD   |
 | Gemini 3.1 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 500 RPD   |
 | Gemini 2.5 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 10 RPM, 20 RPD    |
-| Gemmma 4              | 1M      | 65K        | Text + Image + Audio + Video | 30 RPM, 14.4k RPD |
+| Gemma 4              | 1M      | 65K        | Text + Image + Audio + Video | 30 RPM, 14.4k RPD |
 
 ### [Mistral AI](https://console.mistral.ai/api-keys) 🇫🇷
 

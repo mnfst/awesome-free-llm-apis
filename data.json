@@ -213,7 +213,7 @@
         },
         {
           "id": "gemma-4",
-          "name": "Gemmma 4",
+          "name": "Gemma 4",
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
