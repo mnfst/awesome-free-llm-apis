@@ -119,6 +119,19 @@ Base URL: `https://open.bigmodel.cn/api/paas/v4`
 
 Third-party platforms that host open-weight models from various sources.
 
+### [Api.Airforce](https://api.airforce)
+
+Unified, OpenAI- & Anthropic-compatible gateway. Permanent free tier (free models, no credit card) plus pay-as-you-go from $0 for 100+ models across text, image, audio and video. OpenAI SDK-compatible; official SDKs in 8 languages.
+
+Base URL: `https://api.airforce/v1`
+
+| Model Name         | Context | Max Output | Modality | Rate Limit                                      |
+| ------------------ | ------- | ---------- | -------- | ----------------------------------------------- |
+| GLM-4.7 Flash      | 203K    | 131K       | Text     | Free tier (per-key throttle + daily token cap)  |
+| Kimi K2.6 Thinking | 262K    | 16K        | Text     | Free tier (per-key throttle + daily token cap)  |
+| DeepSeek V3.2      | 164K    | 8K         | Text     | Free tier (per-key throttle + daily token cap)  |
+| GPT-OSS 120B       | 131K    | 33K        | Text     | Free tier (per-key throttle + daily token cap)  |
+
 ### [Cerebras](https://cloud.cerebras.ai/) 🇺🇸
 
 Free tier with payment method required. Ultra-fast inference. 1M tokens/day cap. 64K context on free tier.
