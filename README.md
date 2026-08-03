@@ -149,26 +149,6 @@ Base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
 | `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 32K       | Shared w/ context | Text (reasoning)               | 10K neurons/day (shared) |
 | + 42 more models                               | Varies    | Varies            | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
 
-### [GitHub Models](https://github.com/marketplace/models) 🇺🇸
-
-Free prototyping for all GitHub users. 45+ models. Per-request limits (8K in / 4K out).
-
-Base URL: `https://models.github.ai/inference`
-
-| Model Name                             | Context | Max Output | Modality         | Rate Limit      |
-| -------------------------------------- | ------- | ---------- | ---------------- | --------------- |
-| gpt-5                                  | 200K    | 32K        | Text             | 10 RPM, 50 RPD  |
-| gpt-4.1                                | 1M      | 32K        | Text             | 10 RPM, 50 RPD  |
-| gpt-4.1-mini                           | 1M      | 32K        | Text             | 15 RPM, 150 RPD |
-| gpt-4o                                 | 128K    | 16K        | Text + Vision    | 10 RPM, 50 RPD  |
-| o4-mini                                | 200K    | 100K       | Text (reasoning) | 10 RPM, 50 RPD  |
-| Llama-4-Scout-17B-16E-Instruct         | 512K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
-| Llama-4-Maverick-17B-128E-Instruct-FP8 | 256K    | ~4K        | Text + Vision    | 10 RPM, 50 RPD  |
-| Llama-3.3-70B-Instruct                 | 131K    | ~4K        | Text             | 15 RPM, 150 RPD |
-| DeepSeek-R1                            | 64K     | 8K         | Text (reasoning) | 15 RPM, 150 RPD |
-| Mistral-Small-3.1                      | 128K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
-| + 35 more models                       | Varies  | Varies     | Text / Image     | Varies by tier  |
-
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
 Free tier, no credit card. Ultra-fast LPU inference. [^2]
