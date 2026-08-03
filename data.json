@@ -169,7 +169,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "15 RPM, 1,500 RPD"
+          "rateLimit": "5 RPM, 20 RPD"
         },
         {
           "id": "gemini-3.5-flash",
@@ -177,23 +177,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "15 RPM, 1,500 RPD"
-        },
-        {
-          "id": "gemini-3.5-flash-lite",
-          "name": "Gemini 3.5 Flash-Lite",
-          "context": "1M",
-          "maxOutput": "65K",
-          "modality": "Text + Image + Audio + Video",
-          "rateLimit": "30 RPM, 1,500 RPD"
-        },
-        {
-          "id": "gemini-3.1-flash-lite",
-          "name": "Gemini 3.1 Flash-Lite",
-          "context": "1M",
-          "maxOutput": "65K",
-          "modality": "Text + Image + Audio + Video",
-          "rateLimit": "30 RPM, 1,500 RPD"
+          "rateLimit": "5 RPM, 20 RPD"
         },
         {
           "id": "gemini-2.5-flash",
@@ -201,7 +185,23 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "15 RPM, 1,500 RPD"
+          "rateLimit": "5 RPM, 20 RPD"
+        },
+        {
+          "id": "gemini-3.5-flash-lite",
+          "name": "Gemini 3.5 Flash-Lite",
+          "context": "1M",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
+          "rateLimit": "15 RPM, 500 RPD"
+        },
+        {
+          "id": "gemini-3.1-flash-lite",
+          "name": "Gemini 3.1 Flash-Lite",
+          "context": "1M",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
+          "rateLimit": "15 RPM, 500 RPD"
         },
         {
           "id": "gemini-2.5-flash-lite",
@@ -209,15 +209,15 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "30 RPM, 1,500 RPD"
+          "rateLimit": "10 RPM, 20 RPD"
         },
         {
-          "id": "gemini-2.5-pro",
-          "name": "Gemini 2.5 Pro",
+          "id": "gemma-4",
+          "name": "Gemmma 4",
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "5 RPM, 50 RPD"
+          "rateLimit": "30 RPM, 14.4k RPD"
         }
       ]
     },
