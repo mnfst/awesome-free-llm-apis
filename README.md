@@ -169,6 +169,18 @@ Base URL: `https://models.github.ai/inference`
 | Mistral-Small-3.1                      | 128K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
 | + 35 more models                       | Varies  | Varies     | Text / Image     | Varies by tier  |
 
+### [Gonka Broker](https://app.gonkabroker.com/signup) 🇺🇸
+
+Permanent free tier, no credit card required. 1M+ tokens/month across all models, resets monthly. Model lineup rotates with network governance — live list at /v1/models.
+
+Base URL: `https://proxy.gonkabroker.com/v1`
+
+| Model Name               | Context | Max Output | Modality   | Rate Limit                |
+| ------------------------ | ------- | ---------- | ---------- | ------------------------- |
+| `MiniMaxAI/MiniMax-M2.7` | 204K    | 16K        | Text       | 1M+ tokens/month (shared) |
+| `moonshotai/Kimi-K2.6`   | 262K    | 8K         | Text       | 1M+ tokens/month (shared) |
+| `BAAI/bge-m3`            | 8K      | —          | Embeddings | 1M+ tokens/month (shared) |
+
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
 Free tier, no credit card. Ultra-fast LPU inference. [^2]

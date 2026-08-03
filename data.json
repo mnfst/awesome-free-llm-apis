@@ -546,6 +546,42 @@
       ]
     },
     {
+      "name": "Gonka Broker",
+      "category": "inference_provider",
+      "country": "US",
+      "flag": "🇺🇸",
+      "url": "https://app.gonkabroker.com/signup",
+      "baseUrl": "https://proxy.gonkabroker.com/v1",
+      "description": "Permanent free tier, no credit card required. 1M+ tokens/month across all models, resets monthly. Model lineup rotates with network governance — live list at /v1/models.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "MiniMaxAI/MiniMax-M2.7",
+          "name": "MiniMaxAI/MiniMax-M2.7",
+          "context": "204K",
+          "maxOutput": "16K",
+          "modality": "Text",
+          "rateLimit": "1M+ tokens/month (shared)"
+        },
+        {
+          "id": "moonshotai/Kimi-K2.6",
+          "name": "moonshotai/Kimi-K2.6",
+          "context": "262K",
+          "maxOutput": "8K",
+          "modality": "Text",
+          "rateLimit": "1M+ tokens/month (shared)"
+        },
+        {
+          "id": "BAAI/bge-m3",
+          "name": "BAAI/bge-m3",
+          "context": "8K",
+          "maxOutput": "—",
+          "modality": "Embeddings",
+          "rateLimit": "1M+ tokens/month (shared)"
+        }
+      ]
+    },
+    {
       "name": "Groq",
       "category": "inference_provider",
       "country": "US",

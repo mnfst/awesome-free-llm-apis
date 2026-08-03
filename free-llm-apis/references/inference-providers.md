@@ -77,6 +77,34 @@ export NVIDIA_API_KEY="your-key-here"
 
 ---
 
+## Gonka Broker
+
+**Models:** MiniMax M2.7, Kimi K2.6, BGE-M3 (embeddings) — lineup rotates; live list at https://proxy.gonkabroker.com/v1/models
+**Limits:** 1M+ tokens/month across all models, resets monthly
+
+### Get your API key
+
+1. Go to [gonkabroker.com](https://app.gonkabroker.com/signup) and sign up with email or Google.
+2. Open the **API Keys** tab and create a key.
+3. Copy the key (starts with `gnk-prx-`, shown only once).
+
+### Usage example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_GONKA_BROKER_KEY",
+    base_url="https://proxy.gonkabroker.com/v1"
+)
+
+response = client.chat.completions.create(
+    model="MiniMaxAI/MiniMax-M2.7",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)
+```
+
 ## Groq
 
 **Models:** Llama 3.3 70B, Llama 4 Scout, Kimi K2 +17 more
