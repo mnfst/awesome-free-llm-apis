@@ -1,0 +1,12 @@
+{
+  "runs": ["2026-07-29", "2026-07-30"],
+  "streaks": {
+    "LLM7.io/deepseek-r1-0528": { "count": 2, "firstFail": "2026-07-29", "errorClass": "NOT_FOUND" },
+    "LLM7.io/deepseek-v3-0324": { "count": 2, "firstFail": "2026-07-29", "errorClass": "NOT_FOUND" },
+    "LLM7.io/gemini-2.5-flash-lite": { "count": 2, "firstFail": "2026-07-29", "errorClass": "NOT_FOUND" },
+    "LLM7.io/gpt-4o-mini": { "count": 2, "firstFail": "2026-07-29", "errorClass": "NOT_FOUND" },
+    "LLM7.io/mistral-small-3.1-24b": { "count": 2, "firstFail": "2026-07-29", "errorClass": "NOT_FOUND" },
+    "LLM7.io/qwen2.5-coder-32b": { "count": 2, "firstFail": "2026-07-29", "errorClass": "NOT_FOUND" },
+    "OVHcloud AI Endpoints/Llama-3.1-8B-Instruct": { "count": 2, "firstFail": "2026-07-29", "errorClass": "NOT_FOUND" }
+  }
+}
