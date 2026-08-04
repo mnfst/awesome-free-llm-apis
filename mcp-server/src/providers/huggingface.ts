@@ -15,6 +15,9 @@ export class HuggingFaceProvider extends BaseProvider {
     { id: 'google/gemma-4-31B-it', name: 'Gemma 4 31B' },
     { id: 'google/gemma-4-26B-A4B-it', name: 'Gemma 4 26B' },
     { id: 'deepseek-ai/DeepSeek-R1', name: 'DeepSeek R1' },
-    { id: 'mistralai/Mistral-7B-Instruct-v0.3', name: 'Mistral 7B v0.3' },
+    { id: 'Qwen/Qwen2.5-Coder-7B-Instruct', name: 'Qwen2.5 Coder 7B Instruct' },
+    { id: 'google/gemma-3-4b-it', name: 'Gemma 3 4B' },
+    { id: 'meta-llama/Llama-3.1-8B-Instruct', name: 'Llama 3.1 8B Instruct' },
+    { id: 'microsoft/phi-4', name: 'Phi-4' },
   ];
 }

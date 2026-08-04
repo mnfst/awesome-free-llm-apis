@@ -43,7 +43,7 @@ graph TD
 | 3 | `StructuralMiddleware` | Injects full **Session Memory** (queue state + distilled knowledge) and enforces Markdown response formats. |
 | 4 | `ImageRouterMiddleware` | Detects `file:///` URIs, parses image extensions, converts to base64, and routes to VLMs. |
 | 5 | `TextRouterMiddleware` | Task-to-Tier routing using `TaskClassifier.autoClassify` to select optimal model. |
-| 6 | `AgenticMiddleware` *(optional)* | Task decomposition, research validation, and multi-turn state persistence. |
+| 6 | `AgenticMiddleware` *(optional)* | Task decomposition, research validation, and multi-turn state persistence. Time-budgeted (`MCP_SUBTASK_BUDGET_MS`, default 20s) — see [Long-Running / Background Execution](#long-running--background-execution) below. |
 | 7 | `TokenManagerMiddleware` | Enforces rate-limit tracking and quota gates. |
 | 8 | `LLMExecutor` | HTTPS request; updates RPM/TPM usage from headers; handles circuit-breaking. |
 
@@ -53,7 +53,7 @@ graph TD
 
 | Tool | Purpose | Required Params | Key Optional Params |
 |------|---------|----------------|---------------------|
-| `use_free_llm` | Universal chat with deterministic steering; returns ONLY text content | `messages` | `model`, `keywords`, `agentic`, `sessionId`, **`workspace_root`** |
+| `use_free_llm` | Universal chat with deterministic steering; returns ONLY text content | `messages` | `model`, `keywords`, `agentic`, `sessionId`, **`workspace_root`**, `action` |
 | `execute_skill` | Runs a prompt grounded in a specific skill's instructions and reference files | `skill`, `input` | `model`, `workspace_root` |
 | `vision_tool` | Analyze local images via a vision-capable model | `image_path` | `prompt`, `model` |
 | `load_skill_prompt` | Dynamically load or search for skill prompts from the global index | `skill` | — |
@@ -62,6 +62,8 @@ graph TD
 | `manage_memory` | Workspace-scoped memory: search/list/stats/clear | `action` | `workspace_root`, `query`, `limit` |
 | `store_workspace_skill` | Explicitly save structured knowledge and generated scripts | `name`, `what` | `workspace_root` |
 | `index_workspace` | Proactively index workspace files for semantic search | `workspace_root` | `force` |
+| `browser_tool` | Owns a real `chrome-devtools-mcp` session; granular actions (navigate/click/extract/network/api_replay/checkpoint/...) plus a legacy one-call `scrape` macro — see [browser_tool.md](docs/browser_tool.md) | `action` | `url`, `sessionId`, `params`, `userInstructions`, `outputDir`, `strict` |
+| `cyber_tool` | Isolated security tool registry & wiki manager for security binaries (`sqlmap`, `nmap`, `ffuf`) | `action` | `toolName`, `githubUrl` |
 
 ---
 
@@ -88,6 +90,15 @@ await client.callTool('use_free_llm', {
 });
 ```
 
+**Poll a long-running agentic session instead of re-sending the full prompt:**
+```ts
+await client.callTool('use_free_llm', {
+  messages: [{ role: 'user', content: '' }],
+  sessionId: 'my-project-session',
+  action: 'status'
+});
+```
+
 **Execute a specific local skill:**
 ```ts
 await client.callTool('execute_skill', {
@@ -96,6 +107,36 @@ await client.callTool('execute_skill', {
   workspace_root: '/abs/path/to/my-project'
 });
 ```
+
+---
+
+## Long-Running / Background Execution
+
+Many MCP clients (code editors especially) kill a tool call at ~30s. `AgenticMiddleware` runs
+against a wall-clock budget (`MCP_SUBTASK_BUDGET_MS`, default 20000ms) instead of blocking until
+every subtask finishes:
+
+- If the budget is hit mid-run, `use_free_llm` returns immediately with whatever subtasks
+  completed plus a resume handle, and **keeps executing the remaining subtasks in the
+  background** on the server.
+- Re-calling `use_free_llm` with the same `sessionId` while that background run is still active
+  returns a status snapshot (completed/remaining count, last finished subtask) instead of
+  starting a second concurrent run — so a client's timeout-and-retry is safe and doubles as
+  polling.
+- Once the background run finishes, the next call for that `sessionId` returns the rest of the
+  result (or, if nothing changed, simply proceeds normally — no explicit action required).
+
+Control this explicitly via the optional `action` param on `use_free_llm`:
+
+| `action` | Behavior |
+|---|---|
+| `run` *(default)* | Normal call, subject to the time budget above. |
+| `status` | Instantly reports whether a background run is active and how much is done — no LLM call. |
+| `continue` | Resumes a paused/yielded queue. Equivalent to replying with `continue <promptId> ...`. |
+| `abort` | Cancels an in-progress background run; the queue stays resumable via `continue`. |
+
+The legacy text convention (`continue <PROMPT_ID> <output>`) still works unchanged for
+terminal-command pauses and failed-subtask pauses (see [docs/skill/SKILL.md](docs/skill/SKILL.md), "⚠️ Agentic Behavior & Limits") — `action` is additive, not a replacement.
 
 ---
 

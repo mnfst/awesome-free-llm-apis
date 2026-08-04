@@ -9,23 +9,44 @@ function truncate(s: string, max: number): string {
   return s.length <= max ? s : s.slice(0, max) + '…[truncated]';
 }
 
+const FIVE_MB = 5 * 1024 * 1024;
+
 /**
- * Appends a turn to the session's chat-log.json with a rolling 200-entry window.
- * Extracted from AgenticMiddleware.ts so other call sites (MCP dispatcher,
- * use-free-llm interception loop) share a single implementation.
+ * Appends a turn to the workspace/session's chat-logs.json with 5MB rotation support.
  */
 export async function logChatTurn(sessionId: string, turn: Record<string, any>): Promise<void> {
   try {
-    const logPath = path.join(PROJECTS_DIR, sessionId, 'chat-log.json');
-    await fs.ensureDir(path.dirname(logPath));
+    const projectDir = path.join(PROJECTS_DIR, sessionId);
+    const logPath = path.join(projectDir, 'chat-logs.json');
+    await fs.ensureDir(projectDir);
+
     let log: any[] = [];
     try {
       const raw = await fs.readFile(logPath, 'utf-8');
       log = JSON.parse(raw);
     } catch { /* start fresh */ }
-    log.push({ ts: Date.now(), ...turn });
+
+    const entryType = turn.role === 'tool_call' ? 'tool' : (turn.isError ? 'error' : 'chat');
+    log.push({
+      sessionId,
+      timestamp: Date.now(),
+      type: entryType,
+      payload: turn
+    });
+
     if (log.length > 200) log = log.slice(-200);
-    await writeFileAtomic(logPath, JSON.stringify(log));
+
+    const serialized = JSON.stringify(log, null, 2);
+    if (serialized.length > FIVE_MB) {
+      const rotatedPath = path.join(projectDir, 'chat-logs.1.json');
+      try {
+        await fs.move(logPath, rotatedPath, { overwrite: true });
+      } catch {}
+      log = log.slice(-50);
+      await writeFileAtomic(logPath, JSON.stringify(log, null, 2));
+    } else {
+      await writeFileAtomic(logPath, serialized);
+    }
   } catch {
     // non-fatal — logging must never affect the call path
   }

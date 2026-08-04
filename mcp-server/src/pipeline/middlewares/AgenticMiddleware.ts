@@ -25,136 +25,32 @@ import { buildExecutionPlan } from './task-classifier.js';
 import { ProviderRegistry } from '../../providers/registry.js';
 
 
-interface SubtaskHistoryEntry {
-    task: string;
-    taskId?: string;
-    output: string;
-    filesModified: string[];
-    timestamp: number;
-    model?: string;
-    provider?: string;
+import { SubtaskDecomposer, createEmptyQueueState, newQueueTaskId, type QueueTask, type QueueState, type SubtaskHistoryEntry } from './SubtaskDecomposer.js';
+import { ContextResolver } from './ContextResolver.js';
+import { HistoryManager } from './HistoryManager.js';
+import { SUBTASK_BUDGET_MS } from './constants.js';
+import { RunRegistry, type RunInfo } from './RunRegistry.js';
+
+export { createEmptyQueueState, newQueueTaskId, type QueueTask, type QueueState, type SubtaskHistoryEntry };
+
+export function protectInjectedReferenceBlocks(goal: string): { tokenized: string; placeholders: Map<string, string> } {
+    return ContextResolver.protectInjectedReferenceBlocks(goal);
 }
 
-// A queued subtask. `task` may contain `protected_ref_N` placeholder tokens standing in for
-// injected pdf://file://artifact:// content (see protectInjectedReferenceBlocks) — those are
-// resolved back to full content lazily, once, right before a subtask's prompt is built
-// (executeSingleSubtask), using QueueState.resolvedContext. Everything upstream of that
-// (decomposeGoal, buildExecutionPlan, queue storage, logs, history) only ever sees the short
-// placeholder form.
-interface QueueTask {
-    id: string;
-    task: string;
+export function decomposeGoal(goal: string): { tasks: QueueTask[]; resolvedContext: Record<string, string> } {
+    return SubtaskDecomposer.decomposeGoal(goal);
 }
 
-interface QueueState {
-    nowQueue: QueueTask[];
-    nextQueue: QueueTask[];
-    blockedQueue: QueueTask[];
-    improveQueue: QueueTask[];
-    resolvedContext?: Record<string, string>;
-    history?: SubtaskHistoryEntry[];
-    paused?: boolean;
-    promptId?: string;
-    pausedSubtaskIndex?: number;
-    retrospectionInjections?: number;
-}
-
-export function createEmptyQueueState(): QueueState {
-    return {
-        nowQueue: [],
-        nextQueue: [],
-        blockedQueue: [],
-        improveQueue: [],
-        resolvedContext: {},
-        history: [],
-        paused: false,
-        promptId: undefined,
-        pausedSubtaskIndex: undefined
-    };
-}
-
-let queueTaskIdCounter = 0;
-function newQueueTaskId(): string {
-    queueTaskIdCounter = (queueTaskIdCounter + 1) % 1_000_000;
-    return `t${Date.now().toString(36)}${queueTaskIdCounter.toString(36)}`;
-}
-
-/**
- * Memory Management: Using LRUCache instead of Map to prevent leaks in high-concurrency environments.
- * Max 500 active sessions, 24h TTL.
- */
-const queues = new LRUCache<string, QueueState>({
-    max: 500,
-    ttl: 1000 * 60 * 60 * 24,
-});
-
-/**
- * Stateless-first state recovery: load from disk if cache miss.
- */
 async function getOrLoadState(sessionId: string): Promise<QueueState> {
-    let state = queues.get(sessionId);
-    if (!state) {
-        // Cold start recovery
-        try {
-            const statePath = path.join(PROJECTS_DIR, sessionId, STATE_FILE);
-            const data = await fs.readFile(statePath, 'utf-8');
-            state = JSON.parse(data);
-            if (state) queues.set(sessionId, state);
-        } catch {
-            // No saved state or invalid, start fresh
-        }
-    }
-
-    if (!state) {
-        state = createEmptyQueueState();
-        queues.set(sessionId, state);
-    } else {
-        if (!state.history) state.history = [];
-        if (state.paused === undefined) state.paused = false;
-        if (!state.resolvedContext) state.resolvedContext = {};
-        
-        // Migrate legacy string queues to QueueTask objects
-        const migrateQueue = (q: any[]) => {
-            if (!Array.isArray(q)) return [];
-            return q.map((item, idx) => {
-                if (typeof item === 'string') {
-                    return {
-                        id: `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-                        task: item
-                    };
-                }
-                return item;
-            });
-        };
-        state.nowQueue = migrateQueue(state.nowQueue);
-        state.nextQueue = migrateQueue(state.nextQueue);
-        state.blockedQueue = migrateQueue(state.blockedQueue);
-        state.improveQueue = migrateQueue(state.improveQueue);
-    }
-    return state;
+    return SubtaskDecomposer.getOrLoadState(sessionId);
 }
 
-async function persistState(sessionId: string, projectDir: string) {
-    const state = queues.get(sessionId);
-    if (!state) return;
-
-    const statePath = path.join(projectDir, STATE_FILE);
-    try {
-        await withFileLock(statePath, async () => {
-            await writeFileAtomic(
-                statePath,
-                JSON.stringify(state, null, 2)
-            );
-        });
-    } catch {
-        // non-fatal
-    }
+async function persistState(sessionId: string, projectDir: string): Promise<void> {
+    return SubtaskDecomposer.persistState(sessionId, projectDir);
 }
 
-/**
- * Debounced State Persistence: Batches writes to reduce I/O under high throughput.
- */
-const persistStateDebounced = debounce(persistState, 2000);
+const persistStateDebounced = SubtaskDecomposer.persistStateDebounced;
+
 
 
 /**
@@ -297,235 +193,23 @@ const REFERENCE_MARKER_REGEX = /\[(?<label>[^\]]+)\]\((?<bProto>file|mcp|ctx7|ar
  * the injected block's own internal line structure into bogus one-line "subtasks."
  */
 // Bracketed system sentinels — [NOT_FOUND_HARD_STOP: ...], [PDF-PAGE-DEFERRED: ...], etc.
-// (use-free-llm.ts's resolveFileRefs) — that stand in for a reference when it couldn't be
-// resolved or was deferred. These often carry the original file path verbatim (e.g. a PDF
-// basename with capitalized segments), which leaks into classifyIntent's capital-word
-// heuristic exactly like unprotected PDF page content did — same bug, different source, so
-// it gets the same opaque-placeholder treatment below.
-const SENTINEL_REGEX = /\[[A-Z][A-Z0-9_-]*:[^\]]*\]/g;
-
-export function protectInjectedReferenceBlocks(goal: string): { tokenized: string; placeholders: Map<string, string> } {
-    const placeholders = new Map<string, string>();
-    const matches = [...goal.matchAll(REFERENCE_MARKER_REGEX)];
-
-    let tokenized: string;
-    let placeholderIndex = 0;
-
-    if (matches.length === 0) {
-        tokenized = goal;
-    } else {
-        tokenized = '';
-        let cursor = 0;
-
-        for (let i = 0; i < matches.length; i++) {
-            const match = matches[i];
-            const matchStart = match.index ?? -1;
-            if (matchStart < cursor) continue; // already consumed as part of a prior span
-
-            const markerEnd = matchStart + match[0].length;
-            const rest = goal.slice(markerEnd);
-            const leadingWsLen = rest.length - rest.trimStart().length;
-            const contentStart = markerEnd + leadingWsLen;
-
-            const PDF_CONTEXT_CLOSE = '[/PDF-Context]';
-            let blockEnd: number;
-            if (goal.startsWith('```', contentStart)) {
-                const closeIdx = goal.indexOf('```', contentStart + 3);
-                blockEnd = closeIdx === -1 ? goal.length : closeIdx + 3;
-            } else if (goal.startsWith('[PDF-Context]', contentStart)) {
-                const closeIdx = goal.indexOf(PDF_CONTEXT_CLOSE, contentStart);
-                blockEnd = closeIdx === -1 ? goal.length : closeIdx + PDF_CONTEXT_CLOSE.length;
-            } else {
-                // No known closing delimiter (older/unrecognized injected content shape) —
-                // fall back to running until the next reference marker or end of string.
-                // This can still swallow trailing user text that immediately follows an
-                // unrecognized injected block on the same line; recognized shapes above
-                // avoid that by bounding themselves explicitly.
-                const nextMatch = matches.slice(i + 1).find(m => (m.index ?? -1) >= contentStart);
-                blockEnd = nextMatch ? (nextMatch.index as number) : goal.length;
-            }
-
-            const placeholder = `protected_ref_${placeholderIndex++}`;
-            placeholders.set(placeholder, goal.slice(matchStart, blockEnd));
-            tokenized += goal.slice(cursor, matchStart) + placeholder;
-            cursor = blockEnd;
-        }
-        tokenized += goal.slice(cursor);
-    }
-
-    // Second pass: protect any bracketed system sentinels left over (self-contained, no
-    // "following content" to bound — the whole match is the span).
-    let finalTokenized = '';
-    let sentinelCursor = 0;
-    for (const m of tokenized.matchAll(SENTINEL_REGEX)) {
-        const start = m.index ?? -1;
-        const end = start + m[0].length;
-        const placeholder = `protected_ref_${placeholderIndex++}`;
-        placeholders.set(placeholder, m[0]);
-        finalTokenized += tokenized.slice(sentinelCursor, start) + placeholder;
-        sentinelCursor = end;
-    }
-    finalTokenized += tokenized.slice(sentinelCursor);
-
-    return { tokenized: finalTokenized, placeholders };
-}
-
 // Scans raw (untokenized) message text for [PDF-PAGE-DEFERRED: <path> — ...] sentinels
 // (resolveFileRefs()'s 5-page-per-pass cap) and returns the deferred page references found.
 function extractDeferredPdfPages(text: string): string[] {
-    const regex = /\[PDF-PAGE-DEFERRED:\s*([^—\]]+?)\s*—[^\]]*\]/g;
-    return [...text.matchAll(regex)].map(m => m[1].trim());
+    return ContextResolver.extractDeferredPdfPages(text);
 }
 
-// The model isn't reliably mentioning a deferred page on its own (confirmed live: a 6-page
-// request with one page deferred by the cap produced a response that never mentioned page 6
-// at all, especially once context-budget truncation drops earlier pages too) — so this is
-// appended deterministically rather than left to chance.
-// Context-injected log entries previously only recorded a label (e.g. "File Injected: auth.ts
-// (2400 chars)") — the actual injected text lived only in context.request.messages, which is
-// never persisted, so nothing downstream (dashboard included) could ever show what was really
-// injected. This caps what gets logged (chat-log.json has a rolling 200-entry window — don't
-// bloat it with a full 50KB file), not what a user can see: the dashboard renders a short
-// preview with a click-to-expand for the full (capped) text.
 const MAX_CONTEXT_LOG_CHARS = 4000;
 function excerptForLog(text: string): string {
-    const trimmed = text.trim();
-    return trimmed.length > MAX_CONTEXT_LOG_CHARS
-        ? trimmed.slice(0, MAX_CONTEXT_LOG_CHARS) + '…[truncated]'
-        : trimmed;
+    return ContextResolver.excerptForLog(text);
 }
 
 function appendDeferredPagesNotice(content: string, deferred: string[], maxPages: number): string {
-    if (deferred.length === 0) return content;
-    const list = deferred.map(d => `- \`${d}\``).join('\n');
-    return `${content}\n\n---\n⚠️ **Note:** ${deferred.length} PDF page reference(s) were not processed in this pass (max ${maxPages} pages per request) and are not reflected above:\n${list}\nAsk again in a follow-up request to include them.`;
+    return ContextResolver.appendDeferredPagesNotice(content, deferred, maxPages);
 }
 
 function restoreProtectedReferenceBlocks(text: string, placeholders: Map<string, string>): string {
-    let restored = text;
-    for (const [placeholder, original] of placeholders) {
-        restored = restored.split(placeholder).join(original);
-    }
-    return restored;
-}
-
-// Returns subtasks with `protected_ref_N` placeholder tokens left UNRESOLVED (not restored
-// to raw injected content) — decomposeGoalCore's line-splitting, buildExecutionPlan's
-// dependency/file-extraction heuristics, and queue storage/logs all then operate on short,
-// clean text instead of raw PDF/file page content. `resolvedContext` carries the
-// placeholder -> full-content map for the caller to retain (QueueState.resolvedContext) and
-// resolve lazily, once, at actual subtask-execution time (see executeSingleSubtask).
-export function decomposeGoal(goal: string): { tasks: QueueTask[]; resolvedContext: Record<string, string> } {
-    const { tokenized, placeholders } = protectInjectedReferenceBlocks(goal);
-    const steps = placeholders.size === 0 ? decomposeGoalCore(goal) : decomposeGoalCore(tokenized);
-    const tasks = steps.map(task => ({ id: newQueueTaskId(), task }));
-    const resolvedContext = Object.fromEntries(placeholders);
-    return { tasks, resolvedContext };
-}
-
-function decomposeGoalCore(goal: string): string[] {
-    let items: string[] = [];
-    const lines = goal.split('\n').map(l => l.trim()).filter(Boolean);
-    
-    // Keep track of explicit mode for each line
-    const lineModes = lines.map(line => {
-        if (line.startsWith('>')) {
-            return { text: line.substring(1).trim(), mode: 'parallel' as const };
-        }
-        if (line.startsWith('-')) {
-            return { text: line.substring(1).trim(), mode: 'sequential' as const };
-        }
-        // Strip other bullets for clean text processing
-        const cleanText = line.replace(/^\s*(?:\d+[.)\-]|[-*])\s+/, '').trim();
-        return { text: cleanText, mode: undefined };
-    });
-
-    const listItems = goal.match(/^\s*(?:\d+[.)\-]|[-*])\s+(.+)/gm);
-    const hasExplicitDsl = lines.some(l => l.startsWith('>'));
-
-    if (hasExplicitDsl) {
-        items = lineModes.map(m => m.text).filter(Boolean);
-    } else if (listItems && listItems.length >= 2) {
-        items = listItems.map(l => l.replace(/^\s*(?:\d+[.)\-]|[-*])\s+/, '').trim());
-    } else {
-        items = goal
-            .split(/\n+/)
-            .map(l => l.replace(/^\s*\d+[.)]\s*/, '').trim())
-            .filter(l => l.length > 0);
-    }
-
-    if (items.length === 0) {
-        return [];
-    }
-
-    // Semantic combination of similar/simple tasks
-    let finalTasks: { text: string; mode?: 'parallel' | 'sequential' }[] = [];
-    if (hasExplicitDsl) {
-        finalTasks = lineModes.filter(m => m.text).map(m => ({ text: m.text, mode: m.mode }));
-    } else {
-        const combined: string[] = [];
-        let pendingReads: string[] = [];
-
-        for (const item of items) {
-            const isRead = /\b(?:read|view|inspect|show|print|cat|get|display)\b/i.test(item) &&
-                           (/(?:[a-zA-Z]:)?[\\/]/i.test(item) || /\b[a-zA-Z0-9_\-\/\\\.]+\.[a-zA-Z0-9]+\b/i.test(item));
-            
-            if (isRead) {
-                const fileMatch = item.match(/(?:[a-zA-Z]:)?[\\/][a-zA-Z0-9_\-\/\\\.]+\.[a-zA-Z0-9]+|\b[a-zA-Z0-9_\-\/\\\.]+\.[a-zA-Z0-9]+\b/);
-                if (fileMatch) {
-                    pendingReads.push(fileMatch[0]);
-                    continue;
-                }
-            }
-
-            if (pendingReads.length > 0) {
-                combined.push(`Read and inspect ${pendingReads.join(', ')}`);
-                pendingReads = [];
-            }
-
-            combined.push(item);
-        }
-
-        if (pendingReads.length > 0) {
-            combined.push(`Read and inspect ${pendingReads.join(', ')}`);
-        }
-        finalTasks = combined.map(t => ({ text: t }));
-    }
-
-    // Helper to infer TaskType
-    const inferTaskType = (t: string): string => {
-        const text = t.toLowerCase();
-        const codingExts = /\.(ts|js|py|go|rs|json|html|css|sh|yaml|yml)\b/;
-        const codingTerms = /\b(fix|bug|refactor|compile|build|implement|feature|code|function|class|variable|merge|git|commit|pr|pull request|issue|lint|syntax|type|interface)\b/;
-        const reasoningTerms = /\b(why|explain|reason|prove|analyze|diagnose|debug|verify|logical|math|derivation|theorem|proof)\b/;
-        const searchTerms = /\b(search|find|lookup|query|grep|google|fetch|web|internet)\b/;
-        const summarizationTerms = /\b(summarize|summary|distill|brief|outline|overview)\b/;
-        
-        if (codingExts.test(text) || codingTerms.test(text)) return 'coding';
-        if (reasoningTerms.test(text)) return 'reasoning';
-        if (searchTerms.test(text)) return 'search';
-        if (summarizationTerms.test(text)) return 'summarization';
-        return 'chat';
-    };
-
-    // Same TaskType collision guard for parallel tasks
-    const parallelTasks = finalTasks.filter(t => t.mode === 'parallel');
-    const typeCounts = new Map<string, number>();
-    for (const t of parallelTasks) {
-        const type = inferTaskType(t.text);
-        typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
-    }
-
-    return finalTasks.map(t => {
-        let mode = t.mode;
-        if (mode === 'parallel' && (typeCounts.get(inferTaskType(t.text)) || 0) > 1) {
-            mode = 'sequential';
-        }
-        if (mode) {
-            return `[${mode}] ${t.text}`;
-        }
-        return t.text;
-    });
+    return ContextResolver.restoreProtectedReferenceBlocks(text, placeholders);
 }
 
 
@@ -700,6 +384,20 @@ export function extractCues(text: string): string[] {
     const vars = text.match(varPattern) || [];
     for (const v of vars) {
         if (v.length > 3) cues.add(v);
+    }
+
+    // 7. Kebab-case dependency/package names (e.g., serve-static, ip-address, body-parser)
+    const kebabPattern = /\b[a-z0-9]+(?:-[a-z0-9]+)+\b/g;
+    const kebabs = text.match(kebabPattern) || [];
+    for (const k of kebabs) {
+        if (k.length > 3) cues.add(k);
+    }
+
+    // 8. Vulnerability IDs (e.g. CVE-2024-39338, GHSA-c2qf-rxjj-qqgw)
+    const vulnPattern = /\b(?:CVE-\d{4}-\d+|GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4})\b/gi;
+    const vulns = text.match(vulnPattern) || [];
+    for (const v of vulns) {
+        cues.add(v);
     }
 
     return Array.from(cues);
@@ -1357,6 +1055,118 @@ async function executeSingleSubtask(
     return true;
 }
 
+/**
+ * Drains the remaining nowQueue for a session after AgenticMiddleware.execute() has
+ * already yielded a partial result at the time budget. Runs detached (not awaited by the
+ * request handler) — RunRegistry.isRunning(sessionId) keeps other calls for this session
+ * from starting a second concurrent run while this executes; action:'status' reads
+ * RunRegistry.get(sessionId) for progress; action:'abort' cancels via runInfo.controller.
+ */
+async function continueQueueInBackground(
+    sessionId: string,
+    projectDir: string,
+    workspaceRoot: string | undefined,
+    executor: LLMExecutor,
+    baseContext: PipelineContext,
+    commsQueue: string[],
+    promptQueue: string[],
+    runInfo: RunInfo
+): Promise<void> {
+    try {
+        const q = await getOrLoadState(sessionId);
+        let iterations = 0;
+        const MAX_ITERATIONS = 20;
+        while (q.nowQueue.length > 0 && iterations < MAX_ITERATIONS) {
+            if (runInfo.controller.signal.aborted) {
+                console.error(`[AgenticMiddleware] Background run aborted for session=${sessionId}`);
+                break;
+            }
+            iterations++;
+            const taskNode = q.nowQueue[0];
+
+            const clonedCtx: PipelineContext = {
+                ...baseContext,
+                request: {
+                    ...baseContext.request,
+                    messages: baseContext.request.messages.map(m => ({ ...m }))
+                }
+            } as any;
+
+            await logChatTurn(sessionId, { role: 'subtask_start', tool: 'Agentic Subtask (background)', content: taskNode.task });
+
+            let success = false;
+            try {
+                success = await executeSingleSubtask(
+                    taskNode.task, taskNode.id, (q.resolvedContext ??= {}), clonedCtx,
+                    sessionId, projectDir, workspaceRoot, iterations, q.history || [],
+                    executor, [], commsQueue, promptQueue
+                );
+            } catch (err) {
+                console.error(`[AgenticMiddleware] Background subtask crashed: ${err}`);
+                success = false;
+            }
+
+            const responseContent = getResponseContent(clonedCtx);
+            if (!success || !responseContent) {
+                await logChatTurn(sessionId, { role: 'error', tool: 'Agentic Subtask (background)', content: `Failed: ${taskNode.task}` });
+                if (!q.promptId) q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                q.paused = true;
+                q.pauseReason = 'failed';
+                await persistState(sessionId, projectDir);
+                break;
+            }
+
+            await logChatTurn(sessionId, {
+                role: 'subtask_response',
+                tool: 'Agentic Subtask (background)',
+                content: `Completed: ${taskNode.task}`,
+                output: responseContent,
+                model: clonedCtx.response?.model,
+                provider: (clonedCtx.response as any)?._providerId
+            });
+
+            if (!q.history) q.history = [];
+            q.history.push({
+                task: taskNode.task,
+                taskId: taskNode.id,
+                output: responseContent,
+                filesModified: getTaskFiles(responseContent),
+                timestamp: Date.now(),
+                model: clonedCtx.response?.model,
+                provider: (clonedCtx.response as any)?._providerId
+            });
+
+            q.nowQueue = q.nowQueue.filter(e => e.id !== taskNode.id);
+            await persistState(sessionId, projectDir);
+            RunRegistry.progress(sessionId, taskNode.task, q.history.length, q.nowQueue.length);
+        }
+
+        // fix: if we hit the iteration cap with tasks still pending, surface the halt
+        // clearly instead of silently stopping. Without this, action:'status' shows
+        // remaining queue items with no indication that background processing has halted.
+        if (iterations >= MAX_ITERATIONS && q.nowQueue.length > 0 && !runInfo.controller.signal.aborted) {
+            const remaining = q.nowQueue.length;
+            const haltMsg = `Background execution halted after ${MAX_ITERATIONS} iterations with ${remaining} task(s) still pending. Re-submit to continue.`;
+            console.error(`[AgenticMiddleware] ${haltMsg} session=${sessionId}`);
+            q.paused = true;
+            q.pauseReason = 'iteration_limit';
+            await persistState(sessionId, projectDir);
+            RunRegistry.finish(sessionId, haltMsg);
+            return;
+        }
+
+        if (q.nowQueue.length === 0 && !runInfo.controller.signal.aborted) {
+            q.paused = false;
+            q.pauseReason = undefined;
+            await persistState(sessionId, projectDir);
+        }
+        RunRegistry.finish(sessionId);
+    } catch (err: any) {
+        console.error(`[AgenticMiddleware] Background continuation failed for session=${sessionId}:`, err);
+        RunRegistry.finish(sessionId, err?.message || String(err));
+    }
+}
+
 function getOriginalUserContent(content: string): string {
     const marker = '// FULL file content here (never partial diffs)\n```';
     const index = content.indexOf(marker);
@@ -1424,10 +1234,46 @@ export class AgenticMiddleware implements Middleware {
         const projectDir = await ensureProjectFiles(sessionId, workspaceRoot);
         const q = await getOrLoadState(sessionId);
 
+        // A background continuation from a previous budget-yielded call may still be running
+        // for this session. Rather than starting a second concurrent run over the same
+        // on-disk QueueState (interleaved mutations, duplicated file edits), return a status
+        // snapshot — this also turns a client's timeout-and-retry into free polling.
+        if (RunRegistry.isRunning(sessionId)) {
+            const runInfo = RunRegistry.get(sessionId)!;
+            context.response = {
+                id: `status-${Date.now()}`,
+                object: 'chat.completion',
+                created: Date.now(),
+                model: 'agentic-status',
+                choices: [{
+                    index: 0,
+                    message: {
+                        role: 'assistant',
+                        content: `⏳ **Still running in the background**\n\n- Completed: ${runInfo.completedCount}/${runInfo.totalCount || runInfo.completedCount + q.nowQueue.length}\n- Last finished subtask: ${runInfo.lastSubtask || '(none yet)'}\n- Remaining in queue: ${q.nowQueue.length}\n\nRe-call with the same sessionId to poll again, or use \`action: 'status'\` / \`action: 'abort'\`.`
+                    },
+                    finish_reason: 'stop'
+                }]
+            } as any;
+            return;
+        }
+
+        const deadline = Date.now() + SUBTASK_BUDGET_MS;
+        const runInfo = RunRegistry.start(sessionId);
+        let deferredToBackground = false;
+        try {
+
         const userMessage = context.request.messages.find(m => m.role === 'user');
         let userContent = userMessage ? getMessageContent(userMessage.content).trim() : undefined;
         if (userContent) {
             userContent = getOriginalUserContent(userContent);
+        }
+
+        // Budget pauses (yielded when SUBTASK_BUDGET_MS was exceeded, see the loop below)
+        // auto-resume on the very next call for this sessionId — unlike terminal/failure
+        // pauses, they don't require the client to know or supply a promptId.
+        if (q.paused && q.pauseReason === 'budget') {
+            q.paused = false;
+            q.pauseReason = undefined;
         }
 
         // Resume check: "continue <prompt_id> <input-for-next-subtask>"
@@ -1588,8 +1434,46 @@ export class AgenticMiddleware implements Middleware {
         }
 
         while (q.nowQueue.length > 0 && subtaskIteration < MAX_SUBTASKS) {
+            if (Date.now() > deadline) {
+                // Out of time budget. Yield a partial result now (client sees progress
+                // instead of a hard timeout) and keep draining the remaining queue on a
+                // detached background run — the next call for this sessionId will either
+                // see it still running (status snapshot) or find the queue already drained.
+                if (!q.promptId) {
+                    q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                }
+                q.paused = true;
+                q.pauseReason = 'budget';
+                await persistState(sessionId, projectDir);
+
+                const doneSoFar = (q.history || []).map(h => `### ✅ Subtask: ${h.task}\n\n${cleanSubtaskContent(h.output)}`).join('\n\n');
+                const partialContent = `${executionPlanBrief}${doneSoFar}\n\n⏳ **Time budget reached — continuing in the background**\n\n- Completed: ${q.history?.length || 0} subtask(s)\n- Remaining in queue: ${q.nowQueue.length}\n\nRe-call with the same sessionId (or \`action: 'continue'\` / \`continue ${q.promptId}\`) to fetch the rest.`;
+                context.response = {
+                    id: `budget-pause-${Date.now()}`,
+                    object: 'chat.completion',
+                    created: Date.now(),
+                    model: 'gemini-3.1-flash-lite',
+                    choices: [{
+                        index: 0,
+                        message: { role: 'assistant', content: partialContent },
+                        finish_reason: 'stop'
+                    }]
+                } as any;
+
+                deferredToBackground = true;
+                runInfo.totalCount = q.nowQueue.length + (q.history?.length || 0);
+                runInfo.completedCount = q.history?.length || 0;
+                runInfo.promptId = q.promptId;
+                const bgContext: PipelineContext = {
+                    ...context,
+                    request: { ...context.request, messages: context.request.messages.map(m => ({ ...m })) }
+                } as any;
+                void continueQueueInBackground(sessionId, projectDir, workspaceRoot, this.executor, bgContext, commsQueue, promptQueue, runInfo);
+                break;
+            }
+
             subtaskIteration++;
-            
+
             // Prune old messages in context.request.messages to avoid context bloat
             const KEEP_LAST_N_MESSAGES = 6;
             const systemMsgs = context.request.messages.filter(m => m.role === 'system');
@@ -1655,6 +1539,19 @@ export class AgenticMiddleware implements Middleware {
                             const cleaned = cleanSubtaskContent(content);
                             outputs.push(`### ✅ Subtask: ${taskName}\n\n${cleaned}`);
                             context.request.messages.push({ role: 'assistant', content });
+                            // Record to history (previously only the sequential branch did this,
+                            // so a partially-completed parallel round was forgotten on resume and
+                            // its subtasks got silently redone).
+                            if (!q.history) q.history = [];
+                            q.history.push({
+                                task: taskName,
+                                taskId: phase1Tasks[idx].id,
+                                output: content,
+                                filesModified: getTaskFiles(content),
+                                timestamp: Date.now(),
+                                model: clonedCtx.response?.model,
+                                provider: (clonedCtx.response as any)?._providerId
+                            });
                         } else {
                             errors.push(`Subtask ${idx + 1} failed or returned empty: ${taskName}`);
                         }
@@ -1697,7 +1594,7 @@ export class AgenticMiddleware implements Middleware {
                 } as any;
 
                 q.nowQueue = q.nowQueue.filter(e => !phase1Tasks.some(t => t.id === e.id));
-                persistStateDebounced(sessionId, projectDir);
+                await persistState(sessionId, projectDir);
 
             } else {
                 const currentTaskNode = phase1Tasks[0];
@@ -1711,8 +1608,9 @@ export class AgenticMiddleware implements Middleware {
                         q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
                     }
                     q.paused = true;
-                    persistStateDebounced(sessionId, projectDir);
-                    
+                    q.pauseReason = 'terminal';
+                    await persistState(sessionId, projectDir);
+
                     console.error(`[AgenticMiddleware] Pausing pipeline for terminal run. promptId=${q.promptId}`);
                     
                     context.response = {
@@ -1771,7 +1669,8 @@ export class AgenticMiddleware implements Middleware {
                         q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
                     }
                     q.paused = true;
-                    persistStateDebounced(sessionId, projectDir);
+                    q.pauseReason = 'failed';
+                    await persistState(sessionId, projectDir);
 
                     context.response = {
                         id: `failed-pause-${Date.now()}`,
@@ -1859,7 +1758,7 @@ export class AgenticMiddleware implements Middleware {
                 }
 
                 q.nowQueue = q.nowQueue.filter(e => e.id !== currentTaskNode.id);
-                persistStateDebounced(sessionId, projectDir);
+                await persistState(sessionId, projectDir);
 
                 if (q.nowQueue.length === 0 && context.response && executionPlanBrief) {
                     const resContent = getResponseContent(context);
@@ -1890,6 +1789,14 @@ export class AgenticMiddleware implements Middleware {
                     provider: context.response?._providerId
                 });
             }
+        }
+        } finally {
+            // Runs on every synchronous exit path (including early returns for
+            // CONFUSED/QUESTION/terminal-pause/failed-pause/paused). Only the budget-yield
+            // path sets deferredToBackground — there, RunRegistry.finish() is deliberately
+            // left to the detached background continuation so isRunning() stays true until
+            // it actually drains the queue.
+            if (!deferredToBackground) RunRegistry.finish(sessionId);
         }
 
         } catch (err: any) {

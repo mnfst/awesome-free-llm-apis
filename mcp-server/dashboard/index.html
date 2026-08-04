@@ -469,7 +469,6 @@
               <tr><td>Z AI (Zhipu AI)</td><td><code>ZHIPU_API_KEY</code></td><td><a href="https://open.bigmodel.cn/usercenter/apikeys" target="_blank" rel="noopener noreferrer">open.bigmodel.cn/usercenter/apikeys</a></td></tr>
               <tr><td>Cerebras</td><td><code>CEREBRAS_API_KEY</code></td><td><a href="https://cloud.cerebras.ai/" target="_blank" rel="noopener noreferrer">cloud.cerebras.ai</a></td></tr>
               <tr><td>Cloudflare Workers AI</td><td><code>CLOUDFLARE_API_TOKEN</code> + <code>CLOUDFLARE_ACCOUNT_ID</code></td><td><a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer">dash.cloudflare.com/profile/api-tokens</a></td></tr>
-              <tr><td>GitHub Models</td><td><code>GITHUB_TOKEN</code></td><td><a href="https://github.com/marketplace/models" target="_blank" rel="noopener noreferrer">github.com/marketplace/models</a></td></tr>
               <tr><td>Groq</td><td><code>GROQ_API_KEY</code></td><td><a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer">console.groq.com/keys</a></td></tr>
               <tr><td>Hugging Face</td><td><code>HF_TOKEN</code></td><td><a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer">huggingface.co/settings/tokens</a></td></tr>
               <tr><td>Kilo Code</td><td><code>KILO_API_KEY</code></td><td><a href="https://kilo.ai" target="_blank" rel="noopener noreferrer">kilo.ai</a></td></tr>
@@ -593,6 +592,29 @@
             <tbody>
               <tr><td><code>workspace_root</code></td><td>string</td><td>✓</td><td></td></tr>
               <tr><td><code>force</code></td><td>boolean</td><td></td><td>Re-index even if a cache is present</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">browser_tool</span><span class="qs-tool-desc">100% Dynamic browser scraper with pausable checkpoints, 0-token script memory & flat schema exports</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>action</code></td><td>string</td><td></td><td>scrape | list_checkpoints</td></tr>
+              <tr><td><code>url</code></td><td>string</td><td>✓</td><td>Target website URL (or list_checkpoints)</td></tr>
+              <tr><td><code>userInstructions</code></td><td>string</td><td></td><td>Dynamic extraction prompt</td></tr>
+              <tr><td><code>sessionId</code></td><td>string</td><td></td><td>Unique session identifier for checkpointing</td></tr>
+            </tbody>
+          </table>
+        </details>
+        <details class="qs-tool-card">
+          <summary><span class="qs-tool-name">cyber_tool</span><span class="qs-tool-desc">Isolated security tool registry & wiki manager for security binaries (sqlmap, nmap, ffuf)</span></summary>
+          <table class="qs-table">
+            <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>action</code></td><td>string</td><td>✓</td><td>list_tools | get_tool | register_tool | wiki_lookup</td></tr>
+              <tr><td><code>toolName</code></td><td>string</td><td></td><td>Security tool name (e.g. sqlmap)</td></tr>
+              <tr><td><code>githubUrl</code></td><td>string</td><td></td><td>GitHub URL for registration</td></tr>
             </tbody>
           </table>
         </details>

@@ -51,8 +51,10 @@ describe('Router Fallback Fix - Multiple next() Calls Bug', () => {
             taskType: TaskType.Chat
         };
         await router.execute(chatContext, async () => { });
-        // Chat should try DeepSeek-R1 first (High Performance Free)
-        expect(firstModelAttempted).toBe('deepseek/deepseek-r1');
+        // Chat should try the first FREE model that has an available provider.
+        // deepseek-ai/DeepSeek-R1 is on HuggingFace (not stubbed here), so the router
+        // falls through to qwen/qwen3-coder-480b-a35b:free which is on OpenRouter (stubbed).
+        expect(firstModelAttempted).toBe('qwen/qwen3-coder-480b-a35b:free');
     });
 
     it('should call next() exactly once even with multiple fallback attempts', async () => {

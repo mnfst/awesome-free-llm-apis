@@ -1,6 +1,11 @@
 import { BaseProvider } from './base.js';
 import type { ChatRequest, ChatResponse, ProviderModel, RateLimits } from './types.js';
 
+/**
+ * @deprecated as of v1.0.9 — GitHub Models retired/unreliable (persistent
+ * "scheduled retirement brownout" outages); no longer registered in
+ * ProviderRegistry. Kept here for reference only.
+ */
 export class GitHubModelsProvider extends BaseProvider {
   name = 'GitHub Models';
   id = 'github-models';

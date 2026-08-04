@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import path from 'path';
-import { ContextGatherer } from '../src/pipeline/middlewares/context-gatherer.js';
+import { ContextGatherer, __test_clearCache } from '../src/pipeline/middlewares/context-gatherer.js';
 import fs from 'fs/promises';
 
 describe('Context Gatherer Log & JSON Compaction Tests', () => {
@@ -13,6 +13,7 @@ describe('Context Gatherer Log & JSON Compaction Tests', () => {
     const n8nSourcePath = path.resolve(__dirname, 'context', 'daily-nday-pipeline.import.json');
 
     beforeEach(async () => {
+        __test_clearCache();
         originalThreshold = process.env.LOG_COMPACTION_THRESHOLD;
         // Set lower threshold for high variance testing
         process.env.LOG_COMPACTION_THRESHOLD = '0.50';
@@ -60,8 +61,6 @@ describe('Context Gatherer Log & JSON Compaction Tests', () => {
         });
 
         expect(results.some(r => r.includes('FILE: test-metrics.json'))).toBe(true);
-        
-        // Verify head matches
         expect(results.some(r => r.includes('SystemConfiguration'))).toBe(true);
         expect(results.some(r => r.includes('serverPort'))).toBe(true);
         
@@ -96,8 +95,8 @@ describe('Context Gatherer Log & JSON Compaction Tests', () => {
 
         const results = await ContextGatherer.gatherContext({
             workspaceRoot: mockWorkspaceRoot,
-            query: 'workflow.json override jsCode',
-            keywords: ['workflow.json', 'jsCode'],
+            query: 'jsCode',
+            keywords: ['jsCode'],
         });
 
         // Verify file is scanned

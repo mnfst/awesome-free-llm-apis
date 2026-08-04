@@ -19,6 +19,9 @@ import { indexWorkspace } from '../tools/index-workspace.js';
 import { toMarkdownResponse } from '../utils/markdown.js';
 import { logToolCall } from '../utils/ChatLogger.js';
 import { WorkspaceScanner } from '../cache/workspace.js';
+import { actionEnum, renderActionDocs } from '../browser/actionSchemas.js';
+import { dispatchBrowserAction } from '../browser/dispatch.js';
+import { getBrowserSessionPool } from '../browser/BrowserSessionPool.js';
 
 /** Derive a stable ws-<hash> session ID from tool args, falling back to __no_ws__. */
 async function deriveSessionIdFromArgs(args: Record<string, any> | null | undefined): Promise<string> {
@@ -34,7 +37,7 @@ async function deriveSessionIdFromArgs(args: Record<string, any> | null | undefi
 
 export async function createMCPServer(): Promise<Server> {
   const server = new Server(
-    { name: 'free-llm-apis', version: '1.0.7' },
+    { name: 'free-llm-apis', version: '1.0.8' },
     { capabilities: { tools: {} } }
   );
 
@@ -115,6 +118,21 @@ export async function createMCPServer(): Promise<Server> {
               type: 'boolean',
               description: 'Skip the pre-emptive full-workspace re-index + wiki-maintenance pass that agentic mode normally runs on every call with workspace_root. Set true for requests narrowly about a specific file/PDF reference that don\'t need (or shouldn\'t pay the latency/provider-budget cost of) a full codebase re-scan — otherwise that unrelated indexing work can starve the actual request of provider quota.'
             },
+            action: {
+              type: 'string',
+              enum: ['run', 'continue', 'status', 'abort'],
+              description: [
+                'Control action for a long-running agentic (subtask) run, keyed by sessionId.',
+                '"run" (default): normal call. If the server\'s internal time budget is exceeded before all',
+                '  subtasks finish, it returns a PARTIAL result immediately and keeps working in the background —',
+                '  re-call with the same sessionId to fetch progress or the rest.',
+                '"status": instantly (no LLM call) reports whether a background run is still active, how many',
+                '  subtasks are done, and what remains. Use this to poll instead of re-sending "run".',
+                '"continue": resumes a paused/yielded queue (equivalent to replying with "continue <promptId> ...").',
+                '"abort": cancels an in-progress background run; the queue stays resumable via "continue".',
+              ].join('\n')
+            },
+            resume_input: { type: 'string', description: 'For action:"continue" — extra input appended to the subtask being resumed.' },
           },
           required: ['messages'],
         },
@@ -135,7 +153,7 @@ export async function createMCPServer(): Promise<Server> {
       },
        {
          name: 'load_skill_prompt',
-         description: 'Search for or load a dynamic skill from the awesome-antigravity-skills index. Skills are saved locally to the workspace or home directory.',
+         description: 'Search for or load a dynamic skill from the agentic-awesome-skills index. Skills are saved locally to the workspace or home directory.',
          inputSchema: {
            type: 'object' as const,
            properties: {
@@ -449,6 +467,52 @@ export async function createMCPServer(): Promise<Server> {
           },
           required: ['skill', 'input']
         }
+      },
+      {
+        name: 'browser_tool',
+        description: `Browser automation & scraper that owns a real chrome-devtools-mcp session. Actions: ${renderActionDocs()}`,
+        inputSchema: {
+          type: 'object' as const,
+          properties: {
+            action: { type: 'string', enum: actionEnum(), description: 'Which browser action to perform' },
+            url: { type: 'string', description: 'Target website URL (required for navigate/scrape; optional elsewhere)' },
+            sessionId: { type: 'string', description: 'Session identifier — reuses a live browser session and checkpoint across calls' },
+            outputDir: { type: 'string', description: 'Directory to store output datasets, checkpoints, and network dumps' },
+            userInstructions: { type: 'string', description: 'Prompt/instructions for extraction actions' },
+            strict: { type: 'boolean', description: 'When true (default), extraction failures return data:null + errors instead of best-effort guesses' },
+            params: { type: 'object', description: 'Action-specific parameters (see the action list above)' }
+          },
+          required: ['action']
+        }
+      },
+      {
+        name: 'cyber_tool',
+        description: 'Educational cyber security coach plus registry/wiki manager for security binaries (sqlmap, nmap, ffuf). Never executes commands — it teaches the exact commands, explains why, tracks CTF decision graphs, and remembers per-tool run suggestions across sessions so the learner can resume where they left off.',
+        inputSchema: {
+          type: 'object' as const,
+          properties: {
+            action: { type: 'string', enum: ['list_tools', 'get_tool', 'register_tool', 'wiki_lookup', 'learn', 'coach', 'save_graph', 'load_graph', 'tool_memory'], description: 'Cyber tool action' },
+            toolName: { type: 'string', description: 'Security tool name (e.g. sqlmap, nmap, ffuf)' },
+            githubUrl: { type: 'string', description: 'GitHub repository URL for tool registration' },
+            sessionId: { type: 'string', description: 'Session/CTF-challenge id; keys the progress record and decision graph for learn/coach/save_graph/load_graph' },
+            goal: { type: 'string', description: 'Natural-language objective for the learn action, e.g. "find SQLi on a lab web app"' },
+            level: { type: 'string', enum: ['beginner', 'intermediate', 'advanced'], description: 'Learner skill level; defaults to beginner' },
+            observation: { type: 'string', description: 'For coach: what the learner ran and what they observed' },
+            graphNode: {
+              type: 'object',
+              description: 'For save_graph: a decision-graph node to add, optionally linked from a prior node',
+              properties: {
+                id: { type: 'string' },
+                label: { type: 'string' },
+                type: { type: 'string', enum: ['goal', 'hypothesis', 'action', 'finding', 'deadend'] },
+                from: { type: 'string', description: 'id of the node this one follows from' }
+              }
+            },
+            memoryOp: { type: 'string', enum: ['read', 'write'], description: 'For tool_memory: read or append to that tool\'s run-suggestion memory' },
+            note: { type: 'string', description: 'For tool_memory write: the run suggestion/note to append' }
+          },
+          required: ['action']
+        }
       }
     ],
   }));
@@ -527,6 +591,18 @@ export async function createMCPServer(): Promise<Server> {
         const result = await executeSkill(input);
         response = {
           content: [{ type: 'text' as const, text: result.success ? result.response ?? '' : `Error: ${result.error}` }]
+        };
+      } else if (name === 'browser_tool') {
+        const result = await dispatchBrowserAction(args);
+        response = {
+          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+          isError: !result.success,
+        };
+      } else if (name === 'cyber_tool') {
+        const { cyberTool } = await import('../tools/cyber-tool.js');
+        const result = await cyberTool(args as any);
+        response = {
+          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }]
         };
       } else {
         throw new Error(`Unknown tool: ${name}`);

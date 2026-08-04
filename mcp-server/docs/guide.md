@@ -159,6 +159,26 @@ The optional **Agentic Middleware** (`src/pipeline/middlewares/AgenticMiddleware
 ### Enabling the middleware
 You can opt-in on a per-call basis by passing `"agentic": true` in the request body along with a **`workspace_root`** or **`sessionId`**.
 
+### Time Budget & Background Execution (v1.0.8)
+The subtask loop in Phase 2 above runs against a wall-clock budget (`MCP_SUBTASK_BUDGET_MS`,
+default 20000ms) rather than blocking until every subtask completes — many MCP clients kill a
+tool call at ~30s. If the budget is exceeded mid-loop:
+
+1. The current `QueueState` is persisted synchronously (`paused: true`, `pauseReason: 'budget'`),
+   and `use_free_llm` returns immediately with the subtasks completed so far plus a resume handle.
+2. The remaining subtasks keep executing on a **detached background run**, tracked in-process by
+   `RunRegistry` (`src/pipeline/middlewares/RunRegistry.ts`), keyed by `sessionId`.
+3. Any call for that `sessionId` while the background run is still active short-circuits to a
+   status snapshot instead of starting a second concurrent run over the same `QueueState` — this
+   is what makes a client's timeout-and-retry safe (it becomes free polling) rather than causing
+   duplicated file edits from two runs racing on the same queue.
+4. `pauseReason: 'budget'` auto-clears on the very next call for that session — unlike terminal
+   or failed-subtask pauses, no `continue <PROMPT_ID>` reply is required.
+
+Callers can drive this explicitly via `use_free_llm`'s `action` param (`run` | `status` |
+`continue` | `abort`) — see [SKILL.md](skill/SKILL.md) ("⚠️ Agentic Behavior & Limits") and the
+[README](../README.md#long-running--background-execution) for the client-facing contract.
+
 ---
 
 ## 6. Context Injection & GitHub Repository Scanner

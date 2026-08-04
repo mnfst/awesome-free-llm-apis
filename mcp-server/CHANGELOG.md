@@ -1,5 +1,48 @@
 # Changelog
 
+## v1.0.8 – Dynamic Intelligent Browser Scraper, Cyber Tool Registry, File-Lock Concurrency & Flat Schema Exports (July 2026)
+
+### 🚀 Highlights
+
+- **100% Dynamic Browser Scraper (`browser_tool`)**:
+  - Implemented domain-agnostic `DynamicNodeAnalyzer` to discover interactive ARIA buttons and category tabs with zero hardcoded class strings.
+  - Added quantified scroll depth observation (`0%` to `100%` bottom fold) and state monitoring.
+  - Created `ScrapingSessionCheckpointManager` allowing users to pause, inspect frontend findings, select depth options, and resume sessions across process restarts.
+  - Created `ScriptPersistenceManager` to save generated JS extraction functions to `data/scrapes/scripts/` for 0-token LLM context cost on subsequent runs.
+  - Implemented `UniversalTabularSchemaFlattener` to dynamically flatten deeply nested JSON graphs into flat CSV rows (`startX`, `startY`, `endX`, `endY`, `outcome`).
+
+- **`browser_tool` now owns a real browser session end to end.** The scaffolding above wasn't actually reachable: `scrapeAndProcessWithCheckpoint` was always invoked with `devtoolsEvalResponse: null` and no `mcpClient` from both `src/mcp/index.ts` and `POST /api/browser_tool`, so the tool silently exported zero records while reporting `success: true`. `src/browser/BrowserSessionPool.ts` now spawns and reuses a `chrome-devtools-mcp` session per `sessionId`, with LRU eviction, an idle reaper, and a cached-failure path so a broken engine returns a structured error instead of throwing or retrying a slow `npx` spawn on every call.
+- **New action surface** (`src/browser/actionSchemas.ts`, `src/browser/dispatch.ts`): `navigate, snapshot, click, scroll, wait, evaluate, network, api_replay, extract, deep_scrape, screenshot, checkpoint, session`. One zod registry now generates both the MCP `inputSchema` and the runtime validation, closing the drift where `domainContext`/`filenameBase`/`deepScrapeLimit`/etc existed on `BrowserScrapeInput` but were never reachable over MCP. `action: 'scrape'` and `action: 'list_checkpoints'` remain supported as back-compat aliases.
+- **Network body capture + private-API replay**: an injected fetch/XHR interceptor (`src/browser/interceptor.ts`) captures response bodies chrome-devtools-mcp's own `list_network_requests` doesn't expose, and `EndpointRanker`/`EndpointTemplater` (`src/browser/EndpointRanker.ts`, `EndpointTemplater.ts`) score discovered endpoints and mine id values from observed traffic/DOM instead of requiring them to be hardcoded.
+- **Strict mode by default**: `interpretExtractedDataWithLLM` in `src/tools/browser-action.ts` no longer synthesizes plausible-looking `{id, title, link}` records when the LLM's output fails to parse — it now retries once with a corrective prompt, then reports `status: 'failed'` with a structured error. `success: true` with zero records is no longer possible without an explicit evidenced-empty-page warning.
+- **Cloudflare/CAPTCHA block detection + Firebase logging**: `src/browser/BlockDetector.ts` scans snapshot text for known Cloudflare-interstitial and CAPTCHA markers on every `snapshot()` call. When a scrape action (`extract`, `api_replay`, `click`) fails on a page that's actually a challenge wall, the result now says so explicitly (`BLOCKED_BY_CLOUDFLARE` / `BLOCKED_BY_CAPTCHA`) instead of reporting a generic empty result, and the obstruction is fire-and-forget logged to a new `scraping_failures` Firestore collection via `logScrapingFailure` (`src/utils/firebase.ts`) — separate from the general `errors` collection so these are filterable on the dashboard.
+
+- **Isolated Cyber Security Tool Registry (`cyber_tool`)**:
+  - Created process-safe `CyberToolsRegistry` storing security binary mappings in userprofile path `~/.free-llm-mcp/cyber-tools-registry.json`.
+  - Enforced atomic file-locking (`.lock`) synchronization to prevent multi-agent race conditions during concurrent tool registration.
+  - Isolated security tool command flags and WAF/IPS troubleshooting logs within the dedicated `global-cyber-tools` wiki namespace.
+
+- **Granular Step Logging & Web Dashboard Integration**:
+  - Integrated Phase 3 `ChatLogger.logToolCall` across every step of `browser_tool` (`explore_surface_area`, `discover_nodes`, `click_node`, `save_checkpoint`, `load_checkpoint`, `list_checkpoints`, `scrape_and_process`) and `cyber_tool` (`list_tools`, `get_tool`, `register_tool`, `wiki_lookup`).
+  - Added `browser_tool` and `cyber_tool` to `src/server.ts` express endpoints (`POST /api/browser_tool`, `POST /api/cyber_tool`), interactive Tool Playground dropdowns, and Quick Start accordions on the Web Dashboard.
+
+- **Unit & Integration Testing Hardening**:
+  - Achieved 100% green test status across 16/16 unit test suites (`npx vitest run`).
+
+### Next Updates (→ v1.0.9)
+
+- ~~`coding_agents` tool~~ **→ Deferred to v1.0.9**: Scope split into:
+  - v1.0.8: `browser_tool` + `cyber_tool` file-locked userprofile registry foundation
+  - v1.0.9: `local_llm_patch` stub (Ollama-driven single-file patching)
+  - v1.1.0: Full `coding_agents` with LSP grounding + diff preview
+- `cyber_agents`: Isolated cyber routing middleware separate from main pipeline.
+- 'docs/' refactor: 'references/' should maintain different .md files for each tool, remove the usages.md and architecture.md and move the relevant content to the tool-specific .md files, so that the SKILL.md remains lightweight and focused on the agentic workflow, and the tool-specific .md files can be used as a reference for the tools and their usage.
+- **Browser snapshot diff understanding mechanism**: `wait until:'dom-stable'` and the click/pagination-loop guards currently only know two things about a DOM state transition — did the sha256 fingerprint change, yes/no (`DomStateFingerprinter.hasStateChanged`). That's enough to detect a no-op click but not enough to explain *what* changed, so the LLM re-derives it from a full new snapshot every time. Planned: a real structural diff between the previous and current snapshot (added/removed/mutated accessibility nodes, not just a hash flip) so `click`/`wait`/`deep_scrape` can report *what* appeared (e.g. "a Lineups panel with 22 player rows mounted") instead of only *that* something did, and so `extract` can target just the newly-mounted subtree instead of re-scanning the whole page. Also intended to give the Cloudflare/CAPTCHA block detector (above) a second, structural signal — a whole subtree swapped for a single interstitial widget — independent of the current text-marker scan.
+- **GitHub Models provider fully deprecated**: Removed `GitHubModelsProvider` from `ProviderRegistry` (persistent instability / recurring "scheduled retirement brownout" outages made it unreliable for routing). Provider class kept in `src/providers/github-models.ts` for reference only, marked `@deprecated`. Also dropped its `data.json`/README entries, dashboard row, skill-doc mentions, `TextRouterMiddleware` low-cost-provider entry, `update-models.ts` scraper wiring, and dedicated smoke-test script.
+- **Provider model list sync (post upstream merge)**: Verified newly-added/removed upstream model IDs via smoke tests and applied confirmed results to `src/providers/*.ts`: added Cerebras `gemma-4-31b`; Groq `openai/gpt-oss-20b` + `groq/compound`; Hugging Face `Qwen2.5-Coder-7B-Instruct`, `gemma-3-4b-it`, `Llama-3.1-8B-Instruct`, `phi-4` (and removed dead `Mistral-7B-Instruct-v0.3`); Kilo Code `ling-3.0-flash`, `nemotron-3-ultra-550b-a55b`, `laguna-s-2.1`, `step-3.7-flash` (all `:free`); NVIDIA `minimax-m3`, `deepseek-v4-pro`; OpenRouter `laguna-s-2.1:free` (and removed several confirmed-404 `:free` entries); Gemini `gemini-3.6-flash`, `gemini-2.5-flash-lite`. Skipped adds with only ambiguous (rate-limited/timeout) or malformed-response smoke-test results pending re-verification.
+
+---
+
 ## v1.0.7 – Wiki, Log Compaction, Process Locking, Dynamic Tokens, PDF Indexing + Testing Hardening (July 2026)
 
 ### 🚀 Highlights

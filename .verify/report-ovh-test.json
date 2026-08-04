@@ -1,0 +1,145 @@
+[
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Qwen3.5-397B-A17B",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 10553,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-a223e765a2d5a94a\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning\":\"Thinking Process:\\n\\n1.  **\",\"tool_calls\":[]},\"finish_reason\":\"length\"}],\"created\":1785341859,\"model\":\"Qwen3.5-397B-A17B\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":8,\"total_tokens\":20}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "gpt-oss-120b",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 297,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-93d1d2d32055feb4\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning\":\"The user simply says \\\"\",\"tool_calls\":[]},\"finish_reason\":\"length\"}],\"created\":1785341890,\"model\":\"gpt-oss-120b\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":69,\"completion_tokens\":8,\"total_tokens\":77}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "gpt-oss-20b",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 433,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-982ae0b95fa3773d\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning\":\"The user just says \\\"\",\"tool_calls\":[]},\"finish_reason\":\"length\"}],\"created\":1785341922,\"model\":\"gpt-oss-20b\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":69,\"completion_tokens\":8,\"total_tokens\":77}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Meta-Llama-3_3-70B-Instruct",
+    "verdict": "UNKNOWN",
+    "httpStatus": 429,
+    "latencyMs": 40366,
+    "errorClass": "RATE_LIMIT",
+    "responseSnippet": "{\n  \"message\":\"API rate limit exceeded\",\n  \"request_id\":\"[REDACTED]\"\n}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Llama-3.1-8B-Instruct",
+    "verdict": "FAIL",
+    "httpStatus": 404,
+    "latencyMs": 91,
+    "errorClass": "NOT_FOUND",
+    "responseSnippet": "{\"error\":{\"code\":\"model_not_found\",\"message\":\"The model `Llama-3.1-8B-Instruct` does not exist.\",\"param\":null,\"type\":\"invalid_request_error\"}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Qwen3.6-27B",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 24073,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-87384ba4ef3cdd9f\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning\":\"Here's a thinking process:\\n\\n1\"},\"finish_reason\":\"length\"}],\"created\":1785342066,\"model\":\"Qwen3.6-27B\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":8,\"total_tokens\":20}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Qwen3.5-9B",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 2338,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-8e34b9ad5a90e9da\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"reasoning\":\"Thinking Process:\\n\\n1.  **\",\"tool_calls\":[]},\"finish_reason\":\"length\"}],\"created\":1785342113,\"model\":\"Qwen3.5-9B\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":8,\"total_tokens\":20}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Qwen3-32B",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 469,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-8893b5e6fd1e2a6f\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"<think>\\nOkay, the user just said\",\"tool_calls\":[]},\"finish_reason\":\"length\"}],\"created\":1785342144,\"model\":\"Qwen3-32B\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":8,\"total_tokens\":18}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Qwen3-Coder-30B-A3B-Instruct",
+    "verdict": "UNKNOWN",
+    "httpStatus": 429,
+    "latencyMs": 40302,
+    "errorClass": "RATE_LIMIT",
+    "responseSnippet": "{\n  \"message\":\"API rate limit exceeded\",\n  \"request_id\":\"[REDACTED]\"\n}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Qwen2.5-VL-72B-Instruct",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 206,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-b4b3cc503d79f79d\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"OK\",\"tool_calls\":[]},\"finish_reason\":\"stop\"}],\"created\":1785342247,\"model\":\"Qwen2.5-VL-72B-Instruct\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":21,\"completion_tokens\":2,\"total_tokens\":23}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Mistral-Small-3.2-24B-Instruct-2506",
+    "verdict": "UNKNOWN",
+    "httpStatus": 429,
+    "latencyMs": 40373,
+    "errorClass": "RATE_LIMIT",
+    "responseSnippet": "{\n  \"message\":\"API rate limit exceeded\",\n  \"request_id\":\"[REDACTED]\"\n}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Mistral-Nemo-Instruct-2407",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 10488,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"chatcmpl-881d86f78b80452b\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello! How can I assist you today\",\"tool_calls\":[]},\"finish_reason\":\"length\"}],\"created\":1785342360,\"model\":\"Mistral-Nemo-Instruct-2407\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":8,\"total_tokens\":13}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "OVHcloud AI Endpoints",
+    "modelId": "Mistral-7B-Instruct-v0.3",
+    "verdict": "PASS",
+    "httpStatus": 200,
+    "latencyMs": 2495,
+    "errorClass": null,
+    "responseSnippet": "{\"id\":\"[REDACTED]\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\" OK! How can I help you today\",\"tool_calls\":[]},\"finish_reason\":\"length\"}],\"created\":1785342393,\"model\":\"Mistral-7B-Instruct-v0.3\",\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":8,\"total_tokens\":13}}",
+    "billed": null,
+    "evidenceUrl": null
+  }
+]

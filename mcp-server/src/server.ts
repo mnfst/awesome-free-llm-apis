@@ -53,6 +53,7 @@ import { visionTool } from './tools/vision-tool.js';
 import { executeSkill } from './tools/execute-skill.js';
 import { manageMemory } from './tools/manage-memory.js';
 import { indexWorkspace } from './tools/index-workspace.js';
+import { cyberTool } from './tools/cyber-tool.js';
 import { getSharedRouter } from './pipeline/instances.js';
 import { execSync } from 'child_process';
 import fs, { promises as fsp } from 'fs';
@@ -403,6 +404,8 @@ async function main() {
                 workspace_root: params.workspace_root,
                 sessionId: sid || '__no_ws__',
                 skipIndexing: !!params.skipIndexing,
+                action: params.action,
+                resume_input: params.resume_input,
               });
               result = { content: r?.choices?.[0]?.message?.content ?? '', model: r?.model, provider: r?._providerId };
               break;
@@ -463,6 +466,9 @@ async function main() {
               });
               break;
             }
+            case 'cyber_tool':
+              result = await cyberTool(params);
+              break;
             default:
               res.status(400).json({ error: `Unknown tool: ${tool}` });
               return;
@@ -550,6 +556,31 @@ async function main() {
           res.json(data);
         } catch (err) {
           res.status(500).json({ error: String(err) });
+        }
+      });
+
+      // Browser Tool Scraper API Endpoint — routes through the same action
+      // dispatcher as the MCP tool (src/browser/dispatch.ts), not a second copy,
+      // so both entry points share one BrowserSessionPool per process.
+      app.post('/api/browser_tool', express.json({ limit: '10mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const { dispatchBrowserAction } = await import('./browser/dispatch.js');
+          const result = await dispatchBrowserAction(req.body);
+          res.status(result.success ? 200 : 502).json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
+      // Cyber Tool Security Registry & Wiki API Endpoint
+      app.post('/api/cyber_tool', express.json({ limit: '10mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const result = await cyberTool(req.body);
+          res.json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
         }
       });
 
@@ -653,6 +684,21 @@ async function main() {
         }
       });
 
+      // Helper to read and normalize chat log format (chat-logs.json or chat-log.json)
+      async function readNormalizedChatLog(dirPath: string): Promise<any[]> {
+        try {
+          const raw = await fsp.readFile(path.join(dirPath, 'chat-logs.json'), 'utf-8');
+          return JSON.parse(raw);
+        } catch {
+          try {
+            const raw = await fsp.readFile(path.join(dirPath, 'chat-log.json'), 'utf-8');
+            return JSON.parse(raw);
+          } catch {
+            return [];
+          }
+        }
+      }
+
       // ─── Chat Log API ─────────────────────────────────────────────────────────
       // Resolve workspace path → stable session ID (same hash the agentic tools use)
       // Isolated per CWD: each MCP server instance has its own data/projects/ tree.
@@ -681,15 +727,12 @@ async function main() {
             return res.status(400).json({ error: 'Invalid sessionId' });
           }
           const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
-          const logPath = path.resolve(projectsBase, sessionId, 'chat-log.json');
+          const dirPath = path.resolve(projectsBase, sessionId);
           // Path traversal guard: must stay within projectsBase
-          if (!logPath.startsWith(path.resolve(projectsBase) + path.sep)) {
+          if (!dirPath.startsWith(path.resolve(projectsBase) + path.sep) && dirPath !== path.resolve(projectsBase, '__no_ws__')) {
             return res.status(400).json({ error: 'Invalid sessionId' });
           }
-           let log: any[] = [];
-          try {
-            log = JSON.parse(await fsp.readFile(logPath, 'utf-8'));
-          } catch { /* file doesn't exist yet — empty log */ }
+          const log = await readNormalizedChatLog(dirPath);
 
           let workspace = '';
           if (sessionId !== '__no_ws__') {
@@ -705,7 +748,7 @@ async function main() {
 
           const q = ((req.query.q as string) || '').toLowerCase().trim();
           const filtered = q
-            ? log.filter(m => (m.content || '').toLowerCase().includes(q))
+            ? log.filter((m: any) => (m.content || '').toLowerCase().includes(q) || (m.tool || '').toLowerCase().includes(q))
             : log;
           res.json({ sessionId, log: filtered.slice(-200), workspace });
         } catch (err) {
@@ -725,21 +768,8 @@ async function main() {
           const { role, tool, content, latencyMs, ts } = req.body || {};
           if (!role || !content) return res.status(400).json({ error: 'role and content required' });
 
-          const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
-          const dir = path.resolve(projectsBase, sessionId);
-          if (!dir.startsWith(path.resolve(projectsBase) + path.sep) && dir !== path.resolve(projectsBase, '__no_ws__')) {
-            return res.status(400).json({ error: 'Invalid sessionId' });
-          }
-          const logPath = path.join(dir, 'chat-log.json');
-
-          await withFileLock(logPath, async () => {
-            await fsp.mkdir(dir, { recursive: true });
-            let log: any[] = [];
-            try { log = JSON.parse(await fsp.readFile(logPath, 'utf-8')); } catch {}
-            log.push({ role, tool, content, latencyMs: latencyMs ?? null, ts: ts || Date.now() });
-            if (log.length > 200) log = log.slice(-200); // rolling 200-turn window
-            await writeFileAtomic(logPath, JSON.stringify(log));
-          });
+          const { logChatTurn } = await import('./utils/ChatLogger.js');
+          await logChatTurn(sessionId, { role, tool, content, latencyMs: latencyMs ?? null, ts: ts || Date.now() });
 
           res.json({ ok: true });
         } catch (err) {
@@ -755,20 +785,19 @@ async function main() {
           if (!/^(?!\.\..?)([\w\-\.]{1,64}|__no_ws__)$/.test(sessionId)) {
             return res.status(400).json({ error: 'Invalid sessionId' });
           }
-          const logPath = path.resolve(
-            path.join(os.homedir(), '.free-llm-mcp', 'projects'), sessionId, 'chat-log.json'
-          );
+          const projectsBase = path.join(os.homedir(), '.free-llm-mcp', 'projects');
+          const dir = path.resolve(projectsBase, sessionId);
+          const logPath = path.join(dir, 'chat-logs.json');
+          const legacyLogPath = path.join(dir, 'chat-log.json');
           await withFileLock(logPath, async () => {
             await writeFileAtomic(logPath, '[]');
+            try { await writeFileAtomic(legacyLogPath, '[]'); } catch {}
           });
           res.json({ ok: true });
         } catch (err) {
           res.status(500).json({ error: String(err) });
         }
       });
-
-      // GET /api/sessions — enhanced with chat-log message counts
-      // (replaces the existing handler below)
 
       // v1.0.4 Memory Hardening: Use LRUCache for sessions to prevent memory leaks
       const sessionMap = new LRUCache<string, { server: any, transport: StreamableHTTPServerTransport }>({
@@ -859,6 +888,13 @@ async function main() {
           console.error('Failed to flush persistence:', err);
         }
 
+        try {
+          const { getBrowserSessionPool } = await import('./browser/BrowserSessionPool.js');
+          await getBrowserSessionPool().shutdownAll();
+        } catch (err) {
+          console.error('Failed to close browser sessions:', err);
+        }
+
         serverInstance.close(() => {
           console.error('Server closed');
           process.exit(0);
@@ -884,6 +920,12 @@ async function main() {
           await flushSystem();
         } catch (err) {
           console.error('Failed to flush persistence:', err);
+        }
+        try {
+          const { getBrowserSessionPool } = await import('./browser/BrowserSessionPool.js');
+          await getBrowserSessionPool().shutdownAll();
+        } catch (err) {
+          console.error('Failed to close browser sessions:', err);
         }
         process.exit(0);
       };

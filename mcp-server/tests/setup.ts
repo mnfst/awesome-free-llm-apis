@@ -1,4 +1,4 @@
-import { vi, beforeEach } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 
 // List of all known API key environment variables to stub out for isolation
 const API_KEYS = [
@@ -25,6 +25,26 @@ beforeEach(() => {
     for (const key of API_KEYS) {
         vi.stubEnv(key, '');
     }
+});
+
+afterEach(async () => {
+    try {
+        const { memoryManager } = await import('../src/memory/index.js');
+        memoryManager.shortTerm.clear();
+    } catch {}
+
+    try {
+        const { resetAllInstances, getSharedResponseCache } = await import('../src/pipeline/instances.js');
+        try {
+            getSharedResponseCache().flush();
+        } catch {}
+        resetAllInstances();
+    } catch {}
+
+    try {
+        const { __test_clearCache } = await import('../src/pipeline/middlewares/context-gatherer.js');
+        __test_clearCache();
+    } catch {}
 });
 
 // Add unhandled rejection logging as requested by user

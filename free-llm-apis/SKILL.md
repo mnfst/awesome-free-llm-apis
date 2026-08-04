@@ -15,7 +15,7 @@ Ask the user what matters most, then recommend accordingly:
 |---|---|
 | Highest rate limits | Groq (30 RPM, 14.4K RPD), Cerebras (30 RPM, 14.4K RPD) |
 | Largest model selection | Cloudflare Workers AI (49+ models), OpenRouter (32+ models) |
-| Strongest proprietary models | Google Gemini (Gemini 2.5 Pro), GitHub Models (GPT-4o) |
+| Strongest proprietary models | Google Gemini (Gemini 3.1 Flash lite) |
 | Fastest inference | Groq, Cerebras (both optimized for speed) |
 | Highest token budget | Mistral AI (1B tokens/month) |
 | European provider | Mistral AI (EU), LLM7.io (UK) |
@@ -28,7 +28,7 @@ Ask the user what matters most, then recommend accordingly:
 - See [references/provider-apis.md](references/provider-apis.md) for setup instructions.
 
 **Inference providers** -- third-party platforms hosting open-weight models:
-- GitHub Models, NVIDIA NIM, Groq, Cerebras, Cloudflare Workers AI, LLM7.io, Kluster AI, OpenRouter, Hugging Face
+- NVIDIA NIM, Groq, Cerebras, Cloudflare Workers AI, LLM7.io, Kluster AI, OpenRouter, Hugging Face
 - See [references/inference-providers.md](references/inference-providers.md) for setup instructions.
 
 ## Workflow

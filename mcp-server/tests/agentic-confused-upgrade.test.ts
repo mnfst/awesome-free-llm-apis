@@ -31,12 +31,6 @@ UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765
     });
 
     it('protects bracketed system sentinels (e.g. deferred-page markers) the same way as resolved references', () => {
-        // A deferred-page sentinel (use-free-llm.ts's resolveFileRefs, Part A's page cap)
-        // carries the original file path verbatim — capitalized segments here previously
-        // leaked past protectInjectedReferenceBlocks (which only recognized protocol://
-        // markers, not bracketed sentinels) and flipped classifyIntent's hasCapitalSymbol
-        // heuristic to CLEAR_TASK, sending a plain "summarize" ask into full subtask
-        // decomposition instead of the QUESTION/CONFUSED-upgrade path.
         const withDeferredSentinel = `protected_ref_0 [PDF-PAGE-DEFERRED: docs/assets/Some_Capitalized_File_Name.pdf:6 — resolve in a follow-up request; max 5 PDF pages per pass.] summarize each page.`;
         const { tokenized, placeholders } = protectInjectedReferenceBlocks(withDeferredSentinel);
         expect(tokenized).not.toContain('Capitalized');
@@ -72,8 +66,6 @@ UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765
 
         await middleware.execute(context, async () => {});
 
-        // QUESTION path used the real router — not the CONFUSED clarification path (which
-        // never calls getSharedRouter().execute at all, only builds a bare markdown response).
         expect(routerSpy).toHaveBeenCalled();
 
         const content = context.response?.choices?.[0]?.message?.content as string;
@@ -81,7 +73,7 @@ UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765
         expect(content).toBe('Routed via QUESTION path.');
     });
 
-    it('logs the user turn and the final response to chat-log.json for the QUESTION path (dashboard visibility)', async () => {
+    it('logs the user turn and the final response to chat-logs.json for the QUESTION path (dashboard visibility)', async () => {
         const { getSharedRouter } = await import('../src/pipeline/instances.js');
         vi.spyOn(getSharedRouter(), 'execute').mockImplementation(async (ctx: any) => {
             ctx.response = {
@@ -106,13 +98,13 @@ UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765
 
         await middleware.execute(context, async () => {});
 
-        const logPath = path.join(projectDir, 'chat-log.json');
+        const logPath = path.join(projectDir, 'chat-logs.json');
         const log = JSON.parse(await fs.readFile(logPath, 'utf-8'));
-        const roles = log.map((t: any) => t.role);
+        const roles = log.map((t: any) => t.payload?.role || t.role);
         expect(roles).toContain('user');
         expect(roles).toContain('assistant');
-        const assistantTurn = log.find((t: any) => t.role === 'assistant');
-        expect(assistantTurn.content).toBe('Routed via QUESTION path.');
+        const assistantTurn = log.find((t: any) => (t.payload?.role || t.role) === 'assistant');
+        expect(assistantTurn.payload?.content || assistantTurn.content).toBe('Routed via QUESTION path.');
     });
 
     it('logs the actual resolved reference content in contextInjected, not just a label (dashboard "View Injected Context")', async () => {
@@ -140,20 +132,20 @@ UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765
 
         await middleware.execute(context, async () => {});
 
-        const logPath = path.join(projectDir, 'chat-log.json');
+        const logPath = path.join(projectDir, 'chat-logs.json');
         const log = JSON.parse(await fs.readFile(logPath, 'utf-8'));
-        const userTurn = log.find((t: any) => t.role === 'user' && t.content === goal);
+        const userTurn = log.find((t: any) => (t.payload?.role || t.role) === 'user' && (t.payload?.content || t.content) === goal);
         expect(userTurn).toBeDefined();
-        expect(Array.isArray(userTurn.contextInjected)).toBe(true);
-        const referenceEntry = userTurn.contextInjected.find((c: string) => c.includes('Reference Content Resolved'));
+        const payload = userTurn.payload || userTurn;
+        expect(Array.isArray(payload.contextInjected)).toBe(true);
+        const referenceEntry = payload.contextInjected.find((c: string) => c.includes('Reference Content Resolved'));
         expect(referenceEntry).toBeDefined();
-        // The actual injected page text (UNIQUE_MARKER_...), not just a count/label.
         expect(referenceEntry).toContain('UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765');
     });
 
-    it('logs the user turn and clarification response to chat-log.json for the CONFUSED path (dashboard visibility)', async () => {
+    it('logs the user turn and clarification response to chat-logs.json for the CONFUSED path (dashboard visibility)', async () => {
         const middleware = new AgenticMiddleware();
-        const plainConfusedGoal = 'summarize this page in one sentence.'; // no resolved reference — stays CONFUSED
+        const plainConfusedGoal = 'summarize this page in one sentence.';
         const confusedSessionId = `test-confused-plain-${Date.now()}`;
         const confusedProjectDir = path.join(os.homedir(), '.free-llm-mcp', 'projects', confusedSessionId);
         try {
@@ -169,9 +161,9 @@ UNIQUE_MARKER_FOR_CONFUSED_UPGRADE_TEST_98765
 
             await middleware.execute(context, async () => {});
 
-            const logPath = path.join(confusedProjectDir, 'chat-log.json');
+            const logPath = path.join(confusedProjectDir, 'chat-logs.json');
             const log = JSON.parse(await fs.readFile(logPath, 'utf-8'));
-            const roles = log.map((t: any) => t.role);
+            const roles = log.map((t: any) => t.payload?.role || t.role);
             expect(roles).toContain('user');
             expect(roles).toContain('assistant');
         } finally {

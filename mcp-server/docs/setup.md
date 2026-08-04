@@ -4,9 +4,10 @@ This guide covers the necessary steps to set up the MCP server and its provider 
 
 ## Prerequisites
 
-- **Node.js** (v18 or higher)
+- **Node.js** (v18 or higher; **v20+ required** if you'll use `browser_tool` — see below)
 - **Python 3** (v3.9 or higher)
 - **npm** (comes with Node.js)
+- **Chrome/Chromium** — only needed for `browser_tool`. It spawns [`chrome-devtools-mcp`](https://www.npmjs.com/package/chrome-devtools-mcp) on demand via `npx -y chrome-devtools-mcp` (no separate install step; the first call is slower while `npx` fetches it). If Chrome isn't auto-discovered, set `CHROME_PATH` to its executable. See [browser_tool.md](browser_tool.md) for the full action reference.
 
 ## Installation
 
@@ -71,6 +72,7 @@ Fill in your API keys for the providers you wish to use.
 - **AGENT_PROMPT_PATH**: Path to the directory containing `prompt.json` and `README.md` (default: `../external/agent-prompt`).
     > [!IMPORTANT]
     > **Session IDs**: When this flag is enabled, every request **must** include a `sessionId` (either in the context or the request body). Requests without a `sessionId` will bypass the middleware to ensure data safety.
+- **MCP_SUBTASK_BUDGET_MS**: Wall-clock budget (ms, default `20000`) for a single agentic `use_free_llm` call before it yields a partial result and keeps executing remaining subtasks in the background. Keep this under your MCP client's tool-call timeout (many code editors default to ~30s). See [Architecture & Workflow Guide § 5](guide.md#5-agentic-middleware--state-management).
 
 ## Running the Server
 
@@ -98,6 +100,8 @@ Then visit `http://localhost:3000` to view the visual dashboard for provider hea
 | `skipIndexing` | optional | Skips the pre-emptive full-workspace re-index + wiki-maintenance pass agentic mode normally runs every call. Set `true` for requests narrowly about one file/PDF that don't need a full re-scan. |
 | `google_search` | optional | Enable Google Search grounding for Gemini models. |
 | `skill` | optional | Load a specific skill by id/name from the remote skill index. |
+| `action` | optional | Control an in-progress/paused agentic run for `sessionId`: `run` (default), `status` (poll progress, no LLM call), `continue` (resume a paused queue), `abort` (cancel a background run). |
+| `resume_input` | optional | For `action: 'continue'` — extra input appended to the subtask being resumed. |
 
 > [!IMPORTANT]
 > **When performing any task scoped to a project or workspace, you MUST pass both `workspace_root` (absolute path) and `agentic: true`.** Omitting either disables memory injection, context enrichment, and session persistence — the response will be blind to prior work. A bare call with only `messages` is for one-off queries that don't need project context.

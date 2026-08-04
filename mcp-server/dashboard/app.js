@@ -379,6 +379,32 @@ const TOOLS = [
     ]
   },
   {
+    id: 'browser_tool', label: 'browser_tool', icon: '🌐',
+    tag: 'Web Scraping',
+    fields: [
+      { id: 'action', label: 'Action', type: 'select', options: ['navigate', 'snapshot', 'click', 'scroll', 'wait', 'evaluate', 'network', 'api_replay', 'extract', 'deep_scrape', 'screenshot', 'checkpoint', 'session', 'scrape'] },
+      { id: 'url', label: 'Target URL', type: 'text', placeholder: 'https://example.com' },
+      { id: 'userInstructions', label: 'Extraction Instructions', type: 'textarea', placeholder: 'Scrape page headlines and stats' },
+      { id: 'sessionId', label: 'Session ID', type: 'text', placeholder: 'browser_session_1' }
+    ]
+  },
+  {
+    id: 'cyber_tool', label: 'cyber_tool', icon: '🛡️',
+    tag: 'Cyber Security',
+    fields: [
+      { id: 'action', label: 'Action', type: 'select', options: ['list_tools', 'get_tool', 'register_tool', 'wiki_lookup', 'learn', 'coach', 'save_graph', 'load_graph', 'tool_memory'] },
+      { id: 'toolName', label: 'Tool Name', type: 'text', placeholder: 'sqlmap' },
+      { id: 'githubUrl', label: 'GitHub URL (for register)', type: 'text', placeholder: 'https://github.com/sqlmapproject/sqlmap' },
+      { id: 'sessionId', label: 'Session / CTF ID', type: 'text', placeholder: 'ctf-challenge-1' },
+      { id: 'goal', label: 'Goal (for learn)', type: 'textarea', placeholder: 'enumerate services on a lab host with nmap' },
+      { id: 'level', label: 'Level (for learn)', type: 'select', options: ['', 'beginner', 'intermediate', 'advanced'] },
+      { id: 'observation', label: 'Observation (for coach)', type: 'textarea', placeholder: 'nmap showed port 80 open' },
+      { id: 'graphNode', label: 'Graph Node JSON (for save_graph)', type: 'textarea', placeholder: '{"id":"hyp-1","label":"try SQLi on login form","type":"hypothesis","from":"root"}' },
+      { id: 'memoryOp', label: 'Memory Op (for tool_memory)', type: 'select', options: ['', 'read', 'write'] },
+      { id: 'note', label: 'Note (for tool_memory write)', type: 'textarea', placeholder: '-sV -p- for a full service scan on lab targets' }
+    ]
+  },
+  {
     id: 'store_workspace_skill', label: 'store_workspace_skill', icon: '💾',
     tag: 'Skill Storage',
     fields: [
@@ -616,6 +642,11 @@ function collectParams(tool) {
       params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
     } else if (f.id === 'files') {
       params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
+    } else if (f.id === 'graphNode') {
+      const raw = el.value.trim();
+      if (raw) {
+        try { params[f.id] = JSON.parse(raw); } catch { /* leave unset — treat invalid JSON as "no node" */ }
+      }
     } else {
       const v = el.value.trim();
       if (v) params[f.id] = v;

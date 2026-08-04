@@ -4,9 +4,9 @@ import path from 'node:path';
 import os from 'node:os';
 import { resolveConfigDir } from '../utils/config-path.js';
 
-const SKILL_INDEX_URL = 'https://sickn33.github.io/antigravity-awesome-skills/skills.json';
-const RAW_BASE_URL = 'https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main';
-const API_BASE_URL = 'https://api.github.com/repos/sickn33/antigravity-awesome-skills/contents';
+const SKILL_INDEX_URL = 'https://sickn33.github.io/agentic-awesome-skills/skills.json';
+const RAW_BASE_URL = 'https://raw.githubusercontent.com/sickn33/agentic-awesome-skills/main';
+const API_BASE_URL = 'https://api.github.com/repos/sickn33/agentic-awesome-skills/contents';
 
 interface SkillIndexEntry {
   id?: string;

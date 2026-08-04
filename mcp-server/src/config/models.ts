@@ -9,10 +9,9 @@ export interface ModelMetadata {
 
 export const MODEL_METADATA: Record<string, ModelMetadata> = {
     // Frontier Reasoning
-    'deepseek/deepseek-r1': { capability: 1.0, contextWindow: 64000, isReasoning: true },
     'deepseek-ai/DeepSeek-R1': { capability: 1.0, contextWindow: 64000, isReasoning: true },
     'liquid/lfm2.5-1.2b-thinking:free': { capability: 0.88, contextWindow: 32000, isReasoning: true },
-    'microsoft/phi-4-mini-reasoning': { capability: 0.78, contextWindow: 128000, isReasoning: true },
+    'microsoft/phi-4': { capability: 0.86, contextWindow: 128000, isReasoning: true },
 
     // S-Tier Generalists
     'gemma-4-31b-it': { capability: 0.95, contextWindow: 300000, isVision: true, isReasoning: true },
@@ -22,6 +21,8 @@ export const MODEL_METADATA: Record<string, ModelMetadata> = {
     'google/gemma-4-26B-A4B-it': { capability: 0.94, contextWindow: 150000, isVision: true },
     'google/gemma-4-26b-a4b-it:free': { capability: 0.94, contextWindow: 150000, isVision: true },
     'gpt-oss-120b': { capability: 0.94, contextWindow: 128000 },
+    // Cerebras
+    'gemma-4-31b': { capability: 0.95, contextWindow: 128000, isVision: true },
     'qwen-3-235b-a22b-instruct-2507': { capability: 0.92, contextWindow: 128000 },
     'Qwen/Qwen3-235B-A22B': { capability: 0.92, contextWindow: 128000 },
     'Qwen/Qwen3-235B-A22B-nim': { capability: 0.92, contextWindow: 128000 },
@@ -35,19 +36,30 @@ export const MODEL_METADATA: Record<string, ModelMetadata> = {
     'kimi-k2.5': { capability: 0.90, contextWindow: 128000 },
     'minimax-m3': { capability: 0.90, contextWindow: 128000 },
     'gemma4:31b': { capability: 0.90, contextWindow: 300000 },
-    'meta/llama-4-maverick-17b-128e-instruct-fp8': { capability: 0.90, contextWindow: 128000 },
+    // nvidia/meta (fp8 variant removed - use base instruct below)
+    'meta/llama-4-maverick-17b-128e-instruct': { capability: 0.90, contextWindow: 128000 },
 
     // Coder Models
     'qwen/qwen3-coder-480b-a35b:free': { capability: 0.96, contextWindow: 128000, isCoder: true },
     'qwen/qwen3-coder-480b-a35b-instruct': { capability: 0.96, contextWindow: 128000, isCoder: true },
     'qwen3-coder:480b': { capability: 0.88, contextWindow: 128000, isCoder: true },
     'qwen3-coder-next': { capability: 0.85, contextWindow: 128000, isCoder: true },
-    'mistral-ai/codestral-2501': { capability: 0.84, contextWindow: 128000, isCoder: true },
+    // Coder replacements
+    'Qwen/Qwen2.5-Coder-7B-Instruct': { capability: 0.78, contextWindow: 32000, isCoder: true },
+    // groq
+    'openai/gpt-oss-20b': { capability: 0.75, contextWindow: 32000 },
+    'groq/compound': { capability: 0.88, contextWindow: 128000 },
+    // openrouter
+    'poolside/laguna-s-2.1:free': { capability: 0.82, contextWindow: 128000, isCoder: true },
+    // kilocode
+    'inclusionai/ling-3.0-flash:free': { capability: 0.82, contextWindow: 128000 },
+    'nvidia/nemotron-3-ultra-550b-a55b:free': { capability: 0.88, contextWindow: 300000, isReasoning: true },
+    'stepfun/step-3.7-flash:free': { capability: 0.84, contextWindow: 128000, isVision: true },
 
     // A-Tier
     'qwen/qwen3.6-27b': { capability: 0.88, contextWindow: 131072, isVision: true },
-    'meta/llama-4-maverick-17b-128e-instruct': { capability: 0.88, contextWindow: 128000 },
-    'microsoft/phi-4-multimodal-instruct': { capability: 0.88, contextWindow: 128000, isVision: true },
+    'meta/llama-4-maverick-17b-128e-instruct-fp8': { capability: 0.90, contextWindow: 128000 },
+    'microsoft/phi-4-multimodal-instruct': { capability: 0.88, contextWindow: 128000, isVision: true, isReasoning: true },
     'mistralai/mistral-nemotron': { capability: 0.88, contextWindow: 128000 },
     'open-mistral-nemo': { capability: 0.88, contextWindow: 400000 },
     'google/gemma-3-27b-it': { capability: 0.88, contextWindow: 130000, isVision: true },
@@ -96,7 +108,6 @@ export const MODEL_METADATA: Record<string, ModelMetadata> = {
     'Qwen/Qwen3-8B': { capability: 0.70, contextWindow: 32000 },
     'nvidia/nemotron-mini-4b-instruct:free': { capability: 0.65, contextWindow: 32000 },
     'nvidia/nemotron-mini-4b-instruct': { capability: 0.65, contextWindow: 32000 },
-    'nvidia/nemotron-nano-9b-v2:free': { capability: 0.65, contextWindow: 32000 },
     'gpt-oss:20b': { capability: 0.78, contextWindow: 32000 },
     'nemotron-3-ultra': { capability: 0.90, contextWindow: 128000 },
     'ministral-3:14b': { capability: 0.84, contextWindow: 128000 },
@@ -126,12 +137,17 @@ export const MODEL_METADATA: Record<string, ModelMetadata> = {
     'zai-org/GLM-5': { capability: 0.94, contextWindow: 128000 },
     'zai-org/GLM-4.7-Flash': { capability: 0.85, contextWindow: 128000 },
     'deepseek-ai/DeepSeek-V4-Pro': { capability: 0.98, contextWindow: 128000, isReasoning: true },
+    'deepseek-ai/deepseek-v4-pro': { capability: 0.98, contextWindow: 128000, isReasoning: true },
     'deepseek-ai/DeepSeek-V4-Flash': { capability: 0.88, contextWindow: 128000 },
     'deepseek-ai/DeepSeek-V3.2': { capability: 0.94, contextWindow: 128000 },
     'Qwen/Qwen3-Coder-30B-A3B-Instruct': { capability: 0.88, contextWindow: 128000, isCoder: true },
     'Qwen/Qwen3.5-397B-A17B': { capability: 0.96, contextWindow: 128000, isVision: true },
     'Qwen/Qwen3-VL-235B-A22B-Instruct': { capability: 0.92, contextWindow: 128000, isVision: true },
-    'cohere/north-mini-code:free': { capability: 0.94, contextWindow: 256000, isCoder: true }
+    // HuggingFace underutilized
+    'google/gemma-3-4b-it': { capability: 0.72, contextWindow: 130000, isVision: true },
+    'meta-llama/Llama-3.1-8B-Instruct': { capability: 0.72, contextWindow: 128000 },
+    // nvidia underutilized
+    'minimaxai/minimax-m3': { capability: 0.90, contextWindow: 128000 }
 };
 
 /**

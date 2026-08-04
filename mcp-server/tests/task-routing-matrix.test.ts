@@ -53,7 +53,7 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
         // This allows us to verify if the router picks the TOP suggested model when available
         const prov = new MockProvider('gemini', [
             { id: 'qwen/qwen3-coder-480b-a35b:free', name: 'Qwen3 Coder' },
-            { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1' },
+            { id: 'deepseek-ai/DeepSeek-R1', name: 'DeepSeek R1' },
             { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3' },
             { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3' },
             { id: 'google/gemma-4-31b-it:free', name: 'Gemma 4' },
@@ -94,7 +94,7 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
         await verifyRouting(
             'Think step by step: if all bloops are bleeps and some bleeps are blops...',
             TaskType.Reasoning,
-            'deepseek/deepseek-r1'
+            'deepseek-ai/DeepSeek-R1'
         );
     });
 
@@ -151,7 +151,7 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
         await verifyRouting(
             'Hello! How is your day going?',
             TaskType.Chat,
-            'deepseek/deepseek-r1'
+            'deepseek-ai/DeepSeek-R1'
         );
     });
 
@@ -159,7 +159,7 @@ describe('Intelligent Router - Task Intelligence Matrix', () => {
         await verifyRouting(
             'We need to write an exploit to solve this buffer overflow ctf vulnerability.',
             TaskType.Cyber,
-            'deepseek/deepseek-r1'
+            'deepseek-ai/DeepSeek-R1'
         );
     });
 

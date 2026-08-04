@@ -24,5 +24,7 @@ export class NvidiaProvider extends BaseProvider {
     { id: 'meta/llama-3.2-90b-vision-instruct', name: 'Llama 3.2 90B Vision' },
     { id: 'meta/llama-3.2-11b-vision-instruct', name: 'Llama 3.2 11B Vision' },
     { id: 'google/paligemma', name: 'PaliGemma (Vision)' },
+    { id: 'minimaxai/minimax-m3', name: 'MiniMax M3' },
+    { id: 'deepseek-ai/deepseek-v4-pro', name: 'DeepSeek V4 Pro' },
   ];
 }

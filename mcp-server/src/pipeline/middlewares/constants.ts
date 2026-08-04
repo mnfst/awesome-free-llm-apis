@@ -54,3 +54,8 @@ export const LOCAL_SKILLS_DIR = path.join('.free-llm-mcp', 'skills');
 export const MAX_DEPTH = 5;
 export const MAX_FILES_SCANNED = 5000;
 
+// Wall-clock budget for a single use_free_llm agentic call before it yields a partial
+// result + resume handle instead of continuing to block. Many MCP clients (code editors)
+// kill a tool call at ~30s; default leaves headroom for serialization + the final persist.
+export const SUBTASK_BUDGET_MS = Number(process.env.MCP_SUBTASK_BUDGET_MS ?? 20_000);
+

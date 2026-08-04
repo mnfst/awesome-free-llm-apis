@@ -24,6 +24,8 @@ import { validateProvider } from './validate-provider.js';
 import { initWorkspace } from './init-workspace.js';
 import { GlobalWikiManager } from '../utils/GlobalWikiManager.js';
 import { logToolCall } from '../utils/ChatLogger.js';
+export { cyberTool } from './cyber-tool.js';
+export { IntelligentBrowserScraper as browserTool } from './browser-action.js';
 
 // Each pdf:// reference costs a subprocess render plus a vision-classification LLM call
 // (resolvePdfRef) — sequential, uncapped resolution of many pages in one pass would be an
@@ -55,6 +57,14 @@ export interface UseFreeLLMInput {
   // request is narrowly about a specific file/PDF reference and doesn't need (or
   // shouldn't pay the latency/provider-budget cost of) a full codebase re-scan.
   skipIndexing?: boolean;
+  // Control action for an in-progress/paused agentic run, keyed by sessionId.
+  // 'run' (default) behaves as before. 'continue' resumes a paused queue (equivalent to
+  // the `continue <promptId> ...` prompt-text convention, which still works as a fallback).
+  // 'status' and 'abort' short-circuit before the pipeline runs — they never touch a provider.
+  action?: 'run' | 'continue' | 'status' | 'abort';
+  // For action:'continue' — appended to the resumed subtask, same as the trailing text in
+  // `continue <promptId> <resume_input>`.
+  resume_input?: string;
 }
 
 const workspaceScanner = new WorkspaceScanner(process.cwd());
@@ -614,6 +624,58 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
   if (!effectiveSessionId && (workspaceRoot || agentic)) {
     // v1.0.4 Hardening: Use the stable wsHash to derive sessionId if missing
     effectiveSessionId = `ws-${wsHash.substring(0, 16)}`;
+  }
+
+  const action = (input as any).action as UseFreeLLMInput['action'] | undefined;
+  if ((action === 'status' || action === 'abort') && effectiveSessionId) {
+    // Never touch a provider or the pipeline for these — must return in well under a
+    // client's tool-call timeout even while a background subtask run is mid-flight.
+    const { RunRegistry } = await import('../pipeline/middlewares/RunRegistry.js');
+    const { SubtaskDecomposer } = await import('../pipeline/middlewares/SubtaskDecomposer.js');
+    const q = await SubtaskDecomposer.getOrLoadState(effectiveSessionId);
+    let text: string;
+    if (action === 'abort') {
+      const aborted = RunRegistry.abort(effectiveSessionId);
+      text = aborted
+        ? `🛑 Aborted the in-progress background run for session ${effectiveSessionId}. The queue is left as-is and can be resumed with \`action: 'continue'\`.`
+        : `No in-progress background run found for session ${effectiveSessionId}.`;
+    } else {
+      const runInfo = RunRegistry.get(effectiveSessionId);
+      const running = RunRegistry.isRunning(effectiveSessionId);
+      text = [
+        `**Session**: ${effectiveSessionId}`,
+        `**Background run active**: ${running}`,
+        `**Paused**: ${!!q.paused}${q.pauseReason ? ` (${q.pauseReason})` : ''}`,
+        `**Completed subtasks**: ${q.history?.length ?? 0}`,
+        `**Remaining in queue**: ${q.nowQueue.length}`,
+        runInfo?.lastSubtask ? `**Last finished**: ${runInfo.lastSubtask}` : '',
+        q.promptId ? `**promptId**: ${q.promptId}` : '',
+      ].filter(Boolean).join('\n');
+    }
+    return {
+      id: `action-${action}-${Date.now()}`,
+      object: 'chat.completion',
+      created: Math.floor(Date.now() / 1000),
+      model: 'agentic-control',
+      choices: [{ index: 0, message: { role: 'assistant', content: text }, finish_reason: 'stop' }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    };
+  }
+
+  if (action === 'continue' && effectiveSessionId) {
+    // Reuse the existing `continue <promptId> <resume_input>` convention that
+    // AgenticMiddleware already understands, so no new resume logic is needed there.
+    const { SubtaskDecomposer } = await import('../pipeline/middlewares/SubtaskDecomposer.js');
+    const q = await SubtaskDecomposer.getOrLoadState(effectiveSessionId);
+    const promptId = q.promptId || '';
+    const resumeText = `continue ${promptId} ${(input as any).resume_input || ''}`.trim();
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) {
+      lastUserMsg.content = resumeText;
+    } else {
+      messages.push({ role: 'user', content: resumeText });
+    }
+    request.messages = messages;
   }
 
   const context: PipelineContext = {
