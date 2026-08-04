@@ -23,10 +23,6 @@ async function runSmokeTest() {
     }
 
     for (const provider of availableProviders) {
-        if (provider.id === 'github-models') {
-            console.error(`\n[ ] Skipping Provider: ${provider.name} (github-models)`);
-            continue;
-        }
         // Preference for gemini-2.5-flash if it exists, otherwise first model
         let model = provider.models[0];
         if (provider.id === 'gemini') {

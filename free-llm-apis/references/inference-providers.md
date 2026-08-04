@@ -2,44 +2,6 @@
 
 Third-party platforms that host open-weight models from various sources.
 
-## GitHub Models
-
-**Models:** GPT-4o, Llama 3.3 70B, DeepSeek-R1 +more
-**Limits:** 10-15 RPM, 50-150 RPD
-
-### Get your API key
-
-1. Go to [GitHub Models Marketplace](https://github.com/marketplace/models).
-2. Sign in with your GitHub account.
-3. Pick any model and click "Get API key" or go to your GitHub settings > Developer settings > Personal access tokens.
-4. Generate a fine-grained token with the "Models" permission.
-5. Copy the token.
-
-### Usage example
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    api_key="YOUR_GITHUB_TOKEN",
-    base_url="https://models.inference.ai.azure.com/"
-)
-
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-print(response.choices[0].message.content)
-```
-
-### Environment variable
-
-```bash
-export GITHUB_TOKEN="your-token-here"
-```
-
----
-
 ## NVIDIA NIM
 
 **Models:** Llama 3.3 70B, Mistral Large, Qwen3 235B +more

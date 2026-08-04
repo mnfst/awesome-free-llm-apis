@@ -4,7 +4,6 @@ import { MistralProvider } from './mistral.js';
 import { ZhipuProvider } from './zhipu.js';
 import { CerebrasProvider } from './cerebras.js';
 import { CloudflareProvider } from './cloudflare.js';
-import { GitHubModelsProvider } from './github-models.js';
 import { GroqProvider } from './groq.js';
 import { HuggingFaceProvider } from './huggingface.js';
 import { LLM7Provider } from './llm7.js';
@@ -28,7 +27,8 @@ export class ProviderRegistry {
       new ZhipuProvider(),
       new CerebrasProvider(),
       new CloudflareProvider(),
-      new GitHubModelsProvider(),
+      // v1.0.9 Deprecated: GitHubModelsProvider removed from the registry (persistent
+      // instability / scheduled retirement brownouts on GitHub's side). See github-models.ts.
       new GroqProvider(),
       new HuggingFaceProvider(),
       new LLM7Provider(),

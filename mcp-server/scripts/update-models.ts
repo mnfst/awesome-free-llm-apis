@@ -183,8 +183,6 @@ async function updateProviderFile(providerId: string, scrapedModels: ScrapedMode
       belongs = true;
     } else if (providerId === 'siliconflow' && (modelId.startsWith('Qwen/') || modelId.startsWith('DeepSeek-') || modelId.startsWith('deepseek-') || modelId.includes('GLM-') || modelId.includes('glm-'))) {
       if (modelId.includes('/') && !modelId.startsWith('openrouter/')) belongs = true;
-    } else if (providerId === 'github-models' && (modelId === 'gpt-4o' || modelId === 'Llama-3.3-70B-Instruct' || modelId === 'DeepSeek-R1')) {
-      belongs = true;
     } else if (providerId === 'kilocode' && modelId.includes('kilo-')) {
       belongs = true;
     } else if (providerId === 'cohere' && modelId.startsWith('command-')) {
@@ -532,7 +530,7 @@ async function scrapeFallbackProvider(providerId: string): Promise<ScrapedModel[
   console.log(`[Scraper] Generating task/router matched model catalog for ${providerId}...`);
   const models: ScrapedModel[] = [];
   
-  // Scrapes and matches models for other providers: groq, mistral, cohere, cerebras, zhipu, ollama-cloud, huggingface, github-models
+  // Scrapes and matches models for other providers: groq, mistral, cohere, cerebras, zhipu, ollama-cloud, huggingface
   for (const mId of requiredRouterModels) {
     let belongs = false;
     if (providerId === 'groq' && (mId.includes('instant') || mId.includes('versatile') || mId.startsWith('groq/'))) {
@@ -542,8 +540,6 @@ async function scrapeFallbackProvider(providerId: string): Promise<ScrapedModel[
     } else if (providerId === 'cohere' && mId.startsWith('command-')) {
       belongs = true;
     } else if (providerId === 'cerebras' && (mId.includes('cerebras') || mId.includes('llama3-') || mId.includes('deepseek-r1'))) {
-      belongs = true;
-    } else if (providerId === 'github-models' && (mId === 'gpt-4o' || mId === 'Llama-3.3-70B-Instruct' || mId === 'DeepSeek-R1')) {
       belongs = true;
     } else if (providerId === 'huggingface' && (mId.includes('huggingface') || mId.includes('Mistral-7B'))) {
       belongs = true;
@@ -579,7 +575,7 @@ async function main() {
   const providers = [
     'nvidia', 'openrouter', 'kilocode', 'llm7', 
     'cloudflare', 'siliconflow', 'groq', 'mistral', 'cohere', 
-    'cerebras', 'github-models', 'huggingface', 'zhipu', 'ollama-cloud'
+    'cerebras', 'huggingface', 'zhipu', 'ollama-cloud'
   ];
 
   try {

@@ -10,5 +10,6 @@ export class CerebrasProvider extends BaseProvider {
   models: ProviderModel[] = [
     { id: 'zai-glm-4.7', name: 'Zai GLM 4.7' },
     { id: 'gpt-oss-120b', name: 'GPT OSS 120B' },
+    { id: 'gemma-4-31b', name: 'Gemma 4 31B' },
   ];
 }

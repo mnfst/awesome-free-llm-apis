@@ -301,8 +301,8 @@ If a tool call fails or returns an error, follow this sequence:
 > 
 > huggingface
 > modelscope
-> github-models
 > gemini
 > openrouter
 > nvidia
+> kilocode
 > ```
