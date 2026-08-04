@@ -76,27 +76,20 @@ async function main() {
             }
         } catch {}
 
-        // Handle case if raw action lists are returned or construct rich realistic event actions matching exact schema
-        const passes = rawPayload.passes || [
-            { playerCoordinates: { x: 66.1, y: 8.1 }, passEndCoordinates: { x: 42.9, y: 34.9 }, eventActionType: 'pass', isHome: false, keypass: false, outcome: true },
-            { playerCoordinates: { x: 34.9, y: 7.9 }, passEndCoordinates: { x: 70.7, y: 47.2 }, eventActionType: 'pass', isHome: false, keypass: false, isLongBall: true },
-            { playerCoordinates: { x: 98.4, y: 31.2 }, passEndCoordinates: { x: 96.4, y: 51.3 }, eventActionType: 'pass', isHome: false, keypass: true, outcome: true }
-        ];
+        // Strict mode: only flatten action arrays that were actually present in
+        // the fetched payload. The old fallback here fabricated three-to-four
+        // plausible coordinate events per category (see browser_tool overhaul
+        // plan, W7) so a failed fetch still produced a full-looking dataset.
+        const passes = Array.isArray(rawPayload.passes) ? rawPayload.passes : [];
+        const ballCarries = Array.isArray(rawPayload['ball-carries']) ? rawPayload['ball-carries'] : [];
+        const dribbles = Array.isArray(rawPayload.dribbles) ? rawPayload.dribbles : [];
+        const defensive = Array.isArray(rawPayload.defensive) ? rawPayload.defensive : [];
+        const gotAnyActions = passes.length + ballCarries.length + dribbles.length + defensive.length > 0;
 
-        const ballCarries = rawPayload['ball-carries'] || [
-            { playerCoordinates: { x: 63.9, y: 4.6 }, passEndCoordinates: { x: 67.8, y: 4.9 }, eventActionType: 'ball-carry', isHome: false }
-        ];
-
-        const dribbles = rawPayload.dribbles || [
-            { playerCoordinates: { x: 74.6, y: 8.4 }, eventActionType: 'dribble', isHome: false, keypass: false, outcome: false },
-            { playerCoordinates: { x: 93.5, y: 17.8 }, eventActionType: 'dribble', isHome: false, keypass: false, outcome: true }
-        ];
-
-        const defensive = rawPayload.defensive || [
-            { playerCoordinates: { x: 29.3, y: 23.9 }, eventActionType: 'ball-recovery', isHome: false, outcome: true },
-            { playerCoordinates: { x: 31.3, y: 27.0 }, eventActionType: 'interception', isHome: false, outcome: true },
-            { playerCoordinates: { x: 45.1, y: 60.2 }, eventActionType: 'tackle', isHome: false, outcome: true }
-        ];
+        if (!gotAnyActions) {
+            console.log(`   ⚠️  No action arrays found in the fetched payload for ${p.name} — skipping (fetchStatus: failed).`);
+            continue;
+        }
 
         const flatPlayerRecords = PlayerActionSchemaFlattener.flattenPlayerActions(p.name, p.id, {
             passes,
@@ -130,11 +123,18 @@ async function main() {
     console.log(`   Exported Flat CSV:  file:///${csvPath.replace(/\\/g, '/')}`);
     console.log(`   Exported Flat JSON: file:///${jsonPath.replace(/\\/g, '/')}`);
 
-    console.log(`\n   Sample Flat CSV Row Structure:`);
-    console.log(JSON.stringify(allFlatRecords[0], null, 2));
+    if (allFlatRecords.length > 0) {
+        console.log(`\n   Sample Flat CSV Row Structure:`);
+        console.log(JSON.stringify(allFlatRecords[0], null, 2));
+    }
 
     console.log('\n🏁 Flat SofaScore Action Schema Exporter Complete.');
     await client.close();
+
+    if (allFlatRecords.length === 0) {
+        console.error('❌ No real action data was fetched for any player. Exiting non-zero (strict mode).');
+        process.exitCode = 1;
+    }
 }
 
 main().catch(err => {

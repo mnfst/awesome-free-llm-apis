@@ -39,6 +39,8 @@ export interface BrowserScrapeInput {
 
 export interface ScrapeResult {
     success: boolean;
+    /** @since 2.0 — 'failed' means data is not trustworthy; see `errors`. */
+    status?: 'ok' | 'partial' | 'failed';
     url: string;
     domainContext: string;
     recordCount: number;
@@ -52,6 +54,8 @@ export interface ScrapeResult {
     sampleRecords: Record<string, any>[];
     sampleDeepRecords?: Record<string, any>[];
     usedPersistedScript: boolean;
+    /** @since 2.0 — structured errors; `error` (singular) is kept as a deprecated alias for the first message. */
+    errors?: Array<{ stage: string; code: string; message: string; recoverable: boolean }>;
     error?: string;
 }
 
@@ -455,12 +459,21 @@ CRITICAL REQUIREMENTS:
         }`;
     }
 
+    /**
+     * Strict-mode normalization: never invent plausible-looking records. If the
+     * LLM's output doesn't parse as JSON, this reports a `failed` status with an
+     * explicit error instead of silently synthesizing `{id, title, link}` rows
+     * from the raw DOM lines (the old fallback here was the source of false
+     * "success: true, 0 usable records" results).
+     */
     async interpretExtractedDataWithLLM(
         extractedItems: any[],
         domainContext: string,
         userInstructions?: string
-    ): Promise<Record<string, any>[]> {
-        if (!extractedItems || extractedItems.length === 0) return [];
+    ): Promise<{ records: Record<string, any>[]; status: 'ok' | 'partial' | 'failed'; errors: Array<{ stage: string; code: string; message: string; recoverable: boolean }>; rawSample?: any[] }> {
+        if (!extractedItems || extractedItems.length === 0) {
+            return { records: [], status: 'failed', errors: [{ stage: 'normalize', code: 'EMPTY_INPUT', message: 'No raw items to normalize', recoverable: true }] };
+        }
 
         const systemPrompt = `You are a universal AI Web Data Normalizer.
 Web Context: ${domainContext}
@@ -475,26 +488,42 @@ Output ONLY a valid JSON array of standardized objects. Do not wrap in markdown 
         const sampleBatch = extractedItems.slice(0, 30);
         const userPrompt = `Raw extracted DOM elements:\n${JSON.stringify(sampleBatch, null, 2)}`;
 
-        const rawText = await this.callLLM([
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-        ]);
-
-        const match = rawText.match(/\[[\s\S]*\]/);
-        if (match) {
+        const attempt = async (extraInstruction?: string) => {
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: extraInstruction ? `${userPrompt}\n\n${extraInstruction}` : userPrompt },
+            ];
+            const rawText = await this.callLLM(messages);
+            const match = rawText.match(/\[[\s\S]*\]/);
+            if (!match) return null;
             try {
                 const parsed = JSON.parse(match[0]);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    return parsed.map((item, idx) => ({ id: idx + 1, ...item }));
-                }
-            } catch {}
+                return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+            } catch {
+                return null;
+            }
+        };
+
+        let parsed = await attempt();
+        if (!parsed) {
+            // One re-prompt before declaring failure, per strict-mode retry policy.
+            parsed = await attempt('Your previous output failed JSON.parse. Return ONLY a JSON array, no prose, no markdown fences.');
         }
 
-        return sampleBatch.map((item, idx) => ({
-            id: idx + 1,
-            title: (item.lines || []).join(' | '),
-            link: item.href || ''
-        }));
+        if (parsed) {
+            return {
+                records: parsed.map((item: any, idx: number) => ({ id: idx + 1, ...item })),
+                status: 'ok',
+                errors: [],
+            };
+        }
+
+        return {
+            records: [],
+            status: 'failed',
+            errors: [{ stage: 'normalize', code: 'LLM_JSON_PARSE_FAILED', message: 'LLM output did not parse as a JSON array after retry', recoverable: true }],
+            rawSample: sampleBatch,
+        };
     }
 
     async deepScrapeMatchDetails(mcpClient: any, parentRecords: Record<string, any>[], domainContext: string, limit: number = 2): Promise<Record<string, any>[]> {
@@ -638,11 +667,12 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
                 };
             }
 
-            const newRecords = await this.interpretExtractedDataWithLLM(
+            const normalization = await this.interpretExtractedDataWithLLM(
                 Array.isArray(rawItems) ? rawItems : [],
                 domainContext,
                 input.userInstructions
             );
+            const newRecords = normalization.records;
 
             const getItemKey = (r: Record<string, any>) => r.link || r.title || r.team1 || r.homeTeam || r.entityName || JSON.stringify(r);
             const existingKeys = new Set(checkpoint.accumulatedRecords.map(getItemKey));
@@ -699,8 +729,14 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
                 });
             }
 
+            // Strict mode: "success" requires either real records or an explicit,
+            // evidenced empty-result — never the old "0 records, success:true" false positive.
+            const emptyIsExpected = newRecords.length === 0 && Array.isArray(rawItems) && rawItems.length === 0;
+            const success = normalization.status !== 'failed' && (newRecords.length > 0 || emptyIsExpected);
+
             const res = {
-                success: true,
+                success,
+                status: normalization.status,
                 url: input.url,
                 domainContext,
                 recordCount: newRecords.length,
@@ -713,13 +749,16 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
                 checkpointPath,
                 sampleRecords: checkpoint.accumulatedRecords.slice(0, 5),
                 sampleDeepRecords: checkpoint.deepRecords.slice(0, 3),
-                usedPersistedScript: false
+                usedPersistedScript: false,
+                errors: normalization.errors,
+                error: normalization.errors[0]?.message,
             };
             await logToolCall(sessionId, 'browser_tool:scrape', input, res, 0, false).catch(() => {});
             return res;
         } catch (err: any) {
             const errRes = {
                 success: false,
+                status: 'failed' as const,
                 url: input.url,
                 domainContext: input.domainContext || 'Web Page Data',
                 recordCount: 0,
@@ -727,6 +766,7 @@ Output a valid JSON object. Do not include markdown codeblocks.`;
                 deepRecordCount: 0,
                 sampleRecords: [],
                 usedPersistedScript: false,
+                errors: [{ stage: 'scrape', code: 'UNCAUGHT_EXCEPTION', message: err?.message || String(err), recoverable: false }],
                 error: err?.message || String(err)
             };
             const sid = input.sessionId || 'browser_tool_session';

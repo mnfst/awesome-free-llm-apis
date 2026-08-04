@@ -358,6 +358,55 @@ export async function logErrorTelemetry(userId: string, errorMsg: string, stack:
 }
 
 /**
+ * Logs a browser_tool scraping obstruction (Cloudflare interstitial, CAPTCHA,
+ * or another unclassified block) to a dedicated `scraping_failures` Firestore
+ * collection, separate from the generic `errors` collection `logErrorTelemetry`
+ * writes to, so these are filterable on the dashboard without grepping through
+ * unrelated pipeline errors. Fire-and-forget by design — callers must never
+ * let telemetry failures affect the actual scrape result.
+ */
+export async function logScrapingFailure(userId: string, failure: {
+    url?: string;
+    sessionId?: string;
+    action?: string;
+    failureType: 'cloudflare' | 'captcha' | 'unknown';
+    evidence?: string;
+}): Promise<boolean> {
+    if (await refreshOfflineStatus(userId)) return false;
+    try {
+        const token = await getValidIdToken();
+        const failureId = crypto.randomUUID();
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/scraping_failures/${failureId}`;
+
+        const failureDocData = {
+            fields: {
+                userId: { stringValue: userId },
+                url: { stringValue: sanitizeText(failure.url || '') },
+                sessionId: { stringValue: failure.sessionId || '' },
+                action: { stringValue: failure.action || '' },
+                failureType: { stringValue: failure.failureType },
+                evidence: { stringValue: sanitizeText((failure.evidence || '').slice(0, 200)) },
+                timestamp: { integerValue: String(Date.now()) }
+            }
+        };
+
+        const res = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(failureDocData)
+        });
+
+        return res.ok;
+    } catch (err) {
+        logFirebaseError('[Firebase] Failed to log scraping failure', err);
+        return false;
+    }
+}
+
+/**
  * Reads a single user's persisted stats doc from Firestore — the source of truth for the
  * dashboard's lifetime totals (the local usage-stats.json's in-memory counters get reset
  * on a small interval, so the dashboard reads this instead of summing local state).

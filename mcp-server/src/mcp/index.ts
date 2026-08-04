@@ -19,6 +19,9 @@ import { indexWorkspace } from '../tools/index-workspace.js';
 import { toMarkdownResponse } from '../utils/markdown.js';
 import { logToolCall } from '../utils/ChatLogger.js';
 import { WorkspaceScanner } from '../cache/workspace.js';
+import { actionEnum, renderActionDocs } from '../browser/actionSchemas.js';
+import { dispatchBrowserAction } from '../browser/dispatch.js';
+import { getBrowserSessionPool } from '../browser/BrowserSessionPool.js';
 
 /** Derive a stable ws-<hash> session ID from tool args, falling back to __no_ws__. */
 async function deriveSessionIdFromArgs(args: Record<string, any> | null | undefined): Promise<string> {
@@ -452,17 +455,19 @@ export async function createMCPServer(): Promise<Server> {
       },
       {
         name: 'browser_tool',
-        description: '100% Dynamic, domain-agnostic Intelligent Browser Scraper with pausable session checkpointing, 0-token script memory, and flat schema exports.',
+        description: `Browser automation & scraper that owns a real chrome-devtools-mcp session. Actions: ${renderActionDocs()}`,
         inputSchema: {
           type: 'object' as const,
           properties: {
-            url: { type: 'string', description: 'Target website URL to inspect, explore, or scrape (or "list_checkpoints")' },
-            action: { type: 'string', enum: ['scrape', 'list_checkpoints'], description: 'Action to perform ("scrape" or "list_checkpoints")' },
-            userInstructions: { type: 'string', description: 'Prompt or instructions for dynamic extraction' },
-            outputDir: { type: 'string', description: 'Directory to store output datasets and checkpoints' },
-            sessionId: { type: 'string', description: 'Unique session identifier for checkpointing' }
+            action: { type: 'string', enum: actionEnum(), description: 'Which browser action to perform' },
+            url: { type: 'string', description: 'Target website URL (required for navigate/scrape; optional elsewhere)' },
+            sessionId: { type: 'string', description: 'Session identifier — reuses a live browser session and checkpoint across calls' },
+            outputDir: { type: 'string', description: 'Directory to store output datasets, checkpoints, and network dumps' },
+            userInstructions: { type: 'string', description: 'Prompt/instructions for extraction actions' },
+            strict: { type: 'boolean', description: 'When true (default), extraction failures return data:null + errors instead of best-effort guesses' },
+            params: { type: 'object', description: 'Action-specific parameters (see the action list above)' }
           },
-          required: ['url']
+          required: ['action']
         }
       },
       {
@@ -573,11 +578,10 @@ export async function createMCPServer(): Promise<Server> {
           content: [{ type: 'text' as const, text: result.success ? result.response ?? '' : `Error: ${result.error}` }]
         };
       } else if (name === 'browser_tool') {
-        const { IntelligentBrowserScraper } = await import('../tools/browser-action.js');
-        const scraper = new IntelligentBrowserScraper();
-        const result = await scraper.scrapeAndProcessWithCheckpoint(args as any, null);
+        const result = await dispatchBrowserAction(args);
         response = {
-          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }]
+          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+          isError: !result.success,
         };
       } else if (name === 'cyber_tool') {
         const { cyberTool } = await import('../tools/cyber-tool.js');

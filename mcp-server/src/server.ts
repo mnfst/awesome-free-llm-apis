@@ -53,7 +53,6 @@ import { visionTool } from './tools/vision-tool.js';
 import { executeSkill } from './tools/execute-skill.js';
 import { manageMemory } from './tools/manage-memory.js';
 import { indexWorkspace } from './tools/index-workspace.js';
-import { IntelligentBrowserScraper } from './tools/browser-action.js';
 import { cyberTool } from './tools/cyber-tool.js';
 import { getSharedRouter } from './pipeline/instances.js';
 import { execSync } from 'child_process';
@@ -558,13 +557,15 @@ async function main() {
         }
       });
 
-      // Browser Tool Scraper API Endpoint
+      // Browser Tool Scraper API Endpoint — routes through the same action
+      // dispatcher as the MCP tool (src/browser/dispatch.ts), not a second copy,
+      // so both entry points share one BrowserSessionPool per process.
       app.post('/api/browser_tool', express.json({ limit: '10mb' }), async (req, res) => {
         if (!checkRateLimit(req, res)) return;
         try {
-          const scraper = new IntelligentBrowserScraper();
-          const result = await scraper.scrapeAndProcessWithCheckpoint(req.body, null);
-          res.json(result);
+          const { dispatchBrowserAction } = await import('./browser/dispatch.js');
+          const result = await dispatchBrowserAction(req.body);
+          res.status(result.success ? 200 : 502).json(result);
         } catch (err: any) {
           res.status(500).json({ error: String(err?.message || err) });
         }
@@ -885,6 +886,13 @@ async function main() {
           console.error('Failed to flush persistence:', err);
         }
 
+        try {
+          const { getBrowserSessionPool } = await import('./browser/BrowserSessionPool.js');
+          await getBrowserSessionPool().shutdownAll();
+        } catch (err) {
+          console.error('Failed to close browser sessions:', err);
+        }
+
         serverInstance.close(() => {
           console.error('Server closed');
           process.exit(0);
@@ -910,6 +918,12 @@ async function main() {
           await flushSystem();
         } catch (err) {
           console.error('Failed to flush persistence:', err);
+        }
+        try {
+          const { getBrowserSessionPool } = await import('./browser/BrowserSessionPool.js');
+          await getBrowserSessionPool().shutdownAll();
+        } catch (err) {
+          console.error('Failed to close browser sessions:', err);
         }
         process.exit(0);
       };
