@@ -404,6 +404,8 @@ async function main() {
                 workspace_root: params.workspace_root,
                 sessionId: sid || '__no_ws__',
                 skipIndexing: !!params.skipIndexing,
+                action: params.action,
+                resume_input: params.resume_input,
               });
               result = { content: r?.choices?.[0]?.message?.content ?? '', model: r?.model, provider: r?._providerId };
               break;

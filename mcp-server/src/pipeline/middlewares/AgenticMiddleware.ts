@@ -28,6 +28,8 @@ import { ProviderRegistry } from '../../providers/registry.js';
 import { SubtaskDecomposer, createEmptyQueueState, newQueueTaskId, type QueueTask, type QueueState, type SubtaskHistoryEntry } from './SubtaskDecomposer.js';
 import { ContextResolver } from './ContextResolver.js';
 import { HistoryManager } from './HistoryManager.js';
+import { SUBTASK_BUDGET_MS } from './constants.js';
+import { RunRegistry, type RunInfo } from './RunRegistry.js';
 
 export { createEmptyQueueState, newQueueTaskId, type QueueTask, type QueueState, type SubtaskHistoryEntry };
 
@@ -1053,6 +1055,103 @@ async function executeSingleSubtask(
     return true;
 }
 
+/**
+ * Drains the remaining nowQueue for a session after AgenticMiddleware.execute() has
+ * already yielded a partial result at the time budget. Runs detached (not awaited by the
+ * request handler) — RunRegistry.isRunning(sessionId) keeps other calls for this session
+ * from starting a second concurrent run while this executes; action:'status' reads
+ * RunRegistry.get(sessionId) for progress; action:'abort' cancels via runInfo.controller.
+ */
+async function continueQueueInBackground(
+    sessionId: string,
+    projectDir: string,
+    workspaceRoot: string | undefined,
+    executor: LLMExecutor,
+    baseContext: PipelineContext,
+    commsQueue: string[],
+    promptQueue: string[],
+    runInfo: RunInfo
+): Promise<void> {
+    try {
+        const q = await getOrLoadState(sessionId);
+        let iterations = 0;
+        while (q.nowQueue.length > 0 && iterations < 20) {
+            if (runInfo.controller.signal.aborted) {
+                console.error(`[AgenticMiddleware] Background run aborted for session=${sessionId}`);
+                break;
+            }
+            iterations++;
+            const taskNode = q.nowQueue[0];
+
+            const clonedCtx: PipelineContext = {
+                ...baseContext,
+                request: {
+                    ...baseContext.request,
+                    messages: baseContext.request.messages.map(m => ({ ...m }))
+                }
+            } as any;
+
+            await logChatTurn(sessionId, { role: 'subtask_start', tool: 'Agentic Subtask (background)', content: taskNode.task });
+
+            let success = false;
+            try {
+                success = await executeSingleSubtask(
+                    taskNode.task, taskNode.id, (q.resolvedContext ??= {}), clonedCtx,
+                    sessionId, projectDir, workspaceRoot, iterations, q.history || [],
+                    executor, [], commsQueue, promptQueue
+                );
+            } catch (err) {
+                console.error(`[AgenticMiddleware] Background subtask crashed: ${err}`);
+                success = false;
+            }
+
+            const responseContent = getResponseContent(clonedCtx);
+            if (!success || !responseContent) {
+                await logChatTurn(sessionId, { role: 'error', tool: 'Agentic Subtask (background)', content: `Failed: ${taskNode.task}` });
+                if (!q.promptId) q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                q.paused = true;
+                q.pauseReason = 'failed';
+                await persistState(sessionId, projectDir);
+                break;
+            }
+
+            await logChatTurn(sessionId, {
+                role: 'subtask_response',
+                tool: 'Agentic Subtask (background)',
+                content: `Completed: ${taskNode.task}`,
+                output: responseContent,
+                model: clonedCtx.response?.model,
+                provider: (clonedCtx.response as any)?._providerId
+            });
+
+            if (!q.history) q.history = [];
+            q.history.push({
+                task: taskNode.task,
+                taskId: taskNode.id,
+                output: responseContent,
+                filesModified: getTaskFiles(responseContent),
+                timestamp: Date.now(),
+                model: clonedCtx.response?.model,
+                provider: (clonedCtx.response as any)?._providerId
+            });
+
+            q.nowQueue = q.nowQueue.filter(e => e.id !== taskNode.id);
+            await persistState(sessionId, projectDir);
+            RunRegistry.progress(sessionId, taskNode.task, q.history.length, q.nowQueue.length);
+        }
+
+        if (q.nowQueue.length === 0 && !runInfo.controller.signal.aborted) {
+            q.paused = false;
+            q.pauseReason = undefined;
+            await persistState(sessionId, projectDir);
+        }
+        RunRegistry.finish(sessionId);
+    } catch (err: any) {
+        console.error(`[AgenticMiddleware] Background continuation failed for session=${sessionId}:`, err);
+        RunRegistry.finish(sessionId, err?.message || String(err));
+    }
+}
+
 function getOriginalUserContent(content: string): string {
     const marker = '// FULL file content here (never partial diffs)\n```';
     const index = content.indexOf(marker);
@@ -1120,10 +1219,46 @@ export class AgenticMiddleware implements Middleware {
         const projectDir = await ensureProjectFiles(sessionId, workspaceRoot);
         const q = await getOrLoadState(sessionId);
 
+        // A background continuation from a previous budget-yielded call may still be running
+        // for this session. Rather than starting a second concurrent run over the same
+        // on-disk QueueState (interleaved mutations, duplicated file edits), return a status
+        // snapshot — this also turns a client's timeout-and-retry into free polling.
+        if (RunRegistry.isRunning(sessionId)) {
+            const runInfo = RunRegistry.get(sessionId)!;
+            context.response = {
+                id: `status-${Date.now()}`,
+                object: 'chat.completion',
+                created: Date.now(),
+                model: 'agentic-status',
+                choices: [{
+                    index: 0,
+                    message: {
+                        role: 'assistant',
+                        content: `⏳ **Still running in the background**\n\n- Completed: ${runInfo.completedCount}/${runInfo.totalCount || runInfo.completedCount + q.nowQueue.length}\n- Last finished subtask: ${runInfo.lastSubtask || '(none yet)'}\n- Remaining in queue: ${q.nowQueue.length}\n\nRe-call with the same sessionId to poll again, or use \`action: 'status'\` / \`action: 'abort'\`.`
+                    },
+                    finish_reason: 'stop'
+                }]
+            } as any;
+            return;
+        }
+
+        const deadline = Date.now() + SUBTASK_BUDGET_MS;
+        const runInfo = RunRegistry.start(sessionId);
+        let deferredToBackground = false;
+        try {
+
         const userMessage = context.request.messages.find(m => m.role === 'user');
         let userContent = userMessage ? getMessageContent(userMessage.content).trim() : undefined;
         if (userContent) {
             userContent = getOriginalUserContent(userContent);
+        }
+
+        // Budget pauses (yielded when SUBTASK_BUDGET_MS was exceeded, see the loop below)
+        // auto-resume on the very next call for this sessionId — unlike terminal/failure
+        // pauses, they don't require the client to know or supply a promptId.
+        if (q.paused && q.pauseReason === 'budget') {
+            q.paused = false;
+            q.pauseReason = undefined;
         }
 
         // Resume check: "continue <prompt_id> <input-for-next-subtask>"
@@ -1284,8 +1419,46 @@ export class AgenticMiddleware implements Middleware {
         }
 
         while (q.nowQueue.length > 0 && subtaskIteration < MAX_SUBTASKS) {
+            if (Date.now() > deadline) {
+                // Out of time budget. Yield a partial result now (client sees progress
+                // instead of a hard timeout) and keep draining the remaining queue on a
+                // detached background run — the next call for this sessionId will either
+                // see it still running (status snapshot) or find the queue already drained.
+                if (!q.promptId) {
+                    q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                }
+                q.paused = true;
+                q.pauseReason = 'budget';
+                await persistState(sessionId, projectDir);
+
+                const doneSoFar = (q.history || []).map(h => `### ✅ Subtask: ${h.task}\n\n${cleanSubtaskContent(h.output)}`).join('\n\n');
+                const partialContent = `${executionPlanBrief}${doneSoFar}\n\n⏳ **Time budget reached — continuing in the background**\n\n- Completed: ${q.history?.length || 0} subtask(s)\n- Remaining in queue: ${q.nowQueue.length}\n\nRe-call with the same sessionId (or \`action: 'continue'\` / \`continue ${q.promptId}\`) to fetch the rest.`;
+                context.response = {
+                    id: `budget-pause-${Date.now()}`,
+                    object: 'chat.completion',
+                    created: Date.now(),
+                    model: 'gemini-3.1-flash-lite',
+                    choices: [{
+                        index: 0,
+                        message: { role: 'assistant', content: partialContent },
+                        finish_reason: 'stop'
+                    }]
+                } as any;
+
+                deferredToBackground = true;
+                runInfo.totalCount = q.nowQueue.length + (q.history?.length || 0);
+                runInfo.completedCount = q.history?.length || 0;
+                runInfo.promptId = q.promptId;
+                const bgContext: PipelineContext = {
+                    ...context,
+                    request: { ...context.request, messages: context.request.messages.map(m => ({ ...m })) }
+                } as any;
+                void continueQueueInBackground(sessionId, projectDir, workspaceRoot, this.executor, bgContext, commsQueue, promptQueue, runInfo);
+                break;
+            }
+
             subtaskIteration++;
-            
+
             // Prune old messages in context.request.messages to avoid context bloat
             const KEEP_LAST_N_MESSAGES = 6;
             const systemMsgs = context.request.messages.filter(m => m.role === 'system');
@@ -1351,6 +1524,19 @@ export class AgenticMiddleware implements Middleware {
                             const cleaned = cleanSubtaskContent(content);
                             outputs.push(`### ✅ Subtask: ${taskName}\n\n${cleaned}`);
                             context.request.messages.push({ role: 'assistant', content });
+                            // Record to history (previously only the sequential branch did this,
+                            // so a partially-completed parallel round was forgotten on resume and
+                            // its subtasks got silently redone).
+                            if (!q.history) q.history = [];
+                            q.history.push({
+                                task: taskName,
+                                taskId: phase1Tasks[idx].id,
+                                output: content,
+                                filesModified: getTaskFiles(content),
+                                timestamp: Date.now(),
+                                model: clonedCtx.response?.model,
+                                provider: (clonedCtx.response as any)?._providerId
+                            });
                         } else {
                             errors.push(`Subtask ${idx + 1} failed or returned empty: ${taskName}`);
                         }
@@ -1393,7 +1579,7 @@ export class AgenticMiddleware implements Middleware {
                 } as any;
 
                 q.nowQueue = q.nowQueue.filter(e => !phase1Tasks.some(t => t.id === e.id));
-                persistStateDebounced(sessionId, projectDir);
+                await persistState(sessionId, projectDir);
 
             } else {
                 const currentTaskNode = phase1Tasks[0];
@@ -1407,8 +1593,9 @@ export class AgenticMiddleware implements Middleware {
                         q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
                     }
                     q.paused = true;
-                    persistStateDebounced(sessionId, projectDir);
-                    
+                    q.pauseReason = 'terminal';
+                    await persistState(sessionId, projectDir);
+
                     console.error(`[AgenticMiddleware] Pausing pipeline for terminal run. promptId=${q.promptId}`);
                     
                     context.response = {
@@ -1467,7 +1654,8 @@ export class AgenticMiddleware implements Middleware {
                         q.promptId = Math.random().toString(36).substring(2, 8).toUpperCase();
                     }
                     q.paused = true;
-                    persistStateDebounced(sessionId, projectDir);
+                    q.pauseReason = 'failed';
+                    await persistState(sessionId, projectDir);
 
                     context.response = {
                         id: `failed-pause-${Date.now()}`,
@@ -1555,7 +1743,7 @@ export class AgenticMiddleware implements Middleware {
                 }
 
                 q.nowQueue = q.nowQueue.filter(e => e.id !== currentTaskNode.id);
-                persistStateDebounced(sessionId, projectDir);
+                await persistState(sessionId, projectDir);
 
                 if (q.nowQueue.length === 0 && context.response && executionPlanBrief) {
                     const resContent = getResponseContent(context);
@@ -1586,6 +1774,14 @@ export class AgenticMiddleware implements Middleware {
                     provider: context.response?._providerId
                 });
             }
+        }
+        } finally {
+            // Runs on every synchronous exit path (including early returns for
+            // CONFUSED/QUESTION/terminal-pause/failed-pause/paused). Only the budget-yield
+            // path sets deferredToBackground — there, RunRegistry.finish() is deliberately
+            // left to the detached background continuation so isRunning() stays true until
+            // it actually drains the queue.
+            if (!deferredToBackground) RunRegistry.finish(sessionId);
         }
 
         } catch (err: any) {

@@ -36,7 +36,7 @@
   - v1.0.9: `local_llm_patch` stub (Ollama-driven single-file patching)
   - v1.1.0: Full `coding_agents` with LSP grounding + diff preview
 - `cyber_agents`: Isolated cyber routing middleware separate from main pipeline.
-- Provider Stream Mode: Optional streaming pass-through for high-throughput endpoints.
+- 'docs/' refactor: 'references/' should maintain different .md files for each tool, remove the usages.md and architecture.md and move the relevant content to the tool-specific .md files, so that the SKILL.md remains lightweight and focused on the agentic workflow, and the tool-specific .md files can be used as a reference for the tools and their usage.
 - **Browser snapshot diff understanding mechanism**: `wait until:'dom-stable'` and the click/pagination-loop guards currently only know two things about a DOM state transition — did the sha256 fingerprint change, yes/no (`DomStateFingerprinter.hasStateChanged`). That's enough to detect a no-op click but not enough to explain *what* changed, so the LLM re-derives it from a full new snapshot every time. Planned: a real structural diff between the previous and current snapshot (added/removed/mutated accessibility nodes, not just a hash flip) so `click`/`wait`/`deep_scrape` can report *what* appeared (e.g. "a Lineups panel with 22 player rows mounted") instead of only *that* something did, and so `extract` can target just the newly-mounted subtree instead of re-scanning the whole page. Also intended to give the Cloudflare/CAPTCHA block detector (above) a second, structural signal — a whole subtree swapped for a single interstitial widget — independent of the current text-marker scan.
 
 ---

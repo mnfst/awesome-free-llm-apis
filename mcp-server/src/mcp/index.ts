@@ -118,6 +118,21 @@ export async function createMCPServer(): Promise<Server> {
               type: 'boolean',
               description: 'Skip the pre-emptive full-workspace re-index + wiki-maintenance pass that agentic mode normally runs on every call with workspace_root. Set true for requests narrowly about a specific file/PDF reference that don\'t need (or shouldn\'t pay the latency/provider-budget cost of) a full codebase re-scan — otherwise that unrelated indexing work can starve the actual request of provider quota.'
             },
+            action: {
+              type: 'string',
+              enum: ['run', 'continue', 'status', 'abort'],
+              description: [
+                'Control action for a long-running agentic (subtask) run, keyed by sessionId.',
+                '"run" (default): normal call. If the server\'s internal time budget is exceeded before all',
+                '  subtasks finish, it returns a PARTIAL result immediately and keeps working in the background —',
+                '  re-call with the same sessionId to fetch progress or the rest.',
+                '"status": instantly (no LLM call) reports whether a background run is still active, how many',
+                '  subtasks are done, and what remains. Use this to poll instead of re-sending "run".',
+                '"continue": resumes a paused/yielded queue (equivalent to replying with "continue <promptId> ...").',
+                '"abort": cancels an in-progress background run; the queue stays resumable via "continue".',
+              ].join('\n')
+            },
+            resume_input: { type: 'string', description: 'For action:"continue" — extra input appended to the subtask being resumed.' },
           },
           required: ['messages'],
         },

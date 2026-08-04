@@ -20,6 +20,7 @@ export interface SubtaskHistoryEntry {
 export interface QueueTask {
     id: string;
     task: string;
+    status?: 'pending' | 'running' | 'done' | 'failed';
 }
 
 export interface QueueState {
@@ -30,6 +31,11 @@ export interface QueueState {
     resolvedContext?: Record<string, string>;
     history?: SubtaskHistoryEntry[];
     paused?: boolean;
+    // Why the queue is paused. 'budget' pauses are yielded automatically when the
+    // per-call time budget (SUBTASK_BUDGET_MS) is exceeded and auto-resume on the next
+    // call without requiring user input, unlike ordinary terminal/failure pauses which
+    // require an explicit `continue <promptId>`.
+    pauseReason?: 'budget' | 'terminal' | 'failed';
     promptId?: string;
     pausedSubtaskIndex?: number;
     retrospectionInjections?: number;
@@ -86,9 +92,11 @@ export class SubtaskDecomposer {
                     if (typeof item === 'string') {
                         return {
                             id: `T${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-                            task: item
+                            task: item,
+                            status: 'pending'
                         };
                     }
+                    if (!item.status) item.status = 'pending';
                     return item;
                 });
             };

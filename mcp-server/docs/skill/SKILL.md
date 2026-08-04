@@ -43,6 +43,11 @@ Perform chat completion with optional fallback and workspace memory.
 > [!IMPORTANT]
 > **MANDATORY PROJECT RULE**: For any workspace task, you MUST set `"agentic": true` AND provide `"workspace_root"`. This enables session memory and grounding.
 
+> [!NOTE]
+> Agentic calls run under a server-side time budget and may return a partial result that keeps
+> completing in the background — poll with `"action": "status"` rather than re-sending the full
+> prompt. See "⚠️ Agentic Behavior & Limits" below.
+
 #### ⚡ Task Decomposition & Planning
 When `"agentic": true` is enabled, the pipeline decomposes the user's goal into subtasks. You can control this in two ways:
 1. **Automatic Planning (Recommended)**: Leave the prompt as plain prose. The system will use a reasoning/planning model to automatically decompose the goal and determine dependencies.
@@ -127,14 +132,17 @@ Save structured knowledge and scripts into the workspace.
 
 ---
 
-### `browser_tool` [NEW]
-Universal, 100% dynamic browser scraper with pausable session checkpointing, 0-token script memory, and flat schema tabular exports.
+### `browser_tool` [v1.0.8]
+Owns a real, live `chrome-devtools-mcp` browser session per `sessionId` with a granular action surface — full reference in [browser_tool.md](../browser_tool.md).
 - **Parameters**:
-  - `url` (required): Target website URL or `'list_checkpoints'`.
-  - `action` (optional): `'scrape'` or `'list_checkpoints'`.
-  - `userInstructions` (optional): Dynamic extraction instructions.
-  - `sessionId` (optional): Unique session identifier for pausable checkpoint persistence.
-- **How it Works**: Uses zero hardcoded domain selectors to discover interactive ARIA nodes, tracks scroll depth (0-100%), persists pausable session state to `data/scrapes/checkpoints/`, re-uses JS script memory, and exports nested data to flat CSV files (`UniversalTabularSchemaFlattener`).
+  - `action` (required): `navigate` | `snapshot` | `click` | `scroll` | `wait` | `evaluate` | `network` | `api_replay` | `extract` | `deep_scrape` | `screenshot` | `checkpoint` | `session` | `site_memory` | `scrape` (legacy one-call macro).
+  - `url` (required for `navigate`/`scrape`; optional elsewhere): Target website URL.
+  - `sessionId` (optional): Reuses a live pooled browser session + checkpoint across calls.
+  - `params` (optional): Action-specific object — see [browser_tool.md](../browser_tool.md) for the per-action schema.
+  - `userInstructions` (optional): Prompt/instructions for extraction actions.
+  - `outputDir` (optional): Directory for exported datasets/checkpoints/network dumps.
+  - `strict` (optional, default `true`): Extraction failures return `data: null` + errors instead of a best-effort guess.
+- **How it Works**: `BrowserSessionPool` spawns/reuses a real `chrome-devtools-mcp` child process per session. Discovers interactive nodes purely by ARIA role/text (zero hardcoded selectors), captures network response bodies via an injected interceptor (chrome-devtools-mcp's own network tooling doesn't expose them), ranks/replays private API endpoints, detects Cloudflare/CAPTCHA block pages, persists pausable checkpoints to `data/scrapes/checkpoints/`, and exports nested data to flat CSV via `UniversalTabularSchemaFlattener`. Requires Node >= 20 and a locally discoverable Chrome (`CHROME_PATH` to override).
 
 ---
 
@@ -224,7 +232,14 @@ preferred persona: coder
 ## ⚠️ Agentic Behavior & Limits
 
 - **Subtask cap**: The pipeline executes at most **3 subtasks** per request. For larger plans, break your request into multiple calls or use the `continue` resume command.
-- **Pipeline Pause**: If a subtask requires a terminal command, execution pauses and you will receive a `⚠️ Pipeline Paused` message. Reply with `continue <PROMPT_ID> <output>` to resume.
+- **Time budget & background execution**: Each call is also bounded by a wall-clock budget (`MCP_SUBTASK_BUDGET_MS`, default 20s — kept under typical MCP client tool-call timeouts). If the budget runs out before all subtasks finish, the call returns immediately with whatever completed so far plus a resume handle, and the server **keeps working on the rest in the background**. Re-calling with the same `sessionId` while that background run is still active returns a status snapshot instead of starting a duplicate run — safe to do on a client-side timeout/retry, and it doubles as polling. Explicit controls:
+  - `"action": "status"` — instantly reports progress (no LLM call).
+  - `"action": "continue"` — resumes a paused/yielded queue (same effect as `continue <PROMPT_ID> ...`).
+  - `"action": "abort"` — cancels an in-progress background run; the queue stays resumable.
+  ```json
+  { "messages": [{ "role": "user", "content": "" }], "sessionId": "my-project", "action": "status" }
+  ```
+- **Pipeline Pause**: If a subtask requires a terminal command, or a subtask fails, execution pauses and you will receive a `⚠️ Pipeline Paused` / `❌ Subtask Execution Failed` message. Reply with `continue <PROMPT_ID> <output>` (or `"action": "continue"`) to resume. Budget-triggered pauses (above) are different — those auto-resume on the very next call and don't require a `continue` reply.
 - **Agentic gate**: Set `ENABLE_AGENTIC_MIDDLEWARE=true` in the server environment, or explicitly pass `"agentic": true` in your request to activate subtask decomposition.
 - **`AGENTS.md` Workspace Rules**: The pipeline automatically detects and loads the `AGENTS.md` file located at the workspace root or under `.agents/AGENTS.md`. Use this file to define project-specific coding standards, behavioral rules, and model routing preferences that the agent must follow.
 
