@@ -21,7 +21,20 @@ const HEADER = `<h1 align="center">
 
 <p align="center">LLM APIs with permanent free tiers for text inference.</p>
 
-<p align="center"><sub>All endpoints are OpenAI SDK-compatible unless noted. Each link points to the provider's API key page.</sub></p>`;
+<p align="center"><sub>All endpoints are OpenAI SDK-compatible unless noted. Each link points to the provider's API key page.</sub></p>
+
+<hr>
+
+<p align="center">
+\t<a href="https://manifest.build">
+\t\t<picture>
+\t\t\t<source media="(prefers-color-scheme: dark)" srcset="media/manifest-logo-dark.png">
+\t\t\t<img src="media/manifest-logo-light.png" width="240" alt="Manifest">
+\t\t</picture>
+\t</a>
+</p>
+
+<p align="center"><em>All of those free LLM APIs are available at <a href="https://manifest.build">manifest.build</a> - make reliable agents.</em></p>`;
 
 function alignTable(header, rows) {
 	const widths = header.map((cell, i) => {
