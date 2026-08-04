@@ -35,7 +35,7 @@ export interface QueueState {
     // per-call time budget (SUBTASK_BUDGET_MS) is exceeded and auto-resume on the next
     // call without requiring user input, unlike ordinary terminal/failure pauses which
     // require an explicit `continue <promptId>`.
-    pauseReason?: 'budget' | 'terminal' | 'failed';
+    pauseReason?: 'budget' | 'terminal' | 'failed' | 'iteration_limit';
     promptId?: string;
     pausedSubtaskIndex?: number;
     retrospectionInjections?: number;

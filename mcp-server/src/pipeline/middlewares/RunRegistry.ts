@@ -28,6 +28,19 @@ export interface RunInfo {
 
 const runs = new Map<string, RunInfo>();
 
+/** Delay (ms) before a finished/aborted entry is evicted from the in-memory Map. */
+const RUN_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/** Schedule removal of a completed run after TTL so status polls can still read it briefly. */
+function scheduleEviction(sessionId: string): void {
+    setTimeout(() => {
+        const info = runs.get(sessionId);
+        if (info && info.done) {
+            runs.delete(sessionId);
+        }
+    }, RUN_TTL_MS).unref?.(); // .unref() so the timer doesn't block process exit
+}
+
 export class RunRegistry {
     static start(sessionId: string): RunInfo {
         const existing = runs.get(sessionId);
@@ -58,6 +71,7 @@ export class RunRegistry {
         if (!info) return;
         info.done = true;
         if (error) info.error = error;
+        scheduleEviction(sessionId); // fix: prevent unbounded Map growth
     }
 
     static abort(sessionId: string): boolean {
@@ -65,6 +79,7 @@ export class RunRegistry {
         if (!info || info.done) return false;
         info.controller.abort();
         info.done = true;
+        scheduleEviction(sessionId); // fix: prevent unbounded Map growth
         return true;
     }
 

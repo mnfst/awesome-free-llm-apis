@@ -1075,7 +1075,8 @@ async function continueQueueInBackground(
     try {
         const q = await getOrLoadState(sessionId);
         let iterations = 0;
-        while (q.nowQueue.length > 0 && iterations < 20) {
+        const MAX_ITERATIONS = 20;
+        while (q.nowQueue.length > 0 && iterations < MAX_ITERATIONS) {
             if (runInfo.controller.signal.aborted) {
                 console.error(`[AgenticMiddleware] Background run aborted for session=${sessionId}`);
                 break;
@@ -1138,6 +1139,20 @@ async function continueQueueInBackground(
             q.nowQueue = q.nowQueue.filter(e => e.id !== taskNode.id);
             await persistState(sessionId, projectDir);
             RunRegistry.progress(sessionId, taskNode.task, q.history.length, q.nowQueue.length);
+        }
+
+        // fix: if we hit the iteration cap with tasks still pending, surface the halt
+        // clearly instead of silently stopping. Without this, action:'status' shows
+        // remaining queue items with no indication that background processing has halted.
+        if (iterations >= MAX_ITERATIONS && q.nowQueue.length > 0 && !runInfo.controller.signal.aborted) {
+            const remaining = q.nowQueue.length;
+            const haltMsg = `Background execution halted after ${MAX_ITERATIONS} iterations with ${remaining} task(s) still pending. Re-submit to continue.`;
+            console.error(`[AgenticMiddleware] ${haltMsg} session=${sessionId}`);
+            q.paused = true;
+            q.pauseReason = 'iteration_limit';
+            await persistState(sessionId, projectDir);
+            RunRegistry.finish(sessionId, haltMsg);
+            return;
         }
 
         if (q.nowQueue.length === 0 && !runInfo.controller.signal.aborted) {

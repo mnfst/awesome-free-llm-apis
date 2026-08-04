@@ -11,7 +11,7 @@ export const MODEL_METADATA: Record<string, ModelMetadata> = {
     // Frontier Reasoning
     'deepseek-ai/DeepSeek-R1': { capability: 1.0, contextWindow: 64000, isReasoning: true },
     'liquid/lfm2.5-1.2b-thinking:free': { capability: 0.88, contextWindow: 32000, isReasoning: true },
-    'microsoft/phi-4': { capability: 0.86, contextWindow: 128000 },
+    'microsoft/phi-4': { capability: 0.86, contextWindow: 128000, isReasoning: true },
 
     // S-Tier Generalists
     'gemma-4-31b-it': { capability: 0.95, contextWindow: 300000, isVision: true, isReasoning: true },
@@ -59,7 +59,7 @@ export const MODEL_METADATA: Record<string, ModelMetadata> = {
     // A-Tier
     'qwen/qwen3.6-27b': { capability: 0.88, contextWindow: 131072, isVision: true },
     'meta/llama-4-maverick-17b-128e-instruct-fp8': { capability: 0.90, contextWindow: 128000 },
-    'microsoft/phi-4-multimodal-instruct': { capability: 0.88, contextWindow: 128000, isVision: true },
+    'microsoft/phi-4-multimodal-instruct': { capability: 0.88, contextWindow: 128000, isVision: true, isReasoning: true },
     'mistralai/mistral-nemotron': { capability: 0.88, contextWindow: 128000 },
     'open-mistral-nemo': { capability: 0.88, contextWindow: 400000 },
     'google/gemma-3-27b-it': { capability: 0.88, contextWindow: 130000, isVision: true },
