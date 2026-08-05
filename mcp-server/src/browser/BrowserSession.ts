@@ -57,6 +57,10 @@ export class BrowserSession {
     lastUsedAt: number = Date.now();
     currentUrl: string | null = null;
     lastFingerprint: string = '';
+    /** Raw text of the most recent take_snapshot call — kept so callers (dispatch.ts's
+     *  handleClick/handleWait) can diff structurally against the *next* snapshot without
+     *  re-capturing; not persisted to checkpoints (see ScrapingSessionCheckpoint.lastDiffSummary). */
+    lastSnapshotText: string = '';
     netLogCursor: number = 0;
     engineCaps: EngineCaps = { networkBodiesViaDevTools: null, interceptorInstalled: false };
     networkTracker = new NetworkStateTracker();
@@ -106,8 +110,24 @@ export class BrowserSession {
         const text = raw?.content?.[0]?.text || '';
         const fingerprint = DomStateFingerprinter.computeHash(text);
         this.lastFingerprint = fingerprint;
+        this.lastSnapshotText = text;
+        // Cheap marker scan only here — this runs on every dom-stable poll tick (every
+        // 300ms in dispatch.ts's handleWait), so the parse+diff structural heuristic is
+        // deliberately NOT run here. Callers that already computed a diff (handleClick,
+        // handleWait's exit) can upgrade this via applyStructuralSignal() below.
         this.lastBlockCheck = detectBlockingChallenge(text);
         return { text, fingerprint };
+    }
+
+    /**
+     * Upgrades lastBlockCheck with a structural-interstitial signal a caller already computed
+     * from a diffSnapshots() result (see dispatch.ts's handleClick/handleWait) — never recomputes
+     * the diff itself, so it adds no cost beyond what the caller already paid for.
+     */
+    applyStructuralSignal(structuralSignal: boolean): void {
+        if (structuralSignal && !this.lastBlockCheck.blocked) {
+            this.lastBlockCheck = { blocked: true, type: 'unknown', evidence: 'structural-interstitial' };
+        }
     }
 
     /**

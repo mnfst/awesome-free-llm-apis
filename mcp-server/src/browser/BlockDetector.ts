@@ -41,9 +41,14 @@ const CAPTCHA_MARKERS = [
  * Scans page text/HTML-ish content for known challenge markers. Case-insensitive.
  * `type` prefers 'cloudflare' over generic 'captcha' when both hit, since Cloudflare's
  * own Turnstile challenge often also contains the word "captcha" in surrounding copy.
+ *
+ * `structuralSignal`, when passed true, means SnapshotDiffer.looksLikeStructuralInterstitial()
+ * already found a near-total top-level wipeout replaced by a small added set (an interstitial
+ * swap shape) — OR'd into the marker-based result as a secondary, marker-independent signal for
+ * challenge walls that don't happen to contain any of the known text markers above.
  */
-export function detectBlockingChallenge(text: string): BlockingChallengeResult {
-    if (!text) return { blocked: false };
+export function detectBlockingChallenge(text: string, structuralSignal = false): BlockingChallengeResult {
+    if (!text) return structuralSignal ? { blocked: true, type: 'unknown', evidence: 'structural-interstitial' } : { blocked: false };
     const lower = text.toLowerCase();
 
     for (const marker of CLOUDFLARE_MARKERS) {
@@ -55,6 +60,9 @@ export function detectBlockingChallenge(text: string): BlockingChallengeResult {
         if (lower.includes(marker)) {
             return { blocked: true, type: 'captcha', evidence: marker };
         }
+    }
+    if (structuralSignal) {
+        return { blocked: true, type: 'unknown', evidence: 'structural-interstitial' };
     }
     return { blocked: false };
 }
