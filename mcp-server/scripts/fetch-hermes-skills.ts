@@ -18,7 +18,11 @@ const REPO_API_BASE = `https://api.github.com/repos/${REPO_SLUG}/contents`;
 // `skills/` prefix) to match HermesSkillEntry.path's existing convention, and
 // this prefix is joined on only for the actual GitHub API calls.
 const SKILLS_ROOT_PATH = 'skills';
-const TEXT_EXTENSIONS = ['md', 'txt', 'json', 'yml', 'yaml'];
+// Doc/config types plus common helper-script types skills ship alongside
+// SKILL.md (e.g. research/arxiv's scripts/search_arxiv.py) — anything not in
+// this list is silently dropped by fetchDirRecursive's extension filter, so
+// keep it as broad as "plausibly a skill asset" rather than "plausibly text".
+const TEXT_EXTENSIONS = ['md', 'txt', 'json', 'yml', 'yaml', 'py', 'sh', 'js', 'ts', 'mjs', 'cjs'];
 
 // Category/skill paths to fetch, per docs/plans/hermes-agent-skills.md's
 // "What Skills Are Included" table. Kept as a flat list (not auto-discovered)
