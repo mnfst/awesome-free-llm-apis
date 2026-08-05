@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { resolveConfigDir } from '../utils/config-path.js';
+import { listHermesSkills, findHermesSkill, loadHermesSkillContent, searchHermesSkills } from '../hermes/loader.js';
 
 const SKILL_INDEX_URL = 'https://sickn33.github.io/agentic-awesome-skills/skills.json';
 const RAW_BASE_URL = 'https://raw.githubusercontent.com/sickn33/agentic-awesome-skills/main';
@@ -23,11 +24,13 @@ interface SkillIndexEntry {
 }
 
 export interface LoadSkillPromptInput {
-  type: 'load' | 'search';
+  type: 'load' | 'search' | 'list';
   keywords?: string[];
   name?: string;
   skill?: string;
   workspaceDir?: string;
+  /** 'hermes' searches/loads the bundled external/hermes/ skill set instead of the agentic-awesome index. */
+  source?: 'agentic-awesome' | 'hermes';
 }
 
 export interface LoadSkillPromptResult {
@@ -132,10 +135,50 @@ async function fetchAllFiles(skillPath: string, accumulator: { path: string, con
   return accumulator;
 }
 
+async function loadHermesSkillPrompt(input: LoadSkillPromptInput): Promise<LoadSkillPromptResult> {
+  if (input.type === 'list') {
+    const skills = await listHermesSkills();
+    return { success: true, skills: skills.map(s => ({ name: s.name, description: s.description })) };
+  }
+
+  if (input.type === 'search') {
+    const results = await searchHermesSkills(input.keywords || []);
+    return { success: true, skills: results.map(s => ({ name: s.name, description: s.description })) };
+  }
+
+  if (input.type === 'load') {
+    const name = input.name || input.skill || '';
+    const found = await findHermesSkill(name);
+    if (!found) {
+      const keywords = name.split(/\s+/).filter(Boolean);
+      const results = await searchHermesSkills(keywords);
+      return { success: true, skills: results.map(s => ({ name: s.name, description: s.description })) };
+    }
+
+    const loaded = await loadHermesSkillContent(found.id);
+    if (!loaded) {
+      return { success: false, error: `Hermes skill "${name}" was found in the manifest but its SKILL.md is missing on disk — run \`npm run fetch-hermes\`.` };
+    }
+
+    return {
+      success: true,
+      skill: found.name,
+      description: found.description,
+      prompt: loaded.content,
+    };
+  }
+
+  return { success: false, error: 'Invalid type for source "hermes". Use "load", "search", or "list".' };
+}
+
 export async function loadSkillPrompt(input: LoadSkillPromptInput): Promise<LoadSkillPromptResult> {
   try {
+    if (input.source === 'hermes') {
+      return await loadHermesSkillPrompt(input);
+    }
+
     const configDir = await getBaseDir(input.workspaceDir);
-    
+
     if (input.type === 'search') {
       const results = await searchSkills(input.keywords || [], configDir);
       return { success: true, skills: results };

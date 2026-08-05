@@ -1,0 +1,298 @@
+{
+  "generatedAt": "2026-08-05T18:45:49.290Z",
+  "skills": [
+    {
+      "id": "humanizer",
+      "category": "creative",
+      "name": "humanizer",
+      "description": "Humanize text: strip AI-isms and add real voice.",
+      "tags": [],
+      "path": "creative/humanizer"
+    },
+    {
+      "id": "codebase-inspection",
+      "category": "github",
+      "name": "codebase-inspection",
+      "description": "Inspect codebases w/ pygount: LOC, languages, ratios.",
+      "tags": [],
+      "path": "github/codebase-inspection"
+    },
+    {
+      "id": "github-auth",
+      "category": "github",
+      "name": "github-auth",
+      "description": "GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login.",
+      "tags": [],
+      "path": "github/github-auth"
+    },
+    {
+      "id": "github-code-review",
+      "category": "github",
+      "name": "github-code-review",
+      "description": "Review PRs: diffs, inline comments via gh or REST.",
+      "tags": [],
+      "path": "github/github-code-review"
+    },
+    {
+      "id": "github-issues",
+      "category": "github",
+      "name": "github-issues",
+      "description": "Create, triage, label, assign GitHub issues via gh or REST.",
+      "tags": [],
+      "path": "github/github-issues"
+    },
+    {
+      "id": "github-pr-workflow",
+      "category": "github",
+      "name": "github-pr-workflow",
+      "description": "GitHub PR lifecycle: branch, commit, open, CI, merge.",
+      "tags": [],
+      "path": "github/github-pr-workflow"
+    },
+    {
+      "id": "github-repo-management",
+      "category": "github",
+      "name": "github-repo-management",
+      "description": "Clone/create/fork repos; manage remotes, releases.",
+      "tags": [],
+      "path": "github/github-repo-management"
+    },
+    {
+      "id": "obsidian",
+      "category": "note-taking",
+      "name": "obsidian",
+      "description": "Read, search, create, and edit notes in the Obsidian vault.",
+      "tags": [],
+      "path": "note-taking/obsidian"
+    },
+    {
+      "id": "airtable",
+      "category": "productivity",
+      "name": "airtable",
+      "description": "Airtable REST API via curl. Records CRUD, filters, upserts.",
+      "tags": [],
+      "path": "productivity/airtable"
+    },
+    {
+      "id": "docx",
+      "category": "productivity",
+      "name": "docx",
+      "description": "Create, read, edit Word .docx documents and templates.",
+      "tags": [],
+      "path": "productivity/docx"
+    },
+    {
+      "id": "google-workspace",
+      "category": "productivity",
+      "name": "google-workspace",
+      "description": "Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python.",
+      "tags": [],
+      "path": "productivity/google-workspace"
+    },
+    {
+      "id": "maps",
+      "category": "productivity",
+      "name": "maps",
+      "description": "Geocode, POIs, routes, timezones via OpenStreetMap/OSRM.",
+      "tags": [],
+      "path": "productivity/maps"
+    },
+    {
+      "id": "nano-pdf",
+      "category": "productivity",
+      "name": "nano-pdf",
+      "description": "Edit text in existing PDFs via natural-language prompts.",
+      "tags": [],
+      "path": "productivity/nano-pdf"
+    },
+    {
+      "id": "notion",
+      "category": "productivity",
+      "name": "notion",
+      "description": "Notion API + ntn CLI: pages, databases, markdown, Workers.",
+      "tags": [],
+      "path": "productivity/notion"
+    },
+    {
+      "id": "ocr-and-documents",
+      "category": "productivity",
+      "name": "ocr-and-documents",
+      "description": "Extract text from PDFs/scans (pymupdf, marker-pdf).",
+      "tags": [],
+      "path": "productivity/ocr-and-documents"
+    },
+    {
+      "id": "pdf",
+      "category": "productivity",
+      "name": "pdf",
+      "description": "Create, merge, split, fill, and secure PDF files.",
+      "tags": [],
+      "path": "productivity/pdf"
+    },
+    {
+      "id": "powerpoint",
+      "category": "productivity",
+      "name": "powerpoint",
+      "description": "Create, read, edit .pptx decks, slides, notes, templates.",
+      "tags": [],
+      "path": "productivity/powerpoint"
+    },
+    {
+      "id": "teams-meeting-pipeline",
+      "category": "productivity",
+      "name": "teams-meeting-pipeline",
+      "description": "Teams meeting summaries, job replay, Graph subscriptions.",
+      "tags": [],
+      "path": "productivity/teams-meeting-pipeline"
+    },
+    {
+      "id": "xlsx",
+      "category": "productivity",
+      "name": "xlsx",
+      "description": "Create, read, edit Excel .xlsx spreadsheets and CSVs.",
+      "tags": [],
+      "path": "productivity/xlsx"
+    },
+    {
+      "id": "arxiv",
+      "category": "research",
+      "name": "arxiv",
+      "description": "Search arXiv papers by keyword, author, category, or ID.",
+      "tags": [],
+      "path": "research/arxiv"
+    },
+    {
+      "id": "blogwatcher",
+      "category": "research",
+      "name": "blogwatcher",
+      "description": "Monitor blogs and RSS/Atom feeds via blogwatcher-cli tool.",
+      "tags": [],
+      "path": "research/blogwatcher"
+    },
+    {
+      "id": "grounded-citations",
+      "category": "research",
+      "name": "grounded-citations",
+      "description": "Ground answers and documents in cited, verifiable sources.",
+      "tags": [],
+      "path": "research/grounded-citations"
+    },
+    {
+      "id": "llm-wiki",
+      "category": "research",
+      "name": "llm-wiki",
+      "description": "Karpathy's LLM Wiki: build/query interlinked markdown KB.",
+      "tags": [],
+      "path": "research/llm-wiki"
+    },
+    {
+      "id": "polymarket",
+      "category": "research",
+      "name": "polymarket",
+      "description": "Query Polymarket: markets, prices, orderbooks, history.",
+      "tags": [
+        "polymarket",
+        "prediction-markets",
+        "market-data",
+        "trading"
+      ],
+      "path": "research/polymarket"
+    },
+    {
+      "id": "research-paper-writing",
+      "category": "research",
+      "name": "research-paper-writing",
+      "description": "Write ML papers for NeurIPS/ICML/ICLR: design→submit.",
+      "tags": [],
+      "path": "research/research-paper-writing"
+    },
+    {
+      "id": "dogfood",
+      "category": "software-development",
+      "name": "dogfood",
+      "description": "Exploratory QA of web apps: find bugs, evidence, reports.",
+      "tags": [],
+      "path": "software-development/dogfood"
+    },
+    {
+      "id": "hermes-agent-skill-authoring",
+      "category": "software-development",
+      "name": "hermes-agent-skill-authoring",
+      "description": "Author in-repo SKILL.md files: frontmatter and structure.",
+      "tags": [],
+      "path": "software-development/hermes-agent-skill-authoring"
+    },
+    {
+      "id": "inspecting-hermes-desktop-dom",
+      "category": "software-development",
+      "name": "inspecting-hermes-desktop-dom",
+      "description": "Read the live Hermes desktop DOM/CSS over CDP.",
+      "tags": [],
+      "path": "software-development/inspecting-hermes-desktop-dom"
+    },
+    {
+      "id": "node-inspect-debugger",
+      "category": "software-development",
+      "name": "node-inspect-debugger",
+      "description": "Debug Node.js via --inspect + Chrome DevTools Protocol CLI.",
+      "tags": [],
+      "path": "software-development/node-inspect-debugger"
+    },
+    {
+      "id": "plan",
+      "category": "software-development",
+      "name": "plan",
+      "description": "Write a markdown plan to .hermes/plans/; no execution.",
+      "tags": [],
+      "path": "software-development/plan"
+    },
+    {
+      "id": "python-debugpy",
+      "category": "software-development",
+      "name": "python-debugpy",
+      "description": "Debug Python: pdb REPL + debugpy remote (DAP).",
+      "tags": [],
+      "path": "software-development/python-debugpy"
+    },
+    {
+      "id": "requesting-code-review",
+      "category": "software-development",
+      "name": "requesting-code-review",
+      "description": "Pre-commit review: security scan, quality gates, auto-fix.",
+      "tags": [],
+      "path": "software-development/requesting-code-review"
+    },
+    {
+      "id": "simplify-code",
+      "category": "software-development",
+      "name": "simplify-code",
+      "description": "Parallel 4-agent cleanup of recent code changes.",
+      "tags": [],
+      "path": "software-development/simplify-code"
+    },
+    {
+      "id": "spike",
+      "category": "software-development",
+      "name": "spike",
+      "description": "Throwaway experiments to validate an idea before build.",
+      "tags": [],
+      "path": "software-development/spike"
+    },
+    {
+      "id": "systematic-debugging",
+      "category": "software-development",
+      "name": "systematic-debugging",
+      "description": "4-phase root cause debugging: understand bugs before fixing.",
+      "tags": [],
+      "path": "software-development/systematic-debugging"
+    },
+    {
+      "id": "test-driven-development",
+      "category": "software-development",
+      "name": "test-driven-development",
+      "description": "TDD: enforce RED-GREEN-REFACTOR, tests before code.",
+      "tags": [],
+      "path": "software-development/test-driven-development"
+    }
+  ]
+}
