@@ -2,6 +2,7 @@ import type { Middleware, NextFunction, PipelineContext } from '../middleware.js
 import { TaskType } from '../middleware.js';
 import { SearchProviderRegistry } from '../../search/registry.js';
 import type { UnifiedSearchResult } from '../../search/types.js';
+import { logToolCall } from '../../utils/ChatLogger.js';
 
 /**
  * Routes search requests (context.request.google_search or TaskType.SemanticSearch)
@@ -54,6 +55,35 @@ export class SearchRouterMiddleware implements Middleware {
     };
   }
 
+  /**
+   * Logs a completed search to the local per-session chat-logs.json (same
+   * mechanism browser_tool/cyber_tool use, so it renders in the existing
+   * dashboard chat-log view for free) and fire-and-forget to Firestore's
+   * `search_logs` collection for cross-session/dashboard aggregation.
+   * Never awaited on the response path — logging must not add latency or
+   * ever affect the actual search result.
+   */
+  private logSearch(context: PipelineContext, query: string, provider: string, results: UnifiedSearchResult[], latencyMs: number): void {
+    const sessionId = context.sessionId || context.request.sessionId || 'search-adhoc';
+    const fullResults = results.map(r => ({ title: r.title, url: r.url, snippet: r.snippet }));
+
+    logToolCall(sessionId, 'search_tool:search', { query, provider }, {
+      provider,
+      resultCount: results.length,
+      results: fullResults,
+    }, latencyMs, false).catch(() => {});
+
+    import('../../utils/firebase.js').then(({ logSearchQuery }) =>
+      logSearchQuery('anonymous', {
+        query,
+        provider,
+        sessionId,
+        resultCount: results.length,
+        results: fullResults,
+      })
+    ).catch(() => {});
+  }
+
   async execute(context: PipelineContext, next: NextFunction): Promise<void> {
     if (context.response) {
       return await next();
@@ -75,10 +105,12 @@ export class SearchRouterMiddleware implements Middleware {
       .sort((a, b) => a.getPenaltyScore() - b.getPenaltyScore());
 
     for (const provider of candidates) {
+      const start = Date.now();
       try {
         const results = await provider.search(query);
         if (results.length > 0) {
           context.response = this.formatResponse(query, results, provider.id);
+          this.logSearch(context, query, provider.id, results, Date.now() - start);
           // google_search no longer needs to force-route TextRouterMiddleware to Gemini.
           context.request.google_search = false;
           return await next();

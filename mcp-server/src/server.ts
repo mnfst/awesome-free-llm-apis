@@ -58,7 +58,8 @@ import { getSharedRouter } from './pipeline/instances.js';
 import { execSync } from 'child_process';
 import fs, { promises as fsp } from 'fs';
 import { persistence } from './utils/PersistenceManager.js';
-import { initFirebase, syncStats, getLeaderboard, getUserStats } from './utils/firebase.js';
+import { initFirebase, syncStats, getLeaderboard, getUserStats, getRecentSearchLogs } from './utils/firebase.js';
+import { SearchProviderRegistry } from './search/registry.js';
 import { withFileLock } from './utils/file-lock.js';
 import { writeFileAtomic } from './utils/FileUtils.js';
 import { WorkspaceScanner } from './cache/workspace.js';
@@ -338,6 +339,34 @@ async function main() {
         try {
           const stats = getSharedRouter().getExecutor().getProviderStats();
           res.json(stats);
+        } catch (err) {
+          res.status(500).json({ error: String(err) });
+        }
+      });
+
+      // Search-provider health for the dashboard's Providers tab Search section (v1.0.9).
+      app.get('/api/search-provider-stats', async (req, res) => {
+        try {
+          const providers = SearchProviderRegistry.getInstance().getProviders();
+          const stats = providers.map(p => ({
+            id: p.id,
+            name: p.name,
+            available: p.isAvailable(),
+            keyless: !p.envVar,
+            consecutiveFailures: p.consecutiveFailures,
+            penaltyScore: p.getPenaltyScore(),
+          }));
+          res.json(stats);
+        } catch (err) {
+          res.status(500).json({ error: String(err) });
+        }
+      });
+
+      // Recent search queries/results logged by SearchRouterMiddleware (v1.0.9).
+      app.get('/api/search-logs', async (req, res) => {
+        try {
+          const logs = await getRecentSearchLogs();
+          res.json(logs);
         } catch (err) {
           res.status(500).json({ error: String(err) });
         }

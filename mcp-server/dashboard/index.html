@@ -163,6 +163,32 @@
           Connecting to MCP server…
         </div>
       </div>
+
+      <!-- Search Providers (v1.0.9 SearchRouterMiddleware) -->
+      <div style="margin-top:32px;">
+        <div class="section-title">Search Providers</div>
+        <div class="section-sub">Fallback chain: Parallel AI → Tavily → Jina → Brave → SearXNG · used by <code>google_search</code>/semantic-search requests</div>
+      </div>
+      <div class="providers-grid" id="search-providers-grid" style="margin-top:12px;">
+        <div style="grid-column:1/-1;text-align:center;padding:24px 0;color:var(--text-muted);">Loading…</div>
+      </div>
+
+      <div style="margin-top:28px;">
+        <div class="section-title">Recent Search Queries</div>
+        <div class="section-sub">Last 25 searches served through SearchRouterMiddleware, newest first</div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="card-body" style="padding:0;">
+          <table class="qs-table" id="search-logs-table" style="width:100%;">
+            <thead>
+              <tr><th>Time</th><th>Query</th><th>Provider</th><th>Count</th><th>Results</th></tr>
+            </thead>
+            <tbody id="search-logs-tbody">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════════

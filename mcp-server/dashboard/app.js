@@ -159,7 +159,7 @@ tabBtns.forEach(btn => {
 
     // Tab-specific actions
     if (target === 'memory')   { fetchSessions(); if (activeMemSid) startMemPoll(activeMemSid); }
-    if (target === 'providers') fetchStats();
+    if (target === 'providers') { fetchStats(); fetchSearchData(); }
     if (target === 'playground') ensureModels();
     if (target === 'profile')  { fetchUserConfig(); fetchLeaderboard(); }
     if (target === 'wiki')     { initWikiTab(); }
@@ -320,6 +320,83 @@ async function verifyProvider(providerId) {
 }
 
 document.getElementById('refresh-btn').addEventListener('click', fetchStats);
+
+// ─── Search Providers + Recent Search Logs (v1.0.9 SearchRouterMiddleware) ──
+const searchProvidersGrid = document.getElementById('search-providers-grid');
+const searchLogsTbody     = document.getElementById('search-logs-tbody');
+
+function renderSearchProviders(providers) {
+  if (!searchProvidersGrid) return;
+  if (!providers.length) {
+    searchProvidersGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px 0;color:var(--text-muted);">No search providers configured.</div>';
+    return;
+  }
+  searchProvidersGrid.innerHTML = providers.map(p => {
+    const badgeCls = p.available ? 'badge-green' : 'badge-red';
+    const badgeTxt = p.available ? '● Online' : '✕ Unavailable';
+    return `
+    <div class="provider-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div>
+          <div class="provider-name">${esc(p.name)}</div>
+          <div class="provider-id">${esc(p.id)}${p.keyless ? ' · keyless' : ''}</div>
+        </div>
+        <span class="badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      ${p.consecutiveFailures > 0 ? `<div style="font-size:.72rem;color:var(--accent-red);margin-bottom:6px;">⚠ ${p.consecutiveFailures} failure${p.consecutiveFailures > 1 ? 's' : ''}</div>` : ''}
+      <div class="provider-stat"><span>Penalty score</span><span>${p.penaltyScore.toFixed(2)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// Renders the full result list (all URLs + snippets, not a preview slice) inside a
+// <details>/<summary> dropdown — same collapsed-by-default pattern as the Tool
+// Playground's subtask "View Injected Context" cards (addSubtaskResponseBubble above).
+function renderSearchResultsDropdown(results) {
+  if (!Array.isArray(results) || results.length === 0) return '—';
+  return `
+    <details>
+      <summary style="cursor:pointer; font-size:.72rem; color:var(--accent-cyan); outline:none; list-style:none;">
+        📂 ${results.length} result${results.length > 1 ? 's' : ''}
+      </summary>
+      <ul style="margin-top:6px; padding-left:16px; font-size:.72rem; color:var(--text-muted); display:flex; flex-direction:column; gap:8px; list-style-type:circle; max-width:520px;">
+        ${results.map(r => `
+          <li>
+            <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title || r.url)}</a>
+            ${r.snippet ? `<div style="margin-top:2px;">${esc(r.snippet)}</div>` : ''}
+          </li>`).join('')}
+      </ul>
+    </details>`;
+}
+
+function renderSearchLogs(logs) {
+  if (!searchLogsTbody) return;
+  if (!logs.length) {
+    searchLogsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">No search activity yet.</td></tr>';
+    return;
+  }
+  searchLogsTbody.innerHTML = logs.map(l => `
+    <tr>
+      <td style="white-space:nowrap;">${esc(new Date(l.timestamp).toLocaleString())}</td>
+      <td>${esc(l.query)}</td>
+      <td><span class="badge badge-cyan">${esc(l.provider)}</span></td>
+      <td>${fmt(l.resultCount)}</td>
+      <td>${renderSearchResultsDropdown(l.results)}</td>
+    </tr>`).join('');
+}
+
+async function fetchSearchData() {
+  try {
+    const [provRes, logsRes] = await Promise.all([
+      fetch('/api/search-provider-stats'),
+      fetch('/api/search-logs'),
+    ]);
+    if (provRes.ok) renderSearchProviders(await provRes.json());
+    if (logsRes.ok) renderSearchLogs(await logsRes.json());
+  } catch (err) {
+    console.error('[Dashboard] fetchSearchData error:', err);
+  }
+}
 
 // ─── TOOL PLAYGROUND ─────────────────────────────────────────────
 
@@ -1713,6 +1790,12 @@ setInterval(fetchStats, 5000);
 setInterval(() => {
   const memActive = document.getElementById('panel-memory')?.classList.contains('active');
   if (memActive) fetchSessions();
+}, 10000);
+
+// Auto-refresh search providers/logs periodically when Providers tab is active
+setInterval(() => {
+  const providersActive = document.getElementById('panel-providers')?.classList.contains('active');
+  if (providersActive) fetchSearchData();
 }, 10000);
 
 // ─── WIKI TAB ───────────────────────────────────────────────────
