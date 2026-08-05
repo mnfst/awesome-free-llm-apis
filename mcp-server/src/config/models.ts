@@ -12,6 +12,7 @@ export const MODEL_METADATA: Record<string, ModelMetadata> = {
     'deepseek-ai/DeepSeek-R1': { capability: 1.0, contextWindow: 64000, isReasoning: true },
     'liquid/lfm2.5-1.2b-thinking:free': { capability: 0.88, contextWindow: 32000, isReasoning: true },
     'microsoft/phi-4': { capability: 0.86, contextWindow: 128000, isReasoning: true },
+    'empero-ai/Qwythos-9B-Claude-Mythos-5-1M': { capability: 0.95, contextWindow: 128000},
 
     // S-Tier Generalists
     'gemma-4-31b-it': { capability: 0.95, contextWindow: 300000, isVision: true, isReasoning: true },

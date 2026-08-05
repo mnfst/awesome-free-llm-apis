@@ -19,5 +19,6 @@ export class HuggingFaceProvider extends BaseProvider {
     { id: 'google/gemma-3-4b-it', name: 'Gemma 3 4B' },
     { id: 'meta-llama/Llama-3.1-8B-Instruct', name: 'Llama 3.1 8B Instruct' },
     { id: 'microsoft/phi-4', name: 'Phi-4' },
+    { id: 'empero-ai/Qwythos-9B-Claude-Mythos-5-1M', name: 'Qwythos 9B Claude Mythos 5.1M' },
   ];
 }
