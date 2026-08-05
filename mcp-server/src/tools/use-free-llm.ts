@@ -78,7 +78,8 @@ import {
   getSharedImageRouter,
   getAgenticMiddleware,
   getWorkspaceContextMiddleware,
-  getStructuralMarkdownMiddleware
+  getStructuralMarkdownMiddleware,
+  getSearchRouterMiddleware
 } from '../pipeline/instances.js';
 
 /**
@@ -609,11 +610,14 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
   // 1. StructuralMarkdownMiddleware - Inject full session memory into agentic requests (v1.0.4)
   // 2. ResponseCache - Check for cached responses
   // 3. AgenticMiddleware - Handle agentic/reasoning mode if enabled
-  // 4. IntelligentRouter - Select provider/model and execute (includes token management and LLM execution)
+  // 4. SearchRouterMiddleware - Free-provider fallback search (Parallel/Tavily/Jina/Brave/SearXNG),
+  //    short-circuits before the LLM routers when google_search/SemanticSearch is requested (v1.0.9)
+  // 5. IntelligentRouter - Select provider/model and execute (includes token management and LLM execution)
   pipeline.use(getStructuralMarkdownMiddleware());
   pipeline.use(getSharedResponseCache());
   pipeline.use(getWorkspaceContextMiddleware());
   pipeline.use(getAgenticMiddleware());
+  pipeline.use(getSearchRouterMiddleware());
   pipeline.use(getSharedImageRouter());
   pipeline.use(getSharedRouter());
 

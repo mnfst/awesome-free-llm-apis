@@ -1,0 +1,20 @@
+export interface UnifiedSearchResult {
+  provider: 'parallel' | 'tavily' | 'jina' | 'brave' | 'searxng';
+  title: string;
+  url: string;
+  snippet: string;
+  score?: number;
+  answer?: string;
+}
+
+export interface SearchProvider {
+  id: string;
+  name: string;
+  /** Env var holding the API key. Absent for keyless providers (Parallel AI, SearXNG). */
+  envVar?: string;
+  consecutiveFailures: number;
+  isAvailable(): boolean;
+  search(query: string, maxResults?: number): Promise<UnifiedSearchResult[]>;
+  recordFailure(status: number): void;
+  getPenaltyScore(): number;
+}
