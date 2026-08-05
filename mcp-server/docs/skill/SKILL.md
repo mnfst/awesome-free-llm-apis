@@ -277,7 +277,7 @@ The server maintains a structured wiki under `.free-llm-mcp/wiki/` containing ma
 - [**Skill & Sandbox Logic**](references/code-mode-logic.md): Guide to creating custom skills for `execute_skill` and how the internal QuickJS sandbox executes code.
 - [**Memory Usage Guide**](references/memory-usage.md): Architectural details of the persistent memory system, wiki structure, and PDF offset caching.
 - [**Documentation Maintainer**](references/doc-maintainer.md): Context-aware best practices for codebase documentation.
-- [**System Tool Usage Matrix**](references/usages.md): Full test matrix with actual responses and latency measurements.
+- **Per-tool reference & usage docs** (one file each, `references/<tool>.md`): [`use_free_llm`](references/use_free_llm.md), [`execute_skill`](references/execute_skill.md), [`vision_tool`](references/vision_tool.md), [`manage_memory`](references/manage_memory.md), [`store_workspace_skill`](references/store_workspace_skill.md), [`index_workspace`](references/index_workspace.md), [`get_token_stats`](references/get_token_stats.md), [`validate_provider`](references/validate_provider.md), [`browser_tool`](references/browser_tool.md), [`cyber_tool`](references/cyber_tool.md), [`quantum_tool`](references/quantum_tool.md), [`local_llm_patch`](references/local_llm_patch.md).
 
 ---
 
