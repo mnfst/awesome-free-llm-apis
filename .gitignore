@@ -7,6 +7,7 @@
 *venv
 
 external/agent-prompt/prompt.json
+external/hermes/manifest.json
 # Rust build artifacts (sandbox runner)
 mcp-server/scripts/sandboxes/rust-sandbox-runner/target/
 mcp-server/scripts/sandboxes/rust-sandbox-runner/Cargo.lock
