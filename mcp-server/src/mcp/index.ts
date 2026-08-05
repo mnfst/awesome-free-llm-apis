@@ -513,6 +513,37 @@ export async function createMCPServer(): Promise<Server> {
           },
           required: ['action']
         }
+      },
+      {
+        name: 'quantum_tool',
+        description: 'Multi-branch/persona reasoning aid using a quantum-circuit metaphor: "qubits" are reasoning branches, "gates" (H/X/Y/Z/RY/RZ/CNOT/CZ/SWAP/MEASURE) adjust each branch\'s stance/confidence via real single-qubit rotation math, and "analyze" calls an LLM to synthesize across branch states. Research/exploration tool, not a production decision system — state is in-memory per session only.',
+        inputSchema: {
+          type: 'object' as const,
+          properties: {
+            action: { type: 'string', enum: ['setup', 'step', 'pause', 'continue', 'modify', 'reset', 'status', 'get_state', 'analyze'], description: 'Quantum circuit action' },
+            sessionId: { type: 'string', description: 'Session id keying the circuit state' },
+            numBranches: { type: 'number', description: 'For setup: number of reasoning branches/qubits (default 3)' },
+            personas: { type: 'array', items: { type: 'string' }, description: 'For setup/reset: persona label per branch' },
+            gates: {
+              type: 'array',
+              description: 'For modify: gate operations to add to the circuit',
+              items: {
+                type: 'object',
+                properties: {
+                  qubit: { type: 'number' },
+                  column: { type: 'number', description: 'Circuit step (0..maxStep-1) this gate applies at' },
+                  gate: { type: 'string', enum: ['H', 'X', 'Y', 'Z', 'RY', 'RZ', 'CNOT', 'CZ', 'SWAP', 'MEASURE', 'BARRIER'] },
+                  target: { type: 'number', description: 'Second qubit for CNOT/CZ/SWAP' },
+                  param: { type: 'number', description: 'Angle in radians for RY/RZ' }
+                },
+                required: ['qubit', 'column', 'gate']
+              }
+            },
+            query: { type: 'string', description: 'For analyze: the question to reason about across branches' },
+            temperature: { type: 'number', description: 'For analyze: 0..1 prompt-compression aggressiveness (1 = uncompressed)' }
+          },
+          required: ['action', 'sessionId']
+        }
       }
     ],
   }));
@@ -603,6 +634,13 @@ export async function createMCPServer(): Promise<Server> {
         const result = await cyberTool(args as any);
         response = {
           content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }]
+        };
+      } else if (name === 'quantum_tool') {
+        const { quantumTool } = await import('../tools/quantum-tool.js');
+        const result = await quantumTool(args as any);
+        response = {
+          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+          isError: !result.success,
         };
       } else {
         throw new Error(`Unknown tool: ${name}`);

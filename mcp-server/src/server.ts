@@ -498,6 +498,11 @@ async function main() {
             case 'cyber_tool':
               result = await cyberTool(params);
               break;
+            case 'quantum_tool': {
+              const { quantumTool } = await import('./tools/quantum-tool.js');
+              result = await quantumTool(params);
+              break;
+            }
             default:
               res.status(400).json({ error: `Unknown tool: ${tool}` });
               return;
@@ -622,6 +627,28 @@ async function main() {
         try {
           const result = await cyberTool({ action: 'load_graph', sessionId: req.params.sessionId });
           res.json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
+      // Quantum Tool — multi-branch/persona reasoning aid (v1.0.9)
+      app.post('/api/quantum_tool', express.json({ limit: '2mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const { quantumTool } = await import('./tools/quantum-tool.js');
+          const result = await quantumTool(req.body);
+          res.status(result.success ? 200 : 400).json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
+      app.get('/api/quantum_tool/state/:sessionId', async (req, res) => {
+        try {
+          const { quantumTool } = await import('./tools/quantum-tool.js');
+          const result = await quantumTool({ action: 'get_state', sessionId: req.params.sessionId } as any);
+          res.status(result.success ? 200 : 404).json(result);
         } catch (err: any) {
           res.status(500).json({ error: String(err?.message || err) });
         }

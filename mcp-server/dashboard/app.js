@@ -493,6 +493,19 @@ const TOOLS = [
     ]
   },
   {
+    id: 'quantum_tool', label: 'quantum_tool', icon: '⚛️',
+    tag: 'Multi-Branch Reasoning',
+    fields: [
+      { id: 'action', label: 'Action', type: 'select', options: ['setup', 'step', 'pause', 'continue', 'modify', 'reset', 'status', 'get_state', 'analyze'] },
+      { id: 'sessionId', label: 'Session ID', type: 'text', placeholder: 'quantum-session-1' },
+      { id: 'numBranches', label: 'Number of Branches (for setup)', type: 'number', placeholder: '3' },
+      { id: 'personas', label: 'Personas (comma-separated, for setup/reset)', type: 'text', placeholder: 'Optimist, Skeptic, Pragmatist' },
+      { id: 'gates', label: 'Gates JSON array (for modify)', type: 'textarea', placeholder: '[{"qubit":0,"column":0,"gate":"H"},{"qubit":0,"column":1,"gate":"RY","param":1.2}]' },
+      { id: 'query', label: 'Question (for analyze)', type: 'textarea', placeholder: 'What should we conclude?' },
+      { id: 'temperature', label: 'Compression temperature 0-1 (for analyze)', type: 'number', placeholder: '0.7' },
+    ]
+  },
+  {
     id: 'get_token_stats', label: 'get_token_stats', icon: '📊',
     tag: 'Monitoring',
     fields: []
@@ -708,6 +721,7 @@ function collectParams(tool) {
     if (!el) return;
 
     if (f.type === 'toggle')       params[f.id] = el.checked;
+    else if (f.type === 'number' && f.id === 'temperature') params[f.id] = el.value ? parseFloat(el.value) : undefined;
     else if (f.type === 'number')  params[f.id] = el.value ? parseInt(el.value, 10) : undefined;
     else if (f.type === 'model-picker') {
       const inp = document.getElementById(`pg-field-${f.id}`);
@@ -719,11 +733,13 @@ function collectParams(tool) {
       params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
     } else if (f.id === 'files') {
       params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
-    } else if (f.id === 'graphNode') {
+    } else if (f.id === 'graphNode' || f.id === 'gates') {
       const raw = el.value.trim();
       if (raw) {
-        try { params[f.id] = JSON.parse(raw); } catch { /* leave unset — treat invalid JSON as "no node" */ }
+        try { params[f.id] = JSON.parse(raw); } catch { /* leave unset — treat invalid JSON as "no value" */ }
       }
+    } else if (f.id === 'personas') {
+      params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
     } else {
       const v = el.value.trim();
       if (v) params[f.id] = v;
