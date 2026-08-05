@@ -338,6 +338,27 @@
           <div class="wiki-related" id="wiki-related"></div>
         </div>
       </div>
+
+      <!-- Cyber Tool Decision Graph (v1.0.9) -->
+      <div style="margin-top:28px;">
+        <div class="section-title">🕸 Cyber Tool Decision Graph</div>
+        <div class="section-sub">Visualizes the goal/hypothesis/action/finding/dead-end graph a <code>cyber_tool</code> coaching session built via <code>save_graph</code>/<code>load_graph</code>.</div>
+      </div>
+      <div class="card" style="margin-top:12px;margin-bottom:12px;">
+        <div class="card-body">
+          <div class="session-controls">
+            <label class="field-label" style="margin:0;white-space:nowrap;" for="cyber-graph-session-input">Session ID</label>
+            <input type="text" id="cyber-graph-session-input" class="session-input" placeholder="cyber_tool sessionId">
+            <button class="btn btn-primary btn-sm" id="cyber-graph-load-btn">Load Graph</button>
+            <input type="text" id="cyber-graph-search-input" class="session-input" placeholder="Filter nodes by label/id…" style="max-width:220px;">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="cyber-graph-body">
+          <div class="conv-empty">Enter a session ID and click Load Graph.</div>
+        </div>
+      </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════════

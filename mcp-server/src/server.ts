@@ -613,6 +613,20 @@ async function main() {
         }
       });
 
+      // Dashboard-facing convenience wrapper around cyber_tool's existing
+      // 'load_graph' action (v1.0.9) — the decision-graph nodes/edges it
+      // returns are already exactly what the dashboard's task-graph
+      // visualization needs, so this just narrows the generic action-based
+      // endpoint above to a plain GET for that one read.
+      app.get('/api/cyber_tool/task_graph/:sessionId', async (req, res) => {
+        try {
+          const result = await cyberTool({ action: 'load_graph', sessionId: req.params.sessionId });
+          res.json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
       // List all agentic sessions with chat-log metadata (msgCount, lastTs)
       app.get('/api/sessions', async (req, res) => {
         if (!checkRateLimit(req, res)) return;
