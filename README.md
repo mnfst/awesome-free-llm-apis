@@ -270,6 +270,22 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 | `deepseek-ai/deepseek-v4-pro`             | 128K    | ~64K       | Text                                   | ~40 RPM    |
 | + 85 more models                          | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | ~40 RPM    |
 
+### [OdiRouter](https://odirouter.ai?utm_source=mnfst&channel=github) 🇷🇺
+
+OpenAI SDK-compatible gateway with 50 free requests/day. No credit card required.
+
+Base URL: `https://api.odirouter.ai/v1`
+
+| Model Name              | Context | Max Output | Modality                     | Rate Limit |
+| ----------------------- | ------- | ---------- | ---------------------------- | ---------- |
+| Grok 4.5 (free)         | 500K    | 500K       | Text + Image                 | 50 RPD     |
+| GPT-5.6 Terra (free)    | 1.1M    | 128K       | Text + Image                 | 50 RPD     |
+| GPT-5.6 Luna (free)     | 1.1M    | 128K       | Text + Image                 | 50 RPD     |
+| Gemini 3.5 Flash (free) | 1M      | 65.5K      | Text + Image + Audio + Video | 50 RPD     |
+| Qwen3.7-Plus (free)     | 256K    | 32.8K      | Text + Image + Video         | 50 RPD     |
+| GPT-5.4 mini (free)     | 1.1M    | 131.1K     | Text + Image                 | 50 RPD     |
+| + 14 more free models   | Varies  | Varies     | Text / Image / Audio / Video | 50 RPD     |
+
 ### [Ollama Cloud](https://ollama.com/settings/keys) 🇺🇸
 
 Free tier with qualitative usage limits. 400+ models from Ollama library. Not OpenAI SDK-compatible; uses [Ollama API](https://docs.ollama.com/cloud). [^3]

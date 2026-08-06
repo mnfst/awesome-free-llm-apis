@@ -994,6 +994,74 @@
       ]
     },
     {
+      "name": "OdiRouter",
+      "category": "inference_provider",
+      "country": "RU",
+      "flag": "🇷🇺",
+      "url": "https://odirouter.ai?utm_source=mnfst&channel=github",
+      "baseUrl": "https://api.odirouter.ai/v1",
+      "description": "OpenAI SDK-compatible gateway with 50 free requests/day. No credit card required.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "free-grok-4.5",
+          "name": "Grok 4.5 (free)",
+          "context": "500K",
+          "maxOutput": "500K",
+          "modality": "Text + Image",
+          "rateLimit": "50 RPD"
+        },
+        {
+          "id": "free-gpt-5.6-terra",
+          "name": "GPT-5.6 Terra (free)",
+          "context": "1.1M",
+          "maxOutput": "128K",
+          "modality": "Text + Image",
+          "rateLimit": "50 RPD"
+        },
+        {
+          "id": "free-gpt-5.6-luna",
+          "name": "GPT-5.6 Luna (free)",
+          "context": "1.1M",
+          "maxOutput": "128K",
+          "modality": "Text + Image",
+          "rateLimit": "50 RPD"
+        },
+        {
+          "id": "free-gemini-3.5-flash",
+          "name": "Gemini 3.5 Flash (free)",
+          "context": "1M",
+          "maxOutput": "65.5K",
+          "modality": "Text + Image + Audio + Video",
+          "rateLimit": "50 RPD"
+        },
+        {
+          "id": "free-qwen3.7-plus",
+          "name": "Qwen3.7-Plus (free)",
+          "context": "256K",
+          "maxOutput": "32.8K",
+          "modality": "Text + Image + Video",
+          "rateLimit": "50 RPD"
+        },
+        {
+          "id": "free-gpt-5.4-mini",
+          "name": "GPT-5.4 mini (free)",
+          "context": "1.1M",
+          "maxOutput": "131.1K",
+          "modality": "Text + Image",
+          "rateLimit": "50 RPD"
+        },
+        {
+          "id": null,
+          "name": "+ 14 more free models",
+          "context": "Varies",
+          "maxOutput": "Varies",
+          "modality": "Text / Image / Audio / Video",
+          "rateLimit": "50 RPD"
+        }
+      ]
+    },
+    {
       "name": "Ollama Cloud",
       "category": "inference_provider",
       "country": "US",
