@@ -95,3 +95,70 @@ export async function chatLocal(model: string, messages: OllamaLocalMessage[], o
     completionTokens: data.eval_count ?? 0,
   };
 }
+
+export interface PatchOptions {
+  teachMode?: boolean;
+  temperature?: number;
+  maxTokens?: number;
+  coachTool?: any;
+}
+
+export interface PatchWithReinforceResult {
+  patchResult: OllamaLocalChatResult;
+  explanationFrame?: any;
+  reflection?: string;
+}
+
+/**
+ * Executes a patch request with optional teachMode integration and Phase 4 reinforce reflection.
+ */
+export async function patch(
+  model: string,
+  filePath: string,
+  fileContent: string,
+  instruction: string,
+  options?: PatchOptions
+): Promise<OllamaLocalChatResult> {
+  let promptText = instruction;
+  if (options?.teachMode && options?.coachTool) {
+    const frame = options.coachTool.explainInstruction(instruction);
+    promptText = `${instruction}\n\n[Coach Mode Active]\nConcept: ${frame.concept}\nExample: ${frame.example}\nExercise: ${frame.exercise}\nHint: ${frame.hint}`;
+  }
+
+  const messages: OllamaLocalMessage[] = [
+    { role: 'system', content: 'You are a precise code-editing assistant. Return only the complete new file content in a single code fence.' },
+    { role: 'user', content: `## File: ${filePath}\n\`\`\`\n${fileContent}\n\`\`\`\n\n## Instruction\n${promptText}` },
+  ];
+
+  return chatLocal(model, messages, { temperature: options?.temperature, maxTokens: options?.maxTokens });
+}
+
+/**
+ * Higher-level helper that applies a patch and records Phase 4 reinforcement.
+ */
+export async function applyPatchWithReinforce(
+  model: string,
+  filePath: string,
+  fileContent: string,
+  instruction: string,
+  coachTool?: any,
+  options?: PatchOptions
+): Promise<PatchWithReinforceResult> {
+  const effectiveOptions: PatchOptions = { ...options, coachTool };
+  const patchResult = await patch(model, filePath, fileContent, instruction, effectiveOptions);
+  
+  let reflection: string | undefined;
+  let explanationFrame: any;
+
+  if (coachTool) {
+    explanationFrame = coachTool.getHistory().slice(-1)[0]?.explanation;
+    reflection = coachTool.reinforce(instruction, `Patched ${filePath} successfully`);
+  }
+
+  return {
+    patchResult,
+    explanationFrame,
+    reflection,
+  };
+}
+
