@@ -17,13 +17,17 @@ const logFiles = [
   '06-local-llm-patch-coach.md',
   '07-browser-snapshot-diff.md',
   '08-firebase-retry.md',
+  '09-vision-tool.md',
+  '10-execute-skill.md',
+  '11-wiki-mechanisms.md',
+  '12-pdf-indexing.md',
 ];
 
 function generateSamples() {
   const timestamp = new Date().toISOString();
   let content = `# MCP Server Benchmark Log Aggregation (SAMPLES.md)\n\n`;
   content += `> Automatically generated from benchmark run logs on: \`${timestamp}\`\n\n`;
-  content += `This document aggregates the full execution logs across all 8 core subsystem benchmarks of the MCP server.\n\n`;
+  content += `This document aggregates the full execution logs across all 12 core subsystem benchmarks of the MCP server.\n\n`;
   content += `---\n\n`;
 
   for (const file of logFiles) {

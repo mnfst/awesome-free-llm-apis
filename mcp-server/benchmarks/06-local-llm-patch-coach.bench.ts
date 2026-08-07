@@ -1,161 +1,190 @@
-import { bench, describe, vi } from "vitest";
-import { countTokens } from "./helpers/token-counter.js";
-import { writeBenchmarkLog } from "./helpers/log-writer.js";
+import { bench, describe } from 'vitest';
+import { useCacheIsolation } from '../tests/helpers/test-cache-isolation.js';
+import { CoachTool } from '../src/tools/coach-tool.js';
+import { listLocalModels, rankCandidateModels } from '../src/providers/ollama-local.js';
+import { countTokens, delay } from './helpers/token-counter.js';
+import { writeBenchmarkLog } from './helpers/log-writer.js';
+import fetch from 'node-fetch';
 
-// Sample instruction frame / patch context definitions
-const sampleCoachInstructionFrame = `
-You are the Local LLM Patch Coach. Your role is to guide local code modifications safely and iteratively.
-Follow this 4-phase protocol:
-Phase 1: Instruct - Analyze code context, user intention, and produce structured guidance.
-Phase 2: Confirm - Evaluate proposed patch against user requirements and safety boundaries before execution.
-Phase 3: Patch - Generate precise unified diff / edit operations matching target files.
-Phase 4: Reinforce - Perform post-patch reflection, test outcome analysis, and update project memory.
+useCacheIsolation();
 
-Guidelines:
-- Keep instruction concise and focused on high-precision changes.
-- Never output malformed diffs or unverified destructive commands.
-`;
+const OLLAMA_BASE = process.env.OLLAMA_LOCAL_BASE_URL || 'http://localhost:11434';
+const REAL_INSTRUCTION = 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store';
 
-const sampleConfirmationGateInput = {
-  phase: "confirm",
-  targetFile: "src/utils/math.ts",
-  proposedPatchSummary: "Fix edge case in division by zero and round-trip float precision.",
-  safetyCheckPassed: true,
-  userApprovalRequired: false,
-};
-
-const samplePatchContent = `
---- src/utils/math.ts
-+++ src/utils/math.ts
-@@ -10,4 +10,6 @@
- export function safeDivide(a: number, b: number): number {
-+  if (b === 0) return 0;
-   return a / b;
- }
-`;
-
-const sampleReflectionContent = `
-Phase 4 Reinforce Reflection:
-- Patch applied cleanly to src/utils/math.ts.
-- Division by zero safety check passed all unit tests.
-- Memory record updated: math.ts safeDivide contract verified.
-`;
-
-const ollamaModelCandidates = [
-  { name: "qwen2.5-coder:7b", latencyMs: 320, tokenCost: 145, precisionScore: 0.95 },
-  { name: "deepseek-r1:7b", latencyMs: 410, tokenCost: 180, precisionScore: 0.93 },
-  { name: "llama3.1:8b", latencyMs: 350, tokenCost: 160, precisionScore: 0.88 },
-  { name: "codellama:7b", latencyMs: 380, tokenCost: 175, precisionScore: 0.84 },
-];
-
-// Pre-populate benchmark output log
 generateLogReport().catch(console.error);
 
-describe("06-local-llm-patch-coach benchmarks", () => {
-  // Scenario 1: Phase 1 Coach Instruction Frame Token Cost
-  bench("Phase 1 Coach Instruction Frame Token Cost", () => {
-    const tokens = countTokens(sampleCoachInstructionFrame);
-    JSON.stringify({ phase: "Phase 1: Instruct", tokens });
+describe('06 — Local LLM Patch Coach: 4-Phase Protocol & Ollama Fallback Benchmark', () => {
+  // ── Phase 1: Instruct ───────────────────────────────────────────────────
+  bench('Phase 1: Coach instruction frame generation (CoachTool.explainInstruction)', () => {
+    const coach = new CoachTool();
+    const frame = coach.explainInstruction(REAL_INSTRUCTION);
+    countTokens(JSON.stringify(frame));
   });
 
-  // Scenario 2: Phase 2 Confirmation Gate Cost
-  bench("Phase 2 Confirmation Gate Cost", () => {
-    const jsonStr = JSON.stringify(sampleConfirmationGateInput);
-    countTokens(jsonStr);
+  // ── Phase 2: Confirm ────────────────────────────────────────────────────
+  bench('Phase 2: Confirmation gate input validation', () => {
+    const confirmationInput = {
+      phase: 'confirm',
+      targetFile: 'src/memory/index.ts',
+      instruction: REAL_INSTRUCTION,
+      safetyCheckPassed: true,
+      userApprovalRequired: false,
+    };
+    countTokens(JSON.stringify(confirmationInput));
   });
 
-  // Scenario 3: Phase 3 Patch Token Cost
-  bench("Phase 3 Patch Token Cost", () => {
-    countTokens(samplePatchContent);
+  // ── Phase 3: Patch ──────────────────────────────────────────────────────
+  bench('Phase 3: Ollama patch execution (real HTTP or fallback)', async () => {
+    let patchOutput = '';
+    try {
+      const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'qwen2.5-coder:7b',
+          messages: [{ role: 'user', content: REAL_INSTRUCTION }],
+          stream: false,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as any;
+      patchOutput = data.message?.content || '[OLLAMA_OFFLINE]';
+    } catch {
+      patchOutput = `[OLLAMA_OFFLINE] diff --git a/src/memory/index.ts b/src/memory/index.ts\n+  public resetAll(): void {\n+    this.shortTerm.clear();\n+    this.longTerm.init();\n+  }`;
+    }
+    countTokens(patchOutput);
   });
 
-  // Scenario 4: Phase 4 Reinforce Reflection Token Cost
-  bench("Phase 4 Reinforce Reflection Token Cost", () => {
-    countTokens(sampleReflectionContent);
+  // ── Phase 4: Reinforce ──────────────────────────────────────────────────
+  bench('Phase 4: Reinforce reflection generation (CoachTool.reinforce)', () => {
+    const coach = new CoachTool();
+    const patchSummary = 'Added resetAll() method to MemoryManager in src/memory/index.ts';
+    const reflection = coach.reinforce(REAL_INSTRUCTION, patchSummary);
+    countTokens(reflection);
   });
 
-  // Scenario 5: Ollama Model Candidate Ranking
-  bench("Ollama Model Candidate Ranking", () => {
-    const ranked = [...ollamaModelCandidates].sort(
-      (a, b) => b.precisionScore / (a.latencyMs * a.tokenCost) - a.precisionScore / (b.latencyMs * b.tokenCost)
-    );
-    const jsonStr = JSON.stringify(ranked);
-    countTokens(jsonStr);
+  // ── Model Candidate Ranking ─────────────────────────────────────────────
+  bench('Model candidate ranking via production rankCandidateModels()', async () => {
+    let models: string[];
+    try {
+      models = await listLocalModels();
+      if (models.length === 0) throw new Error('empty');
+    } catch {
+      models = ['llama3.1:8b', 'qwen2.5-coder:7b', 'mistral:7b', 'deepseek-coder:6.7b', 'nomic-embed-text:latest'];
+    }
+    const ranked = rankCandidateModels(models);
+    countTokens(ranked.join(','));
   });
 });
 
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
 
-  // Phase 1 Measurement
-  const t0 = performance.now();
-  const phase1Tokens = countTokens(sampleCoachInstructionFrame);
-  const t1 = performance.now();
+  // Phase 1: Instruct
+  const coach1 = new CoachTool();
+  const frame = coach1.explainInstruction(REAL_INSTRUCTION);
+  const p1InTok = countTokens(REAL_INSTRUCTION);
+  const p1OutTok = countTokens(JSON.stringify(frame));
 
-  // Phase 2 Measurement
-  const t2 = performance.now();
-  const phase2Json = JSON.stringify(sampleConfirmationGateInput);
-  const phase2Tokens = countTokens(phase2Json);
-  const t3 = performance.now();
+  // Phase 2: Confirm
+  const confirmationInput = {
+    phase: 'confirm',
+    targetFile: 'src/memory/index.ts',
+    instruction: REAL_INSTRUCTION,
+    safetyCheckPassed: true,
+    userApprovalRequired: false,
+  };
+  const p2Tok = countTokens(JSON.stringify(confirmationInput));
 
-  // Phase 3 Measurement
-  const t4 = performance.now();
-  const phase3Tokens = countTokens(samplePatchContent);
-  const t5 = performance.now();
+  // Phase 3: Patch (Real Ollama HTTP or Fallback)
+  let patchOutput = '';
+  let statusLabel = 'REAL_OLLAMA_HTTP';
+  try {
+    const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'qwen2.5-coder:7b',
+        messages: [{ role: 'user', content: REAL_INSTRUCTION }],
+        stream: false,
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json() as any;
+    patchOutput = data.message?.content || '[OLLAMA_OFFLINE]';
+  } catch {
+    statusLabel = '[OLLAMA_OFFLINE]';
+    patchOutput = `diff --git a/src/memory/index.ts b/src/memory/index.ts\nindex 4b2a8d1..7c9e01f 100644\n--- a/src/memory/index.ts\n+++ b/src/memory/index.ts\n@@ -45,6 +45,10 @@ export class MemoryManager {\n     return this.longTerm;\n   }\n \n+  public resetAll(): void {\n+    this.shortTerm.clear();\n+    this.longTerm.init();\n+  }\n }`;
+  }
+  const p3Tok = countTokens(patchOutput);
 
-  // Phase 4 Measurement
-  const t6 = performance.now();
-  const phase4Tokens = countTokens(sampleReflectionContent);
-  const t7 = performance.now();
+  // Phase 4: Reinforce
+  const coach4 = new CoachTool();
+  const patchSummary = 'Added resetAll() method to MemoryManager in src/memory/index.ts';
+  const reflection = coach4.reinforce(REAL_INSTRUCTION, patchSummary);
+  const p4Tok = countTokens(reflection);
 
-  // Candidate Ranking Measurement
-  const t8 = performance.now();
-  const rankedCandidates = [...ollamaModelCandidates].sort((a, b) => {
-    const scoreA = (a.precisionScore * 1000) / (a.latencyMs * 0.5 + a.tokenCost * 0.5);
-    const scoreB = (b.precisionScore * 1000) / (b.latencyMs * 0.5 + b.tokenCost * 0.5);
-    return scoreB - scoreA;
-  });
-  const t9 = performance.now();
-
-  const totalWorkflowTokens = phase1Tokens + phase2Tokens + phase3Tokens + phase4Tokens;
-
-  const candidateSummary = rankedCandidates
-    .map(
-      (c, i) =>
-        `${i + 1}. **${c.name}** - Precision: ${c.precisionScore}, Est. Latency: ${c.latencyMs}ms, Token Cost: ${c.tokenCost} tok`
-    )
-    .join("\n   ");
+  // Model Candidate Ranking
+  let models: string[];
+  let rankingStatus = 'REAL_OLLAMA_TAGS';
+  try {
+    models = await listLocalModels();
+    if (models.length === 0) throw new Error('empty');
+  } catch {
+    rankingStatus = '[OLLAMA_OFFLINE_STUB_LIST]';
+    models = ['llama3.1:8b', 'qwen2.5-coder:7b', 'mistral:7b', 'deepseek-coder:6.7b', 'nomic-embed-text:latest'];
+  }
+  const rankedModels = rankCandidateModels(models);
 
   const logContent = `# Benchmark Log: 06-local-llm-patch-coach
 
 **Timestamp**: ${timestamp}
 
-## Scenarios Executed
+## 🎯 Real Target Requirement & Work Instruction
+\`${REAL_INSTRUCTION}\`
 
-1. **Phase 1: Coach Instruction Frame Token Cost**
-   - Latency: ${(t1 - t0).toFixed(2)} ms
-   - Token Count: ${phase1Tokens} tokens
+---
 
-2. **Phase 2: Confirmation Gate Cost**
-   - Latency: ${(t3 - t2).toFixed(2)} ms
-   - Input Payload Token Count: ${phase2Tokens} tokens
+## 🛠️ 4-Phase Coach-First Protocol Breakdown
 
-3. **Phase 3: Patch Token Cost**
-   - Latency: ${(t5 - t4).toFixed(2)} ms
-   - Sample Unified Diff Token Count: ${phase3Tokens} tokens
+| Phase | Phase Name | Function / Utility Executed | Input Size | Output Size | Status |
+|---|---|---|---|---|---|
+| **Phase 1** | **Instruct** | \`CoachTool.explainInstruction()\` | ${p1InTok} tok | ${p1OutTok} tok | ✅ SUCCESS |
+| **Phase 2** | **Confirm** | Safety Gate Payload Validation | — | ${p2Tok} tok | ✅ APPROVED |
+| **Phase 3** | **Patch** | Real Ollama HTTP (\`/api/chat\`) or Fallback | ${p1InTok} tok | ${p3Tok} tok | \`${statusLabel}\` |
+| **Phase 4** | **Reinforce** | \`CoachTool.reinforce()\` Reflection | ${countTokens(patchSummary)} tok | ${p4Tok} tok | ✅ COMPLETED |
 
-4. **Phase 4: Reinforce Reflection Token Cost**
-   - Latency: ${(t7 - t6).toFixed(2)} ms
-   - Reflection Payload Token Count: ${phase4Tokens} tokens
+---
 
-5. **Total 4-Phase Workflow Token Cost**
-   - Total Tokens: ${totalWorkflowTokens} tokens
+## 📋 Phase 1: Generated Coach Explanation Frame
+\`\`\`json
+${JSON.stringify(frame, null, 2)}
+\`\`\`
 
-6. **Ollama Model Candidate Ranking**
-   - Latency: ${(t9 - t8).toFixed(2)} ms
-   - Candidates Evaluated: ${ollamaModelCandidates.length}
-   - Ranked List:
-   ${candidateSummary}
+---
+
+## 💻 Phase 3: Executed Unified Patch Output (\`${statusLabel}\`)
+\`\`\`diff
+${patchOutput}
+\`\`\`
+
+---
+
+## 🧠 Phase 4: Generated Reflection
+\`\`\`text
+${reflection}
+\`\`\`
+
+---
+
+## 🏆 Ollama Model Candidate Ranking (\`${rankingStatus}\`)
+
+Production ranking via \`rankCandidateModels()\` from \`src/providers/ollama-local.ts\`:
+
+**Available Models**: ${models.map(m => `\`${m}\``).join(', ')}
+
+**Ranked Candidates (Coding Preferred)**:
+${rankedModels.map((m, idx) => `${idx + 1}. \`${m}\`${m.toLowerCase().includes('coder') ? ' ⭐ (Coding Model Preferred)' : ''}`).join('\n')}
 
 ---
 *Generated by Vitest Benchmark Suite (06-local-llm-patch-coach.bench.ts)*

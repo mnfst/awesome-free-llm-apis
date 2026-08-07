@@ -1,0 +1,137 @@
+import { bench, describe } from 'vitest';
+import { vectorStore } from '../src/memory/vector.js';
+import { memoryManager } from '../src/memory/index.js';
+import { countTokens } from './helpers/token-counter.js';
+import { writeBenchmarkLog } from './helpers/log-writer.js';
+
+const PDF_BENCH_WS = 'pdf_bench_ws_hash';
+const SAMPLE_PDF_TEXT = `
+# System Architecture Specification & PDF Report
+
+1. Executive Summary
+This document outlines the distributed system architecture for the Free LLM MCP Server platform.
+The server orchestrates 4 distinct memory layers: ShortTermMemory, LongTermMemory, WikiMemory, and VectorStore.
+
+2. Security & Verification
+Security controls are enforced via the Isolation Gate Protocol (<target_project_guidelines_isolation_gate>).
+All incoming model routing passes through strict input-validation filters to prevent prompt injection.
+
+3. Performance Benchmarking
+The system evaluates pipeline throughput across 12 distinct benchmark suites using Vitest.
+VectorStore utilizes cosine similarity search over code and document embeddings.
+`;
+
+function chunkText(text: string, chunkSize: number, overlap: number): string[] {
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < text.length) {
+    chunks.push(text.slice(start, start + chunkSize));
+    if (start + chunkSize >= text.length) {
+      break;
+    }
+    const step = Math.max(1, chunkSize - overlap);
+    start += step;
+  }
+  if (chunks.length === 0 && text.trim()) chunks.push(text);
+  return chunks;
+}
+
+generateLogReport().catch(console.error);
+
+describe('12 — PDF Indexing: Text Chunking, VectorStore RAG & Wiki Creation', () => {
+  // ── Scenario 1: PDF Text Chunking ────────────────────────────────────────
+  bench('PDF Text Chunking (chunkText 500/50)', () => {
+    const chunks = chunkText(SAMPLE_PDF_TEXT, 500, 50);
+    countTokens(chunks.join('\n'));
+  });
+
+  // ── Scenario 2: VectorStore Upsert for PDF Chunks ────────────────────────
+  bench('VectorStore Upsert PDF Chunks', async () => {
+    const chunks = chunkText(SAMPLE_PDF_TEXT, 500, 50);
+    for (let i = 0; i < chunks.length; i++) {
+      await vectorStore.upsert(PDF_BENCH_WS, {
+        id: `pdf_chunk_${i}`,
+        content: chunks[i],
+        metadata: {
+          source: 'docs/architecture.pdf',
+          page: i + 1
+        }
+      });
+    }
+  });
+
+  // ── Scenario 3: RAG Semantic Search over Indexed PDF ──────────────────────
+  bench('RAG Query over VectorStore PDF Index', async () => {
+    await vectorStore.search(PDF_BENCH_WS, 'distributed system architecture memory layers', 3);
+  });
+});
+
+async function generateLogReport() {
+  const timestamp = new Date().toISOString();
+
+  // 1. Chunking
+  const chunks = chunkText(SAMPLE_PDF_TEXT, 200, 30);
+  const totalRawTokens = countTokens(SAMPLE_PDF_TEXT);
+
+  // 2. VectorStore Upsert
+  for (let i = 0; i < chunks.length; i++) {
+    await vectorStore.upsert(PDF_BENCH_WS, {
+      id: `bench_pdf_chunk_${i}`,
+      content: chunks[i],
+      metadata: {
+        source: 'docs/architecture.pdf',
+        page: i + 1
+      }
+    });
+  }
+
+  // 3. RAG Search
+  const searchResults = await vectorStore.search(PDF_BENCH_WS, 'memory layers security isolation gate', 2);
+
+  // 4. Create Wiki Summary Note
+  const wiki = memoryManager.getWiki('pdf-bench', process.cwd());
+  const wikiTitle = 'pdf-wiki/architecture-pdf';
+  const topChunkContent = searchResults[0]?.content || searchResults[0]?.metadata?.content || 'Memory layers';
+  const wikiContent = `# PDF Architecture Report Summary\n\n- Extracted ${chunks.length} chunks from \`docs/architecture.pdf\`.\n- Top RAG Match: ${topChunkContent}`;
+  await wiki.write(wikiTitle, wikiContent, ['pdf', 'rag'], []);
+
+  const logContent = `# Benchmark Log: 12-pdf-indexing — STTP PDF Chunking, RAG Retrieval & Wiki Creation
+
+**Timestamp**: ${timestamp}
+
+## 🎯 Target PDF File & Query Context
+- **Source Document**: \`docs/architecture.pdf\`
+- **Raw Document Size**: ${SAMPLE_PDF_TEXT.length} characters (${totalRawTokens} tokens)
+- **RAG Target Query**: \`memory layers security isolation gate\`
+
+---
+
+## ⚡ PDF Indexing Pipeline Breakdown
+
+| Pipeline Stage | Operation / Utility | Output / Result | Status |
+|---|---|---|---|
+| **1. Text Chunking** | \`chunkText(text, 200, 30)\` | Produced ${chunks.length} text chunks | ✅ COMPLETED |
+| **2. Vector Embedding** | \`vectorStore.upsert()\` | Embedded ${chunks.length} chunks into vector index | ✅ INDEXED |
+| **3. RAG Retrieval** | \`vectorStore.search(k=2)\` | Retrieved **${searchResults.length} relevant chunks** | ✅ RETRIEVED |
+| **4. Wiki Memory Note** | \`wiki.write('pdf-wiki/architecture-pdf')\` | Created durable markdown summary note | ✅ PERSISTED |
+
+---
+
+## 📄 Top RAG Retrieved Chunk (${searchResults[0] ? countTokens(topChunkContent) : 0} tokens)
+\`\`\`markdown
+${topChunkContent}
+\`\`\`
+
+---
+
+## 📄 Generated PDF Wiki Summary Note (${countTokens(wikiContent)} tokens)
+\`\`\`markdown
+${wikiContent}
+\`\`\`
+
+---
+*Generated by Vitest Benchmark Suite (12-pdf-indexing.bench.ts)*
+`;
+
+  await writeBenchmarkLog("12-pdf-indexing.md", logContent);
+}

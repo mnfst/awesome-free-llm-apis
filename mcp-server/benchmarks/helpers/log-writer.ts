@@ -1,5 +1,9 @@
 import fs from "fs-extra";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface BenchmarkLogData {
   title: string;
@@ -16,7 +20,7 @@ export async function writeBenchmarkLog(
   logsDir?: string
 ): Promise<string> {
   const targetDir =
-    logsDir || path.resolve(process.cwd(), "benchmarks", "logs");
+    logsDir || path.resolve(__dirname, "..", "logs");
 
   await fs.ensureDir(targetDir);
 
