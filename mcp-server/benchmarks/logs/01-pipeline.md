@@ -1,20 +1,20 @@
 # Benchmark Log: 01-pipeline
 
-**Timestamp**: 2026-08-06T05:52:06.130Z
+**Timestamp**: 2026-08-06T06:05:26.050Z
 
 ## Scenarios Executed
 
 1. **Prompt Injection (Intelligent System Prompt)**
-   - Latency: 18.87 ms
+   - Latency: 21.23 ms
    - Result Token Count: 845 tokens
 
 2. **Memory Sliding Window (150 msgs -> 400 tok budget)**
-   - Latency: 14.62 ms
+   - Latency: 4.72 ms
    - Messages Ingested: 150
    - Messages Retained within 400 token budget: 16 (400 tokens)
 
 3. **Sandbox Extraction (QuickJS execution)**
-   - Latency: 45.63 ms
+   - Latency: 44.63 ms
    - Status: Success
 
 ---

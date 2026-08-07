@@ -1,30 +1,30 @@
 # Benchmark Log: 06-local-llm-patch-coach
 
-**Timestamp**: 2026-08-06T05:59:52.898Z
+**Timestamp**: 2026-08-06T06:05:12.074Z
 
 ## Scenarios Executed
 
 1. **Phase 1: Coach Instruction Frame Token Cost**
-   - Latency: 211.98 ms
+   - Latency: 304.59 ms
    - Token Count: 133 tokens
 
 2. **Phase 2: Confirmation Gate Cost**
-   - Latency: 0.71 ms
+   - Latency: 0.35 ms
    - Input Payload Token Count: 45 tokens
 
 3. **Phase 3: Patch Token Cost**
-   - Latency: 0.17 ms
+   - Latency: 0.39 ms
    - Sample Unified Diff Token Count: 58 tokens
 
 4. **Phase 4: Reinforce Reflection Token Cost**
-   - Latency: 0.11 ms
+   - Latency: 0.36 ms
    - Reflection Payload Token Count: 42 tokens
 
 5. **Total 4-Phase Workflow Token Cost**
    - Total Tokens: 278 tokens
 
 6. **Ollama Model Candidate Ranking**
-   - Latency: 0.04 ms
+   - Latency: 0.09 ms
    - Candidates Evaluated: 4
    - Ranked List:
    1. **qwen2.5-coder:7b** - Precision: 0.95, Est. Latency: 320ms, Token Cost: 145 tok

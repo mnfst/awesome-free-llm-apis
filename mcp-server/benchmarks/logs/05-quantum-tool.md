@@ -1,18 +1,18 @@
 # Benchmark Log: 05-quantum-tool
 
-**Timestamp**: 2026-08-06T05:58:51.880Z
+**Timestamp**: 2026-08-06T06:05:15.824Z
 
 ## Scenarios Executed
 
 1. **RY Confidence Math Round-Trip Fidelity**
-   - Latency: 0.17 ms
+   - Latency: 0.14 ms
    - Test Operations Count: 20
    - Max Round-Trip Error: 8.0000e-1
    - Average Error: 8.7010e-2
    - Math Formula: `phi = 2 * asin(sqrt(confidence))`, `confidence = sin(phi / 2)^2`
 
 2. **Multi-Branch State Serialization (5 branches + gates)**
-   - Latency: 885.96 ms
+   - Latency: 944.92 ms
    - Branch Count: 5
    - Gate Count: 5
    - Current Step: 2
@@ -20,7 +20,7 @@
    - State Token Count: 478 tokens
 
 3. **Analyze Synthesis Prompt Token Cost**
-   - Latency: 16.85 ms
+   - Latency: 28.36 ms
    - Query: "What is the recommended consensus strategy for migrating database schemas under high write load?"
    - Active Branches: 3 (Optimistic, Pessimistic, Pragmatic)
    - Prompt Token Count: 171 tokens

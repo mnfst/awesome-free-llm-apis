@@ -57,6 +57,23 @@ describe('SnapshotDiffer', () => {
     expect(summary).toContain('+3 nodes');
   });
 
+  it('summarizeDiff can group additions under an existing parent node', () => {
+    const before = parseSnapshot(`
+[
+  list "Lineups" uid=4
+]
+`);
+    const after = parseSnapshot(`
+[
+  list "Lineups" uid=4
+    generic "Player 1" uid=5
+    generic "Player 2" uid=6
+]
+`);
+    const summary = summarizeDiff(diffSnapshots(before, after));
+    expect(summary).toContain('mounted under "list  Lineups"');
+  });
+
   it('looksLikeStructuralInterstitial is false for an ordinary append', () => {
     const diff = diffSnapshots(parseSnapshot(BEFORE), parseSnapshot(AFTER_ADDED));
     expect(looksLikeStructuralInterstitial(parseSnapshot(BEFORE), diff)).toBe(false);

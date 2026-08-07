@@ -14,12 +14,13 @@
 - **`docs/` reference refactor**: `references/usages.md` split into one `.md` file per tool (`references/use_free_llm.md`, `references/browser_tool.md`, `references/cyber_tool.md`, `references/quantum_tool.md`, `references/local_llm_patch.md`, etc.), linked individually from `SKILL.md` so the skill doc stays focused on agentic workflow guidance rather than a growing test matrix.
 - `empero-ai/Qwythos-9B-Claude-Mythos-5-1M` confirmed present in the HuggingFace provider list and reachable via `TextRouterMiddleware` routing (verify-only, no code change needed).
 
-### Deferred to a future release
+### Next updates (→ v1.1.0)
 
-- **Firebase Auth hardening** (password-based login for the dashboard/MCP server, moving cached tokens from in-memory to a credential file): scoped in the original v1.0.9 plan but pushed out — the identity-churn bug above was fixed as a smaller, isolated correction instead of bundling it with the larger auth-hardening rework.
+- **Firebase Auth hardening** (password-based login for the dashboard/MCP server, moving cached tokens from in-memory to a credential file): scoped in the original v1.0.9 plan but pushed out — the identity-churn bug above was fixed as a smaller, isolated correction instead of bundling it with the larger auth-hardening rework. Could be avoided if username based IDOR vulnerability is potentially exploitable, so the fix is deferred to v1.1.0.
 - `local_llm_patch` MCP/server wiring (`src/mcp/index.ts` tool registration, `POST /api/local_llm_patch`, dashboard Tool Playground entry) — the tool itself is implemented and tested but intentionally left unwired pending explicit sign-off on exposing a local-only, unauthenticated code-patching surface.
 - `repo_graph.json` → `VectorStore` semantic RAG for coding agents, and LSP-grounded variable-level dataflow analysis — both explicitly out of scope for the single-file `local_llm_patch` granularity; real, separately-scoped work for v1.1.0's full `coding_agents`.
 - `extract`/`deep_scrape` subtree-targeting via the new snapshot diff (mapping a diffed node back to a DOM selector) — the diff shape needs to prove out on `click`/`wait` first.
+- `osint` tool (new) — a multi-step OSINT workflow that uses `search_tool`, `cyber_tool`, and `browser_tool` to gather information about a target domain, IP, or individual. The tool will be able to perform WHOIS lookups, DNS enumeration, subdomain discovery, and other OSINT techniques. To be integrated in the `cyber_tool` itself.
 
 ---
 

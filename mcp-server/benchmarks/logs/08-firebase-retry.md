@@ -1,17 +1,17 @@
 # Benchmark Log: 08-firebase-retry
 
-**Timestamp**: 2026-08-06T06:02:46.004Z
+**Timestamp**: 2026-08-06T06:05:30.919Z
 
 ## Scenarios Executed
 
 1. **exchangeRefreshToken (0 retries instant success)**
-   - Latency: 0.40 ms
+   - Latency: 0.25 ms
    - Attempts: 1
    - Token Count: 37 tokens
    - Result: Auth Success (UID: uid-1)
 
 2. **exchangeRefreshToken (1 retry with backoff)**
-   - Latency: 0.10 ms
+   - Latency: 0.09 ms
    - Attempts: 2
    - Token Count: 37 tokens
    - Result: Auth Recovered on Retry (UID: uid-2)

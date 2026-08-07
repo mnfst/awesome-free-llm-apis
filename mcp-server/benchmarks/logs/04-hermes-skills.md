@@ -1,18 +1,18 @@
 # Benchmark Log: 04-hermes-skills
 
-**Timestamp**: 2026-08-06T05:57:48.463Z
+**Timestamp**: 2026-08-06T06:05:21.188Z
 
 ## Scenarios Executed
 
 1. **Hermes Skill Source Detection**
-   - Latency: 7.70 ms
+   - Latency: 264.41 ms
    - Target Skill: `systematic-debugging`
    - Hermes Match Found: true (`systematic-debugging`)
    - Non-existent Match Result: null (fallback to agentic-awesome)
    - Output Data Token Count: 55 tokens
 
 2. **Adapter Injection Token Overhead**
-   - Latency: 19.20 ms
+   - Latency: 18.48 ms
    - Target Skill: `systematic-debugging`
    - Raw Skill Tokens: 3299 tokens
    - Adapted Skill Tokens: 3400 tokens
@@ -20,7 +20,7 @@
    - Token Overhead Added: +101 tokens
 
 3. **execute_skill End-to-End Token Cost**
-   - Latency: 3.08 ms
+   - Latency: 3.70 ms
    - Input Skill: `systematic-debugging`
    - User Prompt: "Debug an unexpected null pointer exception in user authentication flow."
    - Execution Success: true

@@ -26,6 +26,7 @@ export interface SnapshotNode {
 export interface SnapshotDiff {
     added: SnapshotNode[];
     removed: SnapshotNode[];
+    current?: SnapshotNode[];
 }
 
 const UID_RE = /uid=["']?([\w-]+)["']?/;
@@ -86,7 +87,7 @@ export function diffSnapshots(prev: SnapshotNode[], curr: SnapshotNode[]): Snaps
     const added = curr.filter(n => !prevKeys.has(n.key));
     const removed = prev.filter(n => !currKeys.has(n.key));
 
-    return { added, removed };
+    return { added, removed, current: curr };
 }
 
 /**
@@ -95,21 +96,22 @@ export function diffSnapshots(prev: SnapshotNode[], curr: SnapshotNode[]): Snaps
  * falls back to a flat count. Cheap heuristic, not a real tree reconstruction.
  */
 export function summarizeDiff(diff: SnapshotDiff): string {
-    const { added, removed } = diff;
+    const { added, removed, current } = diff;
     if (added.length === 0 && removed.length === 0) return 'No structural changes.';
 
     const parts: string[] = [];
 
     if (added.length > 0) {
         const byParentLabel = new Map<string, number>();
+        const parentCandidates = current && current.length > 0 ? current : added;
         for (const node of added) {
             const parentDepth = node.depth - 1;
-            const parent = added.find(n => n.depth === parentDepth) || null;
+            const parent = parentCandidates.find(n => n.depth === parentDepth) || null;
             const bucket = parent?.label || '(root)';
             byParentLabel.set(bucket, (byParentLabel.get(bucket) || 0) + 1);
         }
         const [dominantLabel, dominantCount] = [...byParentLabel.entries()].sort((a, b) => b[1] - a[1])[0];
-        if (dominantCount / added.length > 0.6 && dominantLabel !== '(root)') {
+        if (added.length > 1 && dominantCount / added.length > 0.6 && dominantLabel !== '(root)') {
             parts.push(`+${added.length} nodes mounted under "${dominantLabel}"`);
         } else {
             parts.push(`+${added.length} nodes added`);

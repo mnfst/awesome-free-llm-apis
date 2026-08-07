@@ -240,14 +240,18 @@ async function handleClick(session: BrowserSession, input: BrowserToolInput, ses
 
     const after = await session.snapshot(false);
     const changed = DomStateFingerprinter.hasStateChanged(before, after.fingerprint);
+    const hasBaseline = Boolean(before && beforeText);
     const warnings = changed ? [] : ['CLICK_NO_EFFECT'];
+    if (!hasBaseline) warnings.push('BASELINE_SNAPSHOT_UNAVAILABLE');
 
     let domDiffSummary: string | undefined;
-    if (changed) {
+    if (changed && hasBaseline) {
         const beforeNodes = parseSnapshot(beforeText);
         const diff = diffSnapshots(beforeNodes, parseSnapshot(after.text));
         domDiffSummary = summarizeDiff(diff);
         session.applyStructuralSignal(looksLikeStructuralInterstitial(beforeNodes, diff));
+    } else if (changed) {
+        domDiffSummary = 'No prior snapshot baseline; captured current snapshot without structural diff.';
     }
 
     return okResult({ action: 'click', sessionId, data: { clicked: res.json.label, domChanged: changed, domDiffSummary }, warnings });
@@ -303,10 +307,22 @@ async function handleWait(session: BrowserSession, input: BrowserToolInput, sess
 
     if (until === 'dom-stable' || until === 'selector' || until === 'text') {
         const beforeWaitText = session.lastSnapshotText;
+        const hasBaseline = Boolean(session.lastFingerprint && beforeWaitText);
         let lastFp = session.lastFingerprint;
         while (Date.now() < deadline) {
             const { text, fingerprint } = await session.snapshot(false);
             if (until === 'dom-stable' && !DomStateFingerprinter.hasStateChanged(lastFp, fingerprint)) {
+                if (!hasBaseline) {
+                    return okResult({
+                        action: 'wait',
+                        sessionId,
+                        data: {
+                            stable: true,
+                            domDiffSummary: 'No prior snapshot baseline; DOM is stable but structural diff was not computed.',
+                        },
+                        warnings: ['BASELINE_SNAPSHOT_UNAVAILABLE'],
+                    });
+                }
                 const beforeWaitNodes = parseSnapshot(beforeWaitText);
                 const diff = diffSnapshots(beforeWaitNodes, parseSnapshot(text));
                 session.applyStructuralSignal(looksLikeStructuralInterstitial(beforeWaitNodes, diff));

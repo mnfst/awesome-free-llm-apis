@@ -1,16 +1,16 @@
 # Benchmark Log: 02-search-router
 
-**Timestamp**: 2026-08-06T05:54:21.262Z
+**Timestamp**: 2026-08-06T06:05:33.416Z
 
 ## Scenarios Executed
 
 1. **Provider Normalization (Parallel, Tavily, Jina, Brave, SearXNG)**
-   - Latency: 273.40 ms
+   - Latency: 255.29 ms
    - Providers Evaluated: 5
    - Total Sample Normalized Tokens: 217 tokens
 
 2. **429 Fallback Chain Simulation**
-   - Latency: 0.12 ms
+   - Latency: 0.09 ms
    - Providers Rate-Limited (429): parallel, tavily, jina
    - Next Selected Provider: parallel
 

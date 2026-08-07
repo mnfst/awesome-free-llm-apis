@@ -93,6 +93,9 @@ export class BrowserSession {
     async navigate(url: string): Promise<void> {
         await this.call('navigate_page', { url });
         this.currentUrl = url;
+        this.lastFingerprint = '';
+        this.lastSnapshotText = '';
+        this.lastBlockCheck = { blocked: false };
         // (Re-)install the network interceptor on every navigation — it does not
         // survive a full page load, and SPA route changes are hooked internally
         // via history.pushState/popstate inside the injected script.

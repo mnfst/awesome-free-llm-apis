@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
 import type { HermesManifest, HermesSkillEntry } from './types.js';
 
 // Resolved relative to this file (not process.cwd()) — mirrors the
@@ -26,27 +27,13 @@ const MANIFEST_PATH = path.join(HERMES_ROOT, 'manifest.json');
 let cachedManifest: HermesManifest | null = null;
 let cachedMtimeMs = 0;
 
-/**
- * Minimal YAML frontmatter parser scoped to SKILL.md's flat key: value shape
- * (name/description/tags) — avoids pulling in a full YAML dependency for a
- * handful of scalar/array fields. Not a general-purpose YAML parser.
- */
-export function extractFrontmatter(content: string): { fields: Record<string, string | string[]>; body: string } {
+/** Parses SKILL.md YAML frontmatter, including nested metadata fields. */
+export function extractFrontmatter(content: string): { fields: Record<string, any>; body: string } {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!match) return { fields: {}, body: content };
 
-  const fields: Record<string, string | string[]> = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (!kv) continue;
-    const [, key, rawValue] = kv;
-    const value = rawValue.trim();
-    if (value.startsWith('[') && value.endsWith(']')) {
-      fields[key] = value.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-    } else {
-      fields[key] = value.replace(/^["']|["']$/g, '');
-    }
-  }
+  const parsed = parseYaml(match[1]);
+  const fields = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, any> : {};
   return { fields, body: match[2] };
 }
 
@@ -74,7 +61,9 @@ export async function generateManifest(): Promise<HermesManifest> {
           category: categoryDir.name,
           name: (fields.name as string) || skillDir.name,
           description: (fields.description as string) || '',
-          tags: Array.isArray(fields.tags) ? fields.tags : (fields.tags ? [fields.tags as string] : []),
+          tags: Array.isArray(fields.tags)
+            ? fields.tags
+            : (fields.tags ? [fields.tags as string] : (Array.isArray(fields.metadata?.hermes?.tags) ? fields.metadata.hermes.tags : [])),
           path: `${categoryDir.name}/${skillDir.name}`,
         });
       }

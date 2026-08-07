@@ -1,23 +1,23 @@
 # Benchmark Log: 07-browser-snapshot-diff
 
-**Timestamp**: 2026-08-06T06:01:16.345Z
+**Timestamp**: 2026-08-06T11:18:12.451Z
 
 ## Scenarios Executed
 
 1. **click -> expand structural node diff (+22 nodes)**
-   - Latency: 0.62 ms
+   - Latency: 0.55 ms
    - Added Nodes Count: 22
    - Diff Summary: "+22 nodes added."
    - Summary Token Count: 5 tokens
 
 2. **wait until:dom-stable single-diff exit**
-   - Latency: 0.08 ms
+   - Latency: 0.06 ms
    - Added Nodes: 0, Removed Nodes: 0
    - Stable Signal Exit: true
    - Diff Summary: "No structural changes."
 
 3. **BlockDetector Cloudflare structural wipeout signal**
-   - Latency: 0.19 ms
+   - Latency: 0.13 ms
    - Structural Interstitial Signal: true
    - Blocked Status: true
    - Challenge Type: cloudflare
