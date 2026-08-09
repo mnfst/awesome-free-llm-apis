@@ -14,7 +14,7 @@ const workspaceScanner = new WorkspaceScanner(process.cwd());
 // authored against the Claude Desktop/filesystem environment (raw file
 // read/write, its own memory tool), not this MCP server's tool surface, so
 // without this note the model tries to call tools that don't exist here.
-const HERMES_ADAPTER_NOTE = `## MCP Environment Overrides
+export const HERMES_ADAPTER_NOTE = `## MCP Environment Overrides
 This skill originates from the Hermes-Agent skill set, authored for a different environment. In THIS environment:
 - Do NOT create files or folders directly. Use \`manage_memory\` for persistent storage instead.
 - For fetching external/web data, use \`browser_tool\`.

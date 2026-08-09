@@ -110,6 +110,7 @@ export class SearchRouterMiddleware implements Middleware {
         const results = await provider.search(query);
         if (results.length > 0) {
           context.response = this.formatResponse(query, results, provider.id);
+          (context as any).searchTrace = { query, provider: provider.id, results, latencyMs: Date.now() - start };
           this.logSearch(context, query, provider.id, results, Date.now() - start);
           // google_search no longer needs to force-route TextRouterMiddleware to Gemini.
           context.request.google_search = false;

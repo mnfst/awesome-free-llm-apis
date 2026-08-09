@@ -1,41 +1,9 @@
 import { bench, describe, vi } from "vitest";
 import { findHermesSkill, loadHermesSkillContent, listHermesSkills, searchHermesSkills } from "../src/hermes/loader.js";
 import { loadSkillPrompt } from "../src/tools/load-skill-prompt.js";
-import { executeSkill } from "../src/tools/execute-skill.js";
+import { executeSkill, HERMES_ADAPTER_NOTE } from "../src/tools/execute-skill.js";
 import { countTokens } from "./helpers/token-counter.js";
 import { writeBenchmarkLog } from "./helpers/log-writer.js";
-
-// Mock useFreeLLM to avoid real API calls during benchmark execution
-vi.mock("../src/tools/use-free-llm.js", () => ({
-  useFreeLLM: vi.fn().mockResolvedValue({
-    choices: [
-      {
-        message: {
-          content: "Mocked LLM execution response for benchmark testing.",
-        },
-      },
-    ],
-  }),
-}));
-
-// Mock memoryManager to avoid filesystem/wiki side effects
-vi.mock("../src/memory/index.js", () => ({
-  memoryManager: {
-    getWiki: vi.fn().mockReturnValue({
-      search: vi.fn().mockResolvedValue([]),
-      write: vi.fn().mockResolvedValue({}),
-    }),
-  },
-}));
-
-const HERMES_ADAPTER_NOTE = `## MCP Environment Overrides
-This skill originates from the Hermes-Agent skill set, authored for a different environment. In THIS environment:
-- Do NOT create files or folders directly. Use \`manage_memory\` for persistent storage instead.
-- For fetching external/web data, use \`browser_tool\`.
-- For searching existing code or prior notes, use the workspace context tools (grep/wiki) already available to you — not a raw filesystem search.
-Follow the skill's methodology below, but execute it through this server's tools.
-
-`;
 
 generateLogReport().catch(console.error);
 

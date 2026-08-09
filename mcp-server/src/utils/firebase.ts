@@ -221,7 +221,7 @@ const EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS = [300, 800];
  * (HTTP status + body) when Google genuinely rejects the token, so a real
  * "invalid_grant" is distinguishable from a network blip in the logs.
  */
-async function exchangeRefreshToken(refreshToken: string): Promise<{ idToken: string; refreshToken: string; userId: string; expiresIn: number } | null> {
+export async function exchangeRefreshToken(refreshToken: string): Promise<{ idToken: string; refreshToken: string; userId: string; expiresIn: number } | null> {
     let lastErr: any;
     for (let attempt = 0; attempt <= EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS.length; attempt++) {
         try {
@@ -592,7 +592,7 @@ export async function getRecentSearchLogs(): Promise<Array<{
  * dashboard's lifetime totals (the local usage-stats.json's in-memory counters get reset
  * on a small interval, so the dashboard reads this instead of summing local state).
  */
-function isRetryableNetworkError(err: any): boolean {
+export function isRetryableNetworkError(err: any): boolean {
     const errMsg = err?.message || String(err);
     return errMsg.includes('fetch failed') ||
         errMsg.includes('timeout') ||

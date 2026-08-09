@@ -1,220 +1,183 @@
-import { bench, describe } from "vitest";
+import { bench, describe, vi } from "vitest";
 import { countTokens } from "./helpers/token-counter.js";
 import { writeBenchmarkLog } from "./helpers/log-writer.js";
-
-/**
- * Simulated exchangeRefreshToken function matching firebase.ts logic & retries
- */
-const EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS = [300, 800];
-
-function isRetryableNetworkError(err: any): boolean {
-  const errMsg = err?.message || String(err);
-  return (
-    errMsg.includes("fetch failed") ||
-    errMsg.includes("timeout") ||
-    errMsg.includes("ConnectTimeoutError") ||
-    errMsg.includes("aborted") ||
-    err?.name === "AbortError" ||
-    err?.code === "UND_ERR_CONNECT_TIMEOUT"
-  );
-}
-
-interface ExchangeResult {
-  idToken: string;
-  refreshToken: string;
-  userId: string;
-  expiresIn: number;
-}
-
-interface MockFetchOption {
-  mockResponses?: Array<{ ok: boolean; status: number; body: any; error?: Error }>;
-}
-
-async function simulateExchangeRefreshToken(
-  refreshToken: string,
-  options: MockFetchOption = {}
-): Promise<{ result: ExchangeResult | null; attempts: number; warnings: string[] }> {
-  const warnings: string[] = [];
-  const responses = options.mockResponses || [];
-  let attempt = 0;
-  let lastErr: any;
-
-  for (; attempt <= EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS.length; attempt++) {
-    try {
-      const respSpec = responses[attempt] || {
-        ok: true,
-        status: 200,
-        body: {
-          id_token: "mock-id-token-12345",
-          refresh_token: "mock-refresh-token-67890",
-          user_id: "mock-user-uid-abcde",
-          expires_in: "3600",
-        },
-      };
-
-      if (respSpec.error) {
-        throw respSpec.error;
-      }
-
-      if (!respSpec.ok) {
-        const bodyStr = typeof respSpec.body === "string" ? respSpec.body : JSON.stringify(respSpec.body);
-        const warnMsg = `[Firebase] Refresh token exchange rejected by Google (HTTP ${respSpec.status}): ${bodyStr.slice(0, 300)}. Falling back to a new anonymous account.`;
-        warnings.push(warnMsg);
-        return { result: null, attempts: attempt + 1, warnings };
-      }
-
-      const data = respSpec.body;
-      return {
-        result: {
-          idToken: data.id_token,
-          refreshToken: data.refresh_token,
-          userId: data.user_id,
-          expiresIn: parseInt(data.expires_in, 10),
-        },
-        attempts: attempt + 1,
-        warnings,
-      };
-    } catch (err) {
-      lastErr = err;
-      const isLastAttempt = attempt === EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS.length;
-      if (isLastAttempt || !isRetryableNetworkError(err)) break;
-      // Skip actual delay during sync/benchmark simulation or use simulated tick
-    }
-  }
-
-  const warnMsg = `[Firebase] Refresh token exchange failed after retries: ${(lastErr as Error)?.message || lastErr}. Falling back to a new anonymous account.`;
-  warnings.push(warnMsg);
-  const fallbackWarn = `[Firebase] Saved identity (UID: mock-saved-uid) could not be restored — provisioning a NEW anonymous account. Previous usage history will appear under the old UID.`;
-  warnings.push(fallbackWarn);
-
-  return { result: null, attempts: attempt + 1, warnings };
-}
+import { exchangeRefreshToken, isRetryableNetworkError } from "../src/utils/firebase.js";
 
 // Pre-populate benchmark output log report
 generateLogReport().catch(console.error);
 
-describe("08-firebase-retry benchmarks", () => {
+describe("08-firebase-retry benchmarks (Production exchangeRefreshToken Integration)", () => {
   // Scenario 1: 0 retries instant success
   bench("exchangeRefreshToken (0 retries instant success)", async () => {
-    const res = await simulateExchangeRefreshToken("valid-refresh-token", {
-      mockResponses: [
-        {
-          ok: true,
-          status: 200,
-          body: {
-            id_token: "id-tok-0",
-            refresh_token: "ref-tok-0",
-            user_id: "user-uid-0",
-            expires_in: "3600",
-          },
-        },
-      ],
-    });
-    countTokens(JSON.stringify(res));
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id_token: "id-tok-0",
+        refresh_token: "ref-tok-0",
+        user_id: "user-uid-0",
+        expires_in: "3600",
+      }),
+    } as any);
+
+    try {
+      const res = await exchangeRefreshToken("valid-refresh-token");
+      countTokens(JSON.stringify(res));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   // Scenario 2: 1 retry with backoff
   bench("exchangeRefreshToken (1 retry with backoff)", async () => {
-    const res = await simulateExchangeRefreshToken("valid-refresh-token", {
-      mockResponses: [
-        { ok: false, status: 500, body: {}, error: new Error("fetch failed (network blip)") },
-        {
-          ok: true,
-          status: 200,
-          body: {
-            id_token: "id-tok-1",
-            refresh_token: "ref-tok-1",
-            user_id: "user-uid-1",
-            expires_in: "3600",
-          },
-        },
-      ],
+    const originalFetch = globalThis.fetch;
+    let callCount = 0;
+    globalThis.fetch = vi.fn().mockImplementation(async () => {
+      callCount++;
+      if (callCount === 1) {
+        throw new Error("fetch failed (network blip)");
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id_token: "id-tok-1",
+          refresh_token: "ref-tok-1",
+          user_id: "user-uid-1",
+          expires_in: "3600",
+        }),
+      } as any;
     });
-    countTokens(JSON.stringify(res));
+
+    try {
+      const res = await exchangeRefreshToken("valid-refresh-token");
+      countTokens(JSON.stringify(res));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
-  // Scenario 3: 3 retries exhausted fallback to new account with explicit warning
+  // Scenario 3: 3 retries exhausted fallback
   bench("exchangeRefreshToken (3 retries exhausted fallback to new account)", async () => {
-    const res = await simulateExchangeRefreshToken("stale-refresh-token", {
-      mockResponses: [
-        { ok: false, status: 500, body: {}, error: new Error("fetch failed (timeout attempt 1)") },
-        { ok: false, status: 500, body: {}, error: new Error("fetch failed (timeout attempt 2)") },
-        { ok: false, status: 500, body: {}, error: new Error("fetch failed (timeout attempt 3)") },
-      ],
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockImplementation(async () => {
+      throw new Error("fetch failed (timeout)");
     });
-    countTokens(JSON.stringify(res));
+
+    try {
+      const res = await exchangeRefreshToken("stale-refresh-token");
+      countTokens(JSON.stringify({ res, isNull: res === null }));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  // Scenario 4: Error Classifier
+  bench("isRetryableNetworkError classification", () => {
+    const e1 = isRetryableNetworkError(new Error("fetch failed"));
+    const e2 = isRetryableNetworkError(new Error("connect timeout"));
+    const e3 = isRetryableNetworkError(new Error("unrelated application error"));
+    countTokens(JSON.stringify({ e1, e2, e3 }));
   });
 });
 
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
 
-  // Measurement 1
+  // Scenario 1 Measurement
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      id_token: "id-tok-0",
+      refresh_token: "ref-tok-0",
+      user_id: "user-uid-0",
+      expires_in: "3600",
+    }),
+  } as any);
+
   const t0 = performance.now();
-  const res1 = await simulateExchangeRefreshToken("valid-token", {
-    mockResponses: [
-      {
-        ok: true,
-        status: 200,
-        body: { id_token: "id-1", refresh_token: "ref-1", user_id: "uid-1", expires_in: "3600" },
-      },
-    ],
-  });
+  const res1 = await exchangeRefreshToken("valid-token");
   const t1 = performance.now();
-  const tokens1 = countTokens(JSON.stringify(res1));
 
-  // Measurement 2
+  // Scenario 2 Measurement
+  let callCount = 0;
+  globalThis.fetch = vi.fn().mockImplementation(async () => {
+    callCount++;
+    if (callCount === 1) {
+      throw new Error("fetch failed (network blip)");
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id_token: "id-tok-1",
+        refresh_token: "ref-tok-1",
+        user_id: "user-uid-1",
+        expires_in: "3600",
+      }),
+    } as any;
+  });
+
   const t2 = performance.now();
-  const res2 = await simulateExchangeRefreshToken("valid-token", {
-    mockResponses: [
-      { ok: false, status: 500, body: {}, error: new Error("fetch failed (network blip)") },
-      {
-        ok: true,
-        status: 200,
-        body: { id_token: "id-2", refresh_token: "ref-2", user_id: "uid-2", expires_in: "3600" },
-      },
-    ],
-  });
+  const res2 = await exchangeRefreshToken("valid-token");
   const t3 = performance.now();
-  const tokens2 = countTokens(JSON.stringify(res2));
 
-  // Measurement 3
-  const t4 = performance.now();
-  const res3 = await simulateExchangeRefreshToken("stale-token", {
-    mockResponses: [
-      { ok: false, status: 500, body: {}, error: new Error("fetch failed (timeout attempt 1)") },
-      { ok: false, status: 500, body: {}, error: new Error("fetch failed (timeout attempt 2)") },
-      { ok: false, status: 500, body: {}, error: new Error("fetch failed (timeout attempt 3)") },
-    ],
+  // Scenario 3 Measurement
+  globalThis.fetch = vi.fn().mockImplementation(async () => {
+    throw new Error("fetch failed (timeout)");
   });
-  const t5 = performance.now();
-  const tokens3 = countTokens(JSON.stringify(res3));
 
-  const logContent = `# Benchmark Log: 08-firebase-retry
+  const t4 = performance.now();
+  const res3 = await exchangeRefreshToken("stale-token");
+  const t5 = performance.now();
+
+  // Restore fetch
+  globalThis.fetch = originalFetch;
+
+  const tok1 = countTokens(JSON.stringify(res1));
+  const tok2 = countTokens(JSON.stringify(res2));
+  const tok3 = countTokens(JSON.stringify({ res3, isNull: res3 === null }));
+
+  const logContent = `# Benchmark Log: 08-firebase-retry — Production exchangeRefreshToken Integration
 
 **Timestamp**: ${timestamp}
 
-## Scenarios Executed
+## 🎯 Production Code Executed
+- **Source File**: \`src/utils/firebase.ts\`
+- **Target Method**: \`export async function exchangeRefreshToken(refreshToken: string)\`
+- **Network Classifier**: \`export function isRetryableNetworkError(err: any)\`
 
-1. **exchangeRefreshToken (0 retries instant success)**
-   - Latency: ${(t1 - t0).toFixed(2)} ms
-   - Attempts: ${res1.attempts}
-   - Token Count: ${tokens1} tokens
-   - Result: Auth Success (UID: ${res1.result?.userId})
+---
 
-2. **exchangeRefreshToken (1 retry with backoff)**
-   - Latency: ${(t3 - t2).toFixed(2)} ms
-   - Attempts: ${res2.attempts}
-   - Token Count: ${tokens2} tokens
-   - Result: Auth Recovered on Retry (UID: ${res2.result?.userId})
+## ⚡ Real Implementation Scenarios Executed
 
-3. **exchangeRefreshToken (3 retries exhausted fallback to new account)**
-   - Latency: ${(t5 - t4).toFixed(2)} ms
-   - Attempts: ${res3.attempts}
-   - Token Count: ${tokens3} tokens
-   - Warnings Logged:
-     ${res3.warnings.map((w) => `- \`${w}\``).join("\n     ")}
-   - Fallback Action: Provisioned new anonymous account
+### 1. **Instant Token Refresh Success (0 Retries)**
+- **Latency**: ${(t1 - t0).toFixed(2)} ms
+- **Token Count**: ${tok1} tokens
+- **Output Payload**:
+\`\`\`json
+${JSON.stringify(res1, null, 2)}
+\`\`\`
+
+---
+
+### 2. **Transient Network Error Recovery (1 Retry with Exponential Backoff)**
+- **Latency**: ${(t3 - t2).toFixed(2)} ms
+- **Token Count**: ${tok2} tokens
+- **Output Payload**:
+\`\`\`json
+${JSON.stringify(res2, null, 2)}
+\`\`\`
+
+---
+
+### 3. **Exhausted Network Retries Fallback (3 Retries Failed)**
+- **Latency**: ${(t5 - t4).toFixed(2)} ms
+- **Token Count**: ${tok3} tokens
+- **Return Value**: \`null\` (Triggers provision of NEW anonymous account in \`initFirebase()\`)
 
 ---
 *Generated by Vitest Benchmark Suite (08-firebase-retry.bench.ts)*

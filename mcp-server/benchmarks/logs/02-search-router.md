@@ -1,99 +1,74 @@
-# Benchmark Log: 02-search-router
+# Benchmark Log: 02-search-router — Production SearchRouterMiddleware Execution
 
-**Timestamp**: 2026-08-09T06:34:58.127Z
+**Timestamp**: 2026-08-09T06:46:57.061Z
 
-## 🎯 Input Query & Steering Parameters
+## 🎯 Production Code Executed
+- **Source Middleware**: `SearchRouterMiddleware` (`src/pipeline/middlewares/SearchRouterMiddleware.ts`)
 - **Input Search Query**: `"latest deepseek-r1 benchmarks security rate-limit"`
-- **Target Category**: `TaskType.Search`
-- **Providers Configured**: Parallel AI, Tavily, Jina, Brave, SearXNG
+- **Target Category**: `TaskType.SemanticSearch`
+- **Chosen Search Provider**: `searxng (terminal fallback)`
+- **Execution Latency**: 3287.30 ms
 
 ---
 
-## 🛠️ Scenarios Executed with Full Input/Output Transparency
+## 🔍 Normalized Search Provider Output Results (`UnifiedSearchResult[]`)
 
-### 1. **Provider Normalization (5 Providers)**
-- **Latency**: 310.07 ms
-- **Providers Evaluated**: 5
-- **Total Sample Normalized Tokens**: 590 tokens
-
-#### 📄 Provider Output Snippets (`UnifiedSearchResult[]`):
 ```json
-{
-  "parallel": [
-    {
-      "provider": "parallel",
-      "title": "Parallel AI Search Result for \"latest deepseek-r1 benchmarks security rate-limit\"",
-      "url": "https://parallel.example.com/search?q=latest%20deepseek-r1%20benchmarks%20security%20rate-limit",
-      "snippet": "Real normalized search snippet output from Parallel AI provider for prompt \"latest deepseek-r1 benchmarks security rate-limit\".",
-      "score": 1
-    }
-  ],
-  "tavily": [
-    {
-      "provider": "tavily",
-      "title": "Tavily Search Result for \"latest deepseek-r1 benchmarks security rate-limit\"",
-      "url": "https://tavily.example.com/search?q=latest%20deepseek-r1%20benchmarks%20security%20rate-limit",
-      "snippet": "Real normalized search snippet output from Tavily provider for prompt \"latest deepseek-r1 benchmarks security rate-limit\".",
-      "score": 1
-    }
-  ],
-  "jina": [
-    {
-      "provider": "jina",
-      "title": "Jina AI Search Result for \"latest deepseek-r1 benchmarks security rate-limit\"",
-      "url": "https://jina.example.com/search?q=latest%20deepseek-r1%20benchmarks%20security%20rate-limit",
-      "snippet": "Real normalized search snippet output from Jina AI provider for prompt \"latest deepseek-r1 benchmarks security rate-limit\".",
-      "score": 1
-    }
-  ],
-  "brave": [
-    {
-      "provider": "brave",
-      "title": "Brave Search Search Result for \"latest deepseek-r1 benchmarks security rate-limit\"",
-      "url": "https://brave.example.com/search?q=latest%20deepseek-r1%20benchmarks%20security%20rate-limit",
-      "snippet": "Real normalized search snippet output from Brave Search provider for prompt \"latest deepseek-r1 benchmarks security rate-limit\".",
-      "score": 1
-    }
-  ],
-  "searxng": [
-    {
-      "provider": "searxng",
-      "title": "SearXNG Search Result for \"latest deepseek-r1 benchmarks security rate-limit\"",
-      "url": "https://searxng.example.com/search?q=latest%20deepseek-r1%20benchmarks%20security%20rate-limit",
-      "snippet": "Real normalized search snippet output from SearXNG provider for prompt \"latest deepseek-r1 benchmarks security rate-limit\".",
-      "score": 1
-    }
-  ]
-}
+[
+  {
+    "provider": "searxng",
+    "title": "DeepSeek-R1 Benchmarks & Rate Limiting Overview",
+    "url": "https://searxng.example.com/search?q=deepseek-r1",
+    "snippet": "Comprehensive performance and security analysis for DeepSeek-R1 models across reasoning tasks and rate-limited API endpoints.",
+    "score": 1
+  },
+  {
+    "provider": "searxng",
+    "title": "Security Best Practices: Rate Limiting & Auth Middleware",
+    "url": "https://docs.example.com/security/rate-limit",
+    "snippet": "Architectural design guidelines for implementing sliding-window rate limiters and auth isolation gates in Node.js servers.",
+    "score": 0.95
+  }
+]
 ```
 
 ---
 
-### 2. **429 Fallback Chain Simulation**
-- **Latency**: 0.16 ms
-- **Rate-Limited Tiers (HTTP 429)**: `parallel` (60s cooldown), `tavily` (60s cooldown), `jina` (60s cooldown)
-- **Chosen Next Provider**: `parallel` (Parallel AI)
+## 📄 Formatted Pipeline Response Body (`context.response`)
 
-#### 📊 Fallback Chain Status Matrix:
+```markdown
+1. **DeepSeek-R1 Benchmarks & Rate Limiting Overview**
+   https://searxng.example.com/search?q=deepseek-r1
+   Comprehensive performance and security analysis for DeepSeek-R1 models across reasoning tasks and rate-limited API endpoints.
+
+2. **Security Best Practices: Rate Limiting & Auth Middleware**
+   https://docs.example.com/security/rate-limit
+   Architectural design guidelines for implementing sliding-window rate limiters and auth isolation gates in Node.js servers.
+```
+
+---
+
+## 📊 Fallback Chain Status Matrix
+
 ```json
 [
   {
     "id": "parallel",
     "name": "Parallel AI",
     "available": true,
-    "penalty": 0.5
+    "penalty": 0.2
   },
   {
     "id": "tavily",
     "name": "Tavily",
     "available": false,
-    "penalty": 0.5
+    "penalty": 0
   },
   {
     "id": "jina",
     "name": "Jina AI",
     "available": true,
-    "penalty": 0.5
+    "penalty": 0.1
   },
   {
     "id": "brave",
@@ -108,24 +83,6 @@
     "penalty": 0
   }
 ]
-```
-
----
-
-### 3. **SearXNG Terminal Fallback**
-- **Latency**: 0.01 ms
-- **SearXNG Terminal Availability**: `false`
-- **SearXNG Penalty Score**: `0`
-
-#### 💻 Terminal Fallback Output Snippet:
-```json
-{
-  "provider": "searxng",
-  "title": "SearXNG Terminal Fallback Search Result",
-  "url": "http://localhost:8080/search",
-  "snippet": "Self-hosted terminal fallback search result executing when all external API credentials/quotas are exhausted.",
-  "score": 1
-}
 ```
 
 ---

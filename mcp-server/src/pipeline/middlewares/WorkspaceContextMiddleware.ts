@@ -589,6 +589,15 @@ export class WorkspaceContextMiddleware implements Middleware {
             console.error(`[WorkspaceContextMiddleware] Agentic mode: skipping own system prompt injection, delegating to AgenticMiddleware.`);
         }
 
+        (context as any).telemetry = {
+            memoryContext,
+            grepContext: workspaceContextStr || undefined,
+            wikiContext,
+            groundingGate,
+            dirTree,
+            durationMs: Date.now() - startMs
+        };
+
         console.error(`[WorkspaceContextMiddleware] ${Date.now() - startMs}ms context injected for session=${sessionId}`);
         
         await next();
