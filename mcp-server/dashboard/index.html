@@ -63,6 +63,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
         Quick Start
       </button>
+      <button class="tab-btn" data-tab="steering" role="tab" aria-selected="false" id="tab-steering">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4"/></svg>
+        Keyword & Prompt Steering
+      </button>
     </nav>
 
     <!-- ══════════════════════════════════════════════════════════
@@ -725,6 +729,78 @@
         </details>
       </div>
 
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TAB 8: KEYWORD & PROMPT STEERING
+    ══════════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="panel-steering" role="tabpanel" aria-labelledby="tab-steering">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <span class="section-title" style="margin:0;font-size:1rem;color:var(--accent-purple);">🎯 Keyword-Driven System Prompt Steering & Ingestion Inspector</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
+            Test how user queries and explicit <code>keywords[]</code> arrays trigger section-level injection from <code>prompt.json</code>, isolate memory context gates, and prevent context window bloat across single-pass and multi-pass agentic execution.
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sample User Query:</label>
+              <input type="text" id="steering-query-input" class="form-input" value="Fix bug in auth middleware and check security rate limiting" placeholder="Type prompt query..." style="width:100%;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Explicit keywords[] Array:</label>
+              <input type="text" id="steering-keywords-input" class="form-input" value="security, auth, rate-limit, debug" placeholder="e.g. security, auth, rate-limit" style="width:100%;">
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px;">
+            <label style="display:inline-flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;">
+              <input type="checkbox" id="steering-agentic-toggle">
+              <span style="font-weight:600;">Enable agentic: true (Multi-Pass Subtask Engine)</span>
+            </label>
+            <button id="btn-run-steering-eval" class="btn btn-purple btn-sm">Simulate Prompt Ingestion & Bloat Test</button>
+          </div>
+
+          <!-- Live Token & Context Comparison Cards -->
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card">
+              <div class="stat-label c-purple">System Prompt Overhead</div>
+              <div class="stat-value c-purple" id="steering-sys-tokens">943 tok</div>
+              <div class="stat-sub" id="steering-sys-desc">Single-Pass Mode (isOnePass: true)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label c-cyan">Total Payload Size</div>
+              <div class="stat-value c-cyan" id="steering-payload-tokens">1,030 tok</div>
+              <div class="stat-sub">Lightweight context footprint</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label c-green">Net Token Savings</div>
+              <div class="stat-value c-green" id="steering-token-savings">56.0%</div>
+              <div class="stat-sub" id="steering-savings-desc">1,201 tokens saved vs Agentic</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label c-amber">Context Bloat Guard</div>
+              <div class="stat-value c-amber" id="steering-bloat-status">PASSED ✅</div>
+              <div class="stat-sub">0 tokens bloat on empty keywords</div>
+            </div>
+          </div>
+
+          <!-- Matched prompt.json Sections -->
+          <div class="section-title" style="font-size:.88rem;margin-bottom:8px;">📄 Matched prompt.json Injected Sections</div>
+          <div id="steering-matched-sections" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Memory Layer Isolation Gates -->
+          <div class="section-title" style="font-size:.88rem;margin-bottom:8px;">🧠 Active Memory Layer Isolation Gates</div>
+          <div id="steering-memory-gates" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <!-- Rendered by JS -->
+          </div>
+
+        </div>
+      </div>
     </section>
 
   </main>

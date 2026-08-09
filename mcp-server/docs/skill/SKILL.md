@@ -38,31 +38,28 @@ Discipline for orchestrating multiple free LLM providers via the `@mcp:free-llm-
 
 ## 🔑 Keyword Ingestion & System Prompt Steering
 
-This section details how `keywords[]` steer external prompt injection, control memory gates, and prevent context bloat across single-pass and multi-pass executions.
+The `keywords[]` parameter serves two distinct steering intents depending on which tool is invoked:
 
-### 1. Section-Based System Prompt Ingestion (`prompt.json`)
-System instructions are backed by `external/agent-prompt/prompt.json`. The prompt generator scans the user's incoming prompt and explicit `keywords[]` against section `keywords` arrays in `prompt.json`:
-- **Matching Keywords**: Only sections whose `keywords` array intersects with the query are injected into `messages[0]`.
-- **General Queries**: Unmatched sections stay on disk in `prompt.json` and are **never** injected into context.
-- **Context Bloat Prevention**: Passing `keywords: []` on direct queries prevents uncalibrated prompt expansion, reducing System Prompt size from **2,144 tokens** down to **943 tokens** (56% token reduction).
+1. **`use_free_llm` Intent**: Steers system reference section injection, memory layer isolation gates (`<memory_context_isolation_gate>`, `<wiki_context_isolation_gate>`), and persona ranking for completion tasks.
+2. **`load_skill_prompt` Intent**: Steers dynamic skill discovery, querying the local skill catalog and 36 bundled Hermes skills (`searchHermesSkills`) to retrieve target `SKILL.md` prompt instructions.
 
-### 2. External Skill Steering (`load_skill_prompt` & `execute_skill`)
-Skill prompt loading is driven strictly by explicit `keywords[]`:
-- **Situational Ingestion**: `load_skill_prompt({ type: 'search', keywords: ['debug', 'auth'] })` searches local skill manifests and bundled Hermes skills (`src/external/hermes/`).
-- **Empty Keywords Guard**: When `keywords: []` is empty, skill search immediately returns `{ success: true, skills: [] }` with **0 tokens bloat**.
-- **Adapter Note Overhead**: Loading a Hermes skill injects a 101-token environment override note ahead of `SKILL.md` content to enforce MCP memory/browser tool usage rules.
+### 📋 `use_free_llm` System Prompt Ingestion Summary by Keyword
 
-### 3. Memory Gate Keyword Isolation
-External context is situationally injected inside XML isolation gates:
-- `<memory_context_isolation_gate>`: Ingests `LongTermMemory` saved tool outputs and confidence scores.
-- `<wiki_context_isolation_gate>`: Ingests matched `WikiMemory` architecture notes.
-- `<workspace_context_isolation_gate>`: Ingests code snippets selected by Born-rule sampling from `VectorStore`.
+| Keyword Category | Trigger Keywords | System Prompt Instructions & Context Injected |
+|------------------|------------------|-----------------------------------------------|
+| **Security & Auth** | `security`, `auth`, `jwt`, `rate-limit`, `isolation` | Injects security governance rules, authorization verification frames, rate-limiting guidelines, and isolation boundary directives. |
+| **Debugging & Errors** | `debug`, `error`, `exception`, `traceback`, `crash` | Injects systematic debugging workflows, stack trace analysis rules, CLI diagnostics tips, and root-cause analysis directives. |
+| **Reliability & Harness** | `reliability`, `harness`, `evals`, `checkpoint`, `loops` | Injects harness engineering principles, subtask failure recovery workflows, multi-step idempotency rules, and state checkpoint controls. |
+| **Architecture & Memory** | `memory`, `wiki`, `vectorstore`, `adr`, `architecture` | Injects `<memory_context_isolation_gate>` and `<wiki_context_isolation_gate>` containing active ADR decision logs and architecture notes. |
+| **Browser & Automation** | `browser`, `scrape`, `devtools`, `extract` | Injects ARIA-role node discovery guidelines, network response interceptor protocols, and pausable scraping checkpoint controls. |
+| **Cyber Coaching** | `cyber`, `ctf`, `nmap`, `sqlmap`, `ffuf` | Injects security coach persona, CTF decision-graph guidelines (`ctf-graph/{sessionId}`), and binary tool run suggestion memory. |
 
-### 4. Local Dashboard Keyword & Memory Visualization (`http://localhost:3000`)
-When running in SSE mode, open `http://localhost:3000` to inspect:
-- **Live Memory Layer Breakdown**: Real-time token consumption across ShortTerm, LongTerm, Wiki, and VectorStore gates.
-- **Keyword Match Audits**: Visual highlights showing which `keywords[]` triggered specific prompt section injections.
-- **Agentic vs Non-Agentic Toggle**: Real-time comparison of `isOnePass: true` (1,030 tok payload) vs `isOnePass: false` (2,673 tok payload).
+### 🛠️ `load_skill_prompt` Dynamic Skill Discovery Intent
+
+- **Skill Search Mode (`type: 'search'`)**: Uses `keywords[]` to match against local skill manifests (`.free-llm-mcp/skills/`) and bundled Hermes skills (`src/external/hermes/`).
+- **Prompt Auto-Extraction**: If `keywords` parameter is omitted during skill search, keywords are automatically derived from the `name` string (`name.split(/\s+/)`).
+- **Empty Keywords Guard (`keywords: []`)**: Passing `keywords: []` on skill search returns `{ success: true, skills: [] }` immediately with **0 tokens bloat**.
+- **Hermes Adapter Note**: Ingesting a Hermes skill prepends a 101-token override note enforcing native server tools (`manage_memory`, `browser_tool`).
 
 ---
 
@@ -166,12 +163,12 @@ Save structured knowledge and scripts into the workspace.
 ---
 
 ### `browser_tool` [v1.0.8]
-Owns a real, live `chrome-devtools-mcp` browser session per `sessionId` with a granular action surface — full reference in [browser_tool.md](../browser_tool.md).
+Owns a real, live `chrome-devtools-mcp` browser session per `sessionId` with a granular action surface — full reference in [browser_tool.md](references/browser_tool.md).
 - **Parameters**:
   - `action` (required): `navigate` | `snapshot` | `click` | `scroll` | `wait` | `evaluate` | `network` | `api_replay` | `extract` | `deep_scrape` | `screenshot` | `checkpoint` | `session` | `site_memory` | `scrape` (legacy one-call macro).
   - `url` (required for `navigate`/`scrape`; optional elsewhere): Target website URL.
   - `sessionId` (optional): Reuses a live pooled browser session + checkpoint across calls.
-  - `params` (optional): Action-specific object — see [browser_tool.md](../browser_tool.md) for the per-action schema.
+  - `params` (optional): Action-specific object — see [browser_tool.md](references/browser_tool.md) for the per-action schema.
   - `userInstructions` (optional): Prompt/instructions for extraction actions.
   - `outputDir` (optional): Directory for exported datasets/checkpoints/network dumps.
   - `strict` (optional, default `true`): Extraction failures return `data: null` + errors instead of a best-effort guess.
@@ -220,17 +217,8 @@ Scans prompt text for keywords to assign a persona (`debugger`, `researcher`, `s
 preferred persona: coder
 ```
 
-### 4. The `keywords` parameter (API param, steers documentation & skill injection)
-`keywords` is a `string[]` field on `use_free_llm` and `load_skill_prompt`. It is the primary signal for section-level prompt injection (`prompt.json`), wiki note matching, and skill search:
-
-```json
-{
-  "messages": [{ "role": "user", "content": "Add rate limiting to the login endpoint" }],
-  "keywords": ["security", "jwt", "rate-limit"],
-  "agentic": true,
-  "workspace_root": "c:/Users/mahes/project"
-}
-```
+### 4. The `keywords` parameter (API param, steers prompt injection & skill search)
+`keywords` is a `string[]` field passed on `use_free_llm` and `load_skill_prompt`. It is the primary explicit steering signal for section-level prompt injection (`prompt.json`), wiki note matching, and dynamic skill discovery (see [Keyword Ingestion & System Prompt Steering](#-keyword-ingestion--system-prompt-steering) above).
 
 ---
 
@@ -249,7 +237,17 @@ preferred persona: coder
 - [**System Architecture**](references/architecture.md): Deep dive into grounding protocols, decoupled routing mechanics, and advanced agentic patterns.
 - [**Skill & Sandbox Logic**](references/code-mode-logic.md): Guide to creating custom skills for `execute_skill` and QuickJS sandbox execution.
 - [**Memory Usage Guide**](references/memory-usage.md): Architectural details of persistent memory, wiki structure, and PDF offset caching.
-- [**Per-tool reference & usage docs**: `references/<tool>.md`.
+- [**Per-Tool Reference Documentation**]:
+  - [`use_free_llm`](references/use_free_llm.md)
+  - [`load_skill_prompt`](references/load_skill_prompt.md)
+  - [`execute_skill`](references/execute_skill.md)
+  - [`vision_tool`](references/vision_tool.md)
+  - [`browser_tool`](references/browser_tool.md)
+  - [`cyber_tool`](references/cyber_tool.md)
+  - [`quantum_tool`](references/quantum_tool.md)
+  - [`local_llm_patch`](references/local_llm_patch.md)
+  - [`manage_memory`](references/manage_memory.md)
+  - [`store_workspace_skill`](references/store_workspace_skill.md)
 
 ---
 

@@ -248,6 +248,27 @@ async function main() {
         }
       });
 
+      app.get('/api/prompt_sections', async (req, res) => {
+        try {
+          const promptPath = path.resolve(__dirname, '../../external/agent-prompt/prompt.json');
+          if (fs.existsSync(promptPath)) {
+            const raw = await fs.promises.readFile(promptPath, 'utf-8');
+            const data = JSON.parse(raw);
+            const sections = (data.sections || []).map((sec: any) => ({
+              id: sec.id,
+              title: sec.title,
+              keywords: sec.keywords || [],
+              tokenCount: Math.ceil((sec.content || '').length / 4)
+            }));
+            res.json({ success: true, sections });
+          } else {
+            res.json({ success: false, error: 'prompt.json not found', sections: [] });
+          }
+        } catch (err) {
+          res.status(500).json({ success: false, error: String(err), sections: [] });
+        }
+      });
+
       app.post('/api/user-config', async (req, res) => {
         try {
           const { username, optOutTelemetry } = req.body;
