@@ -179,10 +179,30 @@ export async function loadSkillPrompt(input: LoadSkillPromptInput): Promise<Load
 
     const configDir = await getBaseDir(input.workspaceDir);
 
-    if (input.type === 'search') {
-      const results = await searchSkills(input.keywords || [], configDir);
-      return { success: true, skills: results };
+  if (input.type === 'search') {
+    const rawKeywords = (input.keywords && input.keywords.length > 0)
+      ? input.keywords
+      : (input.name || input.skill || '').split(/\s+/).filter(k => k.trim().length > 0);
+
+    if (rawKeywords.length === 0) {
+      // Empty keywords array provided — return empty result immediately to avoid context bloat
+      return { success: true, skills: [] };
     }
+
+    if (input.source === 'hermes') {
+      const results = await searchHermesSkills(rawKeywords);
+      return { success: true, skills: results.map(s => ({ name: s.name, description: s.description })) };
+    }
+
+    // Try local/online index first, then fallback to bundled Hermes skills
+    const localResults = await searchSkills(rawKeywords, configDir);
+    if (localResults.length > 0) {
+      return { success: true, skills: localResults };
+    }
+
+    const hermesResults = await searchHermesSkills(rawKeywords);
+    return { success: true, skills: hermesResults.map(s => ({ name: s.name, description: s.description })) };
+  }
 
     if (input.type === 'load') {
       const name = input.name || '';
