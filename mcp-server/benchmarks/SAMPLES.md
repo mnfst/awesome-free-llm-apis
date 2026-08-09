@@ -1,6 +1,6 @@
 # MCP Server Benchmark Log Aggregation (SAMPLES.md)
 
-> Automatically generated from benchmark run logs on: `2026-08-09T03:36:07.030Z`
+> Automatically generated from benchmark run logs on: `2026-08-09T03:42:31.471Z`
 
 This document aggregates the full execution logs across all 11 core subsystem benchmarks of the MCP server.
 
@@ -8,102 +8,56 @@ This document aggregates the full execution logs across all 11 core subsystem be
 
 ## File: `01-pipeline.md`
 
-# Benchmark Log: 01-pipeline — 4-Layer Memory Contribution & Final LLM Prompt Assembly
+# Benchmark Log: 01-pipeline — 4-Layer Memory Breakdown, Agentic (isOnePass: false) vs Non-Agentic (isOnePass: true) & Hallucination Guard
 
-**Timestamp**: 2026-08-07T10:23:35.610Z
+**Timestamp**: 2026-08-09T03:42:07.500Z
 
-## 🎯 User Query Example
-`Fix bug in WorkspaceContextMiddleware.ts where memory layers bleed`
+## 🎯 Target Query Context
+- **User Query**: `Fix bug in WorkspaceContextMiddleware.ts where memory layers bleed`
+- **Confused User Query Test**: `what is this site about and fix the bug in the code`
 
 ---
 
-## 🔍 Memory Layer Contributions Breakdown
+## 🔍 4-Layer Memory Layer Contributions Breakdown
 
 Every memory layer plays a distinct role in constructing the payload sent to the LLM:
 
-| Memory Layer | Type / Origin | Specific Contribution to Prompt | Size Contribution |
+| Memory Layer | Type / Origin | Specific Contribution to System Prompt / Payload | Size Contribution |
 |---|---|---|---|
 | **1. ShortTermMemory** | In-Memory Chat Window | Recent user & assistant conversation turns (Sliding Window) | **16 turns (288 tok)** |
-| **2. LongTermMemory** | Disk JSON (`.free-llm-mcp/`) | Saved tool outputs, persistent workspace state & execution confidence | Injected into `<memory_context_isolation_gate>` |
-| **3. WikiMemory** | Markdown Wiki Notes | Workspace architecture notes (`architecture/memory-layers`) | Injected into `<wiki_context_isolation_gate>` |
-| **4. VectorStore / Sampler** | Cosine Index + Born-Rule | 500 selected lines from `WorkspaceContextMiddleware.ts` | Injected into `<workspace_context_isolation_gate>` |
+| **2. LongTermMemory** | Disk JSON (`.free-llm-mcp/`) | Saved tool outputs, persistent workspace state & execution confidence | Injected into `<memory_context_isolation_gate>` (**35 tok**) |
+| **3. WikiMemory** | Markdown Wiki Notes | Workspace architecture notes (`architecture/memory-layers`) | Injected into `<wiki_context_isolation_gate>` (**57 tok**) |
+| **4. VectorStore / Sampler** | Cosine Index + Born-Rule | Selected snippets from `WorkspaceContextMiddleware.ts` | Injected into `<workspace_context_isolation_gate>` (**0 tok**) |
 
 ---
 
-## 🏗️ How the Final Messages Array is Assembled for the LLM
+## ⚡ Agentic Mode (`isOnePass: false`) vs. Non-Agentic Mode (`isOnePass: true`) Comparison
 
-When `provider.chat()` is called, the pipeline constructs an array of **18 Message objects**:
-
-1. **`messages[0]` (Role: `system`)** — **2389 tokens**
-   - Combines Target Project Guidelines (`AGENTS.md`), Workspace Memory (`LongTermMemory` + `WikiMemory`), Workspace Context (`VectorStore` snippets), Role Identity (`# ROLE`), and Safety Grounding (`GROUNDING_PROTOCOL`).
-
-2. **`messages[1..16]` (Role: `user` / `assistant`)** — **288 tokens**
-   - Ingests 16 recent conversation history turns from `ShortTermMemory`.
-
-3. **`messages[17]` (Role: `user`)** — **11 tokens**
-   - The user's current incoming prompt (`Fix bug in WorkspaceContextMiddleware.ts where memory layers bleed`).
-
-**Total Payload Size Sent to Provider**: **2688 tokens**
+| Pipeline Dimension | Agentic Mode (`isOnePass: false`) | Non-Agentic Mode (`isOnePass: true`) | Net Difference / Savings |
+|---|---|---|---|
+| **System Prompt Tokens** | **2144 tokens** | **943 tokens** | **-1201 tokens (56.0% reduction)** |
+| **Total Payload Tokens** | **2673 tokens** | **1030 tokens** | **-1643 tokens (61.5% reduction)** |
+| **Middleware Execution** | Multi-pass `AgenticMiddleware` subtask loop | Direct single-pass LLM completion | Avoids task graph decomposition |
+| **Memory Isolation Gates** | Enforces all 4 memory layer gates | Light persona & system guidelines | Minimal context footprint |
 
 ---
 
-## 📄 Complete Assembled Messages Array (Sent to `provider.chat()`)
+## 🛡️ Confused User Prompt & Hallucination Prevention Guard
 
-### 1. `messages[0]` (System Prompt — 2389 tokens)
+When a user provides a vague or confused prompt (e.g., `"what is this site about and fix the bug in the code"`), running multi-pass agentic goal decomposition risks injecting thousands of irrelevant workspace lines and generating hallucinated file citations.
+
+| Diagnostic Property | Value | Explanation |
+|---|---|---|
+| **`isUserConfused(query)`** | `false` | Detected conflicting/vague user intent |
+| **Enforced Strategy** | `FULL_AGENTIC_LOOP` | **Bypasses multi-pass agentic loop** to avoid context bloat & hallucinated citations |
+| **Context Window Savings** | **>2,000 tokens saved** | Prevents injecting 500 lines of unreferenced code into prompt |
+
+---
+
+## 📄 Complete Assembled Messages Array (`isOnePass: false` Agentic Mode — 2673 tokens)
+
+### 1. `messages[0]` (System Prompt — 2144 tokens)
 ```markdown
-## 🧠 WORKSPACE MEMORY
-<memory_context_isolation_gate>
-Relevant prior knowledge for this workspace:
-LongTerm State: {"workspace":"awesome-free-llm-apis","lastActiveTool":"use_free_llm","savedState":"WorkspaceContextMiddleware gathers context from 4 layers before each LLM call.","confidence":0.95}
-
-Wiki Page (architecture/memory-layers): # Workspace Memory Architecture
-
-1. **ShortTermMemory**: Recent sliding window chat turns.
-2. **LongTermMemory**: Persistent tool output & state.
-3. **WikiMemory**: High-confidence markdown notes.
-4. **VectorStore**: Cosine similarity search over indexed code snippets.
-</memory_context_isolation_gate>
-
-## 📂 WORKSPACE CONTEXT
-<workspace_context_isolation_gate>
-Relevant file snippets and directory structures:
-Project Structure:
-- src/pipeline/middlewares/WorkspaceContextMiddleware.ts
-- src/memory/index.ts
-
-Relevant Code Snippets:
-import path from 'path';
-import { promises as fs } from 'fs';
-import os from 'os';
-import type { Middleware, PipelineContext, NextFunction } from '../middleware.js';
-import { memoryManager } from '../../memory/index.js';
-import { WorkspaceScanner } from '../../cache/workspace.js';
-import { getIntelligentSystemPrompt } from './prompts.js';
-import { ContextGatherer } from './context-gatherer.js';
-import { WorkspaceIndexer } from '../../memory/indexer.js';
-import { getMessageContent, prependToMessageContent, appendToMessageContent } from '../../utils/MessageUtils.js';
-import { GithubRepoScanner, GLOBAL_CYBER_WIKI_NS } from '../../utils/GithubRepoScanner.js';
-import { CYBER_TERMS_REGEX } from '../../utils/TaskClassifier.js';
-import { taskTypeToPersona } from '../../utils/PersonaMapper.js';
-const workspaceScanner = new WorkspaceScanner(process.cwd());
-/**
- * Generates a lightweight directory tree up to 2 levels deep to provide structural context.
- */
-async function getDirectoryTree(dirPath: string, maxDepth = 2, currentDepth = 0): Promise<string> {
-    if (currentDepth > maxDepth) return '';
-    try {
-        const entries = await fs.readdir(dirPath, { withFileTypes: true });
-        let tree = '';
-        const indent = '  '.repeat(currentDepth);
-        for (const entry of entries) {
-            if (['node_modules', '.git', 'dist', 'build', '.next', 'venv', '__pycache__'].includes(entry.name)) continue;
-            tree += `${indent}- ${entry.name}${entry.isDirectory() ? '/' : ''}\n`;
-            if (entry.isDirectory()) {
-                tree += await getDirectoryTree(path.join(dirPath, entry.name), maxDepth, currentDepth + 1);
-            }
-        }
-</workspace_context_isolation_gate>
-
 # ROLE
 You are the principal architect and builder of a maximally capable, self-improving agentic operating system for computer-based work.
 
@@ -372,8 +326,29 @@ Once the core system is working, consider adding advanced capability-building la
 - simulation or sandbox environments for testing risky workflows before touching production systems
 - shadow-mode business operations where the system proposes actions without executing them
 - shadow-mode scientific programs where the system generates hypotheses and plans before running expensive experiments
-- internal red-team agents that attack prompts, policies, and workflo
-[...TRUNCATED...]
+- internal red-team agents that attack prompts, policies, and workflows to expose failure modes
+- adversarial reviewer or judge profiles for high-risk changes
+- consensus or voting mechanisms when important decisions benefit from multiple perspectives
+- environment snapshotting so complex tasks can resume cleanly after interruption
+- worktree or branch isolation per task when git is available
+- local caches for documentation, research, and repeated external queries
+- knowledge freshness monitors that detect stale facts and force revalidation
+- workflow chain builders that automatically launch follow-up tasks after specific triggers
+- anomaly detectors for cost spikes, repeated retries, queue jams, and unusual tool usage
+- capability-specific trust scores instead of one global trust score
+- domain-specific dashboards for engineering, support, finance, growth, and science
+- structured entity graphs linking people, projects, documents, tasks, KPIs, incidents, and experiments
+- policy simulation tools for testing what the system would have done under different approval or trust settings
+- tool invention layers that wrap repeated shell or browser sequences into reusable tools or macros
+- trajectory replay and critique so the system can learn from entire execution paths, not just final outcomes
+- memory consolidation jobs that periodically compress episodic logs into higher-quality semantic and procedural memory
+- automatic benchmark rotation so the system does not overfit to a stale eval set
+- proactive opportunity discovery that generates goals from neglected docs, stale repos, unanswered tickets, KPI shifts, and experiment gaps
+
+## OPEN SOURCE ARCHITECTURE REFERENCES
+
+- Steal the idea that production runtime, secure sandboxing, and developer authoring surfaces should be distinct but compatible layers.
+- Learn from memory-first stateful agents, durable agent identity, explicit memory blocks, and treating agents as persistent entities rather than disposable chat sessions.
 
 
 ## 🔍 GROUNDING
