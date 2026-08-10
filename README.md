@@ -29,6 +29,7 @@
 
 ## Contents
 
+- [free-llm-atlas](https://github.com/happyyboxx/free-llm-atlas) - 46 free LLM providers, daily auto-probe, structured JSON + gateway configs (Hermes/LiteLLM/Portkey). 17 permanent free (no card). 🔄 Daily probe
 - [Provider APIs](#provider-apis)
 - [Inference providers](#inference-providers)
 - [Glossary](#glossary)
