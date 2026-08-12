@@ -36,11 +36,18 @@ export class SearchRouterMiddleware implements Middleware {
 
   private formatResponse(query: string, results: UnifiedSearchResult[], providerId: string): PipelineContext['response'] {
     const answer = results.find(r => r.answer)?.answer;
-    const lines = results.map((r, i) => `${i + 1}. **${r.title}**\n   ${r.url}\n   ${r.snippet}`);
+    const lines = results.map((r, i) => {
+      const header = `${i + 1}. **[${r.title}](${r.url})**\n   - **Provider**: \`${r.provider || providerId}\` | **Relevance**: ${r.score ?? 1.0}\n   - **Snippet**: ${r.snippet}`;
+      const extract = r.fullContent
+        ? `\n\n   <details><summary>📄 Extracted Content</summary>\n\n${r.fullContent}\n\n   </details>`
+        : '';
+      return header + extract;
+    });
     const body = [
-      answer ? `${answer}\n` : null,
-      lines.length > 0 ? lines.join('\n\n') : '_No results found._',
-    ].filter(Boolean).join('\n');
+      `### 🔍 Web Search Grounding: "${query}" (via ${providerId.toUpperCase()})`,
+      answer ? `> **Direct Answer Summary**: ${answer}` : null,
+      lines.length > 0 ? lines.join('\n\n') : '_No search results found._',
+    ].filter(Boolean).join('\n\n');
 
     return {
       id: `search-${providerId}-${Date.now()}`,

@@ -34,7 +34,14 @@ describe('SearchRouterMiddleware', () => {
 
         vi.spyOn(parallel, 'search').mockRejectedValue(Object.assign(new Error('429'), { status: 429 }));
         vi.spyOn(tavily, 'search').mockResolvedValue([
-            { provider: 'tavily', title: 'Result A', url: 'https://a.example', snippet: 'snippet A', answer: 'The answer' },
+            {
+                provider: 'tavily',
+                title: 'Result A',
+                url: 'https://a.example',
+                snippet: 'snippet A',
+                answer: 'The answer',
+                fullContent: '## Deep Section\n\nThis is the full article.',
+            },
         ]);
 
         const middleware = new SearchRouterMiddleware();
@@ -49,6 +56,7 @@ describe('SearchRouterMiddleware', () => {
         expect(context.response!.model).toBe('search:tavily');
         expect(context.response!.choices[0].message.content).toContain('Result A');
         expect(context.response!.choices[0].message.content).toContain('The answer');
+        expect(context.response!.choices[0].message.content).toContain('Deep Section');
         // google_search should be cleared so TextRouterMiddleware doesn't re-force Gemini
         expect(context.request.google_search).toBe(false);
     });
