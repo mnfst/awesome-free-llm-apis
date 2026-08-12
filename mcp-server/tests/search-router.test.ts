@@ -116,7 +116,7 @@ describe('SearchProviderRegistry availability', () => {
         expect(parallel.isAvailable()).toBe(true);
     });
 
-    it('gates Tavily/Brave/Jina-key-bonus behind their env vars', () => {
+    it('gates Tavily/Jina-key-bonus behind their env vars', () => {
         const registry = SearchProviderRegistry.getInstance();
         const tavily = registry.getProviders().find(p => p.id === 'tavily')!;
         expect(tavily.isAvailable()).toBe(false);
@@ -134,8 +134,15 @@ describe('SearchProviderRegistry availability', () => {
 
     it('rejects placeholder-looking API keys', () => {
         const registry = SearchProviderRegistry.getInstance();
-        const brave = registry.getProviders().find(p => p.id === 'brave')!;
-        vi.stubEnv('BRAVE_API_KEY', 'your_brave_api_key_here');
-        expect(brave.isAvailable()).toBe(false);
+        const tavily = registry.getProviders().find(p => p.id === 'tavily')!;
+        vi.stubEnv('TAVILY_API_KEY', 'your_tavily_api_key_here');
+        expect(tavily.isAvailable()).toBe(false);
+    });
+
+    it('does NOT include Brave in the provider registry', () => {
+        const registry = SearchProviderRegistry.getInstance();
+        const brave = registry.getProviders().find(p => p.id === 'brave');
+        expect(brave).toBeUndefined();
     });
 });
+

@@ -1,10 +1,12 @@
 export interface UnifiedSearchResult {
-  provider: 'parallel' | 'tavily' | 'jina' | 'brave' | 'searxng';
+  provider: 'parallel' | 'tavily' | 'jina' | 'searxng';
   title: string;
   url: string;
   snippet: string;
   score?: number;
   answer?: string;
+  /** Full extracted page content (populated after the extract phase). */
+  fullContent?: string;
 }
 
 export interface SearchProvider {
