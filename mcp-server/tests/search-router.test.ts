@@ -210,4 +210,77 @@ describe('JinaSearchProvider — intelligent extraction', () => {
     });
 });
 
+describe('TavilySearchProvider — intelligent extraction', () => {
+    beforeEach(() => {
+        vi.unstubAllEnvs();
+        (SearchProviderRegistry as any).instance = undefined;
+    });
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllEnvs();
+    });
+
+    it('enriches results with fullContent via Tavily Extract after search', async () => {
+        vi.stubEnv('TAVILY_API_KEY', 'a-real-tavily-key-123456');
+        const { TavilySearchProvider } = await import('../src/search/providers/tavily.js');
+        const provider = new TavilySearchProvider();
+        const fetchMock = vi.fn();
+
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                answer: 'The answer',
+                results: [
+                    { title: 'T1', url: 'https://t.example/1', content: 'snippet 1', score: 0.9 },
+                    { title: 'T2', url: 'https://t.example/2', content: 'snippet 2', score: 0.7 },
+                ],
+            }),
+        });
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                results: [
+                    { url: 'https://t.example/1', raw_content: '# Full page 1\n\nDeep content here.' },
+                    { url: 'https://t.example/2', raw_content: '# Full page 2\n\nMore deep content.' },
+                ],
+            }),
+        });
+
+        (provider as any).fetchImpl = fetchMock;
+
+        const results = await provider.search('AI ethics', 2);
+        expect(results[0].fullContent).toContain('Full page 1');
+        expect(results[1].fullContent).toContain('Full page 2');
+        expect(results[0].snippet).toBe('snippet 1');
+        expect(results[0].answer).toBe('The answer');
+
+        const body = JSON.parse(fetchMock.mock.calls[1][1].body);
+        expect(body.urls).toEqual(['https://t.example/1', 'https://t.example/2']);
+        expect(body.query).toBe('AI ethics');
+        expect(body.chunks_per_source).toBe(4);
+    });
+
+    it('skips extraction gracefully if Extract call fails', async () => {
+        vi.stubEnv('TAVILY_API_KEY', 'a-real-tavily-key-123456');
+        const { TavilySearchProvider } = await import('../src/search/providers/tavily.js');
+        const provider = new TavilySearchProvider();
+        const fetchMock = vi.fn();
+
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                results: [{ title: 'T', url: 'https://t.example', content: 'snip', score: 0.8 }],
+            }),
+        });
+        fetchMock.mockRejectedValueOnce(new Error('extract timeout'));
+
+        (provider as any).fetchImpl = fetchMock;
+
+        const results = await provider.search('query', 1);
+        expect(results[0].snippet).toBe('snip');
+        expect(results[0].fullContent).toBeUndefined();
+    });
+});
+
+
 
