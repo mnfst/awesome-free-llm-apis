@@ -146,3 +146,68 @@ describe('SearchProviderRegistry availability', () => {
     });
 });
 
+describe('JinaSearchProvider — intelligent extraction', () => {
+    beforeEach(() => {
+        vi.unstubAllEnvs();
+        (SearchProviderRegistry as any).instance = undefined;
+    });
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllEnvs();
+    });
+
+    it('enriches results with fullContent via Jina Reader after search', async () => {
+        const { JinaSearchProvider } = await import('../src/search/providers/jina.js');
+        const provider = new JinaSearchProvider();
+
+        const fetchMock = vi.fn();
+
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                data: [
+                    { title: 'Result 1', url: 'https://example.com/1', content: 'short snippet 1' },
+                    { title: 'Result 2', url: 'https://example.com/2', content: 'short snippet 2' },
+                ],
+            }),
+        });
+
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            text: async () => '# Full Article 1\n\nDetailed content here.',
+        });
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            text: async () => '# Full Article 2\n\nMore detailed content.',
+        });
+
+        (provider as any).fetchImpl = fetchMock;
+
+        const results = await provider.search('test query', 2);
+        expect(results[0].fullContent).toContain('Full Article 1');
+        expect(results[1].fullContent).toContain('Full Article 2');
+        expect(results[0].snippet).toBe('short snippet 1');
+    });
+
+    it('gracefully skips extraction if Reader call fails', async () => {
+        const { JinaSearchProvider } = await import('../src/search/providers/jina.js');
+        const provider = new JinaSearchProvider();
+
+        const fetchMock = vi.fn();
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                data: [{ title: 'R', url: 'https://example.com', content: 'snip' }],
+            }),
+        });
+        fetchMock.mockRejectedValueOnce(new Error('network timeout'));
+
+        (provider as any).fetchImpl = fetchMock;
+
+        const results = await provider.search('test', 1);
+        expect(results[0].snippet).toBe('snip');
+        expect(results[0].fullContent).toBeUndefined();
+    });
+});
+
+
