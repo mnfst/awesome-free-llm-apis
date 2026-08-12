@@ -32,8 +32,12 @@ export class TavilySearchProvider extends BaseSearchProvider {
     });
 
     if (!searchResp.ok) {
+      const retryAfter = searchResp.headers.get('retry-after');
       const error: any = new Error(`Tavily HTTP ${searchResp.status}: ${await (searchResp as any).text()}`);
       error.status = searchResp.status;
+      if (retryAfter) {
+        error.retryAfterSeconds = parseInt(retryAfter, 10);
+      }
       throw error;
     }
 

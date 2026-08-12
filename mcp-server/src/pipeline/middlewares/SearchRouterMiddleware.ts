@@ -116,6 +116,25 @@ export class SearchRouterMiddleware implements Middleware {
       try {
         const results = await provider.search(query);
         if (results.length > 0) {
+          // CDP Soup fallback for any results still missing fullContent
+          const missingContent = results.filter(r => !r.fullContent);
+          if (missingContent.length > 0) {
+            try {
+              const { cdpSoupExtract } = await import('../CdpSoupExtractor.js');
+              const soupOutcomes = await Promise.allSettled(
+                missingContent.map(r => cdpSoupExtract(r.url))
+              );
+              missingContent.forEach((r, idx) => {
+                const outcome = soupOutcomes[idx];
+                if (outcome.status === 'fulfilled' && outcome.value) {
+                  r.fullContent = outcome.value;
+                }
+              });
+            } catch {
+              // CDP Soup is optional/best-effort
+            }
+          }
+
           context.response = this.formatResponse(query, results, provider.id);
           (context as any).searchTrace = { query, provider: provider.id, results, latencyMs: Date.now() - start };
           this.logSearch(context, query, provider.id, results, Date.now() - start);
@@ -125,7 +144,7 @@ export class SearchRouterMiddleware implements Middleware {
         }
       } catch (err: any) {
         console.error(`[SearchRouter] ${provider.id} failed: ${err.message}`);
-        provider.recordFailure(err.status || 500);
+        provider.recordFailure(err.status || 500, err.retryAfterSeconds);
       }
     }
 

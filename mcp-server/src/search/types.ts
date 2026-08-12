@@ -1,5 +1,5 @@
 export interface UnifiedSearchResult {
-  provider: 'parallel' | 'tavily' | 'jina' | 'searxng';
+  provider: 'parallel' | 'tinyfish' | 'tavily' | 'ddgs' | 'jina' | 'searxng';
   title: string;
   url: string;
   snippet: string;

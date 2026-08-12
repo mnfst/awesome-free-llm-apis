@@ -32,10 +32,11 @@ export abstract class BaseSearchProvider implements SearchProvider {
     return 0;
   }
 
-  recordFailure(status: number): void {
+  recordFailure(status: number, retryAfterSeconds?: number): void {
     if (this.consecutiveFailures < 100) this.consecutiveFailures++;
     if (status === 429) {
-      this.cooldownUntil = Date.now() + 60_000;
+      const cooldownMs = retryAfterSeconds ? retryAfterSeconds * 1000 : 60_000;
+      this.cooldownUntil = Date.now() + cooldownMs;
     } else if (status >= 500) {
       const baseDelay = 10_000;
       const maxDelay = 60_000;

@@ -290,5 +290,94 @@ describe('TavilySearchProvider — intelligent extraction', () => {
     });
 });
 
+describe('TinyFishSearchProvider — two-phase extraction', () => {
+    beforeEach(() => {
+        vi.unstubAllEnvs();
+        (SearchProviderRegistry as any).instance = undefined;
+    });
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllEnvs();
+    });
+
+    it('executes search and enriches with fetch content when API key is provided', async () => {
+        vi.stubEnv('TINYFISH_API_KEY', 'tf-valid-api-key-12345');
+        const { TinyFishSearchProvider } = await import('../src/search/providers/tinyfish.js');
+        const provider = new TinyFishSearchProvider();
+
+        const fetchMock = vi.fn();
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                results: [
+                    { title: 'TF Result 1', url: 'https://tf.example/1', snippet: 'tf snippet 1' },
+                ],
+            }),
+        });
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            text: async () => '# TinyFish Full Article 1',
+        });
+
+        (provider as any).fetchImpl = fetchMock;
+
+        const results = await provider.search('test query', 1);
+        expect(results[0].title).toBe('TF Result 1');
+        expect(results[0].fullContent).toContain('TinyFish Full Article 1');
+    });
+});
+
+describe('DdgsMcpSearchProvider & parseDdgSearchResults', () => {
+    it('parses formatted string output correctly', async () => {
+        const { parseDdgSearchResults } = await import('../src/search/providers/ddgs.js');
+        const raw = `Found 2 search results:\n\n1. First Title\n   URL: https://ddg.example/1\n   Summary: First summary text\n\n2. Second Title\n   URL: https://ddg.example/2\n   Summary: Second summary text`;
+
+        const parsed = parseDdgSearchResults(raw);
+        expect(parsed).toHaveLength(2);
+        expect(parsed[0].title).toBe('First Title');
+        expect(parsed[0].url).toBe('https://ddg.example/1');
+        expect(parsed[0].snippet).toBe('First summary text');
+    });
+
+    it('performs search and fetch_content using injected client', async () => {
+        const { DdgsMcpSearchProvider } = await import('../src/search/providers/ddgs.js');
+        const provider = new DdgsMcpSearchProvider();
+
+        const fakeClient = {
+            callTool: vi.fn().mockImplementation(async (req) => {
+                if (req.name === 'search') {
+                    return {
+                        content: [
+                            {
+                                type: 'text',
+                                text: 'Found 1 search results:\n\n1. DDG Item\n   URL: https://ddg.test/1\n   Summary: DDG snippet',
+                            },
+                        ],
+                    };
+                }
+                if (req.name === 'fetch_content') {
+                    return {
+                        content: [
+                            {
+                                type: 'text',
+                                text: '# Extracted DDG Content',
+                            },
+                        ],
+                    };
+                }
+                return {};
+            }),
+            close: vi.fn(),
+        };
+
+        provider.setClient(fakeClient as any);
+
+        const results = await provider.search('query', 1);
+        expect(results[0].title).toBe('DDG Item');
+        expect(results[0].fullContent).toBe('# Extracted DDG Content');
+    });
+});
+
+
 
 
