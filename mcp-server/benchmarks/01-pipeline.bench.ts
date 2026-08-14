@@ -48,15 +48,16 @@ describe('01 — Pipeline: Real WorkspaceContextMiddleware Execution & 4-Layer M
   });
 
   // ── LAYER 4: VectorStore / Born-Rule Line Sampler ────────────────────────
+  const targetFile = path.resolve('./src/pipeline/middlewares/WorkspaceContextMiddleware.ts');
+  let cachedTargetLines: string[];
+  try {
+    cachedTargetLines = fs.readFileSync(targetFile, 'utf-8').split('\n');
+  } catch {
+    cachedTargetLines = Array.from({ length: 500 }, (_, i) => `// line ${i}`);
+  }
+
   bench('Layer 4: Born-Rule Line Sampler — WorkspaceContextMiddleware.ts code reduction', () => {
-    const targetFile = path.resolve('./src/pipeline/middlewares/WorkspaceContextMiddleware.ts');
-    let lines: string[];
-    try {
-      lines = fs.readFileSync(targetFile, 'utf-8').split('\n');
-    } catch {
-      lines = Array.from({ length: 500 }, (_, i) => `// line ${i}`);
-    }
-    selectAmplitudeLines(lines);
+    selectAmplitudeLines(cachedTargetLines);
   });
 
   // ── SCENARIO A: Agentic Mode (isOnePass: false) ─────────────────────────

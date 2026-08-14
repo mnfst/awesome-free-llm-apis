@@ -1,4 +1,4 @@
-import { bench, describe, afterAll } from "vitest";
+import { bench, describe, beforeAll, afterAll } from "vitest";
 import { useCacheIsolation } from "../tests/helpers/test-cache-isolation.js";
 import { cyberTool } from "../src/tools/cyber-tool.js";
 import { WikiMemory } from "../src/memory/wiki.js";
@@ -8,6 +8,15 @@ import { writeBenchmarkLog } from "./helpers/log-writer.js";
 useCacheIsolation();
 
 describe("03-cyber-tool benchmarks (Production cyberTool Execution)", () => {
+  beforeAll(async () => {
+    const wiki = new WikiMemory("global-cyber-tools");
+    await wiki.write(
+      "nmap/flags_and_troubleshooting",
+      "# Nmap Flags & Troubleshooting\n\n- `-sV`: Version detection\n- `-sC`: Default scripts\n- `-p-`: Scan all ports\n\nTroubleshooting: Ensure raw socket capabilities or run with sudo.",
+      ["cyber", "nmap"]
+    );
+  });
+
   afterAll(async () => {
     await generateLogReport();
   });
