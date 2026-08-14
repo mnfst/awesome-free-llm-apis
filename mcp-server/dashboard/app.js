@@ -1998,139 +1998,131 @@ cyberGraphLoadBtn?.addEventListener('click', loadCyberGraph);
 cyberGraphSessionInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadCyberGraph(); });
 cyberGraphSearchInput?.addEventListener('input', () => renderCyberGraph(cyberGraphSearchInput.value));
 
-// ─── Keyword & Prompt Steering Inspector Logic ───────────────────
-const btnRunSteeringEval = document.getElementById('btn-run-steering-eval');
-const steeringQueryInput = document.getElementById('steering-query-input');
-const steeringKeywordsInput = document.getElementById('steering-keywords-input');
-const steeringAgenticToggle = document.getElementById('steering-agentic-toggle');
+const steeringWorkspaceInput = document.getElementById('steering-workspace-input');
+const steeringPersonaBadge = document.getElementById('steering-persona-badge');
+const steeringSubtaskView = document.getElementById('steering-subtask-view');
+const steeringRawPromptView = document.getElementById('steering-raw-prompt-view');
 
-const steeringSysTokens = document.getElementById('steering-sys-tokens');
-const steeringSysDesc = document.getElementById('steering-sys-desc');
-const steeringPayloadTokens = document.getElementById('steering-payload-tokens');
-const steeringTokenSavings = document.getElementById('steering-token-savings');
-const steeringSavingsDesc = document.getElementById('steering-savings-desc');
-const steeringBloatStatus = document.getElementById('steering-bloat-status');
+let _steeringEvalTimer = null;
 
-const steeringMatchedSections = document.getElementById('steering-matched-sections');
-const steeringMemoryGates = document.getElementById('steering-memory-gates');
-
-let _loadedPromptSections = [];
-
-async function loadPromptSections() {
-  try {
-    const r = await fetch('/api/prompt_sections');
-    const d = await r.json();
-    if (d.success && Array.isArray(d.sections) && d.sections.length > 0) {
-      _loadedPromptSections = d.sections;
-      runSteeringEvaluation();
-    }
-  } catch {
-    // Retry section load if offline
-  }
+function debouncedSteeringEvaluation() {
+  if (_steeringEvalTimer) clearTimeout(_steeringEvalTimer);
+  _steeringEvalTimer = setTimeout(() => {
+    runSteeringEvaluation();
+  }, 350);
 }
 
-function runSteeringEvaluation() {
-  const sectionsToUse = _loadedPromptSections;
+async function runSteeringEvaluation() {
   const query = (steeringQueryInput?.value || '').trim();
   const rawKeywordsStr = (steeringKeywordsInput?.value || '').trim();
+  const workspaceRoot = (steeringWorkspaceInput?.value || '.').trim();
   const isAgentic = !!steeringAgenticToggle?.checked;
 
   const userKeywords = rawKeywordsStr
     ? rawKeywordsStr.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
     : [];
 
-  const combinedSearch = (query + ' ' + userKeywords.join(' ')).toLowerCase();
+  try {
+    const response = await fetch('/api/steering_eval', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        keywords: userKeywords,
+        agentic: isAgentic,
+        workspaceRoot
+      })
+    });
 
-  // Dynamically match sections against keywords
-  const matched = sectionsToUse.filter(sec => {
-    if (!sec.keywords || !Array.isArray(sec.keywords)) return false;
-    return sec.keywords.some(kw => combinedSearch.includes(kw.toLowerCase()));
-  });
+    const data = await response.json();
+    if (!data.success || !data.telemetry) return;
 
-  // Calculate dynamic token lengths
-  const baseSysTokens = 943;
-  const agenticBaselinePayload = 2673;
-  const queryTokenEstimate = Math.ceil((query.length || 20) / 4);
+    const st = data.telemetry;
+    const mem = st.memoryLayers || {};
+    const matched = st.matchedSections || [];
 
-  // Sum exact token counts of matched sections
-  const matchedSectionTokens = matched.reduce((acc, sec) => acc + (sec.tokenCount || 85), 0);
-
-  let sysTokens = baseSysTokens;
-  let payloadTokens = baseSysTokens + queryTokenEstimate;
-  let sysDesc = 'Single-Pass Mode (isOnePass: true)';
-
-  if (isAgentic) {
-    sysTokens = 2144 + matchedSectionTokens;
-    payloadTokens = sysTokens + queryTokenEstimate + 442; // +442 for memory gates overhead
-    sysDesc = 'Multi-Pass Agentic Mode (isOnePass: false)';
-  } else if (matched.length > 0) {
-    sysTokens = baseSysTokens + matchedSectionTokens;
-    payloadTokens = sysTokens + queryTokenEstimate;
-  }
-
-  // Calculate exact dynamic savings percentage
-  const diff = agenticBaselinePayload - payloadTokens;
-  const savingsPctVal = Math.max(0, ((diff / agenticBaselinePayload) * 100)).toFixed(1);
-  const savingsPct = isAgentic ? '0.0%' : `${savingsPctVal}%`;
-  const savingsDesc = isAgentic
-    ? 'Full 4-layer agentic memory overhead'
-    : `${Math.max(0, diff).toLocaleString()} tokens saved vs Agentic baseline`;
-
-  // Render stats
-  if (steeringSysTokens) steeringSysTokens.textContent = `${sysTokens.toLocaleString()} tok`;
-  if (steeringSysDesc) steeringSysDesc.textContent = sysDesc;
-  if (steeringPayloadTokens) steeringPayloadTokens.textContent = `${payloadTokens.toLocaleString()} tok`;
-  if (steeringTokenSavings) steeringTokenSavings.textContent = savingsPct;
-  if (steeringSavingsDesc) steeringSavingsDesc.textContent = savingsDesc;
-
-  // Bloat guard
-  if (userKeywords.length === 0 && !isAgentic) {
-    if (steeringBloatStatus) steeringBloatStatus.textContent = 'PASSED ✅ (0 bloat)';
-  } else {
-    if (steeringBloatStatus) steeringBloatStatus.textContent = matched.length > 0 ? 'ACTIVE ⚡ (Targeted)' : 'BLOCKED 🛡️';
-  }
-
-  // Render matched sections
-  if (steeringMatchedSections) {
-    if (matched.length === 0) {
-      steeringMatchedSections.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:8px;background:rgba(255,255,255,.03);border-radius:4px;">No prompt.json sections matched — 0 tokens external bloat added.</div>';
-    } else {
-      steeringMatchedSections.innerHTML = matched.map(sec => `
-        <div style="padding:10px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:6px;display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-size:.82rem;font-weight:600;color:var(--accent-purple);">${esc(sec.title || sec.id)}</div>
-            <div style="font-size:.72rem;color:var(--text-secondary);margin-top:2px;">Keywords: <code>${esc((sec.keywords || []).join(', '))}</code> &bull; <span style="color:var(--accent-cyan);">${sec.tokenCount || 85} tok</span></div>
-          </div>
-          <span class="badge badge-purple">Injected into messages[0]</span>
-        </div>
-      `).join('');
+    // Persona & keywords badge
+    if (steeringPersonaBadge) {
+      steeringPersonaBadge.innerHTML = `Persona: <code>${esc(st.persona || 'coder')}</code> &bull; ${userKeywords.length} keywords`;
     }
-  }
 
-  // Render memory gates
-  if (steeringMemoryGates) {
-    steeringMemoryGates.innerHTML = `
-      <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
-        <div style="font-size:.75rem;font-weight:600;color:var(--accent-cyan);">&lt;memory_context_isolation_gate&gt;</div>
-        <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${isAgentic ? '35 tok (LongTermMemory State Ingested)' : 'Omitted / Clean'}</div>
-      </div>
-      <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
-        <div style="font-size:.75rem;font-weight:600;color:var(--accent-green);">&lt;wiki_context_isolation_gate&gt;</div>
-        <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${isAgentic ? '57 tok (Wiki Note Matched)' : 'Omitted / Clean'}</div>
-      </div>
-      <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
-        <div style="font-size:.75rem;font-weight:600;color:var(--accent-amber);">&lt;workspace_context_isolation_gate&gt;</div>
-        <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${isAgentic ? 'Born-rule Vector Sampler Active' : 'Light Persona Guide'}</div>
-      </div>
-    `;
+    // Stats
+    const sysTokens = mem.sysPromptTokens || 0;
+    const payloadTokens = mem.totalContextTokens || 0;
+    const agenticBaselinePayload = 3200;
+    const diff = Math.max(0, agenticBaselinePayload - payloadTokens);
+    const savingsPct = isAgentic ? '0.0%' : `${((diff / agenticBaselinePayload) * 100).toFixed(1)}%`;
+
+    if (steeringSysTokens) steeringSysTokens.textContent = `${sysTokens.toLocaleString()} tok`;
+    if (steeringSysDesc) steeringSysDesc.textContent = isAgentic ? 'Multi-Pass Agentic (Delegated)' : 'Single-Pass System Prompt';
+    if (steeringPayloadTokens) steeringPayloadTokens.textContent = `${payloadTokens.toLocaleString()} tok`;
+    if (steeringTokenSavings) steeringTokenSavings.textContent = savingsPct;
+    if (steeringSavingsDesc) steeringSavingsDesc.textContent = isAgentic ? 'Full 4-layer memory overhead' : `${diff.toLocaleString()} tokens saved vs max budget`;
+
+    if (steeringBloatStatus) {
+      steeringBloatStatus.textContent = matched.length > 0 ? 'ACTIVE ⚡ (Live Targeted)' : 'CLEAN 🛡️ (0 External Bloat)';
+    }
+
+    // Matched prompt.json sections
+    if (steeringMatchedSections) {
+      if (matched.length === 0) {
+        steeringMatchedSections.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:8px;background:rgba(255,255,255,.03);border-radius:4px;">No external prompt.json sections matched query keywords.</div>';
+      } else {
+        steeringMatchedSections.innerHTML = matched.map(sec => `
+          <div style="padding:10px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:6px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:.82rem;font-weight:600;color:var(--accent-purple);">${esc(sec.title || sec.id)}</div>
+              <div style="font-size:.72rem;color:var(--text-secondary);margin-top:2px;">Keywords: <code>${esc((sec.keywords || []).join(', '))}</code> &bull; <span style="color:var(--accent-cyan);">${sec.tokenCount || 0} tok</span></div>
+            </div>
+            <span class="badge badge-purple">Injected</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Memory layer isolation gates
+    if (steeringMemoryGates) {
+      steeringMemoryGates.innerHTML = `
+        <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
+          <div style="font-size:.75rem;font-weight:600;color:var(--accent-cyan);">&lt;short_longterm_memory_gate&gt;</div>
+          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${mem.shortTermTokens || 0} tok (Live Memory Store)</div>
+        </div>
+        <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
+          <div style="font-size:.75rem;font-weight:600;color:var(--accent-green);">&lt;wiki_memory_gate&gt;</div>
+          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${mem.wikiTokens || 0} tok (Wiki Pages Scanned)</div>
+        </div>
+        <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
+          <div style="font-size:.75rem;font-weight:600;color:var(--accent-amber);">&lt;born_rule_vector_sampler_gate&gt;</div>
+          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${mem.grepTokens || 0} tok (Prioritized Folder Snippets)</div>
+        </div>
+      `;
+    }
+
+    // Subtask & Raw prompt inspector
+    if (st.subtaskContext) {
+      if (steeringSubtaskView) {
+        steeringSubtaskView.style.display = 'block';
+        steeringSubtaskView.innerHTML = `📌 Active Subtask: <code>${esc(st.subtaskContext.id || 'subtask-1')}</code> &bull; ${esc(st.subtaskContext.title || '')}`;
+      }
+    } else {
+      if (steeringSubtaskView) steeringSubtaskView.style.display = 'none';
+    }
+
+    if (steeringRawPromptView) {
+      steeringRawPromptView.textContent = st.fullAssembledSystemPrompt || '(No system prompt generated)';
+    }
+
+  } catch (err) {
+    if (steeringBloatStatus) steeringBloatStatus.textContent = 'ERROR ⚠️';
   }
 }
 
 btnRunSteeringEval?.addEventListener('click', runSteeringEvaluation);
-steeringQueryInput?.addEventListener('input', runSteeringEvaluation);
-steeringKeywordsInput?.addEventListener('input', runSteeringEvaluation);
+steeringQueryInput?.addEventListener('input', debouncedSteeringEvaluation);
+steeringKeywordsInput?.addEventListener('input', debouncedSteeringEvaluation);
+steeringWorkspaceInput?.addEventListener('input', debouncedSteeringEvaluation);
 steeringAgenticToggle?.addEventListener('change', runSteeringEvaluation);
 
 // Initial run on script load
-loadPromptSections().then(() => runSteeringEvaluation());
+runSteeringEvaluation();
 setTimeout(runSteeringEvaluation, 500);

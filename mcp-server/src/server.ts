@@ -847,6 +847,52 @@ async function main() {
         }
       });
 
+      // POST /api/steering_eval — Live System Prompt Steering & Ingestion Inspection Endpoint
+      app.post('/api/steering_eval', express.json({ limit: '1mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const { query = '', keywords = [], agentic = false, workspaceRoot = process.cwd(), sessionId = 'steering-eval-session', subtask } = req.body || {};
+          const userKeywords = Array.isArray(keywords)
+            ? keywords
+            : String(keywords).split(',').map((k: string) => k.trim()).filter(Boolean);
+
+          const { evaluatePromptSections } = await import('./pipeline/middlewares/prompts.js');
+          const promptEval = await evaluatePromptSections({
+            context: query,
+            keywords: userKeywords,
+            isSubtask: agentic,
+            workspaceRoot
+          });
+
+          const { WorkspaceContextMiddleware } = await import('./pipeline/middlewares/WorkspaceContextMiddleware.js');
+          const middleware = new WorkspaceContextMiddleware();
+          const context: any = {
+            request: {
+              model: 'gemini-3.1-flash-lite',
+              agentic: !!agentic,
+              messages: [{ role: 'user', content: query || 'Test query' }]
+            },
+            taskType: 'coder',
+            keywords: userKeywords,
+            workspaceRoot,
+            sessionId,
+            isOnePass: !agentic,
+            subtask: subtask || (agentic ? { id: 'subtask-eval-1', title: `Execute task: ${query || 'System prompt steering test'}` } : null)
+          };
+
+          await middleware.execute(context, async () => {});
+          const steeringTelemetry = context.telemetry?.steeringTelemetry || {};
+          steeringTelemetry.matchedSections = promptEval.matchedSections;
+
+          res.json({
+            success: true,
+            telemetry: steeringTelemetry
+          });
+        } catch (err) {
+          res.status(500).json({ success: false, error: String(err) });
+        }
+      });
+
       // POST /api/chat-log/:sessionId  { role, tool, content, latencyMs, ts }
       // Appends one turn atomically using file lock — safe across concurrent MCP instances.
       app.post('/api/chat-log/:sessionId', express.json({ limit: '512kb' }), async (req, res) => {

@@ -539,6 +539,8 @@ export class WorkspaceContextMiddleware implements Middleware {
         }
         (context as any).grepContext = workspaceContextStr || undefined;
 
+        let fullSystemPrompt = '';
+
         // Only inject a system prompt when NOT in agentic mode.
         // In agentic mode, AgenticMiddleware owns the system prompt to prevent
         // double-injection which garbles model responses.
@@ -557,7 +559,7 @@ export class WorkspaceContextMiddleware implements Middleware {
 
                 const CONTEXT_START_MARKER = '<!-- WORKSPACE_CONTEXT_START -->';
                 const CONTEXT_END_MARKER = '<!-- WORKSPACE_CONTEXT_END -->';
-                const fullSystemPrompt = `\n${CONTEXT_START_MARKER}\n${dynamicPrompt}${highLevelStepsSection}${groundingGate}\n${CONTEXT_END_MARKER}\n`;
+                fullSystemPrompt = `\n${CONTEXT_START_MARKER}\n${dynamicPrompt}${highLevelStepsSection}${groundingGate}\n${CONTEXT_END_MARKER}\n`;
                 
                 const messages = context.request.messages;
                 const sysMsgIdx = messages.findIndex(m => m.role === 'system');
@@ -589,13 +591,39 @@ export class WorkspaceContextMiddleware implements Middleware {
             console.error(`[WorkspaceContextMiddleware] Agentic mode: skipping own system prompt injection, delegating to AgenticMiddleware.`);
         }
 
+        const shortTermTokens = Math.ceil((memoryContext?.length || 0) / 3.8);
+        const wikiTokens = Math.ceil((wikiContext?.length || 0) / 3.8);
+        const grepTokens = Math.ceil((workspaceContextStr?.length || 0) / 3.8);
+        const groundingTokens = Math.ceil((groundingGate?.length || 0) / 3.8);
+        const sysPromptTokens = Math.ceil((fullSystemPrompt?.length || 0) / 3.8);
+
+        const steeringTelemetry = {
+            persona: (context as any).taskType || 'coder',
+            matchedKeywords: (context as any).keywords || [],
+            memoryLayers: {
+                shortTermTokens,
+                longTermTokens: shortTermTokens,
+                wikiTokens,
+                grepTokens,
+                groundingTokens,
+                sysPromptTokens,
+                totalContextTokens: shortTermTokens + wikiTokens + grepTokens + groundingTokens + sysPromptTokens
+            },
+            groundingGate: groundingGate || null,
+            dirTree: dirTree || null,
+            fullAssembledSystemPrompt: fullSystemPrompt || '(Delegated to AgenticMiddleware)',
+            subtaskContext: (context as any).subtask || null,
+            durationMs: Date.now() - startMs
+        };
+
         (context as any).telemetry = {
             memoryContext,
             grepContext: workspaceContextStr || undefined,
             wikiContext,
             groundingGate,
             dirTree,
-            durationMs: Date.now() - startMs
+            durationMs: Date.now() - startMs,
+            steeringTelemetry
         };
 
         console.error(`[WorkspaceContextMiddleware] ${Date.now() - startMs}ms context injected for session=${sessionId}`);
