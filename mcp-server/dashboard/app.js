@@ -1998,7 +1998,22 @@ cyberGraphLoadBtn?.addEventListener('click', loadCyberGraph);
 cyberGraphSessionInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadCyberGraph(); });
 cyberGraphSearchInput?.addEventListener('input', () => renderCyberGraph(cyberGraphSearchInput.value));
 
+// ─── Keyword & Prompt Steering Inspector Logic ───────────────────
+const btnRunSteeringEval = document.getElementById('btn-run-steering-eval');
+const steeringQueryInput = document.getElementById('steering-query-input');
+const steeringKeywordsInput = document.getElementById('steering-keywords-input');
 const steeringWorkspaceInput = document.getElementById('steering-workspace-input');
+const steeringAgenticToggle = document.getElementById('steering-agentic-toggle');
+
+const steeringSysTokens = document.getElementById('steering-sys-tokens');
+const steeringSysDesc = document.getElementById('steering-sys-desc');
+const steeringPayloadTokens = document.getElementById('steering-payload-tokens');
+const steeringTokenSavings = document.getElementById('steering-token-savings');
+const steeringSavingsDesc = document.getElementById('steering-savings-desc');
+const steeringBloatStatus = document.getElementById('steering-bloat-status');
+
+const steeringMatchedSections = document.getElementById('steering-matched-sections');
+const steeringMemoryGates = document.getElementById('steering-memory-gates');
 const steeringPersonaBadge = document.getElementById('steering-persona-badge');
 const steeringSubtaskView = document.getElementById('steering-subtask-view');
 const steeringRawPromptView = document.getElementById('steering-raw-prompt-view');
