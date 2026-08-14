@@ -11,7 +11,8 @@ const CDP_SOUP_MAX_CHARS = 12000;
 export async function cdpSoupExtract(url: string): Promise<string | undefined> {
   try {
     const pool = getBrowserSessionPool();
-    const session = await pool.acquire();
+    const { session, error } = await pool.acquire('cdp-soup-session');
+    if (!session) return undefined;
 
     try {
       await session.client.callTool({
@@ -31,7 +32,7 @@ export async function cdpSoupExtract(url: string): Promise<string | undefined> {
         return res.json.slice(0, CDP_SOUP_MAX_CHARS);
       }
     } finally {
-      await pool.release(session);
+      await pool.release('cdp-soup-session');
     }
   } catch {
     // Fail-graceful: CDP soup extraction is strictly best-effort

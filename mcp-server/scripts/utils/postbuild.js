@@ -91,7 +91,7 @@ try {
 // Step 3: Deploy SearXNG Docker container if docker --version is available
 try {
   console.log('Checking Docker availability for SearXNG deployment...');
-  const { ensureSearxngContainer } = await import('../../src/search/searxng-deploy.js');
+  const { ensureSearxngContainer } = await import('../../dist/search/searxng-deploy.js');
   ensureSearxngContainer();
 } catch (err) {
   console.warn('Warning: SearXNG Docker deployment check skipped. Details:', err.message);

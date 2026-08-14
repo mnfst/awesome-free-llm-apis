@@ -189,7 +189,7 @@ export async function loadSkillPrompt(input: LoadSkillPromptInput): Promise<Load
       return { success: true, skills: [] };
     }
 
-    if (input.source === 'hermes') {
+    if ((input as any).source === 'hermes') {
       const results = await searchHermesSkills(rawKeywords);
       return { success: true, skills: results.map(s => ({ name: s.name, description: s.description })) };
     }

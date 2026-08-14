@@ -34,12 +34,27 @@ export class SearchRouterMiddleware implements Middleware {
     return '';
   }
 
+  private escapeMarkdownLink(text: string): string {
+    return text.replace(/[\[\]]/g, '\\$&');
+  }
+
+  private sanitizeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   private formatResponse(query: string, results: UnifiedSearchResult[], providerId: string): PipelineContext['response'] {
     const answer = results.find(r => r.answer)?.answer;
     const lines = results.map((r, i) => {
-      const header = `${i + 1}. **[${r.title}](${r.url})**\n   - **Provider**: \`${r.provider || providerId}\` | **Relevance**: ${r.score ?? 1.0}\n   - **Snippet**: ${r.snippet}`;
+      const safeTitle = this.escapeMarkdownLink(r.title || 'Untitled');
+      const safeUrl = (r.url || '').replace(/\)/g, '%29');
+      const header = `${i + 1}. **[${safeTitle}](${safeUrl})**\n   - **Provider**: \`${r.provider || providerId}\` | **Relevance**: ${r.score ?? 1.0}\n   - **Snippet**: ${r.snippet}`;
       const extract = r.fullContent
-        ? `\n\n   <details><summary>📄 Extracted Content</summary>\n\n${r.fullContent}\n\n   </details>`
+        ? `\n\n   <details><summary>📄 Extracted Content</summary>\n\n${this.sanitizeHtml(r.fullContent)}\n\n   </details>`
         : '';
       return header + extract;
     });
@@ -120,7 +135,7 @@ export class SearchRouterMiddleware implements Middleware {
           const missingContent = results.filter(r => !r.fullContent);
           if (missingContent.length > 0) {
             try {
-              const { cdpSoupExtract } = await import('../CdpSoupExtractor.js');
+              const { cdpSoupExtract } = await import('../../search/CdpSoupExtractor.js');
               const soupOutcomes = await Promise.allSettled(
                 missingContent.map(r => cdpSoupExtract(r.url))
               );
@@ -144,7 +159,7 @@ export class SearchRouterMiddleware implements Middleware {
         }
       } catch (err: any) {
         console.error(`[SearchRouter] ${provider.id} failed: ${err.message}`);
-        provider.recordFailure(err.status || 500, err.retryAfterSeconds);
+        provider.recordFailure(err.status || 500);
       }
     }
 
