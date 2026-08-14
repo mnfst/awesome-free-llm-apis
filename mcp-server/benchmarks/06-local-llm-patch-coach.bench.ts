@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, afterAll } from 'vitest';
 import { useCacheIsolation } from '../tests/helpers/test-cache-isolation.js';
 import { CoachTool } from '../src/tools/coach-tool.js';
 import { listLocalModels, rankCandidateModels } from '../src/providers/ollama-local.js';
@@ -38,9 +38,11 @@ const MULTI_LANG_TARGETS: SampleTargetContext[] = [
   },
 ];
 
-generateLogReport().catch(console.error);
-
 describe('06 — Local LLM Patch Coach: Multi-Language & Ollama Benchmark', () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // ── Phase 1: Instruct ───────────────────────────────────────────────────
   bench('Phase 1: Coach instruction frame generation (CoachTool.explainInstruction)', () => {
     const coach = new CoachTool();
@@ -121,6 +123,8 @@ async function generateLogReport() {
     language: string;
     filePath: string;
     instruction: string;
+    mcpInputPayload: any;
+    llmHttpPayload: any;
     inputContext: string;
     frame: any;
     patchOutput: string;
@@ -133,25 +137,35 @@ async function generateLogReport() {
     const coach = new CoachTool();
     const frame = coach.explainInstruction(target.instruction);
     
+    const mcpInputPayload = {
+      tool: 'coach_tool',
+      action: 'patch',
+      targetFile: target.filePath,
+      instruction: target.instruction,
+      language: target.language,
+    };
+
+    const llmHttpPayload = {
+      model: 'qwen2.5-coder:7b',
+      messages: [
+        { role: 'system', content: 'You are a precise code-editing assistant. Return only the complete new file content in a single code fence.' },
+        { role: 'user', content: `## File: ${target.filePath}\n\`\`\`\n${target.fileContent}\n\`\`\`\n\n## Instruction\n${target.instruction}` }
+      ],
+      stream: false,
+    };
+
     let patchOutput = '';
     try {
       const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'qwen2.5-coder:7b',
-          messages: [
-            { role: 'system', content: 'You are a precise code-editing assistant. Return only the complete new file content in a single code fence.' },
-            { role: 'user', content: `## File: ${target.filePath}\n\`\`\`\n${target.fileContent}\n\`\`\`\n\n## Instruction\n${target.instruction}` }
-          ],
-          stream: false,
-        }),
+        body: JSON.stringify(llmHttpPayload),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as any;
       patchOutput = data.message?.content || '[OLLAMA_OFFLINE]';
     } catch {
-      statusLabel = '[OLLAMA_OFFLINE]';
+      statusLabel = '[OLLAMA_OFFLINE_STUB_ACTIVE]';
       if (target.language === 'TypeScript') {
         patchOutput = `diff --git a/src/memory/index.ts b/src/memory/index.ts\nindex 4b2a8d1..7c9e01f 100644\n--- a/src/memory/index.ts\n+++ b/src/memory/index.ts\n@@ -45,6 +45,10 @@ export class MemoryManager {\n     return this.shortTerm;\n   }\n \n+  public resetAll(): void {\n+    this.shortTerm.clear();\n+    this.longTerm.init();\n+  }\n }`;
       } else if (target.language === 'Python') {
@@ -167,6 +181,8 @@ async function generateLogReport() {
       language: target.language,
       filePath: target.filePath,
       instruction: target.instruction,
+      mcpInputPayload,
+      llmHttpPayload,
       inputContext: target.fileContent,
       frame,
       patchOutput,
@@ -189,6 +205,7 @@ async function generateLogReport() {
   const logContent = `# Benchmark Log: 06-local-llm-patch-coach
 
 **Timestamp**: ${timestamp}
+**Execution Status**: \`${statusLabel}\`
 
 ## 🎯 Code Context Language Inference & 4-Phase Protocol Breakdown
 
@@ -196,26 +213,32 @@ The LLM receives a generic code-editing system prompt (\`"You are a precise code
 
 ---
 
-## 💻 Multi-Language Target Executions (\`${statusLabel}\`)
+## 💻 Multi-Language Target Executions
 
 ${multiLangResults.map((res) => `
 ### 🌐 Target Language: ${res.language} (\`${res.filePath}\`)
 - **Instruction**: \`"${res.instruction}"\`
 
-#### 📄 Input Code Context:
+#### 📥 1. MCP Tool Call Input Payload:
+\`\`\`json
+${JSON.stringify(res.mcpInputPayload, null, 2)}
 \`\`\`
-${res.inputContext}
+
+#### 📄 2. Internal LLM HTTP Request Payload sent to Ollama:
+\`\`\`json
+${JSON.stringify(res.llmHttpPayload, null, 2)}
 \`\`\`
 
 #### 📋 Phase 1 Coach Explanation Frame:
-\`\`\`json
-${JSON.stringify(res.frame, null, 2)}
-\`\`\`
+> **Concept**: ${res.frame?.concept || ''}
+> **Example**: \`${res.frame?.example || ''}\`
+> **Exercise**: ${res.frame?.exercise || ''}
+> **Hint**: *${res.frame?.hint || ''}*
 
 #### 💻 Phase 3 Executed Patch Output:
-\`\`\`diff
-${res.patchOutput}
-\`\`\`
+\`\`\`\`diff
+${res.patchOutput.replace(/```/g, '~~~')}
+\`\`\`\`
 
 #### 🧠 Phase 4 Reflection:
 \`\`\`text

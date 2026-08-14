@@ -1,12 +1,16 @@
-import { bench, describe, vi } from "vitest";
+import { bench, describe, afterAll, vi } from "vitest";
+import { useCacheIsolation } from "../tests/helpers/test-cache-isolation.js";
 import { countTokens } from "./helpers/token-counter.js";
 import { writeBenchmarkLog } from "./helpers/log-writer.js";
 import { exchangeRefreshToken, isRetryableNetworkError } from "../src/utils/firebase.js";
 
-// Pre-populate benchmark output log report
-generateLogReport().catch(console.error);
+useCacheIsolation();
 
 describe("08-firebase-retry benchmarks (Production exchangeRefreshToken Integration)", () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // Scenario 1: 0 retries instant success
   bench("exchangeRefreshToken (0 retries instant success)", async () => {
     const originalFetch = globalThis.fetch;
@@ -85,6 +89,12 @@ describe("08-firebase-retry benchmarks (Production exchangeRefreshToken Integrat
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
 
+  const mcpToolInputPayload = {
+    method: "exchangeRefreshToken",
+    refreshToken: "valid-token-sample",
+    maxRetries: 3
+  };
+
   // Scenario 1 Measurement
   const originalFetch = globalThis.fetch;
   globalThis.fetch = vi.fn().mockResolvedValue({
@@ -145,7 +155,14 @@ async function generateLogReport() {
 
 **Timestamp**: ${timestamp}
 
-## 🎯 Production Code Executed
+## 📥 1. Internal Auth Refresh Input Payload
+\`\`\`json
+${JSON.stringify(mcpToolInputPayload, null, 2)}
+\`\`\`
+
+---
+
+## 🎯 2. Production Code Executed & Telemetry
 - **Source File**: \`src/utils/firebase.ts\`
 - **Target Method**: \`export async function exchangeRefreshToken(refreshToken: string)\`
 - **Network Classifier**: \`export function isRetryableNetworkError(err: any)\`

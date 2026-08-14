@@ -1,8 +1,12 @@
-import { bench, describe, vi } from "vitest";
+import { bench, describe, afterAll, vi } from "vitest";
+import { useCacheIsolation } from "../tests/helpers/test-cache-isolation.js";
 import { findHermesSkill, loadHermesSkillContent } from "../src/hermes/loader.js";
 import { executeSkill } from "../src/tools/execute-skill.js";
 import { countTokens } from "./helpers/token-counter.js";
 import { writeBenchmarkLog } from "./helpers/log-writer.js";
+import { HERMES_ADAPTER_NOTE } from "./helpers/hermes-constants.js";
+
+useCacheIsolation();
 
 // Mock useFreeLLM to avoid real API calls during benchmarks and log generation
 vi.mock("../src/tools/use-free-llm.js", () => ({
@@ -27,25 +31,14 @@ vi.mock("../src/memory/index.js", () => ({
   },
 }));
 
-// Injected adapter note matching execute-skill.ts
-const HERMES_ADAPTER_NOTE = `## MCP Environment Overrides
-This skill originates from the Hermes-Agent skill set, authored for a different environment. In THIS environment:
-- Do NOT create files or folders directly. Use \`manage_memory\` for persistent storage instead.
-- For fetching external/web data, use \`browser_tool\`.
-- For searching existing code or prior notes, use the workspace context tools (grep/wiki) already available to you — not a raw filesystem search.
-Follow the skill's methodology below, but execute it through this server's tools.
-
-`;
-
-// Ensure benchmark output log is populated
-generateLogReport().catch(console.error);
-
 describe("04-hermes-skills benchmarks", () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // Scenario 1: Source Detection (Hermes vs agentic-awesome)
   bench("Hermes Skill Source Detection", async () => {
-    // 1. Detect existing Hermes skill
     const hermesMatch = await findHermesSkill("systematic-debugging");
-    // 2. Detect non-existent Hermes skill (falls back to agentic-awesome / null)
     const nonexistentMatch = await findHermesSkill("nonexistent-skill-name-123");
     
     const dummyRaw = JSON.stringify({ hermesMatch, nonexistentMatch });
@@ -81,6 +74,12 @@ describe("04-hermes-skills benchmarks", () => {
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
 
+  const mcpToolInputPayload = {
+    tool: "execute_skill",
+    skill: "systematic-debugging",
+    input: "Debug an unexpected null pointer exception in user authentication flow."
+  };
+
   // Measure Scenario 1: Source Detection
   const t0 = performance.now();
   const hermesMatch = await findHermesSkill("systematic-debugging");
@@ -103,19 +102,35 @@ async function generateLogReport() {
 
   // Measure Scenario 3: execute_skill End-to-End
   const t4 = performance.now();
-  const executeRes = await executeSkill({
-    skill: "systematic-debugging",
-    input: "Debug an unexpected null pointer exception in user authentication flow.",
-  });
+  const executeRes = await executeSkill(mcpToolInputPayload as any);
   const t5 = performance.now();
   const executeJson = JSON.stringify(executeRes);
   const executeTokens = countTokens(executeJson);
 
-  const logContent = `# Benchmark Log: 04-hermes-skills
+  const internalPromptPayload = {
+    systemPrompt: HERMES_ADAPTER_NOTE + rawContent,
+    userPrompt: mcpToolInputPayload.input
+  };
+
+  const logContent = `# Benchmark Log: 04-hermes-skills — Skill Engine & Adapter Execution
 
 **Timestamp**: ${timestamp}
 
-## Scenarios Executed
+## 📥 1. MCP Server Tool Call Input Payload (\`execute_skill\`)
+\`\`\`json
+${JSON.stringify(mcpToolInputPayload, null, 2)}
+\`\`\`
+
+---
+
+## 📄 2. Internal Skill Engine System Prompt Payload
+\`\`\`json
+${JSON.stringify(internalPromptPayload, null, 2)}
+\`\`\`
+
+---
+
+## ⚡ Scenarios Executed
 
 1. **Hermes Skill Source Detection**
    - Latency: ${(t1 - t0).toFixed(2)} ms
@@ -135,7 +150,7 @@ async function generateLogReport() {
 3. **execute_skill End-to-End Token Cost**
    - Latency: ${(t5 - t4).toFixed(2)} ms
    - Input Skill: \`systematic-debugging\`
-   - User Prompt: "Debug an unexpected null pointer exception in user authentication flow."
+   - User Prompt: "${mcpToolInputPayload.input}"
    - Execution Success: ${executeRes.success}
    - Response Result Token Count: ${executeTokens} tokens
 

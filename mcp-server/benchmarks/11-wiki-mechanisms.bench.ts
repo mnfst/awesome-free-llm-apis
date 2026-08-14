@@ -1,4 +1,5 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, afterAll } from 'vitest';
+import { useCacheIsolation } from '../tests/helpers/test-cache-isolation.js';
 import { GlobalWikiManager } from '../src/utils/GlobalWikiManager.js';
 import { memoryManager } from '../src/memory/index.js';
 import { RepositoryGraph } from '../src/memory/dependency-scanner.js';
@@ -7,12 +8,14 @@ import { countTokens } from './helpers/token-counter.js';
 import { writeBenchmarkLog } from './helpers/log-writer.js';
 import path from 'node:path';
 
+const { getWsRoot } = useCacheIsolation();
 const CYBER_WIKI_NS = 'cyber-tools-bench';
-const getWsRoot = () => path.resolve(process.cwd(), 'temp_bench_ws');
-
-generateLogReport().catch(console.error);
 
 describe('11 — Wiki Mechanisms: GlobalWikiManager, CTF Graph Serialization & ADR Extraction', () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // ── Scenario 1: GlobalWikiManager read / write / search ─────────────────
   bench('GlobalWikiManager flushToWiki & wiki search', async () => {
     const wiki = memoryManager.getWiki(CYBER_WIKI_NS, getWsRoot());
@@ -59,6 +62,13 @@ describe('11 — Wiki Mechanisms: GlobalWikiManager, CTF Graph Serialization & A
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
   const wsRoot = getWsRoot();
+
+  const mcpToolInputPayload = {
+    tool: 'manage_memory',
+    action: 'wiki_flush_and_search',
+    namespace: CYBER_WIKI_NS,
+    query: 'SQL Injection'
+  };
 
   // 1. GlobalWikiManager & Wiki Write/Read/Search
   const wiki = memoryManager.getWiki(CYBER_WIKI_NS, wsRoot);
@@ -115,7 +125,14 @@ async function generateLogReport() {
 
 **Timestamp**: ${timestamp}
 
-## 🎯 Target Wiki Namespace & Target Query
+## 📥 1. MCP Server Tool Call Input Payload (\`manage_memory\`)
+\`\`\`json
+${JSON.stringify(mcpToolInputPayload, null, 2)}
+\`\`\`
+
+---
+
+## 🎯 2. Target Wiki Namespace & Target Query
 - **Namespace**: \`${CYBER_WIKI_NS}\`
 - **Query**: \`SQL Injection\` -> Found **${searchResults.length} pages**
 

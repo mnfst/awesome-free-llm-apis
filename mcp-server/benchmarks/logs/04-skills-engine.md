@@ -1,6 +1,6 @@
 # Benchmark Log: 04-skills-engine — Hermes Indexing, Adapter & Keyword Search
 
-**Timestamp**: 2026-08-09T03:35:50.170Z
+**Timestamp**: 2026-08-12T09:17:10.667Z
 
 ## 🎯 Target Skill Engine & Manifest Context
 - **Manifest Skill Count**: 36 bundled Hermes skills
@@ -13,12 +13,12 @@
 
 | Scenario / Metric | Latency | Key Metric | Tokens / Payloads |
 |---|---|---|---|
-| **1. Manifest Validation** | 330.66 ms | Validated **36 skills** | All manifest entries loadable |
-| **2. Keyword Search ("debug")** | 1098.24 ms | Found **10 matching skills** | Matched: `debugger, debugging-and-error-recovery, error-debugging-error-analysis` |
+| **1. Manifest Validation** | 11.50 ms | Validated **36 skills** | All manifest entries loadable |
+| **2. Keyword Search ("debug")** | 1483.53 ms | Found **10 matching skills** | Matched: `debugger, debugging-and-error-recovery, error-debugging-error-analysis` |
 | **3. Prompt Search ("refactor")** | — | Extracted keywords from prompt | Matched: `code-simplifier, fp-async, fp-backend` |
 | **4. Empty Keywords Guard** | — | Empty array returned | **0 tokens bloat** (skills count: 0) |
-| **5. Adapter Note Injection** | 2.96 ms | Base: 4 tok, Overhead: +101 tok | **Total System Prompt**: 105 tokens |
-| **6. End-to-End Execution** | 28.78 ms | Target: `systematic-debugging` | Response: **18 tokens** (Success: `true`) |
+| **5. Adapter Note Injection** | 2.87 ms | Base: 4 tok, Overhead: +101 tok | **Total System Prompt**: 105 tokens |
+| **6. End-to-End Execution** | 1743.99 ms | Target: `systematic-debugging` | Response: **18 tokens** (Success: `false`) |
 
 ---
 

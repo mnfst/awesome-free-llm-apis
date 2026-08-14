@@ -13,14 +13,20 @@ export class SearxngSearchProvider extends BaseSearchProvider {
   envVar = undefined;
 
   isAvailable(): boolean {
-    const base = process.env.SEARXNG_BASE_URL;
+    const base = process.env.SEARXNG_BASE_URL || process.env.SEARXNG_URL;
     return !!base && base.trim().length > 0;
   }
 
   async search(query: string, maxResults = 5): Promise<UnifiedSearchResult[]> {
-    const base = (process.env.SEARXNG_BASE_URL || '').replace(/\/$/, '');
+    const base = (process.env.SEARXNG_BASE_URL || process.env.SEARXNG_URL || 'http://localhost:8080').replace(/\/$/, '');
     const url = `${base}/search?q=${encodeURIComponent(query)}&format=json`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+        'Connection': 'close',
+      },
+    });
 
     if (!response.ok) {
       const error: any = new Error(`SearXNG HTTP ${response.status}: ${await response.text()}`);

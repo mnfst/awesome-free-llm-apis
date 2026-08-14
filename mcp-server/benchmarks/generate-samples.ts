@@ -12,12 +12,13 @@ const logFiles = [
   '01-pipeline.md',
   '02-search-router.md',
   '03-cyber-tool.md',
-  '04-skills-engine.md',
+  '04-hermes-skills.md',
   '05-quantum-tool.md',
   '06-local-llm-patch-coach.md',
   '07-browser-snapshot-diff.md',
   '08-firebase-retry.md',
   '09-vision-tool.md',
+  '10-execute-skill.md',
   '11-wiki-mechanisms.md',
   '12-pdf-indexing.md',
 ];
@@ -26,7 +27,7 @@ function generateSamples() {
   const timestamp = new Date().toISOString();
   let content = `# MCP Server Benchmark Log Aggregation (SAMPLES.md)\n\n`;
   content += `> Automatically generated from benchmark run logs on: \`${timestamp}\`\n\n`;
-  content += `This document aggregates the full execution logs across all 11 core subsystem benchmarks of the MCP server.\n\n`;
+  content += `This document aggregates the full execution logs across all 12 core subsystem benchmarks of the MCP server, capturing dual-layer input payloads (MCP tool calls & internal agentic prompts).\n\n`;
   content += `---\n\n`;
 
   for (const file of logFiles) {

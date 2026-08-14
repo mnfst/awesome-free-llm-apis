@@ -962,6 +962,13 @@ async function main() {
       const dashboardPath = path.join(__dirname, '../dashboard');
       app.use(express.static(dashboardPath));
 
+      // Auto-deploy/check SearXNG Docker container if docker is available
+      import('./search/searxng-deploy.js').then(({ ensureSearxngContainer }) => {
+        ensureSearxngContainer();
+      }).catch(err => {
+        console.error('[SearXNG Startup Check Error]:', err?.message || err);
+      });
+
       const serverInstance = app.listen(port, () => {
         console.error(`MCP Dashboard & SSE Server running on http://localhost:${port}`);
         console.error(`Unified endpoint: http://localhost:${port}/mcp`);

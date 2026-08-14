@@ -16,15 +16,17 @@ describe('ContextGatherer 4-Layer Retrieval & Prompt Integration', () => {
     memoryManager.shortTerm.set('test-msg-1', { role: 'user', content: 'ShortTerm message about memory layers' });
 
     // 2. Gather context via ContextGatherer
-    const gatherer = new ContextGatherer(wsRoot);
-    const gathered = await gatherer.gather(query, TaskType.Code, 'coder');
+    const grepResults = await ContextGatherer.gatherContext({ workspaceRoot: wsRoot, query });
 
-    expect(gathered).toBeDefined();
-    expect(typeof gathered.shortTermSummary).toBe('string');
-    expect(typeof gathered.longTermSummary).toBe('string');
+    expect(grepResults).toBeDefined();
+    expect(Array.isArray(grepResults)).toBe(true);
 
     // 3. Pass gathered context to getIntelligentSystemPrompt
-    const systemPrompt = await getIntelligentSystemPrompt(query, gathered);
+    const systemPrompt = await getIntelligentSystemPrompt({
+      context: query,
+      workspace: grepResults.join('\n'),
+      workspaceRoot: wsRoot,
+    });
     expect(systemPrompt).toBeDefined();
     expect(systemPrompt.length).toBeGreaterThan(50);
   });

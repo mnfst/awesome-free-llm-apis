@@ -1,19 +1,11 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, afterAll } from 'vitest';
 import { useCacheIsolation } from '../tests/helpers/test-cache-isolation.js';
 import { findHermesSkill } from '../src/hermes/loader.js';
 import { countTokens } from './helpers/token-counter.js';
 import { writeBenchmarkLog } from './helpers/log-writer.js';
+import { HERMES_ADAPTER_NOTE } from './helpers/hermes-constants.js';
 
 useCacheIsolation();
-
-const HERMES_ADAPTER_NOTE = `## MCP Environment Overrides
-This skill originates from the Hermes-Agent skill set, authored for a different environment. In THIS environment:
-- Do NOT create files or folders directly. Use \`manage_memory\` for persistent storage instead.
-- For fetching external/web data, use \`browser_tool\`.
-- For searching existing code or prior notes, use the workspace context tools (grep/wiki) already available to you — not a raw filesystem search.
-Follow the skill's methodology below, but execute it through this server's tools.
-
-`;
 
 const SAMPLE_SKILL_MD = `# Code Refactoring Skill
 
@@ -44,6 +36,10 @@ function extractReferencedFiles(content: string): string[] {
 }
 
 describe('10 — Execute Skill: Source Detection & Hermes Adapter Overhead Benchmark', () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // ── Scenario 1: Hermes Skill Search & Auto-Detection ────────────────────
   bench('Hermes skill manifest lookup (findHermesSkill)', async () => {
     await findHermesSkill('code-refactor');
@@ -59,15 +55,16 @@ describe('10 — Execute Skill: Source Detection & Hermes Adapter Overhead Bench
     const refs = extractReferencedFiles(SAMPLE_SKILL_MD);
     countTokens(refs.join(','));
   });
-
-  // ── Scenario 4: Log Report Generation ───────────────────────────────────
-  bench('Generate Markdown Log Report (10-execute-skill.md)', async () => {
-    await generateLogReport();
-  });
 });
 
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
+
+  const mcpToolInputPayload = {
+    tool: 'execute_skill',
+    skill: 'code-refactor',
+    input: 'Refactor legacy callback authentication to async/await TaskEither pipeline'
+  };
 
   // 1. Hermes Skill Lookup
   const t0 = performance.now();
@@ -82,13 +79,27 @@ async function generateLogReport() {
   const sampleSkillTokens = countTokens(SAMPLE_SKILL_MD);
   const combinedTokens = countTokens(HERMES_ADAPTER_NOTE + SAMPLE_SKILL_MD);
 
+  const internalPromptPayload = {
+    adapterNote: HERMES_ADAPTER_NOTE.trim(),
+    skillContent: SAMPLE_SKILL_MD.trim(),
+    userInput: mcpToolInputPayload.input
+  };
+
   const logContent = `# Benchmark Log: 10-execute-skill — Source Detection & Hermes Adapter Overhead
 
 **Timestamp**: ${timestamp}
 
-## 🎯 Benchmark Target Skill & Prompt Context
-- **Target Skill**: \`code-refactor\`
-- **Source Auto-Detect**: \`findHermesSkill('code-refactor')\` -> \`${hermesMatch ? hermesMatch.id : 'agentic-awesome-fallback'}\`
+## 📥 1. MCP Server Tool Call Input Payload (\`execute_skill\`)
+\`\`\`json
+${JSON.stringify(mcpToolInputPayload, null, 2)}
+\`\`\`
+
+---
+
+## 📄 2. Internal Skill Engine System Prompt Payload
+\`\`\`json
+${JSON.stringify(internalPromptPayload, null, 2)}
+\`\`\`
 
 ---
 
@@ -101,13 +112,6 @@ async function generateLogReport() {
 | **Base SKILL.md Content** | **${sampleSkillTokens} tokens** | Raw skill instructions |
 | **Total Injected System Prompt** | **${combinedTokens} tokens** | Adapter Note + Base SKILL.md content |
 | **Extracted File References** | **${extractedFiles.length} files** | \`${extractedFiles.join('`, `')}\` |
-
----
-
-## 📄 Injected Hermes Adapter Note (${adapterTokens} tokens)
-\`\`\`markdown
-${HERMES_ADAPTER_NOTE.trim()}
-\`\`\`
 
 ---
 

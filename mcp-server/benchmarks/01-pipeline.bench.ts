@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, afterAll } from 'vitest';
 import { useCacheIsolation } from '../tests/helpers/test-cache-isolation.js';
 import { memoryManager, selectAmplitudeLines } from '../src/memory/index.js';
 import { WorkspaceContextMiddleware } from '../src/pipeline/middlewares/WorkspaceContextMiddleware.js';
@@ -13,9 +13,11 @@ import fs from 'node:fs';
 
 const { getWsRoot } = useCacheIsolation();
 
-generateLogReport().catch(console.error);
-
 describe('01 — Pipeline: Real WorkspaceContextMiddleware Execution & 4-Layer Memory Contribution', () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // ── LAYER 1: ShortTerm ──────────────────────────────────────────────────
   bench('Layer 1: ShortTermMemory — recent conversation turns', () => {
     const STM = memoryManager.shortTerm;
@@ -129,9 +131,8 @@ async function generateLogReport() {
   ];
   for (const [idx, turn] of chatTurns.entries()) STM.set(`turn:${idx}`, turn);
 
-  // Execute WorkspaceContextMiddleware for Agentic Mode
-  const middlewareAgentic = new WorkspaceContextMiddleware();
-  const ctxAgentic: PipelineContext = {
+  const mcpToolInputAgentic = {
+    tool: 'use_free_llm',
     request: {
       model: 'gemini-3.1-flash-lite',
       agentic: true,
@@ -140,16 +141,11 @@ async function generateLogReport() {
         { role: 'user', content: sampleQuery }
       ]
     },
-    taskType: 'coder' as any,
-    workspaceRoot: wsRoot,
-    sessionId: 'bench-session-agentic-log',
-    isOnePass: false
+    taskType: 'coder'
   };
-  await middlewareAgentic.execute(ctxAgentic, async () => {});
 
-  // Execute WorkspaceContextMiddleware for Non-Agentic Mode
-  const middlewareNonAgentic = new WorkspaceContextMiddleware();
-  const ctxNonAgentic: PipelineContext = {
+  const mcpToolInputNonAgentic = {
+    tool: 'use_free_llm',
     request: {
       model: 'gemini-3.1-flash-lite',
       agentic: false,
@@ -157,23 +153,41 @@ async function generateLogReport() {
         { role: 'user', content: sampleQuery }
       ]
     },
+    taskType: 'coder'
+  };
+
+  // Execute WorkspaceContextMiddleware for Agentic Mode
+  const middlewareAgentic = new WorkspaceContextMiddleware();
+  const tStartAgentic = performance.now();
+  const ctxAgentic: PipelineContext = {
+    request: JSON.parse(JSON.stringify(mcpToolInputAgentic.request)),
+    taskType: 'coder' as any,
+    workspaceRoot: wsRoot,
+    sessionId: 'bench-session-agentic-log',
+    isOnePass: false
+  };
+  await middlewareAgentic.execute(ctxAgentic, async () => {});
+  const tEndAgentic = performance.now();
+
+  // Execute WorkspaceContextMiddleware for Non-Agentic Mode
+  const middlewareNonAgentic = new WorkspaceContextMiddleware();
+  const tStartNonAgentic = performance.now();
+  const ctxNonAgentic: PipelineContext = {
+    request: JSON.parse(JSON.stringify(mcpToolInputNonAgentic.request)),
     taskType: 'coder' as any,
     workspaceRoot: wsRoot,
     sessionId: 'bench-session-non-agentic-log',
     isOnePass: true
   };
   await middlewareNonAgentic.execute(ctxNonAgentic, async () => {});
+  const tEndNonAgentic = performance.now();
 
-  // Extract telemetry and tokens
+  // Extract system prompt and telemetry
+  const sysMsgAgentic = ctxAgentic.request.messages.find(m => m.role === 'system');
+  const sysPromptAgenticStr = sysMsgAgentic ? (typeof sysMsgAgentic.content === 'string' ? sysMsgAgentic.content : JSON.stringify(sysMsgAgentic.content)) : '';
+
   const sysMsgNonAgentic = ctxNonAgentic.request.messages.find(m => m.role === 'system');
   const sysPromptNonAgenticStr = sysMsgNonAgentic ? (typeof sysMsgNonAgentic.content === 'string' ? sysMsgNonAgentic.content : JSON.stringify(sysMsgNonAgentic.content)) : '';
-
-  const sysPromptAgenticStr = await getIntelligentSystemPrompt({
-    context: sampleQuery,
-    workspace: (ctxAgentic as any).grepContext,
-    memory: (ctxAgentic as any).memoryContext,
-    isSubtask: false
-  });
 
   const tokSysAgentic = countTokens(sysPromptAgenticStr);
   const tokSysNonAgentic = countTokens(sysPromptNonAgenticStr);
@@ -189,19 +203,25 @@ async function generateLogReport() {
 
 **Timestamp**: ${timestamp}
 
-## 🎯 Target Query Context & Production Execution
-- **Source Middleware**: \`WorkspaceContextMiddleware\` (\`src/pipeline/middlewares/WorkspaceContextMiddleware.ts\`)
-- **User Query**: \`${sampleQuery}\`
-- **Confused User Query Test**: \`${confusedQuery}\`
+## 📥 1. MCP Server Tool Call Input Payload (\`use_free_llm\` Agentic vs Non-Agentic)
+
+### Agentic Mode MCP Call Input:
+\`\`\`json
+${JSON.stringify(mcpToolInputAgentic, null, 2)}
+\`\`\`
+
+### Non-Agentic Mode MCP Call Input:
+\`\`\`json
+${JSON.stringify(mcpToolInputNonAgentic, null, 2)}
+\`\`\`
 
 ---
 
-## 🔍 4-Layer Memory Layer Telemetry
-- **Memory Context Injected**: \`${(ctxAgentic as any).telemetry?.memoryContext ? 'YES' : 'CLEARED'}\`
-- **Grep Context Injected**: \`${(ctxAgentic as any).telemetry?.grepContext ? 'YES' : 'NONE'}\`
-- **Wiki Context Injected**: \`${(ctxAgentic as any).telemetry?.wikiContext ? 'YES' : 'NONE'}\`
-- **Grounding Gate**: \`${(ctxAgentic as any).telemetry?.groundingGate ? 'ACTIVATED' : 'NONE'}\`
-- **Middleware Execution Latency**: \`${(ctxAgentic as any).telemetry?.durationMs || 0} ms\`
+## 🎯 2. Internal Subtask & LLM Execution Telemetry
+- **Source Middleware**: \`WorkspaceContextMiddleware\` (\`src/pipeline/middlewares/WorkspaceContextMiddleware.ts\`)
+- **User Query**: \`${sampleQuery}\`
+- **Agentic Execution Latency**: ${(tEndAgentic - tStartAgentic).toFixed(2)} ms
+- **Non-Agentic Execution Latency**: ${(tEndNonAgentic - tStartNonAgentic).toFixed(2)} ms
 
 ---
 
@@ -222,6 +242,14 @@ async function generateLogReport() {
 |---|---|---|
 | **\`isUserConfused(query)\`** | \`${isConfused}\` | Detected conflicting/vague user intent |
 | **Enforced Strategy** | \`${confusedStrategy}\` | **Bypasses multi-pass agentic loop** to avoid context bloat & hallucinated citations |
+
+---
+
+## 📄 Complete Executed Messages Payload (Agentic Mode — ${tokTotalAgentic} tokens)
+
+\`\`\`json
+${JSON.stringify(ctxAgentic.request.messages, null, 2)}
+\`\`\`
 
 ---
 

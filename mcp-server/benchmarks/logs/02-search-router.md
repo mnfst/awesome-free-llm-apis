@@ -1,13 +1,13 @@
 # Benchmark Log: 02-search-router — Production SearchRouterMiddleware Execution
 
-**Timestamp**: 2026-08-09T06:46:57.061Z
+**Timestamp**: 2026-08-09T07:22:05.639Z
 
 ## 🎯 Production Code Executed
 - **Source Middleware**: `SearchRouterMiddleware` (`src/pipeline/middlewares/SearchRouterMiddleware.ts`)
 - **Input Search Query**: `"latest deepseek-r1 benchmarks security rate-limit"`
 - **Target Category**: `TaskType.SemanticSearch`
 - **Chosen Search Provider**: `searxng (terminal fallback)`
-- **Execution Latency**: 3287.30 ms
+- **Execution Latency**: 3456.56 ms
 
 ---
 
@@ -68,7 +68,7 @@
     "id": "jina",
     "name": "Jina AI",
     "available": true,
-    "penalty": 0.1
+    "penalty": 0.2
   },
   {
     "id": "brave",

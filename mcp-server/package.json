@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "smoke-test": "tsx --env-file=.env scripts/verification/smoke-test.ts",
+    "smoke-test:searxng": "tsx --env-file=.env scripts/verification/searxng-smoke-test.ts",
     "smoke-test:vision": "tsx --env-file=.env scripts/verification/vision-smoke-test.ts",
     "smoke:suite": "tsx --env-file=.env scripts/smoke/run-smoke-suite.ts",
     "samples": "tsx --env-file=.env benchmarks/generate-live-samples.ts",

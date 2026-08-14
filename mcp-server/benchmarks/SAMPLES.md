@@ -1,8 +1,8 @@
 # MCP Server Benchmark Log Aggregation (SAMPLES.md)
 
-> Automatically generated from benchmark run logs on: `2026-08-09T06:51:46.091Z`
+> Automatically generated from benchmark run logs on: `2026-08-12T09:24:11.439Z`
 
-This document aggregates the full execution logs across all 11 core subsystem benchmarks of the MCP server.
+This document aggregates the full execution logs across all 12 core subsystem benchmarks of the MCP server, capturing dual-layer input payloads (MCP tool calls & internal agentic prompts).
 
 ---
 
@@ -72,14 +72,14 @@ This document aggregates the full execution logs across all 11 core subsystem be
 
 # Benchmark Log: 02-search-router — Production SearchRouterMiddleware Execution
 
-**Timestamp**: 2026-08-09T06:46:57.061Z
+**Timestamp**: 2026-08-09T07:22:05.639Z
 
 ## 🎯 Production Code Executed
 - **Source Middleware**: `SearchRouterMiddleware` (`src/pipeline/middlewares/SearchRouterMiddleware.ts`)
 - **Input Search Query**: `"latest deepseek-r1 benchmarks security rate-limit"`
 - **Target Category**: `TaskType.SemanticSearch`
 - **Chosen Search Provider**: `searxng (terminal fallback)`
-- **Execution Latency**: 3287.30 ms
+- **Execution Latency**: 3456.56 ms
 
 ---
 
@@ -140,7 +140,7 @@ This document aggregates the full execution logs across all 11 core subsystem be
     "id": "jina",
     "name": "Jina AI",
     "available": true,
-    "penalty": 0.1
+    "penalty": 0.2
   },
   {
     "id": "brave",
@@ -193,152 +193,38 @@ This document aggregates the full execution logs across all 11 core subsystem be
 
 ---
 
-## File: `04-skills-engine.md`
+## File: `04-hermes-skills.md`
 
-# Benchmark Log: 04-skills-engine — Hermes Indexing, Adapter & Keyword Search
+# Benchmark Log: 04-hermes-skills
 
-**Timestamp**: 2026-08-09T03:35:50.170Z
+**Timestamp**: 2026-08-06T06:05:21.188Z
 
-## 🎯 Target Skill Engine & Manifest Context
-- **Manifest Skill Count**: 36 bundled Hermes skills
-- **Manifest Sample Skills**: `humanizer, codebase-inspection, github-auth, github-code-review, github-issues`
-- **Execution Target**: `systematic-debugging`
+## Scenarios Executed
 
----
+1. **Hermes Skill Source Detection**
+   - Latency: 264.41 ms
+   - Target Skill: `systematic-debugging`
+   - Hermes Match Found: true (`systematic-debugging`)
+   - Non-existent Match Result: null (fallback to agentic-awesome)
+   - Output Data Token Count: 55 tokens
 
-## ⚡ Skills Engine Performance & Keyword Search Breakdown
+2. **Adapter Injection Token Overhead**
+   - Latency: 18.48 ms
+   - Target Skill: `systematic-debugging`
+   - Raw Skill Tokens: 3299 tokens
+   - Adapted Skill Tokens: 3400 tokens
+   - Adapter Note Tokens: 101 tokens
+   - Token Overhead Added: +101 tokens
 
-| Scenario / Metric | Latency | Key Metric | Tokens / Payloads |
-|---|---|---|---|
-| **1. Manifest Validation** | 330.66 ms | Validated **36 skills** | All manifest entries loadable |
-| **2. Keyword Search ("debug")** | 1098.24 ms | Found **10 matching skills** | Matched: `debugger, debugging-and-error-recovery, error-debugging-error-analysis` |
-| **3. Prompt Search ("refactor")** | — | Extracted keywords from prompt | Matched: `code-simplifier, fp-async, fp-backend` |
-| **4. Empty Keywords Guard** | — | Empty array returned | **0 tokens bloat** (skills count: 0) |
-| **5. Adapter Note Injection** | 2.96 ms | Base: 4 tok, Overhead: +101 tok | **Total System Prompt**: 105 tokens |
-| **6. End-to-End Execution** | 28.78 ms | Target: `systematic-debugging` | Response: **18 tokens** (Success: `true`) |
-
----
-
-## 🔍 Scenario 2: Keyword-Driven Search Inputs & Payload Traces
-
-### Search Query 1: Explicit Keywords `["debug", "error", "traceback"]`
-```json
-[
-  {
-    "name": "debugger",
-    "description": "Debugging specialist for errors, test failures, and unexpected\nbehavior. Use proactively when encountering any issues.\n"
-  },
-  {
-    "name": "debugging-and-error-recovery",
-    "description": "Guides systematic root-cause debugging. Use when tests fail, builds break, behavior doesn't match expectations, or you encounter any unexpected error. Use when you need a systematic approach to finding and fixing the root cause rather than guessing."
-  },
-  {
-    "name": "error-debugging-error-analysis",
-    "description": "You are an expert error analysis specialist with deep expertise in debugging distributed systems, analyzing production incidents, and implementing comprehensive observability solutions."
-  },
-  {
-    "name": "error-debugging-error-trace",
-    "description": "You are an error tracking and observability expert specializing in implementing comprehensive error monitoring solutions. Set up error tracking systems, configure alerts, implement structured logging, and ensure teams can quickly identify and resolve production issues."
-  },
-  {
-    "name": "error-debugging-multi-agent-review",
-    "description": "Use when working with error debugging multi agent review"
-  },
-  {
-    "name": "error-diagnostics-error-analysis",
-    "description": "You are an expert error analysis specialist with deep expertise in debugging distributed systems, analyzing production incidents, and implementing comprehensive observability solutions."
-  },
-  {
-    "name": "error-diagnostics-smart-debug",
-    "description": "Use when working with error diagnostics smart debug"
-  },
-  {
-    "name": "error-handling-patterns",
-    "description": "Build resilient applications with robust error handling strategies that gracefully handle failures and provide excellent debugging experiences."
-  },
-  {
-    "name": "native-data-fetching",
-    "description": "Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, React Query, SWR, error handling, caching, offline support, and Expo Router data loaders (`useLoaderData`)."
-  },
-  {
-    "name": "rust-async-patterns",
-    "description": "Master Rust async programming with Tokio, async traits, error handling, and concurrent patterns. Use when building async Rust applications, implementing concurrent systems, or debugging async code."
-  }
-]
-```
-
-### Search Query 2: Natural User Prompt `"refactor functional taskeither pipeline"` (Extracted Keywords)
-```json
-[
-  {
-    "name": "code-simplifier",
-    "description": "Simplifies and refines code for clarity, consistency, and maintainability while preserving all functionality. Use when asked to \"simplify code\", \"clean up code\", \"refactor for clarity\", \"improve readability\", or review recently modified code for elegance. Focuses on project-specific best practices."
-  },
-  {
-    "name": "fp-async",
-    "description": "Practical async patterns using TaskEither - clean pipelines instead of try/catch hell, with real API examples"
-  },
-  {
-    "name": "fp-backend",
-    "description": "Functional programming patterns for Node.js/Deno backend development using fp-ts, ReaderTaskEither, and functional dependency injection"
-  },
-  {
-    "name": "fp-refactor",
-    "description": "Comprehensive guide for refactoring imperative TypeScript code to fp-ts functional patterns"
-  },
-  {
-    "name": "advanced-evaluation",
-    "description": "This skill should be used when the user asks to \"implement LLM-as-judge\", \"compare model outputs\", \"create evaluation rubrics\", \"mitigate evaluation bias\", or mentions direct scoring, pairwise comparison, position bias, evaluation pipelines, or automated quality assessment."
-  },
-  {
-    "name": "agentflow",
-    "description": "Orchestrate autonomous AI development pipelines through your Kanban board (Asana, GitHub Projects, Linear). Manages multi-worker Claude Code dispatch, deterministic quality gates, adversarial review, per-task cost tracking, and crash-proof pipeline execution."
-  },
-  {
-    "name": "agentic-actions-auditor",
-    "description": "Audits GitHub Actions workflows for security vulnerabilities in AI agent integrations  including Claude Code Action,  Gemini CLI, OpenAI Codex, and GitHub AI  Inference.  Detects attack vectors where attacker-controlled  input reaches. AI agents running in CI/CD pipelines.\n"
-  },
-  {
-    "name": "ai-engineering-toolkit",
-    "description": "6 production-ready AI engineering workflows: prompt evaluation (8-dimension scoring), context budget planning, RAG pipeline design, agent security audit (65-point checklist), eval harness building, and product sense coaching."
-  },
-  {
-    "name": "ai-ml",
-    "description": "AI and machine learning workflow covering LLM application development, RAG implementation, agent architecture, ML pipelines, and AI-powered features."
-  },
-  {
-    "name": "airflow-dag-patterns",
-    "description": "Build production Apache Airflow DAGs with best practices for operators, sensors, testing, and deployment. Use when creating data pipelines, orchestrating workflows, or scheduling batch jobs."
-  }
-]
-```
-
-### Search Query 3: Empty Keywords `[]` (Context Bloat Guard Output)
-```json
-[]
-```
+3. **execute_skill End-to-End Token Cost**
+   - Latency: 3.70 ms
+   - Input Skill: `systematic-debugging`
+   - User Prompt: "Debug an unexpected null pointer exception in user authentication flow."
+   - Execution Success: true
+   - Response Result Token Count: 18 tokens
 
 ---
-
-## 📄 Scenario 3: Extracted Referenced Files (0 files)
-```json
-[]
-```
-
----
-
-## 📄 Scenario 3: Injected Adapter Note (101 tokens)
-```markdown
-## MCP Environment Overrides
-This skill originates from the Hermes-Agent skill set, authored for a different environment. In THIS environment:
-- Do NOT create files or folders directly. Use `manage_memory` for persistent storage instead.
-- For fetching external/web data, use `browser_tool`.
-- For searching existing code or prior notes, use the workspace context tools (grep/wiki) already available to you — not a raw filesystem search.
-Follow the skill's methodology below, but execute it through this server's tools.
-```
-
----
-*Generated by Vitest Benchmark Suite (04-skills-engine.bench.ts)*
+*Generated by Vitest Benchmark Suite (04-hermes-skills.bench.ts)*
 
 ---
 
@@ -381,7 +267,7 @@ Follow the skill's methodology below, but execute it through this server's tools
 
 # Benchmark Log: 06-local-llm-patch-coach
 
-**Timestamp**: 2026-08-09T06:33:14.825Z
+**Timestamp**: 2026-08-09T07:20:33.610Z
 
 ## 🎯 Code Context Language Inference & 4-Phase Protocol Breakdown
 
@@ -404,6 +290,11 @@ export class MemoryManager {
 ```
 
 #### 📋 Phase 1 Coach Explanation Frame:
+> **Concept**: Concept: Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store
+> **Example**: `Example: Illustrative code pattern or minimal snippet implementing 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store'`
+> **Exercise**: Exercise: Modify the target file according to 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store'
+> **Hint**: *Hint: Ensure changes are scoped precisely and existing tests pass.*
+
 ```json
 {
   "concept": "Concept: Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store",
@@ -415,41 +306,23 @@ export class MemoryManager {
 
 #### 💻 Phase 3 Executed Patch Output:
 ```diff
-```
+```typescript
 import fs from 'fs';
-import path from 'path';
 
 export class MemoryManager {
   private shortTerm = new Map<string, any>();
-  private longTermPath: string;
-
-  constructor(longTermFilePath: string) {
-    this.longTermPath = longTermFilePath;
-    this.loadLongTerm();
-  }
+  private longTerm: { [key: string]: any } = {};
 
   public getShortTerm() { return this.shortTerm; }
 
   public resetAll() {
     this.shortTerm.clear();
-    this.saveLongTerm({});
+    this.longTerm = {};
+    this.saveLongTerm();
   }
 
-  private loadLongTerm() {
-    try {
-      const data = fs.readFileSync(this.longTermPath, 'utf8');
-      this.shortTerm = new Map(Object.entries(JSON.parse(data)));
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        this.saveLongTerm({});
-      } else {
-        throw e;
-      }
-    }
-  }
-
-  private saveLongTerm(data: any) {
-    fs.writeFileSync(this.longTermPath, JSON.stringify(data, null, 2));
+  private saveLongTerm() {
+    fs.writeFileSync('longTerm.json', JSON.stringify(this.longTerm, null, 2));
   }
 }
 ```
@@ -477,6 +350,11 @@ class AuthService:
 ```
 
 #### 📋 Phase 1 Coach Explanation Frame:
+> **Concept**: Concept: Add revoke_token(token) method to AuthService that removes token from _tokens dictionary
+> **Example**: `Example: Illustrative code pattern or minimal snippet implementing 'Add revoke_token(token) method to AuthService that removes token from _tokens dictionary'`
+> **Exercise**: Exercise: Modify the target file according to 'Add revoke_token(token) method to AuthService that removes token from _tokens dictionary'
+> **Hint**: *Hint: Ensure changes are scoped precisely and existing tests pass.*
+
 ```json
 {
   "concept": "Concept: Add revoke_token(token) method to AuthService that removes token from _tokens dictionary",
@@ -496,7 +374,7 @@ class AuthService:
     def validate(self, token: str) -> bool:
         return token in self._tokens
 
-    def revoke_token(self, token: str):
+    def revoke_token(self, token: str) -> None:
         if token in self._tokens:
             del self._tokens[token]
 ```
@@ -527,6 +405,11 @@ func NewLogger(level string) *Logger {
 ```
 
 #### 📋 Phase 1 Coach Explanation Frame:
+> **Concept**: Concept: Add SetLevel(level string) method to Logger struct
+> **Example**: `Example: Illustrative code pattern or minimal snippet implementing 'Add SetLevel(level string) method to Logger struct'`
+> **Exercise**: Exercise: Modify the target file according to 'Add SetLevel(level string) method to Logger struct'
+> **Hint**: *Hint: Ensure changes are scoped precisely and existing tests pass.*
+
 ```json
 {
   "concept": "Concept: Add SetLevel(level string) method to Logger struct",
@@ -538,7 +421,7 @@ func NewLogger(level string) *Logger {
 
 #### 💻 Phase 3 Executed Patch Output:
 ```diff
-```
+```go
 package logger
 
 type Logger struct {
@@ -734,6 +617,56 @@ Production ranking via `rankCandidateModels()` from `src/providers/ollama-local.
 
 ---
 *Generated by Vitest Benchmark Suite (09-vision-tool.bench.ts)*
+
+---
+
+## File: `10-execute-skill.md`
+
+# Benchmark Log: 10-execute-skill — Source Detection & Hermes Adapter Overhead
+
+**Timestamp**: 2026-08-07T10:37:31.653Z
+
+## 🎯 Benchmark Target Skill & Prompt Context
+- **Target Skill**: `code-refactor`
+- **Source Auto-Detect**: `findHermesSkill('code-refactor')` -> `agentic-awesome-fallback`
+
+---
+
+## ⚡ Skill Routing & Adapter Overhead Breakdown
+
+| Dimension | Measured Value | Description |
+|---|---|---|
+| **Hermes Manifest Lookup** | **0.12 ms** | Auto-detection search across bundled Hermes skill manifest |
+| **Hermes Adapter Note** | **101 tokens** | Tool surface overrides injected ahead of Hermes `SKILL.md` |
+| **Base SKILL.md Content** | **73 tokens** | Raw skill instructions |
+| **Total Injected System Prompt** | **174 tokens** | Adapter Note + Base SKILL.md content |
+| **Extracted File References** | **3 files** | `references/functional-patterns.md`, `examples/refactor-demo.ts`, `references/error-handling.md` |
+
+---
+
+## 📄 Injected Hermes Adapter Note (101 tokens)
+```markdown
+## MCP Environment Overrides
+This skill originates from the Hermes-Agent skill set, authored for a different environment. In THIS environment:
+- Do NOT create files or folders directly. Use `manage_memory` for persistent storage instead.
+- For fetching external/web data, use `browser_tool`.
+- For searching existing code or prior notes, use the workspace context tools (grep/wiki) already available to you — not a raw filesystem search.
+Follow the skill's methodology below, but execute it through this server's tools.
+```
+
+---
+
+## 📄 Extracted Referenced Files (3 files)
+```json
+[
+  "references/functional-patterns.md",
+  "examples/refactor-demo.ts",
+  "references/error-handling.md"
+]
+```
+
+---
+*Generated by Vitest Benchmark Suite (10-execute-skill.bench.ts)*
 
 ---
 

@@ -1,4 +1,5 @@
-import { bench, describe } from "vitest";
+import { bench, describe, afterAll } from "vitest";
+import { useCacheIsolation } from "../tests/helpers/test-cache-isolation.js";
 import {
   parseSnapshot,
   diffSnapshots,
@@ -9,6 +10,9 @@ import { detectBlockingChallenge } from "../src/browser/BlockDetector.js";
 import { countTokens } from "./helpers/token-counter.js";
 import { writeBenchmarkLog } from "./helpers/log-writer.js";
 import fetch from "node-fetch";
+import http from "node:http";
+
+useCacheIsolation();
 
 // Sample snapshot fixtures
 const prevExpandSnapshot = `
@@ -63,9 +67,11 @@ uid=cf-box role=dialog "Just a moment..."
   uid=cf-txt role=text "Checking your browser before accessing example.com"
 `;
 
-generateLogReport().catch(console.error);
-
 describe("07-browser-snapshot-diff benchmarks", () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // Scenario 1: click -> expand structural node diff (+22 nodes)
   bench("click -> expand structural node diff (+22 nodes)", () => {
     const prevNodes = parseSnapshot(prevExpandSnapshot);
@@ -114,6 +120,13 @@ describe("07-browser-snapshot-diff benchmarks", () => {
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
 
+  const mcpToolInputPayload = {
+    tool: "browser_tool",
+    action: "diff_snapshots",
+    targetUrl: "http://localhost:3000",
+    strategy: "dom-stable"
+  };
+
   // Scenario 1 Measurement
   const t0 = performance.now();
   const prevExpandNodes = parseSnapshot(prevExpandSnapshot);
@@ -142,16 +155,35 @@ async function generateLogReport() {
   const t5 = performance.now();
   const cfDetectionTokens = countTokens(JSON.stringify(cfDetection));
 
-  // Scenario 4 Live Scrape
+  // Scenario 4 Live Scrape on local HTTP test server
+  const testServer = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`<!DOCTYPE html>
+<html>
+  <head><title>Localhost Test Dashboard</title></head>
+  <body>
+    <header><h1>Awesome Free LLM APIs Local Test Server</h1></header>
+    <main>
+      <section id="status">Status: Active</section>
+      <button id="btn-action">Run Action</button>
+    </main>
+  </body>
+</html>`);
+  });
+
+  await new Promise<void>((resolve) => testServer.listen(8000, '127.0.0.1', () => resolve()));
+
   let liveStatus = 'LIVE_HTTP_SUCCESS';
   let liveSnapshot = '';
   try {
-    const res = await fetch('http://localhost:3000', { timeout: 1000 } as any);
+    const res = await fetch('http://127.0.0.1:8000');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     liveSnapshot = await res.text();
-  } catch {
-    liveStatus = '[CHROME_DEVTOOLS_OFFLINE]';
-    liveSnapshot = `uid=root role=main "Dashboard Localhost:3000"\n  uid=header role=banner "Header"\n  uid=nav role=navigation "Navigation"`;
+  } catch (err: any) {
+    liveStatus = `[OFFLINE] ${err.message}`;
+    liveSnapshot = `uid=root role=main "Dashboard Localhost:8000"\n  uid=header role=banner "Header"\n  uid=nav role=navigation "Navigation"`;
+  } finally {
+    testServer.close();
   }
   const liveNodes = parseSnapshot(liveSnapshot);
 
@@ -159,7 +191,14 @@ async function generateLogReport() {
 
 **Timestamp**: ${timestamp}
 
-## 🎯 Target Page & Scrape Context
+## 📥 1. MCP Server Tool Call Input Payload (\`browser_tool\` diff)
+\`\`\`json
+${JSON.stringify(mcpToolInputPayload, null, 2)}
+\`\`\`
+
+---
+
+## 🎯 2. Target Page & Scrape Telemetry
 - **Live Scrape Target**: \`http://localhost:3000\`
 - **Scrape Status**: \`${liveStatus}\`
 - **Parsed Nodes Count**: ${liveNodes.length} nodes

@@ -1,7 +1,10 @@
-import { bench, describe, vi } from "vitest";
+import { bench, describe, afterAll, vi } from "vitest";
+import { useCacheIsolation } from "../tests/helpers/test-cache-isolation.js";
 import { quantumTool, QuantumBranch } from "../src/tools/quantum-tool.js";
 import { countTokens } from "./helpers/token-counter.js";
 import { writeBenchmarkLog } from "./helpers/log-writer.js";
+
+useCacheIsolation();
 
 // Mock useFreeLLM to avoid actual network/LLM API calls during benchmark runs
 vi.mock("../src/tools/use-free-llm.js", () => ({
@@ -16,12 +19,14 @@ vi.mock("../src/tools/use-free-llm.js", () => ({
   }),
 }));
 
-generateLogReport().catch(console.error);
-
 describe("05-quantum-tool benchmarks (Production quantumTool Execution)", () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // Scenario 1: RY Confidence Rotation Math via quantumTool Execution
   bench("quantumTool RY Rotation Step Execution & Confidence Update", async () => {
-    const sessionId = "bench_quantum_ry_math";
+    const sessionId = `bench_ry_${Math.random()}`;
     await quantumTool({ action: "setup", sessionId, numBranches: 2, personas: ["Branch A", "Branch B"] });
     await quantumTool({
       action: "modify",
@@ -37,7 +42,7 @@ describe("05-quantum-tool benchmarks (Production quantumTool Execution)", () => 
 
   // Scenario 2: Multi-Branch State Serialization (5 branches + gates)
   bench("Multi-Branch State Serialization (5 branches + gates)", async () => {
-    const sessionId = "bench_quantum_multi_branch";
+    const sessionId = `bench_multi_${Math.random()}`;
     await quantumTool({
       action: "setup",
       sessionId,
@@ -67,7 +72,7 @@ describe("05-quantum-tool benchmarks (Production quantumTool Execution)", () => 
 
   // Scenario 3: Analyze Synthesis Prompt Token Cost
   bench("Analyze Synthesis Prompt Token Cost", async () => {
-    const sessionId = "bench_quantum_analyze_cost";
+    const sessionId = `bench_analyze_${Math.random()}`;
     await quantumTool({
       action: "setup",
       sessionId,
@@ -99,6 +104,13 @@ describe("05-quantum-tool benchmarks (Production quantumTool Execution)", () => 
 
 async function generateLogReport() {
   const timestamp = new Date().toISOString();
+
+  const mcpInputAnalyze = {
+    tool: "quantum_tool",
+    action: "analyze",
+    sessionId: "log_quantum_analyze",
+    query: "What is the recommended consensus strategy for migrating database schemas under high write load?"
+  };
 
   // Scenario 1 Measurement
   const t0 = performance.now();
@@ -149,7 +161,7 @@ async function generateLogReport() {
   // Scenario 3 Measurement
   const t4 = performance.now();
   const session3 = "log_quantum_analyze_cost";
-  const query = "What is the recommended consensus strategy for migrating database schemas under high write load?";
+  const query = mcpInputAnalyze.query;
   await quantumTool({
     action: "setup",
     sessionId: session3,
@@ -181,17 +193,18 @@ async function generateLogReport() {
 
 **Timestamp**: ${timestamp}
 
-## 🎯 Production Code Executed
-- **Source File**: \`src/tools/quantum-tool.ts\`
-- **Target Function**: \`export async function quantumTool(input: QuantumToolInput)\`
-- **Actions Evaluated**: \`setup\`, \`modify\`, \`step\`, \`get_state\`, \`analyze\`
+## 📥 1. MCP Server Tool Call Input Payload (\`quantum_tool\` analyze)
+\`\`\`json
+${JSON.stringify(mcpInputAnalyze, null, 2)}
+\`\`\`
 
 ---
 
-## ⚡ Real Scenarios Executed
+## 🎯 2. Real Scenarios Executed & Quantum State Telemetry
 
 ### 1. **quantumTool RY Rotation Step Execution & Confidence Update**
 - **Latency**: ${(t1 - t0).toFixed(2)} ms
+- **Input Gates**: \`[RY(qubit=0, param=π/4), RY(qubit=1, param=-π/3)]\`
 - **Token Count**: ${tok1} tokens
 - **Output State**:
 \`\`\`json
@@ -200,12 +213,25 @@ ${JSON.stringify(stepRes1.state || stepRes1, null, 2)}
 
 ---
 
-### 2. **Multi-Branch State Serialization (5 Branches + Quantum Gates)**
+### 2. **Multi-Branch State Serialization & Quantum Circuit Visualization**
 - **Latency**: ${(t3 - t2).toFixed(2)} ms
 - **Branch Count**: ${stateRes.state?.branches?.length || 5}
 - **Gate Count**: ${stateRes.state?.gates?.length || 5}
 - **State Token Count**: ${serializationTokens} tokens
-- **Output State**:
+
+#### 📊 Quantum Circuit State Diagram
+\`\`\`mermaid
+graph LR
+  subgraph Qubits
+    Q0["Qubit 0 (Architect)"] --> H0["H Gate"] --> CNOT0["CNOT Control"]
+    Q1["Qubit 1 (Security)"] --> RY1["RY Gate (π/4)"]
+    Q2["Qubit 2 (Performance)"] --> X2["X Gate"]
+    Q3["Qubit 3 (UX)"] --> CNOT3["CNOT Target"]
+    Q4["Qubit 4 (QA)"] --> RZ4["RZ Gate (π/3)"]
+  end
+\`\`\`
+
+- **Serialized State Output**:
 \`\`\`json
 ${JSON.stringify(stateRes.state || stateRes, null, 2)}
 \`\`\`
@@ -216,7 +242,7 @@ ${JSON.stringify(stateRes.state || stateRes, null, 2)}
 - **Latency**: ${(t5 - t4).toFixed(2)} ms
 - **Query**: "${query}"
 - **Output Tokens**: ${analyzeOutputTokens} tokens
-- **Output Response**:
+- **Synthesized Response Output**:
 \`\`\`markdown
 ${analyzeRes.response || JSON.stringify(analyzeRes, null, 2)}
 \`\`\`

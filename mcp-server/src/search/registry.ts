@@ -26,12 +26,15 @@ export class SearchProviderRegistry {
     ];
   }
 
-
   static getInstance(): SearchProviderRegistry {
     if (!SearchProviderRegistry.instance) {
       SearchProviderRegistry.instance = new SearchProviderRegistry();
     }
     return SearchProviderRegistry.instance;
+  }
+
+  static resetInstance(): void {
+    (SearchProviderRegistry as any).instance = undefined;
   }
 
   getProviders(): SearchProvider[] {

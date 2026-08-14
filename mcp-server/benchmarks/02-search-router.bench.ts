@@ -1,56 +1,83 @@
-import { bench, describe } from "vitest";
+import { bench, describe, afterAll } from "vitest";
+import { useCacheIsolation } from "../tests/helpers/test-cache-isolation.js";
 import { SearchRouterMiddleware } from "../src/pipeline/middlewares/SearchRouterMiddleware.js";
 import { SearchProviderRegistry } from "../src/search/registry.js";
 import { ParallelSearchProvider } from "../src/search/providers/parallel.js";
 import { TavilySearchProvider } from "../src/search/providers/tavily.js";
 import { JinaSearchProvider } from "../src/search/providers/jina.js";
-import { BraveSearchProvider } from "../src/search/providers/brave.js";
+import { TinyFishSearchProvider } from "../src/search/providers/tinyfish.js";
+import { DdgsMcpSearchProvider } from "../src/search/providers/ddgs.js";
 import { SearxngSearchProvider } from "../src/search/providers/searxng.js";
 import { countTokens } from "./helpers/token-counter.js";
 import { writeBenchmarkLog } from "./helpers/log-writer.js";
 import type { PipelineContext } from "../src/pipeline/middleware.js";
 import type { UnifiedSearchResult } from "../src/search/types.js";
 
-generateLogReport().catch(console.error);
+useCacheIsolation();
+
+const iterationTraces: Array<{
+  tMs: number;
+  input: any;
+  provider?: string;
+  resCount: number;
+}> = [];
 
 describe("02-search-router benchmarks (Production SearchRouterMiddleware Execution)", () => {
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
   // Benchmark 1: SearchRouterMiddleware Execution & Normalization
   bench("SearchRouterMiddleware.execute() — Normalization & Formatting", async () => {
     const middleware = new SearchRouterMiddleware();
+    const requestPayload = {
+      model: "gemini-3.1-flash-lite",
+      google_search: true,
+      messages: [
+        { role: "user", content: "latest deepseek-r1 benchmarks security rate-limit" }
+      ]
+    };
     const context: PipelineContext = {
-      request: {
-        model: "gemini-3.1-flash-lite",
-        google_search: true,
-        messages: [
-          { role: "user", content: "latest deepseek-r1 benchmarks security rate-limit" }
-        ]
-      },
+      request: requestPayload,
       taskType: "search" as any,
       isOnePass: true
     };
 
+    const t0 = performance.now();
     await middleware.execute(context, async () => {});
+    const t1 = performance.now();
+
+    const trace = (context as any).searchTrace;
+    iterationTraces.push({
+      tMs: t1 - t0,
+      input: requestPayload,
+      provider: trace?.provider,
+      resCount: trace?.results?.length || 0
+    });
+
     countTokens(JSON.stringify(context.response || {}));
   });
 
   // Benchmark 2: 429 Fallback Chain Simulation
   bench("429 Fallback Chain Simulation via SearchProviderRegistry", async () => {
+    SearchProviderRegistry.resetInstance();
     const parallel = new ParallelSearchProvider();
     const tavily = new TavilySearchProvider();
     const jina = new JinaSearchProvider();
-    const brave = new BraveSearchProvider();
+    const tinyfish = new TinyFishSearchProvider();
+    const ddgs = new DdgsMcpSearchProvider();
     const searxng = new SearxngSearchProvider();
 
     parallel.recordFailure(429);
     tavily.recordFailure(429);
     jina.recordFailure(429);
 
-    const candidates = [parallel, tavily, jina, brave, searxng]
+    const candidates = [parallel, tinyfish, tavily, ddgs, jina, searxng]
       .filter((p) => p.isAvailable())
       .sort((a, b) => a.getPenaltyScore() - b.getPenaltyScore());
 
     const chosen = candidates[0];
-    countTokens(JSON.stringify({ chosen: chosen.id, score: chosen.getPenaltyScore() }));
+    countTokens(JSON.stringify({ chosen: chosen?.id, score: chosen?.getPenaltyScore() }));
   });
 
   // Benchmark 3: SearXNG Terminal Fallback
@@ -67,12 +94,12 @@ describe("02-search-router benchmarks (Production SearchRouterMiddleware Executi
 });
 
 async function generateLogReport() {
+  SearchProviderRegistry.resetInstance();
   const timestamp = new Date().toISOString();
   const sampleQuery = "latest deepseek-r1 benchmarks security rate-limit";
 
-  // Scenario 1: Execute production SearchRouterMiddleware
-  const middleware = new SearchRouterMiddleware();
-  const context: PipelineContext = {
+  const mcpToolInputPayload = {
+    tool: "use_free_llm",
     request: {
       model: "gemini-3.1-flash-lite",
       google_search: true,
@@ -80,6 +107,13 @@ async function generateLogReport() {
         { role: "user", content: sampleQuery }
       ]
     },
+    taskType: "search"
+  };
+
+  // Scenario 1: Execute production SearchRouterMiddleware
+  const middleware = new SearchRouterMiddleware();
+  const context: PipelineContext = {
+    request: mcpToolInputPayload.request,
     taskType: "search" as any,
     isOnePass: true
   };
@@ -90,6 +124,7 @@ async function generateLogReport() {
 
   const formattedResponse = context.response;
   const searchTrace = (context as any).searchTrace;
+  const isLive = Boolean(searchTrace?.results);
 
   // Fallback data if live external provider API calls are offline
   const fallbackResults: UnifiedSearchResult[] = [
@@ -111,6 +146,7 @@ async function generateLogReport() {
 
   const displayResults = searchTrace?.results || fallbackResults;
   const chosenProvider = searchTrace?.provider || "searxng (terminal fallback)";
+  const executionStatus = isLive ? "LIVE_PROVIDER_HIT" : "OFFLINE_FALLBACK_STUB_ACTIVE";
 
   // Candidate chain evaluation
   const registry = SearchProviderRegistry.getInstance();
@@ -125,13 +161,22 @@ async function generateLogReport() {
   const logContent = `# Benchmark Log: 02-search-router — Production SearchRouterMiddleware Execution
 
 **Timestamp**: ${timestamp}
+**Execution Status**: \`${executionStatus}\`
 
-## 🎯 Production Code Executed
+## 📥 1. MCP Server Tool Call Input Payload (\`use_free_llm\` with \`google_search: true\`)
+\`\`\`json
+${JSON.stringify(mcpToolInputPayload, null, 2)}
+\`\`\`
+
+---
+
+## 🎯 2. Internal Subtask Execution Telemetry
 - **Source Middleware**: \`SearchRouterMiddleware\` (\`src/pipeline/middlewares/SearchRouterMiddleware.ts\`)
 - **Input Search Query**: \`"${sampleQuery}"\`
 - **Target Category**: \`TaskType.SemanticSearch\`
 - **Chosen Search Provider**: \`${chosenProvider}\`
 - **Execution Latency**: ${(t1 - t0).toFixed(2)} ms
+- **Iteration Run Count**: ${iterationTraces.length} bench iterations tracked
 
 ---
 
