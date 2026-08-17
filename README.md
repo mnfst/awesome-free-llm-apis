@@ -270,6 +270,22 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 | `deepseek-ai/deepseek-v4-pro`             | 128K    | ~64K       | Text                                   | ~40 RPM    |
 | + 85 more models                          | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | ~40 RPM    |
 
+### [OpenClaw AI](https://ai.trxenergy.vip) 🌐
+
+OpenAI-compatible inference gateway, fully self-hosted. No account, no API key, no credit card — every IP gets **50,000 sats of free credits per day**, then pay-per-token over Lightning (L402). Drop-in `base_url` for the OpenAI SDK, LangChain, LiteLLM, Cursor, and any client that accepts a custom endpoint.
+
+Base URL: `https://ai.trxenergy.vip/v1`
+
+| Model Name    | Context | Max Output | Modality       | Rate Limit                       |
+| ------------- | ------- | ---------- | -------------- | -------------------------------- |
+| deepseek-r1   | —       | —          | Text (reasoning) | 50,000 sats/day/IP (free)      |
+| qwen3.6-27b   | —       | —          | Text           | 50,000 sats/day/IP (free)      |
+| codellama-13b | —       | —          | Text (code)    | 50,000 sats/day/IP (free)      |
+| llama3        | —       | —          | Text           | 50,000 sats/day/IP (free)      |
+| llama2        | —       | —          | Text           | 50,000 sats/day/IP (free)      |
+| openchat-7b   | —       | —          | Text           | 50,000 sats/day/IP (free)      |
+| qwen2.5-1.5b  | —       | —          | Text           | 50,000 sats/day/IP (free)      |
+
 ### [Ollama Cloud](https://ollama.com/settings/keys) 🇺🇸
 
 Free tier with qualitative usage limits. 400+ models from Ollama library. Not OpenAI SDK-compatible; uses [Ollama API](https://docs.ollama.com/cloud). [^3]
