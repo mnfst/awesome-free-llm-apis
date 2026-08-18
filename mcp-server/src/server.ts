@@ -924,7 +924,7 @@ async function main() {
           const sysTokens = promptEval.totalPromptTokens || steeringTelemetry.memoryLayers?.sysPromptTokens || Math.ceil(assembledPrompt.length / 3.8);
           if (!steeringTelemetry.memoryLayers) steeringTelemetry.memoryLayers = {};
           steeringTelemetry.memoryLayers.sysPromptTokens = sysTokens;
-          steeringTelemetry.memoryLayers.totalContextTokens = (steeringTelemetry.memoryLayers.shortTermTokens || 0) + (steeringTelemetry.memoryLayers.longTermTokens || 0) + (steeringTelemetry.memoryLayers.wikiTokens || 0) + (steeringTelemetry.memoryLayers.grepTokens || 0) + sysTokens;
+          steeringTelemetry.memoryLayers.totalContextTokens = (steeringTelemetry.memoryLayers.shortTermTokens || 0) + (steeringTelemetry.memoryLayers.longTermTokens || 0) + (steeringTelemetry.memoryLayers.wikiTokens || 0) + (steeringTelemetry.memoryLayers.grepTokens || 0) + (steeringTelemetry.memoryLayers.groundingTokens || 0) + sysTokens;
 
           // Structured 5-layer memory hierarchy with explicit priorities and sample extracted text
           const memoryHierarchy = [

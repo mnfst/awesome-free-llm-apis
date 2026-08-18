@@ -75,18 +75,27 @@ search:
     } catch {}
 
     console.error('[SearXNG Docker] Pulling searxng/searxng image...');
-    spawnSync('docker', ['pull', 'searxng/searxng'], { stdio: 'inherit' });
+    const pullResult = spawnSync('docker', ['pull', 'searxng/searxng'], { stdio: 'inherit' });
+    if (pullResult.error || (pullResult.status !== null && pullResult.status !== 0)) {
+      console.warn(`[SearXNG Docker] Docker pull failed (exit code ${pullResult.status}):`, pullResult.error?.message || 'Docker pull error');
+      return false;
+    }
 
     console.error(`[SearXNG Docker] Deploying background SearXNG container on port ${port} with JSON enabled...`);
     // Convert Windows backslashes to forward slashes for Docker volume compatibility
     const normalizedSettingsPath = settingsPath.replace(/\\/g, '/');
-    spawnSync('docker', [
+    const runResult = spawnSync('docker', [
       'run', '-d',
       '--name', containerName,
       '-v', `${normalizedSettingsPath}:/etc/searxng/settings.yml`,
       '-p', `127.0.0.1:${port}:8080`,
       'searxng/searxng'
     ], { stdio: 'inherit' });
+
+    if (runResult.error || (runResult.status !== null && runResult.status !== 0)) {
+      console.warn(`[SearXNG Docker] Docker run failed (exit code ${runResult.status}):`, runResult.error?.message || 'Docker run error');
+      return false;
+    }
 
     console.error(`[SearXNG Docker] Successfully deployed SearXNG on http://localhost:${port}`);
     return true;

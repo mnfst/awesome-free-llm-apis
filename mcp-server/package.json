@@ -22,7 +22,7 @@
     "dashboard": "tsx --env-file=.env src/server.ts --sse",
     "report": "tsx --env-file=.env scripts/evaluation/model-report.ts",
     "fetch-hermes": "tsx scripts/fetch-hermes-skills.ts",
-    "fetch-cyber-tools": "tsx scripts/fetch-cyber-tools.ts"
+    "fetch-cyber-tools": "node scripts/fetch-cyber-tools.js"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",

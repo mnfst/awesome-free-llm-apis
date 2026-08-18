@@ -609,7 +609,8 @@ export class WorkspaceContextMiddleware implements Middleware {
             console.error(`[WorkspaceContextMiddleware] Agentic mode: skipping own system prompt injection, delegating to AgenticMiddleware.`);
         }
 
-        const messagesText = context.request.messages?.map((m: any) => getMessageContent(m.content)).join(' ') || '';
+        const nonSystemMessages = (context.request.messages || []).filter((m: any) => m.role !== 'system');
+        const messagesText = nonSystemMessages.map((m: any) => getMessageContent(m.content)).join(' ');
         const shortTermTokens = Math.ceil(messagesText.length / 3.8);
         const longTermTokens = Math.ceil((memoryContext?.length || 0) / 3.8);
         const wikiTokens = Math.ceil((wikiContext?.length || 0) / 3.8);
