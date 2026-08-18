@@ -8,7 +8,11 @@ export class WorkspaceScanner {
     constructor(private defaultProjectRoot: string) { }
 
     async getWorkspaceHash(projectRoot?: string): Promise<string> {
-        const root = resolve(projectRoot || this.defaultProjectRoot);
+        let inputPath = projectRoot || this.defaultProjectRoot;
+        if (typeof inputPath === 'string') {
+            inputPath = inputPath.replace(/\\/g, '/');
+        }
+        const root = resolve(inputPath);
 
         try {
             await fs.access(root);
