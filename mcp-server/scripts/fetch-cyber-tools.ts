@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /**
  * @file fetch-cyber-tools.ts
  * @description Synchronizes tools_config.json from djmahe4/cyber-tools-index on GitHub to external/cyber-tools-index/.
@@ -17,7 +17,7 @@ const LOCAL_DEST = path.resolve(root, 'external/cyber-tools-index/tools_config.j
 
 export async function fetchCyberToolsIndex(): Promise<boolean> {
   try {
-    console.log([CyberTools] Fetching tools_config.json from ...);
+    console.log(`[CyberTools] Checking remote tools_config.json from ${CYBER_TOOLS_URL}...`);
     const resp = await fetch(CYBER_TOOLS_URL, {
       headers: { 'User-Agent': 'free-llm-mcp-cyber-fetch' }
     });
@@ -25,18 +25,18 @@ export async function fetchCyberToolsIndex(): Promise<boolean> {
       const text = await resp.text();
       mkdirSync(path.dirname(LOCAL_DEST), { recursive: true });
       writeFileSync(LOCAL_DEST, text, 'utf-8');
-      console.log([CyberTools] Successfully synchronized to );
+      console.log(`[CyberTools] Successfully synchronized to ${LOCAL_DEST}`);
       return true;
     } else {
-      console.warn([CyberTools] Remote fetch status HTTP  - skipping.);
+      console.log(`[CyberTools] Remote repo has not published tools_config.json yet (HTTP ${resp.status}) - using local bundled fixture.`);
       return false;
     }
   } catch (err: any) {
-    console.warn([CyberTools] Remote fetch skipped/failed: );
+    console.log(`[CyberTools] Remote fetch skipped: ${err?.message || err}`);
     return false;
   }
 }
 
-if (import.meta.url === ile:// || process.argv[1]?.endsWith('fetch-cyber-tools.ts') || process.argv[1]?.endsWith('fetch-cyber-tools.js')) {
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('fetch-cyber-tools.ts') || process.argv[1]?.endsWith('fetch-cyber-tools.js')) {
   fetchCyberToolsIndex();
 }
