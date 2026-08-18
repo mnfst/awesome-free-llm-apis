@@ -628,6 +628,7 @@ export interface PromptSectionMeta {
     title: string;
     keywords: string[];
     tokenCount: number;
+    content?: string;
 }
 
 export interface PromptEvaluationResult {
@@ -653,7 +654,8 @@ export async function evaluatePromptSections(options: PromptOptions): Promise<Pr
                 id: sec.id,
                 title: sec.title,
                 keywords: sec.keywords,
-                tokenCount: Math.ceil(secContent.length / 3.8)
+                tokenCount: Math.ceil(secContent.length / 3.8),
+                content: secContent
             });
         }
     }

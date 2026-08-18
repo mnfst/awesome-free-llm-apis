@@ -5,7 +5,7 @@ import { WorkspaceContextMiddleware } from '../src/pipeline/middlewares/Workspac
 import { getIntelligentSystemPrompt, evaluatePromptSections } from '../src/pipeline/middlewares/prompts.js';
 
 describe('Steering Evaluation & Ingestion Inspector API (/api/steering_eval)', () => {
-    it('evaluatePromptSections returns matched prompt sections and token metadata', async () => {
+    it('evaluatePromptSections returns matched prompt sections with content and token metadata', async () => {
         const result = await evaluatePromptSections({
             context: 'Fix bug in auth middleware and security rate limit',
             keywords: ['security', 'auth', 'rate-limit']
@@ -17,6 +17,9 @@ describe('Steering Evaluation & Ingestion Inspector API (/api/steering_eval)', (
         expect(Array.isArray(result.matchedSections)).toBe(true);
         expect(result.matchedSections.length).toBeGreaterThan(0);
         expect(result.totalPromptTokens).toBeGreaterThan(0);
+        // Expect section content to be populated for full inspection
+        expect(result.matchedSections[0].content).toBeDefined();
+        expect(typeof result.matchedSections[0].content).toBe('string');
     });
 
     it('WorkspaceContextMiddleware attaches comprehensive steeringTelemetry to context', async () => {

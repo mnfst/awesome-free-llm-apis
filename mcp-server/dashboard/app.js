@@ -2019,6 +2019,43 @@ const steeringSubtaskView = document.getElementById('steering-subtask-view');
 const steeringRawPromptView = document.getElementById('steering-raw-prompt-view');
 
 let _steeringEvalTimer = null;
+let _latestSteeringTelemetry = null;
+let _currentSteeringTab = 'prompt';
+
+function switchSteeringInspectTab(tab) {
+  _currentSteeringTab = tab;
+  ['prompt', 'workspace', 'history'].forEach(t => {
+    const btn = document.getElementById(`btn-inspect-tab-${t}`);
+    if (btn) {
+      if (t === tab) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+  renderSteeringInspectContent();
+}
+window.switchSteeringInspectTab = switchSteeringInspectTab;
+
+function renderSteeringInspectContent() {
+  if (!steeringRawPromptView) return;
+  if (!_latestSteeringTelemetry) {
+    steeringRawPromptView.textContent = '(Click "Inspect Live Ingestion & Telemetry" or edit inputs to load assembled system prompt...)';
+    return;
+  }
+
+  const st = _latestSteeringTelemetry;
+  if (_currentSteeringTab === 'prompt') {
+    steeringRawPromptView.textContent = st.fullAssembledSystemPrompt || '(No system prompt generated)';
+  } else if (_currentSteeringTab === 'workspace') {
+    const treeText = st.dirTree ? `=== 📂 WORKSPACE DIRECTORY TREE ===\n${st.dirTree}\n\n` : '';
+    const codeText = `=== 🔍 EXTRACTED WORKSPACE CODE SNIPPETS & RELEVANT FILES ===\n${st.extractedWorkspaceContext || '(No code snippets matched query keywords)'}`;
+    steeringRawPromptView.textContent = `${treeText}${codeText}`;
+  } else if (_currentSteeringTab === 'history') {
+    const histText = st.chatHistory && st.chatHistory.length > 0
+      ? JSON.stringify(st.chatHistory, null, 2)
+      : '(No previous chat history in this session)';
+    steeringRawPromptView.textContent = `=== 💬 SESSION TURNS & CHAT HISTORY ===\n${histText}`;
+  }
+}
 
 function debouncedSteeringEvaluation() {
   if (_steeringEvalTimer) clearTimeout(_steeringEvalTimer);
@@ -2053,8 +2090,10 @@ async function runSteeringEvaluation() {
     if (!data.success || !data.telemetry) return;
 
     const st = data.telemetry;
+    _latestSteeringTelemetry = st;
     const mem = st.memoryLayers || {};
     const matched = st.matchedSections || [];
+    const memoryHierarchy = st.memoryHierarchy || [];
 
     // Persona & keywords badge
     if (steeringPersonaBadge) {
@@ -2069,48 +2108,73 @@ async function runSteeringEvaluation() {
     const savingsPct = isAgentic ? '0.0%' : `${((diff / agenticBaselinePayload) * 100).toFixed(1)}%`;
 
     if (steeringSysTokens) steeringSysTokens.textContent = `${sysTokens.toLocaleString()} tok`;
-    if (steeringSysDesc) steeringSysDesc.textContent = isAgentic ? 'Multi-Pass Agentic (Delegated)' : 'Single-Pass System Prompt';
+    if (steeringSysDesc) steeringSysDesc.textContent = isAgentic ? 'Multi-Pass Agentic Subtask' : 'Single-Pass System Prompt';
     if (steeringPayloadTokens) steeringPayloadTokens.textContent = `${payloadTokens.toLocaleString()} tok`;
     if (steeringTokenSavings) steeringTokenSavings.textContent = savingsPct;
-    if (steeringSavingsDesc) steeringSavingsDesc.textContent = isAgentic ? 'Full 4-layer memory overhead' : `${diff.toLocaleString()} tokens saved vs max budget`;
+    if (steeringSavingsDesc) steeringSavingsDesc.textContent = isAgentic ? 'Full 5-layer memory overhead' : `${diff.toLocaleString()} tokens saved vs max budget`;
 
     if (steeringBloatStatus) {
       steeringBloatStatus.textContent = matched.length > 0 ? 'ACTIVE ⚡ (Live Targeted)' : 'CLEAN 🛡️ (0 External Bloat)';
     }
 
-    // Matched prompt.json sections
+    // Matched prompt.json sections with expandable text
     if (steeringMatchedSections) {
       if (matched.length === 0) {
-        steeringMatchedSections.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:8px;background:rgba(255,255,255,.03);border-radius:4px;">No external prompt.json sections matched query keywords.</div>';
+        steeringMatchedSections.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:10px;background:rgba(255,255,255,.03);border-radius:4px;border:1px dashed var(--glass-border);">No external prompt.json sections matched the query keywords. Baseline system prompt active.</div>';
       } else {
-        steeringMatchedSections.innerHTML = matched.map(sec => `
-          <div style="padding:10px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:6px;display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <div style="font-size:.82rem;font-weight:600;color:var(--accent-purple);">${esc(sec.title || sec.id)}</div>
-              <div style="font-size:.72rem;color:var(--text-secondary);margin-top:2px;">Keywords: <code>${esc((sec.keywords || []).join(', '))}</code> &bull; <span style="color:var(--accent-cyan);">${sec.tokenCount || 0} tok</span></div>
+        steeringMatchedSections.innerHTML = matched.map((sec, idx) => `
+          <details class="qs-tool-card" style="margin:0;background:rgba(168,85,247,.05);border:1px solid rgba(168,85,247,.3);" ${idx === 0 ? 'open' : ''}>
+            <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;">
+              <div>
+                <span class="qs-tool-name" style="color:var(--accent-purple);font-weight:600;">${esc(sec.title || sec.id)}</span>
+                <span class="qs-tool-desc" style="font-size:.72rem;margin-left:8px;">Keywords: <code>${esc((sec.keywords || []).join(', '))}</code> &bull; <span style="color:var(--accent-cyan);font-weight:600;">${sec.tokenCount || 0} tok</span></span>
+              </div>
+              <span class="badge badge-purple" style="font-size:.7rem;">Injected</span>
+            </summary>
+            <div style="padding:10px 12px;border-top:1px solid rgba(168,85,247,.15);background:rgba(10,10,15,.6);">
+              <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Injected Prompt Content:</div>
+              <pre style="font-size:.72rem;color:var(--text-secondary);white-space:pre-wrap;margin:0;font-family:monospace;max-height:160px;overflow-y:auto;background:rgba(0,0,0,.3);padding:8px;border-radius:4px;">${esc(sec.content || '(No content text available)')}</pre>
             </div>
-            <span class="badge badge-purple">Injected</span>
-          </div>
+          </details>
         `).join('');
       }
     }
 
-    // Memory layer isolation gates
+    // 5-Layer Memory Priority Hierarchy Deck
     if (steeringMemoryGates) {
-      steeringMemoryGates.innerHTML = `
-        <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
-          <div style="font-size:.75rem;font-weight:600;color:var(--accent-cyan);">&lt;short_longterm_memory_gate&gt;</div>
-          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${mem.shortTermTokens || 0} tok (Live Memory Store)</div>
-        </div>
-        <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
-          <div style="font-size:.75rem;font-weight:600;color:var(--accent-green);">&lt;wiki_memory_gate&gt;</div>
-          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${mem.wikiTokens || 0} tok (Wiki Pages Scanned)</div>
-        </div>
-        <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--glass-border);">
-          <div style="font-size:.75rem;font-weight:600;color:var(--accent-amber);">&lt;born_rule_vector_sampler_gate&gt;</div>
-          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">${mem.grepTokens || 0} tok (Prioritized Folder Snippets)</div>
-        </div>
-      `;
+      const priorityColors = {
+        1: { badge: 'badge-purple', color: 'var(--accent-purple)' },
+        2: { badge: 'badge-cyan', color: 'var(--accent-cyan)' },
+        3: { badge: 'badge-green', color: 'var(--accent-green)' },
+        4: { badge: 'badge-amber', color: 'var(--accent-amber)' },
+        5: { badge: 'badge-blue', color: 'var(--accent-blue)' }
+      };
+
+      steeringMemoryGates.innerHTML = memoryHierarchy.map((layer, idx) => {
+        const pStyle = priorityColors[layer.priority] || { badge: 'badge-purple', color: 'var(--accent-purple)' };
+        const isActive = layer.active && layer.tokens > 0;
+        return `
+          <details class="qs-tool-card" style="margin:0;background:rgba(255,255,255,.02);border:1px solid var(--glass-border);" ${idx === 0 ? 'open' : ''}>
+            <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 14px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="badge ${pStyle.badge}" style="font-weight:700;font-size:.72rem;">Priority ${layer.priority} (${layer.level})</span>
+                <div>
+                  <span style="font-size:.82rem;font-weight:600;color:${pStyle.color};">${esc(layer.name)}</span>
+                  <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">${esc(layer.description)}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="badge ${isActive ? 'badge-green' : 'badge-gray'}" style="font-size:.68rem;">${isActive ? '⚡ Active' : '💤 Inactive / 0 tok'}</span>
+                <span style="font-size:.76rem;font-weight:600;color:var(--text-primary);">${(layer.tokens || 0).toLocaleString()} tok</span>
+              </div>
+            </summary>
+            <div style="padding:10px 14px;border-top:1px solid var(--glass-border);background:rgba(10,10,15,.5);">
+              <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Extracted Memory Content Preview:</div>
+              <pre style="font-size:.72rem;color:var(--text-secondary);white-space:pre-wrap;margin:0;font-family:monospace;max-height:140px;overflow-y:auto;background:rgba(0,0,0,.3);padding:8px;border-radius:4px;">${esc(layer.content || '(Empty)')}</pre>
+            </div>
+          </details>
+        `;
+      }).join('');
     }
 
     // Subtask & Raw prompt inspector
@@ -2123,9 +2187,7 @@ async function runSteeringEvaluation() {
       if (steeringSubtaskView) steeringSubtaskView.style.display = 'none';
     }
 
-    if (steeringRawPromptView) {
-      steeringRawPromptView.textContent = st.fullAssembledSystemPrompt || '(No system prompt generated)';
-    }
+    renderSteeringInspectContent();
 
   } catch (err) {
     if (steeringBloatStatus) steeringBloatStatus.textContent = 'ERROR ⚠️';
@@ -2141,3 +2203,4 @@ steeringAgenticToggle?.addEventListener('change', runSteeringEvaluation);
 // Initial run on script load
 runSteeringEvaluation();
 setTimeout(runSteeringEvaluation, 500);
+

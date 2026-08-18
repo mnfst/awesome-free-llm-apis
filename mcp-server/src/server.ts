@@ -856,7 +856,7 @@ async function main() {
             ? keywords
             : String(keywords).split(',').map((k: string) => k.trim()).filter(Boolean);
 
-          const { evaluatePromptSections } = await import('./pipeline/middlewares/prompts.js');
+          const { evaluatePromptSections, getIntelligentSystemPrompt } = await import('./pipeline/middlewares/prompts.js');
           const promptEval = await evaluatePromptSections({
             context: query,
             keywords: userKeywords,
@@ -866,6 +866,8 @@ async function main() {
 
           const { WorkspaceContextMiddleware } = await import('./pipeline/middlewares/WorkspaceContextMiddleware.js');
           const middleware = new WorkspaceContextMiddleware();
+          const subtaskObj = subtask || (agentic ? { id: 'subtask-eval-1', title: `Execute task: ${query || 'System prompt steering test'}` } : null);
+
           const context: any = {
             request: {
               model: 'gemini-3.1-flash-lite',
@@ -877,12 +879,74 @@ async function main() {
             workspaceRoot,
             sessionId,
             isOnePass: !agentic,
-            subtask: subtask || (agentic ? { id: 'subtask-eval-1', title: `Execute task: ${query || 'System prompt steering test'}` } : null)
+            subtask: subtaskObj
           };
 
           await middleware.execute(context, async () => {});
           const steeringTelemetry = context.telemetry?.steeringTelemetry || {};
           steeringTelemetry.matchedSections = promptEval.matchedSections;
+
+          // Assemble the real subtask prompt if in agentic mode so users see exactly what the model receives
+          let assembledPrompt = promptEval.prompt;
+          if (agentic && subtaskObj) {
+            const taskHeader = `\n\n## 📝 CURRENT SUBTASK\nYou are currently executing this subtask:\n- **Task**: ${subtaskObj.title}\n- **Subtask ID**: ${subtaskObj.id}\n\nStrictly focus on this subtask using the tools provided.`;
+            assembledPrompt = `${promptEval.prompt}${taskHeader}`;
+          }
+          steeringTelemetry.fullAssembledSystemPrompt = assembledPrompt;
+
+          // Structured 5-layer memory hierarchy with explicit priorities and sample extracted text
+          const memoryHierarchy = [
+            {
+              level: 'L1',
+              priority: 1,
+              name: 'Short-Term Session Memory',
+              description: 'Recent conversation turns, immediate user instructions & live subtask execution state',
+              tokens: steeringTelemetry.memoryLayers?.shortTermTokens || 0,
+              active: true,
+              content: context.telemetry?.memoryContext || `Turn 1: User prompt -> "${query || 'Test query'}"`
+            },
+            {
+              level: 'L2',
+              priority: 2,
+              name: 'Long-Term Memory & ADR Decisions',
+              description: 'Project preferences, verified technical rules & architectural decision records (.free-llm-mcp/wiki/adr/)',
+              tokens: steeringTelemetry.memoryLayers?.longTermTokens || 0,
+              active: !!context.telemetry?.memoryContext,
+              content: context.telemetry?.memoryContext ? `## ADR / Decision Records\n${context.telemetry.memoryContext}` : '(No persistent ADR rules stored for this workspace)'
+            },
+            {
+              level: 'L3',
+              priority: 3,
+              name: 'Workspace Wiki Knowledge',
+              description: 'Curated technical documentation, module catalogues & domain guides (.free-llm-mcp/wiki/)',
+              tokens: steeringTelemetry.memoryLayers?.wikiTokens || 0,
+              active: !!context.telemetry?.wikiContext,
+              content: context.telemetry?.wikiContext || '(No wiki documentation matched)'
+            },
+            {
+              level: 'L4',
+              priority: 4,
+              name: 'Dynamic Code Snippets (Born-Rule Grep)',
+              description: 'Relevance-scored folder snippets, symbol definitions & dependency graph context',
+              tokens: steeringTelemetry.memoryLayers?.grepTokens || 0,
+              active: !!context.telemetry?.grepContext,
+              content: context.telemetry?.grepContext || '(No code snippets matched the query keywords)'
+            },
+            {
+              level: 'L5',
+              priority: 5,
+              name: 'External Prompt & Skill Steering',
+              description: 'Keyword-targeted prompt.json sections, persona templates & dynamic skills',
+              tokens: steeringTelemetry.memoryLayers?.sysPromptTokens || 0,
+              active: promptEval.matchedSections.length > 0,
+              content: promptEval.matchedSections.map(s => `### ${s.title} (${s.id})\n${s.content || ''}`).join('\n\n') || '(Default baseline system prompt)'
+            }
+          ];
+
+          steeringTelemetry.memoryHierarchy = memoryHierarchy;
+          steeringTelemetry.extractedWorkspaceContext = context.telemetry?.grepContext || '(No code snippets matched)';
+          steeringTelemetry.dirTree = context.telemetry?.dirTree || '';
+          steeringTelemetry.chatHistory = [{ role: 'user', content: query || 'Test query' }];
 
           res.json({
             success: true,

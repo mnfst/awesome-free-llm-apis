@@ -737,16 +737,16 @@
     <section class="tab-panel" id="panel-steering" role="tabpanel" aria-labelledby="tab-steering">
       <div class="card" style="margin-bottom:20px;">
         <div class="card-header">
-          <span class="section-title" style="margin:0;font-size:1rem;color:var(--accent-purple);">🎯 Keyword-Driven System Prompt Steering & Ingestion Inspector</span>
+          <span class="section-title" style="margin:0;font-size:1rem;color:var(--accent-purple);">🎯 Keyword-Driven System Prompt Steering & Memory Hierarchy Studio</span>
         </div>
         <div class="card-body">
           <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
-            Test how user queries and explicit <code>keywords[]</code> arrays trigger section-level injection from <code>prompt.json</code>, isolate memory context gates, and prevent context window bloat across single-pass and multi-pass agentic execution.
+            Inspect how user prompts and <code>keywords[]</code> trigger targeted external sections from <code>prompt.json</code>, prioritize the 5-layer workspace memory hierarchy (L1 Session &rarr; L2 ADR &rarr; L3 Wiki &rarr; L4 Code Grep &rarr; L5 Prompts), and build exact system prompts in single-pass and multi-pass agentic execution.
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-bottom:16px;">
             <div>
-              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sample User Query:</label>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sample User Query / Subtask Goal:</label>
               <input type="text" id="steering-query-input" class="form-input" value="Fix bug in auth middleware and check security rate limiting" placeholder="Type prompt query..." style="width:100%;">
             </div>
             <div>
@@ -759,13 +759,15 @@
             </div>
           </div>
 
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
             <label style="display:inline-flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;">
               <input type="checkbox" id="steering-agentic-toggle">
               <span style="font-weight:600;">Enable agentic: true (Multi-Pass Subtask Engine)</span>
             </label>
-            <div id="steering-persona-badge" class="badge badge-purple" style="font-size:.78rem;padding:4px 10px;">Mapped Persona: <code>coder</code></div>
-            <button id="btn-run-steering-eval" class="btn btn-purple btn-sm">Inspect Live Ingestion & Telemetry</button>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div id="steering-persona-badge" class="badge badge-purple" style="font-size:.78rem;padding:4px 10px;">Mapped Persona: <code>coder</code></div>
+              <button id="btn-run-steering-eval" class="btn btn-purple btn-sm">Inspect Live Ingestion & Telemetry</button>
+            </div>
           </div>
 
           <!-- Live Token & Context Comparison Cards -->
@@ -778,7 +780,7 @@
             <div class="stat-card">
               <div class="stat-label c-cyan">Total Injected Context</div>
               <div class="stat-value c-cyan" id="steering-payload-tokens">0 tok</div>
-              <div class="stat-sub">Live memory layer footprint</div>
+              <div class="stat-sub">Live 5-layer memory footprint</div>
             </div>
             <div class="stat-card">
               <div class="stat-label c-green">Net Token Savings</div>
@@ -793,22 +795,35 @@
           </div>
 
           <!-- Matched prompt.json Sections -->
-          <div class="section-title" style="font-size:.88rem;margin-bottom:8px;">📄 Matched prompt.json Injected Sections</div>
-          <div id="steering-matched-sections" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="section-title" style="font-size:.88rem;margin:0;">📄 Injected External prompt.json Sections</div>
+            <span style="font-size:.72rem;color:var(--text-muted);">Expand section to inspect injected prompt text</span>
+          </div>
+          <div id="steering-matched-sections" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
             <!-- Rendered by JS -->
           </div>
 
-          <!-- Memory Layer Isolation Gates -->
-          <div class="section-title" style="font-size:.88rem;margin-bottom:8px;">🧠 Active Memory Layer Isolation Gates & Folder Snippets</div>
-          <div id="steering-memory-gates" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+          <!-- 5-Layer Memory Priority Hierarchy Deck -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="section-title" style="font-size:.88rem;margin:0;">🧠 5-Layer Workspace Memory Hierarchy & Ingestion Gates</div>
+            <span style="font-size:.72rem;color:var(--text-muted);">Priority ordered: P1 (Top) &rarr; P5 (Base)</span>
+          </div>
+          <div id="steering-memory-gates" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
             <!-- Rendered by JS -->
           </div>
 
-          <!-- Subtask Context & Raw Assembled System Prompt Inspector -->
-          <div class="section-title" style="font-size:.88rem;margin-bottom:8px;">🔍 Assembled System Prompt & Subtask Inspector</div>
+          <!-- Subtask Context & Multi-Tab Raw Inspector -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="section-title" style="font-size:.88rem;margin:0;">🔍 Assembled Prompt & Workspace Context Inspector</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline btn-xs active" id="btn-inspect-tab-prompt" onclick="switchSteeringInspectTab('prompt')">📑 Assembled Prompt</button>
+              <button class="btn btn-outline btn-xs" id="btn-inspect-tab-workspace" onclick="switchSteeringInspectTab('workspace')">📂 Extracted Workspace & Tree</button>
+              <button class="btn btn-outline btn-xs" id="btn-inspect-tab-history" onclick="switchSteeringInspectTab('history')">💬 Chat & Session Turns</button>
+            </div>
+          </div>
           <div style="background:rgba(0,0,0,.3);border:1px solid var(--glass-border);border-radius:6px;padding:12px;">
             <div id="steering-subtask-view" style="font-size:.78rem;color:var(--accent-purple);margin-bottom:8px;font-weight:600;display:none;"></div>
-            <pre id="steering-raw-prompt-view" style="font-size:.72rem;color:var(--text-secondary);max-height:260px;overflow-y:auto;white-space:pre-wrap;margin:0;font-family:monospace;background:rgba(10,10,15,.6);padding:10px;border-radius:4px;">(Click "Inspect Live Ingestion & Telemetry" or edit inputs to load assembled system prompt...)</pre>
+            <pre id="steering-raw-prompt-view" style="font-size:.72rem;color:var(--text-secondary);max-height:300px;overflow-y:auto;white-space:pre-wrap;margin:0;font-family:monospace;background:rgba(10,10,15,.6);padding:10px;border-radius:4px;">(Click "Inspect Live Ingestion & Telemetry" or edit inputs to load assembled system prompt...)</pre>
           </div>
 
         </div>
