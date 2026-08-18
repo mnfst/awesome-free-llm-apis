@@ -61,8 +61,19 @@ export class WorkspaceIndexer {
             ? files.filter(f => targetFiles.includes(path.resolve(f)))
             : files;
 
+        const filteredFiles = filesToProcess.filter(f => {
+            const rel = path.relative(workspaceRoot, f).replace(/\\/g, '/');
+            return !rel.startsWith('.free-llm-mcp/') &&
+                   !rel.startsWith('.agents/') &&
+                   !rel.startsWith('data/') &&
+                   !rel.includes('/.free-llm-mcp/') &&
+                   !rel.includes('/data/');
+        });
+
+        result.totalFiles = filteredFiles.length;
+
         // 2. Process files sequentially to avoid race conditions in Vectra/Memory
-        for (const file of filesToProcess) {
+        for (const file of filteredFiles) {
             try {
                 const relativePath = path.relative(workspaceRoot, file);
                 const vectorKey = `file:${wsHash}:${relativePath}`;

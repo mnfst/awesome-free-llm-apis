@@ -90,7 +90,16 @@ export class MemoryManager {
   }
 
   calculateDecayedConfidence(entry: any, daysSince: number) {
-    return entry.confidence * Math.exp(-daysSince / 30);
+    if (!entry) return 0;
+    if (entry.pinned || entry.decay === false || entry.halfLife === Infinity) {
+      return entry.confidence ?? 1.0;
+    }
+    const sourceCount = Math.max(1, entry.sourceCount || 1);
+    const baseStrength = entry.halfLifeDays || 30;
+    // Reinforced Ebbinghaus retention: memory strength scales with confirmation/repetition
+    const reinforcedStrength = baseStrength * (1 + 0.5 * (sourceCount - 1));
+    const confidence = typeof entry.confidence === 'number' ? entry.confidence : 0.5;
+    return confidence * Math.exp(-daysSince / reinforcedStrength);
   }
 
   detectAndLinkSupersession(oldEntry: any, newContent: string) {

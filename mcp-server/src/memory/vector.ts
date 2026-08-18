@@ -5,6 +5,9 @@ import path from 'path';
 import fs from 'fs/promises';
 import { withFileLock } from '../utils/file-lock.js';
 
+import os from 'os';
+import { config } from '../config/index.js';
+
 // See long-term.ts for rationale: withFileLock() already reaps genuinely stuck/orphaned
 // locks (dead holder or >30s old), so this only needs to be long enough that ordinary
 // contention waits its turn instead of failing.
@@ -22,10 +25,14 @@ export interface VectorEntry {
 export class VectorStore {
     private embedder: any = null;
     private modelName = 'Xenova/bge-small-en-v1.5';
-    private storageRoot: string;
+    private _storageRoot?: string;
 
-    constructor(storageRoot = './data/vector-indices') {
-        this.storageRoot = storageRoot;
+    constructor(storageRoot?: string) {
+        this._storageRoot = storageRoot;
+    }
+
+    get storageRoot(): string {
+        return this._storageRoot || process.env.VECTOR_STORAGE_ROOT || config.vectorStorageRoot || path.join(os.homedir(), '.free-llm-mcp', 'data', 'vector-indices');
     }
 
     private async getEmbedder() {
@@ -105,24 +112,32 @@ export class VectorStore {
         return withFileLock(this.lockPathFor(workspaceHash), async () => {
             const index = await this.getIndex(workspaceHash);
 
-            let results: QueryResult<any>[];
+            let results: QueryResult<any>[] = [];
             try {
-                // Try hybrid search first (BM25 + Semantic)
-                // Signature: (vector, query, topK, filter, isBm25)
-                results = await index.queryItems(queryEmbedding, query, limit, undefined, true);
-            } catch (err) {
-                // Fallback to pure semantic search if BM25 fails (e.g. not enough documents for winkBM25S)
                 results = await index.queryItems(queryEmbedding, query, limit, undefined, false);
+            } catch (err) {
+                results = [];
             }
 
-            return results.map((res: QueryResult<any>) => ({
-                id: res.item.id as string,
-                content: res.item.metadata.content as string,
-                contentHash: res.item.metadata.contentHash as string,
-                timestamp: res.item.metadata.timestamp as number,
-                metadata: res.item.metadata,
-                score: res.score
-            } as any));
+            return results.map((res: QueryResult<any>) => {
+                const ts = (res.item.metadata?.timestamp as number) || Date.now();
+                const daysSince = Math.max(0, (Date.now() - ts) / (1000 * 60 * 60 * 24));
+                const sourceCount = (res.item.metadata?.sourceCount as number) || 1;
+                const isPinned = !!res.item.metadata?.pinned;
+                const strength = 30 * (1 + 0.5 * sourceCount);
+                const decayFactor = isPinned ? 1.0 : Math.exp(-daysSince / strength);
+
+                return {
+                    id: res.item.id as string,
+                    content: res.item.metadata?.content as string,
+                    contentHash: res.item.metadata?.contentHash as string,
+                    timestamp: ts,
+                    metadata: res.item.metadata,
+                    score: res.score * decayFactor,
+                    rawScore: res.score,
+                    decayFactor
+                } as any;
+            });
         }, LOCK_WAIT_MS);
     }
 
