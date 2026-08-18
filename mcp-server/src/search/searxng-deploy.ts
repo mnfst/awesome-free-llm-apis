@@ -35,7 +35,7 @@ export function ensureSearxngContainer(): boolean {
     spawnSync('docker', ['--version'], { stdio: 'pipe' });
     spawnSync('docker', ['info'], { stdio: 'pipe' });
   } catch {
-    console.log('[SearXNG Docker] Docker CLI or daemon not available/active; skipping SearXNG Docker deployment.');
+    console.error('[SearXNG Docker] Docker CLI or daemon not available/active; skipping SearXNG Docker deployment.');
     return false;
   }
 
@@ -67,17 +67,17 @@ search:
 `;
 
     writeFileSync(settingsPath, settingsContent, 'utf-8');
-    console.log(`[SearXNG Docker] Updated settings.yml with json format enabled at ${settingsPath}`);
+    console.error(`[SearXNG Docker] Updated settings.yml with json format enabled at ${settingsPath}`);
 
     // Always recreate container to ensure volume mount and settings are strictly applied
     try {
       spawnSync('docker', ['rm', '-f', containerName], { stdio: 'ignore' });
     } catch {}
 
-    console.log('[SearXNG Docker] Pulling searxng/searxng image...');
+    console.error('[SearXNG Docker] Pulling searxng/searxng image...');
     spawnSync('docker', ['pull', 'searxng/searxng'], { stdio: 'inherit' });
 
-    console.log(`[SearXNG Docker] Deploying background SearXNG container on port ${port} with JSON enabled...`);
+    console.error(`[SearXNG Docker] Deploying background SearXNG container on port ${port} with JSON enabled...`);
     // Convert Windows backslashes to forward slashes for Docker volume compatibility
     const normalizedSettingsPath = settingsPath.replace(/\\/g, '/');
     spawnSync('docker', [
@@ -88,7 +88,7 @@ search:
       'searxng/searxng'
     ], { stdio: 'inherit' });
 
-    console.log(`[SearXNG Docker] Successfully deployed SearXNG on http://localhost:${port}`);
+    console.error(`[SearXNG Docker] Successfully deployed SearXNG on http://localhost:${port}`);
     return true;
   } catch (err: any) {
     console.warn('[SearXNG Docker] Deployment warning:', err?.message || String(err));
