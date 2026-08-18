@@ -11,23 +11,39 @@ import { getMessageContent, prependToMessageContent, appendToMessageContent } fr
 import { GithubRepoScanner, GLOBAL_CYBER_WIKI_NS } from '../../utils/GithubRepoScanner.js';
 import { CYBER_TERMS_REGEX } from '../../utils/TaskClassifier.js';
 import { taskTypeToPersona } from '../../utils/PersonaMapper.js';
+import { EXCLUDE_DIRS, EXCLUDE_EXTENSIONS } from './constants.js';
 
 const workspaceScanner = new WorkspaceScanner(process.cwd());
 
 /**
- * Generates a lightweight directory tree up to 2 levels deep to provide structural context.
+ * Generates a clean, lightweight directory tree (up to 2 levels deep, max 30 entries)
+ * filtering out cache hashes, temporary files, data dirs, and build artifacts to prevent token bloat.
  */
-async function getDirectoryTree(dirPath: string, maxDepth = 2, currentDepth = 0): Promise<string> {
-    if (currentDepth > maxDepth) return '';
+async function getDirectoryTree(dirPath: string, maxDepth = 2, currentDepth = 0, state = { count: 0 }, maxEntries = 30): Promise<string> {
+    if (currentDepth > maxDepth || state.count >= maxEntries) return '';
     try {
         const entries = await fs.readdir(dirPath, { withFileTypes: true });
         let tree = '';
         const indent = '  '.repeat(currentDepth);
-        for (const entry of entries) {
-            if (['node_modules', '.git', 'dist', 'build', '.next', 'venv', '__pycache__'].includes(entry.name)) continue;
+
+        const filtered = entries.filter(entry => {
+            const name = entry.name;
+            if (name.startsWith('.') && name !== '.env' && name !== '.env.example') return false;
+            if (EXCLUDE_DIRS.includes(name) || ['data', 'cache', 'temp', 'tmp', 'projects', 'scrapes'].includes(name)) return false;
+            const ext = path.extname(name).toLowerCase();
+            if (EXCLUDE_EXTENSIONS.includes(ext) || ext === '.tmp' || ext === '.lock' || ext === '.log') return false;
+            return true;
+        });
+
+        for (const entry of filtered) {
+            if (state.count >= maxEntries) {
+                tree += `${indent}... [tree truncated for concise context]\n`;
+                break;
+            }
             tree += `${indent}- ${entry.name}${entry.isDirectory() ? '/' : ''}\n`;
+            state.count++;
             if (entry.isDirectory()) {
-                tree += await getDirectoryTree(path.join(dirPath, entry.name), maxDepth, currentDepth + 1);
+                tree += await getDirectoryTree(path.join(dirPath, entry.name), maxDepth, currentDepth + 1, state, maxEntries);
             }
         }
         return tree;
@@ -413,7 +429,9 @@ export class WorkspaceContextMiddleware implements Middleware {
         if (context.workspaceRoot && userContent) {
             try {
                 dirTree = await getDirectoryTree(context.workspaceRoot);
-                const queryKeywords = context.keywords || [];
+                const queryKeywords = (context.keywords && context.keywords.length > 0)
+                    ? context.keywords
+                    : (userContent ? (userContent.toLowerCase().match(/\b[a-z]{3,}\b/g)?.filter(w => !['the','and','for','with','from','that','this','have','are','was','were','lets','check','please','could','would','should'].includes(w)).slice(0, 8) || []) : []);
                 grepResults = await ContextGatherer.gatherContext({
                     workspaceRoot: context.workspaceRoot,
                     query: userContent,
@@ -591,7 +609,9 @@ export class WorkspaceContextMiddleware implements Middleware {
             console.error(`[WorkspaceContextMiddleware] Agentic mode: skipping own system prompt injection, delegating to AgenticMiddleware.`);
         }
 
-        const shortTermTokens = Math.ceil((memoryContext?.length || 0) / 3.8);
+        const messagesText = context.request.messages?.map((m: any) => getMessageContent(m.content)).join(' ') || '';
+        const shortTermTokens = Math.ceil(messagesText.length / 3.8);
+        const longTermTokens = Math.ceil((memoryContext?.length || 0) / 3.8);
         const wikiTokens = Math.ceil((wikiContext?.length || 0) / 3.8);
         const grepTokens = Math.ceil((workspaceContextStr?.length || 0) / 3.8);
         const groundingTokens = Math.ceil((groundingGate?.length || 0) / 3.8);
@@ -602,12 +622,12 @@ export class WorkspaceContextMiddleware implements Middleware {
             matchedKeywords: (context as any).keywords || [],
             memoryLayers: {
                 shortTermTokens,
-                longTermTokens: shortTermTokens,
+                longTermTokens,
                 wikiTokens,
                 grepTokens,
                 groundingTokens,
                 sysPromptTokens,
-                totalContextTokens: shortTermTokens + wikiTokens + grepTokens + groundingTokens + sysPromptTokens
+                totalContextTokens: shortTermTokens + longTermTokens + wikiTokens + grepTokens + groundingTokens + sysPromptTokens
             },
             groundingGate: groundingGate || null,
             dirTree: dirTree || null,

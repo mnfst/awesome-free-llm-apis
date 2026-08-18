@@ -21,7 +21,8 @@
     "samples": "tsx --env-file=.env benchmarks/generate-live-samples.ts",
     "dashboard": "tsx --env-file=.env src/server.ts --sse",
     "report": "tsx --env-file=.env scripts/evaluation/model-report.ts",
-    "fetch-hermes": "tsx scripts/fetch-hermes-skills.ts"
+    "fetch-hermes": "tsx scripts/fetch-hermes-skills.ts",
+    "fetch-cyber-tools": "tsx scripts/fetch-cyber-tools.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",

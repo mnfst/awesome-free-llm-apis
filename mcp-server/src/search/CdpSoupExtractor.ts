@@ -32,7 +32,7 @@ export async function cdpSoupExtract(url: string): Promise<string | undefined> {
         return res.json.slice(0, CDP_SOUP_MAX_CHARS);
       }
     } finally {
-      await pool.release('cdp-soup-session');
+      await pool.release('cdp-soup-session', true);
     }
   } catch {
     // Fail-graceful: CDP soup extraction is strictly best-effort

@@ -1,11 +1,11 @@
 import { cyberTool } from '../src/tools/cyber-tool.js';
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const CYBERSEC_PATH = path.join(
-    'C:', 'Users', 'mahes', '.gemini', 'antigravity', 'brain',
-    'f2ebbd46-c917-4581-b46c-90bb33b66f95', 'scratch', 'cybersec-toolkit'
-);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const CYBERSEC_PATH = path.resolve(__dirname, 'context', 'cybersec-toolkit');
 
 describe('cyber_tool dag_reverse mode', () => {
     const sessionId = `test-dag-session-${Date.now()}`;

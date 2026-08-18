@@ -2035,6 +2035,10 @@ function switchSteeringInspectTab(tab) {
 }
 window.switchSteeringInspectTab = switchSteeringInspectTab;
 
+document.getElementById('btn-inspect-tab-prompt')?.addEventListener('click', () => switchSteeringInspectTab('prompt'));
+document.getElementById('btn-inspect-tab-workspace')?.addEventListener('click', () => switchSteeringInspectTab('workspace'));
+document.getElementById('btn-inspect-tab-history')?.addEventListener('click', () => switchSteeringInspectTab('history'));
+
 function renderSteeringInspectContent() {
   if (!steeringRawPromptView) return;
   if (!_latestSteeringTelemetry) {
@@ -2074,6 +2078,14 @@ async function runSteeringEvaluation() {
     ? rawKeywordsStr.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
     : [];
 
+  if (btnRunSteeringEval) {
+    btnRunSteeringEval.disabled = true;
+    btnRunSteeringEval.innerHTML = '<span class="spinner" style="width:12px;height:12px;display:inline-block;border-width:2px;vertical-align:middle;margin-right:6px;"></span> Evaluating...';
+  }
+  if (steeringBloatStatus) {
+    steeringBloatStatus.textContent = 'EVALUATING ⏳';
+  }
+
   try {
     const response = await fetch('/api/steering_eval', {
       method: 'POST',
@@ -2087,7 +2099,10 @@ async function runSteeringEvaluation() {
     });
 
     const data = await response.json();
-    if (!data.success || !data.telemetry) return;
+    if (!data.success || !data.telemetry) {
+      if (steeringBloatStatus) steeringBloatStatus.textContent = 'ERROR ⚠️';
+      return;
+    }
 
     const st = data.telemetry;
     _latestSteeringTelemetry = st;
@@ -2097,7 +2112,9 @@ async function runSteeringEvaluation() {
 
     // Persona & keywords badge
     if (steeringPersonaBadge) {
-      steeringPersonaBadge.innerHTML = `Persona: <code>${esc(st.persona || 'coder')}</code> &bull; ${userKeywords.length} keywords`;
+      const activeKw = (st.keywords && st.keywords.length > 0) ? st.keywords : userKeywords;
+      const kwPreview = activeKw.length > 0 ? ` &bull; ${activeKw.length} keywords (<code>${esc(activeKw.slice(0, 3).join(', '))}${activeKw.length > 3 ? '...' : ''}</code>)` : ' &bull; 0 keywords';
+      steeringPersonaBadge.innerHTML = `Persona: <code>${esc(st.persona || 'coder')}</code>${kwPreview}`;
     }
 
     // Stats
@@ -2120,20 +2137,20 @@ async function runSteeringEvaluation() {
     // Matched prompt.json sections with expandable text
     if (steeringMatchedSections) {
       if (matched.length === 0) {
-        steeringMatchedSections.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:10px;background:rgba(255,255,255,.03);border-radius:4px;border:1px dashed var(--glass-border);">No external prompt.json sections matched the query keywords. Baseline system prompt active.</div>';
+        steeringMatchedSections.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:12px;background:rgba(255,255,255,.03);border-radius:6px;border:1px dashed var(--glass-border);display:flex;align-items:center;gap:8px;"><span style="font-size:1.1rem;">🛡️</span><span><strong>Zero External Bloat:</strong> No external prompt.json sections matched the query. Baseline system prompt active.</span></div>';
       } else {
         steeringMatchedSections.innerHTML = matched.map((sec, idx) => `
-          <details class="qs-tool-card" style="margin:0;background:rgba(168,85,247,.05);border:1px solid rgba(168,85,247,.3);" ${idx === 0 ? 'open' : ''}>
-            <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;">
+          <details class="qs-tool-card" style="margin:0;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.45);box-shadow:0 0 12px rgba(168,85,247,.12);border-radius:6px;" ${idx === 0 ? 'open' : ''}>
+            <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 14px;">
               <div>
-                <span class="qs-tool-name" style="color:var(--accent-purple);font-weight:600;">${esc(sec.title || sec.id)}</span>
-                <span class="qs-tool-desc" style="font-size:.72rem;margin-left:8px;">Keywords: <code>${esc((sec.keywords || []).join(', '))}</code> &bull; <span style="color:var(--accent-cyan);font-weight:600;">${sec.tokenCount || 0} tok</span></span>
+                <span class="qs-tool-name" style="color:var(--accent-purple);font-weight:700;font-size:.84rem;">${esc(sec.title || sec.id)}</span>
+                <span class="qs-tool-desc" style="font-size:.74rem;margin-left:8px;">Keywords: <code>${esc((sec.keywords || []).join(', '))}</code> &bull; <span style="color:var(--accent-cyan);font-weight:700;">${sec.tokenCount || 0} tok</span></span>
               </div>
-              <span class="badge badge-purple" style="font-size:.7rem;">Injected</span>
+              <span class="badge badge-purple" style="font-size:.72rem;padding:3px 8px;box-shadow:0 0 8px rgba(168,85,247,.4);">⚡ Injected & Active</span>
             </summary>
-            <div style="padding:10px 12px;border-top:1px solid rgba(168,85,247,.15);background:rgba(10,10,15,.6);">
+            <div style="padding:10px 14px;border-top:1px solid rgba(168,85,247,.2);background:rgba(10,10,15,.7);">
               <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Injected Prompt Content:</div>
-              <pre style="font-size:.72rem;color:var(--text-secondary);white-space:pre-wrap;margin:0;font-family:monospace;max-height:160px;overflow-y:auto;background:rgba(0,0,0,.3);padding:8px;border-radius:4px;">${esc(sec.content || '(No content text available)')}</pre>
+              <pre style="font-size:.72rem;color:var(--text-secondary);white-space:pre-wrap;margin:0;font-family:monospace;max-height:160px;overflow-y:auto;background:rgba(0,0,0,.4);padding:8px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.05);">${esc(sec.content || '(No content text available)')}</pre>
             </div>
           </details>
         `).join('');
@@ -2178,10 +2195,16 @@ async function runSteeringEvaluation() {
     }
 
     // Subtask & Raw prompt inspector
-    if (st.subtaskContext) {
+    if (isAgentic || st.subtaskContext) {
       if (steeringSubtaskView) {
         steeringSubtaskView.style.display = 'block';
-        steeringSubtaskView.innerHTML = `📌 Active Subtask: <code>${esc(st.subtaskContext.id || 'subtask-1')}</code> &bull; ${esc(st.subtaskContext.title || '')}`;
+        const subId = st.subtaskContext?.id || 'subtask-eval-1';
+        const subTitle = st.subtaskContext?.title || (query ? `Execute task: ${query}` : 'System prompt steering subtask');
+        steeringSubtaskView.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(236,72,153,.12);border:1px solid rgba(236,72,153,.35);border-radius:6px;font-size:.76rem;color:#f472b6;">
+            <span class="badge" style="background:#ec4899;color:#fff;font-weight:700;font-size:.68rem;">AGENTIC SUBTASK ACTIVE</span>
+            <span>Subtask ID: <code>${esc(subId)}</code> &bull; <strong>${esc(subTitle)}</strong></span>
+          </div>`;
       }
     } else {
       if (steeringSubtaskView) steeringSubtaskView.style.display = 'none';
@@ -2191,6 +2214,11 @@ async function runSteeringEvaluation() {
 
   } catch (err) {
     if (steeringBloatStatus) steeringBloatStatus.textContent = 'ERROR ⚠️';
+  } finally {
+    if (btnRunSteeringEval) {
+      btnRunSteeringEval.disabled = false;
+      btnRunSteeringEval.innerHTML = 'Inspect Live Ingestion & Telemetry';
+    }
   }
 }
 

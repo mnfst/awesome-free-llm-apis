@@ -97,3 +97,16 @@ try {
   console.warn('Warning: SearXNG Docker deployment check skipped. Details:', err.message);
 }
 
+// Step 4: Ensure cyber tools index is synchronized
+try {
+  const cyberToolsPath = resolve(root, 'external/cyber-tools-index/tools_config.json');
+  if (!existsSync(cyberToolsPath)) {
+    console.log('Synchronizing cyber-tools-index from remote repository...');
+    const { fetchCyberToolsIndex } = await import('../fetch-cyber-tools.js');
+    await fetchCyberToolsIndex();
+  }
+} catch (err) {
+  console.warn('Warning: Cyber tools index sync skipped. Details:', err.message);
+}
+
+

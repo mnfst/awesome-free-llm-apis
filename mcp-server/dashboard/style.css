@@ -279,7 +279,9 @@ body {
 .badge-purple { background: rgba(124,58,237,.15); color: var(--accent-purple); border: 1px solid rgba(124,58,237,.3); }
 .badge-cyan   { background: rgba(6,182,212,.15);  color: var(--accent-cyan);   border: 1px solid rgba(6,182,212,.3); }
 .badge-red    { background: rgba(239,68,68,.15);  color: var(--accent-red);    border: 1px solid rgba(239,68,68,.3); }
-.badge-amber  { background: rgba(245,158,11,.15); color: var(--accent-amber);  border: 1px solid rgba(245,158,11,.3);}
+.badge-amber  { background: rgba(245,158,11,.15); color: var(--accent-amber);  border: 1px solid rgba(245,158,11,.3); }
+.badge-blue   { background: rgba(59,130,246,.15);  color: #60a5fa;             border: 1px solid rgba(59,130,246,.3); }
+.badge-gray   { background: rgba(255,255,255,.06); color: var(--text-muted);  border: 1px solid var(--glass-border); }
 
 /* ─── Provider Cards ─────────────────────────────────────────── */
 .providers-grid {
@@ -389,12 +391,24 @@ select option { background: var(--bg-elevated); }
 }
 .btn-primary:hover:not(:disabled) { background: #6d28d9; box-shadow: var(--shadow-glow-purple); }
 
+.btn-purple {
+  background: var(--accent-purple); color: #fff; border-color: var(--accent-purple);
+}
+.btn-purple:hover:not(:disabled) { background: #6d28d9; box-shadow: var(--shadow-glow-purple); }
+
 .btn-outline {
   background: transparent; color: var(--text-secondary); border-color: var(--glass-border);
 }
 .btn-outline:hover:not(:disabled) { border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(124,58,237,.08); }
+.btn-outline.active {
+  border-color: var(--accent-purple);
+  color: #fff;
+  background: rgba(124, 58, 237, 0.25);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+}
 
 .btn-sm { padding: 5px 12px; font-size: .8rem; }
+.btn-xs { padding: 4px 9px; font-size: .73rem; }
 .btn-icon { padding: 7px; border-radius: var(--radius-sm); }
 
 /* ─── Response Panel ─────────────────────────────────────────── */

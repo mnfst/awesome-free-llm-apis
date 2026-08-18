@@ -61,7 +61,7 @@ describe('vision_tool PDF Ingestion', () => {
     const fileUri = `file:///${dummyPdfPath.replace(/\\/g, '/')}`;
     const result = await visionTool({
       image_path: fileUri,
-      prompt: 'Analyze visual charts on this page'
+      prompt: `Analyze visual charts on this page ${Date.now()}`
     });
 
     expect(renderPdfPageMock).toHaveBeenCalledWith(path.resolve(dummyPdfPath), 1);

@@ -641,19 +641,17 @@ export async function evaluatePromptSections(options: PromptOptions): Promise<Pr
     const prompt = await getIntelligentSystemPrompt(options);
     const promptData = await loadPromptData();
     const sections = promptData?.sections || [];
-    const contextText = (options.context || '') + ' ' + (options.keywords || []).join(' ');
-    const contextTextLower = contextText.toLowerCase();
 
     const matchedSections: PromptSectionMeta[] = [];
     for (const sec of sections) {
-        if (!sec.keywords || !Array.isArray(sec.keywords)) continue;
-        const isMatched = sec.keywords.some((kw: string) => contextTextLower.includes(kw.toLowerCase()));
-        if (isMatched) {
+        if (!sec.title) continue;
+        // A section is matched if and only if it was selected and injected into the assembled prompt
+        if (prompt.includes(sec.title)) {
             const secContent = sec.content || sec.title || sec.id;
             matchedSections.push({
                 id: sec.id,
                 title: sec.title,
-                keywords: sec.keywords,
+                keywords: sec.keywords || [],
                 tokenCount: Math.ceil(secContent.length / 3.8),
                 content: secContent
             });

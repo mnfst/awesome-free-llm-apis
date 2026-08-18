@@ -5,7 +5,7 @@ import { RepositoryGraph } from '../memory/dependency-scanner.js';
 import { logToolCall } from '../utils/ChatLogger.js';
 import { TaskType } from '../pipeline/middleware.js';
 import path from 'node:path';
-import { promises as fs } from 'node:fs';
+import { promises as fs, existsSync } from 'node:fs';
 
 export interface CyberToolInput {
     action: 'list_tools' | 'get_tool' | 'register_tool' | 'wiki_lookup'
@@ -228,7 +228,23 @@ export async function cyberTool(input: CyberToolInput) {
                 const nodes: DagNode[] = [];
 
                 if (input.toolName === 'cybersec-toolkit') {
-                    const configPath = path.join(input.repoPath, 'tools_config.json');
+                    let configPath = input.repoPath ? path.join(input.repoPath, 'tools_config.json') : '';
+                    if (!configPath || !existsSync(configPath)) {
+                        const candidates = [
+                            path.resolve(process.cwd(), 'external/cyber-tools-index/tools_config.json'),
+                            path.resolve(process.cwd(), 'tests/context/cybersec-toolkit/tools_config.json'),
+                            path.resolve(process.cwd(), 'scratch/cybersec-toolkit/tools_config.json')
+                        ];
+                        for (const c of candidates) {
+                            if (existsSync(c)) {
+                                configPath = c;
+                                break;
+                            }
+                        }
+                    }
+                    if (!configPath || !existsSync(configPath)) {
+                        throw new Error(`tools_config.json not found for cybersec-toolkit in ${input.repoPath || 'default paths'}`);
+                    }
                     const raw = JSON.parse(await fs.readFile(configPath, 'utf-8'));
                     const byCategory = new Map<string, any[]>();
                     for (const t of raw) {
@@ -237,12 +253,13 @@ export async function cyberTool(input: CyberToolInput) {
                         byCategory.get(cat)!.push(t);
                     }
                     for (const [cat, tools] of byCategory.entries()) {
+                        const slicedTools = tools.slice(0, SLICE_SIZE);
                         nodes.push({
                             id: `cybersec-toolkit/${cat}`,
                             sliceKey: cat,
                             status: 'pending',
-                            itemCount: tools.length,
-                            items: tools.slice(0, SLICE_SIZE).map((t: any) => ({ name: t.name, method: t.method, url: t.url, module: t.module }))
+                            itemCount: slicedTools.length,
+                            items: slicedTools.map((t: any) => ({ name: t.name, method: t.method, url: t.url, module: t.module }))
                         });
                     }
                 } else if (input.toolName === 'hexstrike-ai') {

@@ -1,12 +1,29 @@
-import { execSync } from 'node:child_process';
-import { mkdirSync, existsSync, writeFileSync } from 'node:fs';
-import dotenv from 'dotenv';
+import { execSync, spawnSync } from 'node:child_process';
+import { mkdirSync, existsSync, writeFileSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Safe zero-dependency .env loader for CLI invocation
+try {
+  const envPath = path.resolve(__dirname, '../../.env');
+  if (existsSync(envPath)) {
+    const raw = readFileSync(envPath, 'utf-8');
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx > 0) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+        if (!process.env[key]) process.env[key] = val;
+      }
+    }
+  }
+} catch {}
 
 /**
  * Checks if Docker is available on host, pulls `searxng/searxng`, and deploys
@@ -15,8 +32,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
  */
 export function ensureSearxngContainer(): boolean {
   try {
-    execSync('docker --version', { stdio: 'pipe' });
-    execSync('docker info', { stdio: 'pipe' });
+    spawnSync('docker', ['--version'], { stdio: 'pipe' });
+    spawnSync('docker', ['info'], { stdio: 'pipe' });
   } catch {
     console.log('[SearXNG Docker] Docker CLI or daemon not available/active; skipping SearXNG Docker deployment.');
     return false;
@@ -35,10 +52,11 @@ export function ensureSearxngContainer(): boolean {
     mkdirSync(searxngDir, { recursive: true });
     const settingsPath = path.resolve(searxngDir, 'settings.yml');
 
+    const generatedSecretKey = crypto.randomBytes(32).toString('hex');
     const settingsContent = `use_default_settings: true
 server:
   bind_address: "0.0.0.0"
-  secret_key: "awesome-free-llm-apis-secret-key-searxng-token"
+  secret_key: "${generatedSecretKey}"
   limiter: false
 search:
   safe_search: 0
@@ -53,16 +71,22 @@ search:
 
     // Always recreate container to ensure volume mount and settings are strictly applied
     try {
-      execSync(`docker rm -f ${containerName}`, { stdio: 'ignore' });
+      spawnSync('docker', ['rm', '-f', containerName], { stdio: 'ignore' });
     } catch {}
 
     console.log('[SearXNG Docker] Pulling searxng/searxng image...');
-    execSync('docker pull searxng/searxng', { stdio: 'inherit' });
+    spawnSync('docker', ['pull', 'searxng/searxng'], { stdio: 'inherit' });
 
     console.log(`[SearXNG Docker] Deploying background SearXNG container on port ${port} with JSON enabled...`);
     // Convert Windows backslashes to forward slashes for Docker volume compatibility
     const normalizedSettingsPath = settingsPath.replace(/\\/g, '/');
-    execSync(`docker run -d --name ${containerName} -v "${normalizedSettingsPath}:/etc/searxng/settings.yml" -p 127.0.0.1:${port}:8080 searxng/searxng`, { stdio: 'inherit' });
+    spawnSync('docker', [
+      'run', '-d',
+      '--name', containerName,
+      '-v', `${normalizedSettingsPath}:/etc/searxng/settings.yml`,
+      '-p', `127.0.0.1:${port}:8080`,
+      'searxng/searxng'
+    ], { stdio: 'inherit' });
 
     console.log(`[SearXNG Docker] Successfully deployed SearXNG on http://localhost:${port}`);
     return true;
