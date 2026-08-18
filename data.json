@@ -677,7 +677,7 @@
         },
         {
           "id": null,
-          "name": "+ ~60 more models (token required)",
+          "name": "+ ~40 more models (token required)",
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text",
@@ -1289,7 +1289,7 @@
     },
     {
       "id": 10,
-      "text": "LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable. Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title."
+      "text": "LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title."
     }
   ],
   "glossary": [

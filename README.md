@@ -207,7 +207,7 @@ Base URL: `https://api.llm7.io/v1`
 | Model Name                         | Context | Max Output | Modality         | Rate Limit              |
 | ---------------------------------- | ------- | ---------- | ---------------- | ----------------------- |
 | `gpt-oss:20b`                      | —       | —          | Text (reasoning) | 30 RPM (120 with token) |
-| + ~60 more models (token required) | Varies  | Varies     | Text             | 30 RPM (120 with token) |
+| + ~40 more models (token required) | Varies  | Varies     | Text             | 30 RPM (120 with token) |
 
 ### [ModelScope](https://modelscope.cn/my/myaccesstoken) 🇨🇳
 
@@ -355,4 +355,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^7]: OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers.
 [^8]: SambaNova grants $5 in initial credits (valid 30 days) on top of the permanent free tier. The free tier itself persists indefinitely with 20 RPM, 20 RPD, and 200K TPD per model. No credit card required. OpenAI SDK-compatible.
 [^9]: SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support.
-[^10]: LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable. Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title.
+[^10]: LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title.
