@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-30",
+  "lastUpdated": "2026-08-19",
   "providers": [
     {
       "name": "Aion Labs",
@@ -160,7 +160,7 @@
       "flag": "🇺🇸",
       "url": "https://aistudio.google.com/app/apikey",
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
-      "description": "Free tier unavailable in EU/UK/Switzerland. Free-tier prompts may be used by Google to improve products.",
+      "description": "Free tier, no credit card. Free-tier prompts may be used by Google to improve products.",
       "footnoteRef": 1,
       "models": [
         {
@@ -446,106 +446,6 @@
       ]
     },
     {
-      "name": "GitHub Models",
-      "category": "inference_provider",
-      "country": "US",
-      "flag": "🇺🇸",
-      "url": "https://github.com/marketplace/models",
-      "baseUrl": "https://models.github.ai/inference",
-      "description": "Free prototyping for all GitHub users. 45+ models. Per-request limits (8K in / 4K out).",
-      "footnoteRef": null,
-      "models": [
-        {
-          "id": "openai/gpt-5",
-          "name": "gpt-5",
-          "context": "200K",
-          "maxOutput": "32K",
-          "modality": "Text",
-          "rateLimit": "10 RPM, 50 RPD"
-        },
-        {
-          "id": "openai/gpt-4.1",
-          "name": "gpt-4.1",
-          "context": "1M",
-          "maxOutput": "32K",
-          "modality": "Text",
-          "rateLimit": "10 RPM, 50 RPD"
-        },
-        {
-          "id": "openai/gpt-4.1-mini",
-          "name": "gpt-4.1-mini",
-          "context": "1M",
-          "maxOutput": "32K",
-          "modality": "Text",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": "openai/gpt-4o",
-          "name": "gpt-4o",
-          "context": "128K",
-          "maxOutput": "16K",
-          "modality": "Text + Vision",
-          "rateLimit": "10 RPM, 50 RPD"
-        },
-        {
-          "id": "openai/o4-mini",
-          "name": "o4-mini",
-          "context": "200K",
-          "maxOutput": "100K",
-          "modality": "Text (reasoning)",
-          "rateLimit": "10 RPM, 50 RPD"
-        },
-        {
-          "id": "meta/Llama-4-Scout-17B-16E-Instruct",
-          "name": "Llama-4-Scout-17B-16E-Instruct",
-          "context": "512K",
-          "maxOutput": "~4K",
-          "modality": "Text + Vision",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": "meta/Llama-4-Maverick-17B-128E-Instruct-FP8",
-          "name": "Llama-4-Maverick-17B-128E-Instruct-FP8",
-          "context": "256K",
-          "maxOutput": "~4K",
-          "modality": "Text + Vision",
-          "rateLimit": "10 RPM, 50 RPD"
-        },
-        {
-          "id": "meta/Llama-3.3-70B-Instruct",
-          "name": "Llama-3.3-70B-Instruct",
-          "context": "131K",
-          "maxOutput": "~4K",
-          "modality": "Text",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": "deepseek/DeepSeek-R1",
-          "name": "DeepSeek-R1",
-          "context": "64K",
-          "maxOutput": "8K",
-          "modality": "Text (reasoning)",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": "mistral-small-2503",
-          "name": "Mistral-Small-3.1",
-          "context": "128K",
-          "maxOutput": "~4K",
-          "modality": "Text + Vision",
-          "rateLimit": "15 RPM, 150 RPD"
-        },
-        {
-          "id": null,
-          "name": "+ 35 more models",
-          "context": "Varies",
-          "maxOutput": "Varies",
-          "modality": "Text / Image",
-          "rateLimit": "Varies by tier"
-        }
-      ]
-    },
-    {
       "name": "Groq",
       "category": "inference_provider",
       "country": "US",
@@ -764,60 +664,20 @@
       "flag": "🇬🇧",
       "url": "https://token.llm7.io",
       "baseUrl": "https://api.llm7.io/v1",
-      "description": "Zero-friction API gateway. No registration needed for basic access. 30+ models. GDPR-compliant.",
-      "footnoteRef": null,
+      "description": "API gateway with a free tier. Anonymous access is now limited to select models; a free token from token.llm7.io unlocks the rest.",
+      "footnoteRef": 10,
       "models": [
         {
-          "id": "deepseek-r1-0528",
-          "name": "deepseek-r1-0528",
+          "id": "gpt-oss:20b",
+          "name": "gpt-oss:20b",
           "context": "—",
           "maxOutput": "—",
           "modality": "Text (reasoning)",
           "rateLimit": "30 RPM (120 with token)"
         },
         {
-          "id": "deepseek-v3-0324",
-          "name": "deepseek-v3-0324",
-          "context": "—",
-          "maxOutput": "—",
-          "modality": "Text",
-          "rateLimit": "30 RPM (120 with token)"
-        },
-        {
-          "id": "gemini-2.5-flash-lite",
-          "name": "gemini-2.5-flash-lite",
-          "context": "—",
-          "maxOutput": "—",
-          "modality": "Text + Vision",
-          "rateLimit": "30 RPM (120 with token)"
-        },
-        {
-          "id": "gpt-4o-mini",
-          "name": "gpt-4o-mini",
-          "context": "—",
-          "maxOutput": "—",
-          "modality": "Text + Vision",
-          "rateLimit": "30 RPM (120 with token)"
-        },
-        {
-          "id": "mistral-small-3.1-24b",
-          "name": "mistral-small-3.1-24b",
-          "context": "32K",
-          "maxOutput": "—",
-          "modality": "Text",
-          "rateLimit": "30 RPM (120 with token)"
-        },
-        {
-          "id": "qwen2.5-coder-32b",
-          "name": "qwen2.5-coder-32b",
-          "context": "—",
-          "maxOutput": "—",
-          "modality": "Text (code)",
-          "rateLimit": "30 RPM (120 with token)"
-        },
-        {
           "id": null,
-          "name": "+ ~24 more models",
+          "name": "+ ~60 more models (token required)",
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text",
@@ -1368,8 +1228,8 @@
       "flag": "🇨🇳",
       "url": "https://cloud.siliconflow.cn/account/ak",
       "baseUrl": "https://api.siliconflow.cn/v1",
-      "description": "Permanently free models, no credit card required. 200+ paid models also available.",
-      "footnoteRef": null,
+      "description": "Permanently free models, no credit card required. Identity verification required. 200+ paid models also available.",
+      "footnoteRef": 9,
       "models": [
         {
           "id": "Qwen/Qwen3-8B",
@@ -1393,7 +1253,7 @@
   "footnotes": [
     {
       "id": 1,
-      "text": "Free tier not available in the EU, UK, or Switzerland ([available regions](https://ai.google.dev/gemini-api/docs/available-regions))."
+      "text": "The Gemini API free tier is now available in the EU, UK, and Switzerland; the [available regions](https://ai.google.dev/gemini-api/docs/available-regions) page lists these regions. Google no longer publishes per-model free-tier rate limits; check your quotas in [AI Studio](https://aistudio.google.com/). Free-tier prompts may be used by Google to improve products."
     },
     {
       "id": 2,
@@ -1422,6 +1282,14 @@
     {
       "id": 8,
       "text": "SambaNova grants $5 in initial credits (valid 30 days) on top of the permanent free tier. The free tier itself persists indefinitely with 20 RPM, 20 RPD, and 200K TPD per model. No credit card required. OpenAI SDK-compatible."
+    },
+    {
+      "id": 9,
+      "text": "SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support."
+    },
+    {
+      "id": 10,
+      "text": "LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable. Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title."
     }
   ],
   "glossary": [
