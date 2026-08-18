@@ -221,6 +221,31 @@ export async function resolveFileRefs(
         continue;
       }
 
+      if (absPath.toLowerCase().endsWith('.pdf')) {
+        if (pdfPagesResolved >= MAX_PDF_PAGES_PER_PASS) {
+          const sentinel = `[PDF-PAGE-DEFERRED: ${uriPath} — resolve in a follow-up request; max ${MAX_PDF_PAGES_PER_PASS} PDF pages per pass.]`;
+          newContent = newContent.replace(fullMatch, sentinel);
+          console.error(`[v1.0.4][resolveRefs] PDF page cap reached (${MAX_PDF_PAGES_PER_PASS}) — deferring ${uriPath}`);
+          continue;
+        }
+        const res = await resolvePdfRef(absPath, workspaceRoot);
+        pdfPagesResolved++;
+        if (res) {
+          resolvedContent = res.resolvedContent;
+          newContent = newContent.replace(fullMatch, `${fullMatch}\n\n${resolvedContent}`);
+          if (res.imageBase64) {
+            imageAttachments.push(res.imageBase64);
+          } else if (res.imagePath) {
+            imageAttachments.push(res.imagePath);
+          }
+        } else {
+          const baseName = path.basename(absPath);
+          const sentinel = `[NOT_FOUND_HARD_STOP: ${baseName} (${fullMatch}) could not be resolved. Provide the correct file:/// path.]`;
+          newContent = newContent.replace(fullMatch, sentinel);
+        }
+        continue;
+      }
+
       try {
         if (await fs.pathExists(absPath) && (await fs.stat(absPath)).isFile()) {
           resolvedContent = await fs.readFile(absPath, 'utf-8');

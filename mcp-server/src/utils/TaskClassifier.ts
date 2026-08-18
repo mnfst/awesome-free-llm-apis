@@ -27,14 +27,6 @@ export class TaskClassifier {
     };
 
     public static autoClassify(messages: Message[], explicitKeywords?: string[]): TaskType {
-        for (const msg of messages) {
-            if (Array.isArray(msg.content)) {
-                if (msg.content.some((item: any) => item && typeof item === 'object' && item.type === 'image_url')) {
-                    return TaskType.Vision;
-                }
-            }
-        }
-
         if (explicitKeywords && explicitKeywords.length > 0) {
             const counts: Record<string, number> = {};
             for (const kw of explicitKeywords) {
@@ -82,6 +74,19 @@ export class TaskClassifier {
         }
         if (lastMsg.includes('who are you') || lastMsg.includes('what can you do') || /\b(help|capabilities)\b/i.test(lastMsg)) {
             return TaskType.UserIntent;
+        }
+
+        // Multimodal / Image presence fallback if not explicitly a text task
+        for (const msg of messages) {
+            if (Array.isArray(msg.content)) {
+                if (msg.content.some((item: any) => item && typeof item === 'object' && item.type === 'image_url')) {
+                    return TaskType.Vision;
+                }
+            }
+        }
+
+        if (/\b(diagram|chart|figure|screenshot|layout|visual|image|photo|picture)\b/i.test(lastMsg)) {
+            return TaskType.Vision;
         }
 
         return TaskType.Chat;

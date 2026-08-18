@@ -13,7 +13,8 @@ const mockProvider = {
 vi.mock('../src/providers/registry.js', () => ({
   ProviderRegistry: {
     getInstance: () => ({
-      getAvailableProviders: () => [mockProvider]
+      getAvailableProviders: () => [mockProvider],
+      getAvailableVisionModels: () => [{ provider: mockProvider, model: { id: 'gemini-3.1-flash-lite' } }],
     })
   }
 }));

@@ -37,13 +37,17 @@ export function buildVisionPrompt(
   pageNum: number,
   isSubBlock: boolean = false,
   pageText: string = '',
-  wikiContext: string = ''
+  wikiContext: string = '',
+  fullPageVisionOverview: string = ''
 ): string {
   let prompt = '';
   if (isSubBlock) {
     prompt += `You are analyzing a cropped visual region from page ${pageNum} of the PDF "${pdfBasename}".\n`;
     if (wikiContext && wikiContext.trim()) {
       prompt += `Document context (from previous pages):\n"""\n${wikiContext.slice(0, 800)}\n"""\n\n`;
+    }
+    if (fullPageVisionOverview && fullPageVisionOverview.trim()) {
+      prompt += `Full page visual overview:\n"""\n${fullPageVisionOverview.slice(0, 800)}\n"""\n\n`;
     }
     if (pageText && pageText.trim()) {
       prompt += `Surrounding page text context:\n"""\n${pageText.slice(0, 800)}\n"""\n\n`;
@@ -63,7 +67,8 @@ export function buildVisionPrompt(
 }
 
 /**
- * Sends the page screenshot and any smaller cropped image blocks to a vision-capable LLM provider.
+ * Sends the page screenshot and any smaller cropped image blocks to a vision-capable LLM provider sequentially.
+ * Passes the full page visual summary into sub-block prompts (context-weighted) and rotates across available vision providers.
  * Returns a formatted description string to be merged into pageText before chunking.
  * Returns '' if no vision provider is available or the calls fail.
  */
@@ -77,15 +82,14 @@ export async function describePageVision(
 ): Promise<string> {
   try {
     const registry = ProviderRegistry.getInstance();
+    const visionCandidates = typeof registry.getAvailableVisionModels === 'function'
+      ? registry.getAvailableVisionModels()
+      : [];
     const providers = registry.getAvailableProviders();
-    // Find provider supporting vision or fall back to first
-    const provider = providers.find((p: any) => p.id === 'gemini') || providers[0];
-    if (!provider) return '';
+    const defaultProvider = providers.find((p: any) => p.id === 'gemini') || providers[0];
+    if (!defaultProvider && visionCandidates.length === 0) return '';
 
-    const modelId = provider.models[0]?.id;
-    if (!modelId) return '';
-
-    // Helper to call vision for a single image path with dynamically calculated maxTokens/timeoutMs
+    // Helper to call vision for a single image path with fallback provider rotation and dynamically calculated maxTokens/timeoutMs
     const callVisionModel = async (imgPath: string, promptText: string, maxTokens: number, timeoutMs: number): Promise<string> => {
       try {
         if (!await fs.pathExists(imgPath)) return '';
@@ -93,74 +97,73 @@ export async function describePageVision(
         const base64Image = imageBuffer.toString('base64');
         const dataUrl = `data:image/png;base64,${base64Image}`;
 
-        const response = await provider.chat({
-          model: modelId,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'text', text: promptText },
-              { type: 'image_url', image_url: { url: dataUrl } },
-            ],
-          }],
-          temperature: 0.2,
-          max_tokens: maxTokens,
-          timeoutMs,
-        });
+        const candidateList = visionCandidates.length > 0
+          ? visionCandidates.map(c => ({ provider: c.provider, model: c.model.id }))
+          : (defaultProvider ? [{ provider: defaultProvider, model: defaultProvider.models[0]?.id }] : []);
 
-        const text = response?.choices?.[0]?.message?.content;
-        return typeof text === 'string' ? text.trim() : '';
+        for (const { provider, model } of candidateList) {
+          if (!provider || !model) continue;
+          try {
+            const response = await provider.chat({
+              model,
+              messages: [{
+                role: 'user',
+                content: [
+                  { type: 'text', text: promptText },
+                  { type: 'image_url', image_url: { url: dataUrl } },
+                ],
+              }],
+              temperature: 0.2,
+              max_tokens: maxTokens,
+              timeoutMs,
+            });
+
+            const text = response?.choices?.[0]?.message?.content;
+            if (typeof text === 'string' && text.trim()) {
+              return text.trim();
+            }
+          } catch (err: any) {
+            console.error(`[PdfVisionHelper] Vision call via ${provider.id}/${model} failed for ${imgPath}:`, err.message);
+          }
+        }
+        return '';
       } catch (err) {
         console.error(`[PdfVisionHelper] Individual vision call failed for ${imgPath}:`, err);
         return '';
       }
     };
 
-    // Build the list of images to analyze: full page + up to 2 sub-blocks
-    const tasks: Array<Promise<{ type: 'full' | 'block'; text: string; index?: number }>> = [];
-
-    // 1. Full page: First pass has a larger budget (500 tokens), subsequent ones delta (300 tokens)
+    // 1. Full page (Sequential pass 1): Larger budget on first pass (500 tokens), delta on subsequent (300 tokens)
     const isFirstPass = !wikiContext;
     const fullPageMaxTokens = isFirstPass ? 500 : 300;
-    // Context weightage: more image blocks and more surrounding text mean more for the
-    // model to describe, so extend the kill-timer proportionally rather than a flat 30s.
     const fullPageTimeoutMs = Math.min(
       FULL_PAGE_MAX_TIMEOUT_MS,
       FULL_PAGE_BASE_TIMEOUT_MS + Math.min(20000, imageBlocks.length * 4000 + Math.floor((pageText.length + wikiContext.length) / 500) * 1000)
     );
-    tasks.push(
-      callVisionModel(imagePath, buildVisionPrompt(pdfBasename, pageNum, false, pageText, wikiContext), fullPageMaxTokens, fullPageTimeoutMs)
-        .then(text => ({ type: 'full', text }))
-    );
 
-    // 2. Sub-blocks (capped at 2): dynamic budget based on relative area of the block (100 to 200 tokens)
+    const fullPagePrompt = buildVisionPrompt(pdfBasename, pageNum, false, pageText, wikiContext);
+    const fullPageText = await callVisionModel(imagePath, fullPagePrompt, fullPageMaxTokens, fullPageTimeoutMs);
+
+    let descriptionText = '';
+    if (fullPageText) {
+      descriptionText += `\n\n[Visual Layout & Summary — page ${pageNum}]\n${fullPageText}\n`;
+    }
+
+    // 2. Sub-blocks (Sequential pass 2, capped at 2): dynamic budget based on area and enriched with fullPageText context
     const blocksToProcess = imageBlocks.slice(0, 2);
-    blocksToProcess.forEach((block, idx) => {
+    for (let idx = 0; idx < blocksToProcess.length; idx++) {
+      const block = blocksToProcess[idx];
       const blockArea = block.width_pt * block.height_pt;
       const areaRatio = blockArea / 500000;
       const blockMaxTokens = Math.min(200, Math.max(100, Math.round(areaRatio * 800)));
-      // Larger cropped regions likely contain more visual detail — extend timeout with area.
       const blockTimeoutMs = Math.min(SUB_BLOCK_MAX_TIMEOUT_MS, SUB_BLOCK_BASE_TIMEOUT_MS + Math.round(areaRatio * 15000));
-      tasks.push(
-        callVisionModel(block.image_path, buildVisionPrompt(pdfBasename, pageNum, true, pageText, wikiContext), blockMaxTokens, blockTimeoutMs)
-          .then(text => ({ type: 'block', text, index: idx }))
-      );
-    });
 
-    const results = await Promise.all(tasks);
-
-    // Format the results into a cohesive description
-    let descriptionText = '';
-    const fullPageRes = results.find(r => r.type === 'full');
-    if (fullPageRes && fullPageRes.text) {
-      descriptionText += `\n\n[Visual Layout & Summary — page ${pageNum}]\n${fullPageRes.text}\n`;
-    }
-
-    const blockResults = results.filter(r => r.type === 'block');
-    blockResults.forEach(r => {
-      if (r.text) {
-        descriptionText += `\n[Figure ${r.index! + 1} details — page ${pageNum}]\n${r.text}\n`;
+      const subBlockPrompt = buildVisionPrompt(pdfBasename, pageNum, true, pageText, wikiContext, fullPageText);
+      const subBlockText = await callVisionModel(block.image_path, subBlockPrompt, blockMaxTokens, blockTimeoutMs);
+      if (subBlockText) {
+        descriptionText += `\n[Figure ${idx + 1} details — page ${pageNum}]\n${subBlockText}\n`;
       }
-    });
+    }
 
     return descriptionText;
   } catch (err) {
