@@ -73,7 +73,7 @@ Base URL: `https://api.cohere.com/v2`
 
 ### [Google Gemini](https://aistudio.google.com/app/apikey) 🇺🇸
 
-Free tier unavailable in EU/UK/Switzerland. Free-tier prompts may be used by Google to improve products. [^1]
+Free tier, no credit card. Free-tier prompts may be used by Google to improve products. [^1]
 
 Base URL: `https://generativelanguage.googleapis.com/v1beta`
 
@@ -119,18 +119,6 @@ Base URL: `https://open.bigmodel.cn/api/paas/v4`
 
 Third-party platforms that host open-weight models from various sources.
 
-### [Cerebras](https://cloud.cerebras.ai/) 🇺🇸
-
-Free tier with payment method required. Ultra-fast inference. 1M tokens/day cap. 64K context on free tier.
-
-Base URL: `https://api.cerebras.ai/v1`
-
-| Model Name                        | Context            | Max Output              | Modality     | Rate Limit              |
-| --------------------------------- | ------------------ | ----------------------- | ------------ | ----------------------- |
-| gpt-oss-120b                      | 131K (65K on free) | 32K (free) / 40K (paid) | Text         | 5 RPM, 30K TPM, 1M TPD  |
-| zai-glm-4.7 (deprecated Aug 2026) | 131K (64K on free) | 40K                     | Text         | 5 RPM, 30K TPM, 1M TPD  |
-| gemma-4-31b                       | 131K (65K on free) | 32K (free) / 40K (paid) | Text + Image | 15 RPM, 30K TPM, 1M TPD |
-
 ### [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸
 
 10,000 Neurons/day free. 50+ models available on free tier.
@@ -148,26 +136,6 @@ Base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
 | `@cf/mistralai/mistral-small-3.1-24b-instruct` | 128K      | Shared w/ context | Text                           | 10K neurons/day (shared) |
 | `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 32K       | Shared w/ context | Text (reasoning)               | 10K neurons/day (shared) |
 | + 42 more models                               | Varies    | Varies            | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
-
-### [GitHub Models](https://github.com/marketplace/models) 🇺🇸
-
-Free prototyping for all GitHub users. 45+ models. Per-request limits (8K in / 4K out).
-
-Base URL: `https://models.github.ai/inference`
-
-| Model Name                             | Context | Max Output | Modality         | Rate Limit      |
-| -------------------------------------- | ------- | ---------- | ---------------- | --------------- |
-| gpt-5                                  | 200K    | 32K        | Text             | 10 RPM, 50 RPD  |
-| gpt-4.1                                | 1M      | 32K        | Text             | 10 RPM, 50 RPD  |
-| gpt-4.1-mini                           | 1M      | 32K        | Text             | 15 RPM, 150 RPD |
-| gpt-4o                                 | 128K    | 16K        | Text + Vision    | 10 RPM, 50 RPD  |
-| o4-mini                                | 200K    | 100K       | Text (reasoning) | 10 RPM, 50 RPD  |
-| Llama-4-Scout-17B-16E-Instruct         | 512K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
-| Llama-4-Maverick-17B-128E-Instruct-FP8 | 256K    | ~4K        | Text + Vision    | 10 RPM, 50 RPD  |
-| Llama-3.3-70B-Instruct                 | 131K    | ~4K        | Text             | 15 RPM, 150 RPD |
-| DeepSeek-R1                            | 64K     | 8K         | Text (reasoning) | 15 RPM, 150 RPD |
-| Mistral-Small-3.1                      | 128K    | ~4K        | Text + Vision    | 15 RPM, 150 RPD |
-| + 35 more models                       | Varies  | Varies     | Text / Image     | Varies by tier  |
 
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
@@ -212,27 +180,23 @@ Base URL: `https://api.kilo.ai/api/gateway`
 | `stepfun/step-3.7-flash:free`                        | 262K    | 262K       | Text             | ~200 req/hr |
 | `nvidia/nemotron-3-super-120b-a12b:free`             | 262K    | 262K       | Text             | ~200 req/hr |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K    | 65K        | Text (reasoning) | ~200 req/hr |
-| `inclusionai/ling-3.0-flash:free`                    | 262K    | 32K        | Text             | ~200 req/hr |
 | `poolside/laguna-s-2.1:free`                         | 262K    | 32K        | Text (code)      | ~200 req/hr |
 | `poolside/laguna-xs-2.1:free`                        | 262K    | 32K        | Text (code)      | ~200 req/hr |
 | `cohere/north-mini-code:free`                        | 256K    | 64K        | Text (code)      | ~200 req/hr |
 | `openrouter/free`                                    | Varies  | Varies     | Text             | ~200 req/hr |
+| `tencent/hy3:free`                                   | —       | —          | Text             | ~200 req/hr |
+| `nvidia/nemotron-3.5-lightning:free`                 | —       | —          | Text             | ~200 req/hr |
 
 ### [LLM7.io](https://token.llm7.io) 🇬🇧
 
-Zero-friction API gateway. No registration needed for basic access. 30+ models. GDPR-compliant.
+API gateway with a free tier. Anonymous access is now limited to select models; a free token from token.llm7.io unlocks the rest. [^10]
 
 Base URL: `https://api.llm7.io/v1`
 
-| Model Name            | Context | Max Output | Modality         | Rate Limit              |
-| --------------------- | ------- | ---------- | ---------------- | ----------------------- |
-| deepseek-r1-0528      | —       | —          | Text (reasoning) | 30 RPM (120 with token) |
-| deepseek-v3-0324      | —       | —          | Text             | 30 RPM (120 with token) |
-| gemini-2.5-flash-lite | —       | —          | Text + Vision    | 30 RPM (120 with token) |
-| gpt-4o-mini           | —       | —          | Text + Vision    | 30 RPM (120 with token) |
-| mistral-small-3.1-24b | 32K     | —          | Text             | 30 RPM (120 with token) |
-| qwen2.5-coder-32b     | —       | —          | Text (code)      | 30 RPM (120 with token) |
-| + ~24 more models     | Varies  | Varies     | Text             | 30 RPM (120 with token) |
+| Model Name                         | Context | Max Output | Modality         | Rate Limit              |
+| ---------------------------------- | ------- | ---------- | ---------------- | ----------------------- |
+| `gpt-oss:20b`                      | —       | —          | Text (reasoning) | 30 RPM (120 with token) |
+| + ~40 more models (token required) | Varies  | Varies     | Text             | 30 RPM (120 with token) |
 
 ### [ModelScope](https://modelscope.cn/my/myaccesstoken) 🇨🇳
 
@@ -348,7 +312,7 @@ Base URL: `https://api.sambanova.ai/v1`
 
 ### [SiliconFlow](https://cloud.siliconflow.cn/account/ak) 🇨🇳
 
-Permanently free models, no credit card required. 200+ paid models also available.
+Permanently free models, no credit card required. Identity verification required. 200+ paid models also available. [^9]
 
 Base URL: `https://api.siliconflow.cn/v1`
 
@@ -371,11 +335,13 @@ Base URL: `https://api.siliconflow.cn/v1`
 
 Know a free tier that's missing? [Open a PR](contributing.md). Include the provider, endpoint, rate limits (link to their docs), and a few notable models. Trial credits and time-limited promos don't count.
 
-[^1]: Free tier not available in the EU, UK, or Switzerland ([available regions](https://ai.google.dev/gemini-api/docs/available-regions)).
+[^1]: The Gemini API free tier is now available in the EU, UK, and Switzerland; the [available regions](https://ai.google.dev/gemini-api/docs/available-regions) page lists these regions. Google no longer publishes per-model free-tier rate limits; check your quotas in [AI Studio](https://aistudio.google.com/). Free-tier prompts may be used by Google to improve products.
 [^2]: Groq rate limits were reduced in 2026. Most models now get 1,000 RPD on the free tier (down from 14,400). Llama 4 Maverick has been deprecated. See [rate limits](https://console.groq.com/docs/rate-limits).
 [^3]: Ollama Cloud measures usage by GPU time, not tokens or requests. Free tier described as "light usage" with session limits resetting every 5 hours and weekly limits every 7 days. Pro (50x more) and Max (250x more) plans available. Not OpenAI SDK-compatible; uses the Ollama API.
 [^4]: Free models default to 50 RPD per model. A one-time purchase of $10+ in credits unlocks 1,000 RPD for free models. OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-models-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training.
-[^5]: Kilo Code free model list changes frequently. nvidia/nemotron-3-super-120b-a12b:free is for trial use only — prompts are logged by NVIDIA. Auto-router `kilo-auto/free` dynamically picks from the current free pool.
+[^5]: Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results on 2026-08-19 confirmed models absent from the catalog still answering. All listed rows were verified with live requests on that date. The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs".
 [^6]: API-Inference is free for registered users. Current published limits are 2,000 requests/day per user (total across models), with per-model daily quotas dynamically adjusted and capped at 500; concurrency is also dynamically rate-limited. Requires Alibaba Cloud account binding and real-name verification ([limits](https://modelscope.cn/docs/model-service/API-Inference/limits), [intro](https://modelscope.cn/docs/model-service/API-Inference/intro)).
 [^7]: OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers.
 [^8]: SambaNova grants $5 in initial credits (valid 30 days) on top of the permanent free tier. The free tier itself persists indefinitely with 20 RPM, 20 RPD, and 200K TPD per model. No credit card required. OpenAI SDK-compatible.
+[^9]: SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support.
+[^10]: LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title.
