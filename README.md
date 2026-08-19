@@ -37,19 +37,18 @@
 
 APIs run by the companies that train or fine-tune the models themselves.
 
-### [Aion Labs](https://www.aionlabs.ai) 🇮🇱
+### [Aion Labs](https://www.aionlabs.ai/app/api-keys/) 🇮🇱
 
 Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.
 
 Base URL: `https://api.aionlabs.ai/v1`
 
-| Model Name       | Context | Max Output | Modality                   | Rate Limit      |
-| ---------------- | ------- | ---------- | -------------------------- | --------------- |
-| Aion 2.5         | 128K    | 32K        | Text (roleplay)            | 15 RPM, 20K TPD |
-| Aion 2.0         | 128K    | 32K        | Text (roleplay)            | 15 RPM, 20K TPD |
-| Aion-RP 1.0 (8B) | 32K     | 32K        | Text (roleplay)            | 15 RPM, 20K TPD |
-| Aion 3.0         | 128K    | 32K        | Text (roleplay, reasoning) | 15 RPM, 20K TPD |
-| Aion 3.0 Mini    | 128K    | 32K        | Text (roleplay, reasoning) | 15 RPM, 20K TPD |
+| Model Name                       | Context | Max Output | Modality                   | Rate Limit      |
+| -------------------------------- | ------- | ---------- | -------------------------- | --------------- |
+| `aion-labs/aion-2.0`             | 128K    | 32K        | Text (roleplay)            | 15 RPM, 20K TPD |
+| `aion-labs/aion-rp-llama-3.1-8b` | 32K     | 32K        | Text (roleplay)            | 15 RPM, 20K TPD |
+| `aion-labs/aion-3.0`             | 128K    | 32K        | Text (roleplay, reasoning) | 15 RPM, 20K TPD |
+| `aion-labs/aion-3.0-mini`        | 128K    | 32K        | Text (roleplay, reasoning) | 15 RPM, 20K TPD |
 
 ### [Cohere](https://dashboard.cohere.com/api-keys) 🇨🇦
 
@@ -59,17 +58,17 @@ Base URL: `https://api.cohere.com/v2`
 
 | Model Name          | Context | Max Output | Modality         | Rate Limit |
 | ------------------- | ------- | ---------- | ---------------- | ---------- |
-| Command A+ (218B)   | 436K    | 64K        | Text + Image     | 20 RPM     |
-| Command A (111B)    | 288K    | 8K         | Text             | 20 RPM     |
+| Command A+ (218B)   | 128K    | 64K        | Text + Image     | 20 RPM     |
+| Command A (111B)    | 256K    | 8K         | Text             | 20 RPM     |
 | Command R+          | 128K    | 4K         | Text             | 20 RPM     |
 | Command R           | 128K    | 4K         | Text             | 20 RPM     |
 | Command R7B         | 128K    | 4K         | Text             | 20 RPM     |
-| Command A Reasoning | 288K    | ~4K        | Text (reasoning) | 20 RPM     |
-| Command A Translate | ~9K     | ~4K        | Text             | 20 RPM     |
-| Command A Vision    | 128K    | ~4K        | Text + Image     | 20 RPM     |
+| Command A Reasoning | 256K    | 32K        | Text (reasoning) | 20 RPM     |
+| Command A Translate | 8K      | 8K         | Text             | 20 RPM     |
+| Command A Vision    | 128K    | 8K         | Text + Image     | 20 RPM     |
 | Command R7B Arabic  | 128K    | ~4K        | Text             | 20 RPM     |
-| Aya Expanse 32B     | 128K    | ~4K        | Text             | 20 RPM     |
-| Aya Vision 32B      | 16K     | ~4K        | Text + Image     | 20 RPM     |
+| Aya Expanse 32B     | 128K    | 4K         | Text             | 20 RPM     |
+| Aya Vision 32B      | 16K     | 4K         | Text + Image     | 20 RPM     |
 
 ### [Google Gemini](https://aistudio.google.com/app/apikey) 🇺🇸
 
@@ -89,31 +88,31 @@ Base URL: `https://generativelanguage.googleapis.com/v1beta`
 
 ### [Mistral AI](https://console.mistral.ai/api-keys) 🇫🇷
 
-Free "Experiment" plan, no credit card. ~1B tokens/month. Prompts may be used to improve models.
+Free mode, enabled by default, no credit card required. $10/month in API credits, and free-mode prompts may be used to train Mistral models unless you opt out. [^13]
 
 Base URL: `https://api.mistral.ai/v1`
 
 | Model Name                | Context | Max Output | Modality            | Rate Limit       |
 | ------------------------- | ------- | ---------- | ------------------- | ---------------- |
-| Mistral Medium 3.5 (128B) | 256K    | 256K       | Text + Image + Code | ~1 RPS, 500K TPM |
-| Mistral Small 4           | 256K    | 256K       | Text + Image + Code | ~1 RPS, 500K TPM |
-| Mistral Large 3           | 256K    | 256K       | Text                | ~1 RPS, 500K TPM |
-| Ministral 8B              | 256K    | 256K       | Text                | ~1 RPS, 500K TPM |
-| Codestral                 | 256K    | 256K       | Code                | ~1 RPS, 500K TPM |
-| Ministral 3B              | 128K    | 128K       | Text                | ~1 RPS, 500K TPM |
-| Ministral 14B             | 256K    | 256K       | Text                | ~1 RPS, 500K TPM |
+| Mistral Medium 3.5 (128B) | 256K    | —          | Text + Image + Code | ~1 RPS, 500K TPM |
+| Mistral Small 4           | 256K    | —          | Text + Image + Code | ~1 RPS, 500K TPM |
+| Mistral Large 3           | 256K    | —          | Multimodal          | ~1 RPS, 500K TPM |
+| Ministral 3 8B            | 256K    | —          | Text                | ~1 RPS, 500K TPM |
+| Codestral                 | 128K    | —          | Code                | ~1 RPS, 500K TPM |
+| Ministral 3 3B            | 256K    | —          | Text                | ~1 RPS, 500K TPM |
+| Ministral 3 14B           | 256K    | —          | Text                | ~1 RPS, 500K TPM |
 
 ### [Z AI (Zhipu AI)](https://open.bigmodel.cn/usercenter/apikeys) 🇨🇳
 
-Permanent free models, no credit card required.
+Permanent free models, no credit card required. [^12]
 
 Base URL: `https://open.bigmodel.cn/api/paas/v4`
 
-| Model Name     | Context | Max Output | Modality         | Rate Limit           |
-| -------------- | ------- | ---------- | ---------------- | -------------------- |
-| GLM-4.7-Flash  | 200K    | 128K       | Text (reasoning) | 1 concurrent request |
-| GLM-4.5-Flash  | 128K    | ~96K       | Text (reasoning) | 1 concurrent request |
-| GLM-4.6V-Flash | 128K    | ~4K        | Text + Image     | 1 concurrent request |
+| Model Name                           | Context | Max Output | Modality         | Rate Limit           |
+| ------------------------------------ | ------- | ---------- | ---------------- | -------------------- |
+| GLM-4.7-Flash                        | 200K    | 128K       | Text (reasoning) | 1 concurrent request |
+| GLM-4.5-Flash (retirement announced) | 128K    | 96K        | Text (reasoning) | 1 concurrent request |
+| GLM-4.6V-Flash                       | 128K    | 32K        | Multimodal       | 1 concurrent request |
 
 ## Inference providers
 
@@ -121,21 +120,20 @@ Third-party platforms that host open-weight models from various sources.
 
 ### [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸
 
-10,000 Neurons/day free. 50+ models available on free tier.
+10,000 Neurons/day free, no credit card required. 75+ models available on the free tier. [^11]
 
 Base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
 
-| Model Name                                     | Context   | Max Output        | Modality                       | Rate Limit               |
-| ---------------------------------------------- | --------- | ----------------- | ------------------------------ | ------------------------ |
-| `@cf/meta/llama-3.3-70b-instruct-fp8-fast`     | 131K      | Shared w/ context | Text                           | 10K neurons/day (shared) |
-| `@cf/meta/llama-4-scout-17b-16e-instruct`      | Up to 10M | Shared w/ context | Multimodal                     | 10K neurons/day (shared) |
-| `@cf/openai/gpt-oss-120b`                      | 128K      | Shared w/ context | Text                           | 10K neurons/day (shared) |
-| `@cf/moonshotai/kimi-k2.7-code`                | 262K      | Shared w/ context | Text (code)                    | 10K neurons/day (shared) |
-| `@cf/google/gemma-4-26b-a4b-it`                | 256K      | Shared w/ context | Text                           | 10K neurons/day (shared) |
-| `@cf/zhipuai/glm-4.7-flash`                    | 131K      | Shared w/ context | Text                           | 10K neurons/day (shared) |
-| `@cf/mistralai/mistral-small-3.1-24b-instruct` | 128K      | Shared w/ context | Text                           | 10K neurons/day (shared) |
-| `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 32K       | Shared w/ context | Text (reasoning)               | 10K neurons/day (shared) |
-| + 42 more models                               | Varies    | Varies            | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
+| Model Name                                     | Context | Max Output        | Modality                       | Rate Limit               |
+| ---------------------------------------------- | ------- | ----------------- | ------------------------------ | ------------------------ |
+| `@cf/meta/llama-3.3-70b-instruct-fp8-fast`     | 24K     | Shared w/ context | Text                           | 10K neurons/day (shared) |
+| `@cf/meta/llama-4-scout-17b-16e-instruct`      | 131K    | Shared w/ context | Multimodal                     | 10K neurons/day (shared) |
+| `@cf/openai/gpt-oss-120b`                      | 128K    | Shared w/ context | Text                           | 10K neurons/day (shared) |
+| `@cf/google/gemma-4-26b-a4b-it`                | 256K    | Shared w/ context | Text                           | 10K neurons/day (shared) |
+| `@cf/zai-org/glm-4.7-flash`                    | 131K    | Shared w/ context | Text                           | 10K neurons/day (shared) |
+| `@cf/mistralai/mistral-small-3.1-24b-instruct` | 128K    | Shared w/ context | Text                           | 10K neurons/day (shared) |
+| `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 80K     | Shared w/ context | Text (reasoning)               | 10K neurons/day (shared) |
+| + 72 more models                               | Varies  | Varies            | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
 
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
@@ -345,3 +343,6 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^8]: SambaNova grants $5 in initial credits (valid 30 days) on top of the permanent free tier. The free tier itself persists indefinitely with 20 RPM, 20 RPD, and 200K TPD per model. No credit card required. OpenAI SDK-compatible.
 [^9]: SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support.
 [^10]: LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title.
+[^11]: The 10,000 free Neurons are shared across all Workers AI usage, not per model, and all limits reset daily at 00:00 UTC. Going over does not bill you, the request fails. Five models are excluded from Workers Free billing and need the Workers Paid plan or prepaid AI Gateway credits: `@cf/moonshotai/kimi-k2.6`, `@cf/moonshotai/kimi-k2.7-code`, `@cf/zai-org/glm-5.2`, `@cf/deepseek-ai/deepseek-v4-flash-0731`, `@cf/deepseek-ai/deepseek-v4-pro-0813` ([pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
+[^12]: Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time.
+[^13]: Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/user-management-finops/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)). Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values.

@@ -6,46 +6,38 @@
       "category": "provider_api",
       "country": "IL",
       "flag": "🇮🇱",
-      "url": "https://www.aionlabs.ai",
+      "url": "https://www.aionlabs.ai/app/api-keys/",
       "baseUrl": "https://api.aionlabs.ai/v1",
       "description": "Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
       "footnoteRef": null,
       "models": [
         {
-          "id": "aion-2.5",
-          "name": "Aion 2.5",
+          "id": "aion-labs/aion-2.0",
+          "name": "aion-labs/aion-2.0",
           "context": "128K",
           "maxOutput": "32K",
           "modality": "Text (roleplay)",
           "rateLimit": "15 RPM, 20K TPD"
         },
         {
-          "id": "aion-2.0",
-          "name": "Aion 2.0",
-          "context": "128K",
-          "maxOutput": "32K",
-          "modality": "Text (roleplay)",
-          "rateLimit": "15 RPM, 20K TPD"
-        },
-        {
-          "id": "aion-rp-llama-3.1-8b",
-          "name": "Aion-RP 1.0 (8B)",
+          "id": "aion-labs/aion-rp-llama-3.1-8b",
+          "name": "aion-labs/aion-rp-llama-3.1-8b",
           "context": "32K",
           "maxOutput": "32K",
           "modality": "Text (roleplay)",
           "rateLimit": "15 RPM, 20K TPD"
         },
         {
-          "id": "aion-3.0",
-          "name": "Aion 3.0",
+          "id": "aion-labs/aion-3.0",
+          "name": "aion-labs/aion-3.0",
           "context": "128K",
           "maxOutput": "32K",
           "modality": "Text (roleplay, reasoning)",
           "rateLimit": "15 RPM, 20K TPD"
         },
         {
-          "id": "aion-3.0-mini",
-          "name": "Aion 3.0 Mini",
+          "id": "aion-labs/aion-3.0-mini",
+          "name": "aion-labs/aion-3.0-mini",
           "context": "128K",
           "maxOutput": "32K",
           "modality": "Text (roleplay, reasoning)",
@@ -66,7 +58,7 @@
         {
           "id": "command-a-plus-05-2026",
           "name": "Command A+ (218B)",
-          "context": "436K",
+          "context": "128K",
           "maxOutput": "64K",
           "modality": "Text + Image",
           "rateLimit": "20 RPM"
@@ -74,7 +66,7 @@
         {
           "id": "command-a-03-2025",
           "name": "Command A (111B)",
-          "context": "288K",
+          "context": "256K",
           "maxOutput": "8K",
           "modality": "Text",
           "rateLimit": "20 RPM"
@@ -106,16 +98,16 @@
         {
           "id": "command-a-reasoning-08-2025",
           "name": "Command A Reasoning",
-          "context": "288K",
-          "maxOutput": "~4K",
+          "context": "256K",
+          "maxOutput": "32K",
           "modality": "Text (reasoning)",
           "rateLimit": "20 RPM"
         },
         {
           "id": "command-a-translate-08-2025",
           "name": "Command A Translate",
-          "context": "~9K",
-          "maxOutput": "~4K",
+          "context": "8K",
+          "maxOutput": "8K",
           "modality": "Text",
           "rateLimit": "20 RPM"
         },
@@ -123,7 +115,7 @@
           "id": "command-a-vision-07-2025",
           "name": "Command A Vision",
           "context": "128K",
-          "maxOutput": "~4K",
+          "maxOutput": "8K",
           "modality": "Text + Image",
           "rateLimit": "20 RPM"
         },
@@ -139,7 +131,7 @@
           "id": "c4ai-aya-expanse-32b",
           "name": "Aya Expanse 32B",
           "context": "128K",
-          "maxOutput": "~4K",
+          "maxOutput": "4K",
           "modality": "Text",
           "rateLimit": "20 RPM"
         },
@@ -147,7 +139,7 @@
           "id": "c4ai-aya-vision-32b",
           "name": "Aya Vision 32B",
           "context": "16K",
-          "maxOutput": "~4K",
+          "maxOutput": "4K",
           "modality": "Text + Image",
           "rateLimit": "20 RPM"
         }
@@ -228,14 +220,14 @@
       "flag": "🇫🇷",
       "url": "https://console.mistral.ai/api-keys",
       "baseUrl": "https://api.mistral.ai/v1",
-      "description": "Free \"Experiment\" plan, no credit card. ~1B tokens/month. Prompts may be used to improve models.",
-      "footnoteRef": null,
+      "description": "Free mode, enabled by default, no credit card required. $10/month in API credits, and free-mode prompts may be used to train Mistral models unless you opt out.",
+      "footnoteRef": 13,
       "models": [
         {
           "id": "mistral-medium-2604",
           "name": "Mistral Medium 3.5 (128B)",
           "context": "256K",
-          "maxOutput": "256K",
+          "maxOutput": "—",
           "modality": "Text + Image + Code",
           "rateLimit": "~1 RPS, 500K TPM"
         },
@@ -243,7 +235,7 @@
           "id": "mistral-small-2603",
           "name": "Mistral Small 4",
           "context": "256K",
-          "maxOutput": "256K",
+          "maxOutput": "—",
           "modality": "Text + Image + Code",
           "rateLimit": "~1 RPS, 500K TPM"
         },
@@ -251,39 +243,39 @@
           "id": "mistral-large-2512",
           "name": "Mistral Large 3",
           "context": "256K",
-          "maxOutput": "256K",
-          "modality": "Text",
+          "maxOutput": "—",
+          "modality": "Multimodal",
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
           "id": "ministral-8b-2512",
-          "name": "Ministral 8B",
+          "name": "Ministral 3 8B",
           "context": "256K",
-          "maxOutput": "256K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
           "id": "codestral-2508",
           "name": "Codestral",
-          "context": "256K",
-          "maxOutput": "256K",
+          "context": "128K",
+          "maxOutput": "—",
           "modality": "Code",
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
           "id": "ministral-3b-2512",
-          "name": "Ministral 3B",
-          "context": "128K",
-          "maxOutput": "128K",
+          "name": "Ministral 3 3B",
+          "context": "256K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
           "id": "ministral-14b-2512",
-          "name": "Ministral 14B",
+          "name": "Ministral 3 14B",
           "context": "256K",
-          "maxOutput": "256K",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "~1 RPS, 500K TPM"
         }
@@ -297,7 +289,7 @@
       "url": "https://open.bigmodel.cn/usercenter/apikeys",
       "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
       "description": "Permanent free models, no credit card required.",
-      "footnoteRef": null,
+      "footnoteRef": 12,
       "models": [
         {
           "id": "glm-4.7-flash",
@@ -309,9 +301,9 @@
         },
         {
           "id": "glm-4.5-flash",
-          "name": "GLM-4.5-Flash",
+          "name": "GLM-4.5-Flash (retirement announced)",
           "context": "128K",
-          "maxOutput": "~96K",
+          "maxOutput": "96K",
           "modality": "Text (reasoning)",
           "rateLimit": "1 concurrent request"
         },
@@ -319,8 +311,8 @@
           "id": "glm-4.6v-flash",
           "name": "GLM-4.6V-Flash",
           "context": "128K",
-          "maxOutput": "~4K",
-          "modality": "Text + Image",
+          "maxOutput": "32K",
+          "modality": "Multimodal",
           "rateLimit": "1 concurrent request"
         }
       ]
@@ -332,13 +324,13 @@
       "flag": "🇺🇸",
       "url": "https://dash.cloudflare.com/profile/api-tokens",
       "baseUrl": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run",
-      "description": "10,000 Neurons/day free. 50+ models available on free tier.",
-      "footnoteRef": null,
+      "description": "10,000 Neurons/day free, no credit card required. 75+ models available on the free tier.",
+      "footnoteRef": 11,
       "models": [
         {
           "id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
           "name": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-          "context": "131K",
+          "context": "24K",
           "maxOutput": "Shared w/ context",
           "modality": "Text",
           "rateLimit": "10K neurons/day (shared)"
@@ -346,7 +338,7 @@
         {
           "id": "@cf/meta/llama-4-scout-17b-16e-instruct",
           "name": "@cf/meta/llama-4-scout-17b-16e-instruct",
-          "context": "Up to 10M",
+          "context": "131K",
           "maxOutput": "Shared w/ context",
           "modality": "Multimodal",
           "rateLimit": "10K neurons/day (shared)"
@@ -360,14 +352,6 @@
           "rateLimit": "10K neurons/day (shared)"
         },
         {
-          "id": "@cf/moonshotai/kimi-k2.7-code",
-          "name": "@cf/moonshotai/kimi-k2.7-code",
-          "context": "262K",
-          "maxOutput": "Shared w/ context",
-          "modality": "Text (code)",
-          "rateLimit": "10K neurons/day (shared)"
-        },
-        {
           "id": "@cf/google/gemma-4-26b-a4b-it",
           "name": "@cf/google/gemma-4-26b-a4b-it",
           "context": "256K",
@@ -376,8 +360,8 @@
           "rateLimit": "10K neurons/day (shared)"
         },
         {
-          "id": "@cf/zhipuai/glm-4.7-flash",
-          "name": "@cf/zhipuai/glm-4.7-flash",
+          "id": "@cf/zai-org/glm-4.7-flash",
+          "name": "@cf/zai-org/glm-4.7-flash",
           "context": "131K",
           "maxOutput": "Shared w/ context",
           "modality": "Text",
@@ -394,14 +378,14 @@
         {
           "id": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
           "name": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-          "context": "32K",
+          "context": "80K",
           "maxOutput": "Shared w/ context",
           "modality": "Text (reasoning)",
           "rateLimit": "10K neurons/day (shared)"
         },
         {
           "id": null,
-          "name": "+ 42 more models",
+          "name": "+ 72 more models",
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text, Image, Audio, Embeddings",
@@ -1262,6 +1246,18 @@
     {
       "id": 10,
       "text": "LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title."
+    },
+    {
+      "id": 11,
+      "text": "The 10,000 free Neurons are shared across all Workers AI usage, not per model, and all limits reset daily at 00:00 UTC. Going over does not bill you, the request fails. Five models are excluded from Workers Free billing and need the Workers Paid plan or prepaid AI Gateway credits: `@cf/moonshotai/kimi-k2.6`, `@cf/moonshotai/kimi-k2.7-code`, `@cf/zai-org/glm-5.2`, `@cf/deepseek-ai/deepseek-v4-flash-0731`, `@cf/deepseek-ai/deepseek-v4-pro-0813` ([pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/))."
+    },
+    {
+      "id": 12,
+      "text": "Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time."
+    },
+    {
+      "id": 13,
+      "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/user-management-finops/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)). Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
     }
   ],
   "glossary": [
