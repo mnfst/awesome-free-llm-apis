@@ -580,14 +580,6 @@
           "rateLimit": "~200 req/hr"
         },
         {
-          "id": "inclusionai/ling-3.0-flash:free",
-          "name": "inclusionai/ling-3.0-flash:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text",
-          "rateLimit": "~200 req/hr"
-        },
-        {
           "id": "poolside/laguna-s-2.1:free",
           "name": "poolside/laguna-s-2.1:free",
           "context": "262K",
@@ -616,6 +608,22 @@
           "name": "openrouter/free",
           "context": "Varies",
           "maxOutput": "Varies",
+          "modality": "Text",
+          "rateLimit": "~200 req/hr"
+        },
+        {
+          "id": "tencent/hy3:free",
+          "name": "tencent/hy3:free",
+          "context": "—",
+          "maxOutput": "—",
+          "modality": "Text",
+          "rateLimit": "~200 req/hr"
+        },
+        {
+          "id": "nvidia/nemotron-3.5-lightning:free",
+          "name": "nvidia/nemotron-3.5-lightning:free",
+          "context": "—",
+          "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "~200 req/hr"
         }
@@ -1132,55 +1140,15 @@
       "flag": "🇺🇸",
       "url": "https://cloud.sambanova.ai/apis",
       "baseUrl": "https://api.sambanova.ai/v1",
-      "description": "Free tier, no credit card. Ultra-fast RDU inference. 20 RPM, 200K tokens/day.",
-      "footnoteRef": 8,
+      "description": "Free tier reduced to select models, no credit card for those. Ultra-fast RDU inference. A payment method is required for all other models.",
+      "footnoteRef": 11,
       "models": [
-        {
-          "id": "DeepSeek-V3.1",
-          "name": "DeepSeek-V3.1",
-          "context": "128K",
-          "maxOutput": "~8K",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 20 RPD, 200K TPD"
-        },
-        {
-          "id": "DeepSeek-V3.2",
-          "name": "DeepSeek-V3.2 (Preview)",
-          "context": "128K",
-          "maxOutput": "~8K",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 20 RPD, 200K TPD"
-        },
-        {
-          "id": "Meta-Llama-3.3-70B-Instruct",
-          "name": "Meta-Llama-3.3-70B-Instruct",
-          "context": "128K",
-          "maxOutput": "~3K",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 20 RPD, 200K TPD"
-        },
-        {
-          "id": "gpt-oss-120b",
-          "name": "gpt-oss-120b",
-          "context": "128K",
-          "maxOutput": "~128K",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 20 RPD, 200K TPD"
-        },
         {
           "id": "MiniMax-M2.7",
           "name": "MiniMax-M2.7",
           "context": "128K",
           "maxOutput": "~192K",
           "modality": "Text",
-          "rateLimit": "20 RPM, 20 RPD, 200K TPD"
-        },
-        {
-          "id": "gemma-4-31B-it",
-          "name": "gemma-4-31B-it (Preview)",
-          "context": "128K",
-          "maxOutput": "~128K",
-          "modality": "Text + Image + Video",
           "rateLimit": "20 RPM, 20 RPD, 200K TPD"
         }
       ]
@@ -1233,7 +1201,7 @@
     },
     {
       "id": 5,
-      "text": "Kilo Code free model list changes frequently. nvidia/nemotron-3-super-120b-a12b:free is for trial use only — prompts are logged by NVIDIA. Auto-router `kilo-auto/free` dynamically picks from the current free pool."
+      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results on 2026-08-19 confirmed models absent from the catalog still answering. All listed rows were verified with live requests on that date. The kilo-auto/free router picks a model from the free pool."
     },
     {
       "id": 6,
@@ -1244,16 +1212,16 @@
       "text": "OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers."
     },
     {
-      "id": 8,
-      "text": "SambaNova grants $5 in initial credits (valid 30 days) on top of the permanent free tier. The free tier itself persists indefinitely with 20 RPM, 20 RPD, and 200K TPD per model. No credit card required. OpenAI SDK-compatible."
-    },
-    {
       "id": 9,
       "text": "SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support."
     },
     {
       "id": 10,
       "text": "LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title."
+    },
+    {
+      "id": 11,
+      "text": "SambaNova now requires a payment method for most models: live requests on 2026-08-19 returned PAYMENT_METHOD_REQUIRED (HTTP 402) for DeepSeek-V3.1, DeepSeek-V3.2, Meta-Llama-3.3-70B-Instruct, gpt-oss-120b, and gemma-4-31B-it, while MiniMax-M2.7 still served free without a payment method. The [rate limits page](https://docs.sambanova.ai/docs/en/models/rate-limits) still describes a broader free tier; live behavior takes precedence here."
     }
   ],
   "glossary": [

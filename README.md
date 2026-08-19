@@ -180,11 +180,12 @@ Base URL: `https://api.kilo.ai/api/gateway`
 | `stepfun/step-3.7-flash:free`                        | 262K    | 262K       | Text             | ~200 req/hr |
 | `nvidia/nemotron-3-super-120b-a12b:free`             | 262K    | 262K       | Text             | ~200 req/hr |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K    | 65K        | Text (reasoning) | ~200 req/hr |
-| `inclusionai/ling-3.0-flash:free`                    | 262K    | 32K        | Text             | ~200 req/hr |
 | `poolside/laguna-s-2.1:free`                         | 262K    | 32K        | Text (code)      | ~200 req/hr |
 | `poolside/laguna-xs-2.1:free`                        | 262K    | 32K        | Text (code)      | ~200 req/hr |
 | `cohere/north-mini-code:free`                        | 256K    | 64K        | Text (code)      | ~200 req/hr |
 | `openrouter/free`                                    | Varies  | Varies     | Text             | ~200 req/hr |
+| `tencent/hy3:free`                                   | —       | —          | Text             | ~200 req/hr |
+| `nvidia/nemotron-3.5-lightning:free`                 | —       | —          | Text             | ~200 req/hr |
 
 ### [LLM7.io](https://token.llm7.io) 🇬🇧
 
@@ -296,18 +297,13 @@ Base URL: `https://oai.endpoints.kepler.ai.cloud.ovh.net/v1`
 
 ### [SambaNova](https://cloud.sambanova.ai/apis) 🇺🇸
 
-Free tier, no credit card. Ultra-fast RDU inference. 20 RPM, 200K tokens/day. [^8]
+Free tier reduced to select models, no credit card for those. Ultra-fast RDU inference. A payment method is required for all other models. [^11]
 
 Base URL: `https://api.sambanova.ai/v1`
 
-| Model Name                  | Context | Max Output | Modality             | Rate Limit               |
-| --------------------------- | ------- | ---------- | -------------------- | ------------------------ |
-| DeepSeek-V3.1               | 128K    | ~8K        | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| DeepSeek-V3.2 (Preview)     | 128K    | ~8K        | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| Meta-Llama-3.3-70B-Instruct | 128K    | ~3K        | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| gpt-oss-120b                | 128K    | ~128K      | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| MiniMax-M2.7                | 128K    | ~192K      | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| gemma-4-31B-it (Preview)    | 128K    | ~128K      | Text + Image + Video | 20 RPM, 20 RPD, 200K TPD |
+| Model Name   | Context | Max Output | Modality | Rate Limit               |
+| ------------ | ------- | ---------- | -------- | ------------------------ |
+| MiniMax-M2.7 | 128K    | ~192K      | Text     | 20 RPM, 20 RPD, 200K TPD |
 
 ### [SiliconFlow](https://cloud.siliconflow.cn/account/ak) 🇨🇳
 
@@ -338,9 +334,9 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^2]: Groq rate limits were reduced in 2026. Most models now get 1,000 RPD on the free tier (down from 14,400). Llama 4 Maverick has been deprecated. See [rate limits](https://console.groq.com/docs/rate-limits).
 [^3]: Ollama Cloud measures usage by GPU time, not tokens or requests. Free tier described as "light usage" with session limits resetting every 5 hours and weekly limits every 7 days. Pro (50x more) and Max (250x more) plans available. Not OpenAI SDK-compatible; uses the Ollama API.
 [^4]: Free models default to 50 RPD per model. A one-time purchase of $10+ in credits unlocks 1,000 RPD for free models. OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-models-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training.
-[^5]: Kilo Code free model list changes frequently. nvidia/nemotron-3-super-120b-a12b:free is for trial use only — prompts are logged by NVIDIA. Auto-router `kilo-auto/free` dynamically picks from the current free pool.
+[^5]: Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results on 2026-08-19 confirmed models absent from the catalog still answering. All listed rows were verified with live requests on that date. The kilo-auto/free router picks a model from the free pool.
 [^6]: API-Inference is free for registered users. Current published limits are 2,000 requests/day per user (total across models), with per-model daily quotas dynamically adjusted and capped at 500; concurrency is also dynamically rate-limited. Requires Alibaba Cloud account binding and real-name verification ([limits](https://modelscope.cn/docs/model-service/API-Inference/limits), [intro](https://modelscope.cn/docs/model-service/API-Inference/intro)).
 [^7]: OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers.
-[^8]: SambaNova grants $5 in initial credits (valid 30 days) on top of the permanent free tier. The free tier itself persists indefinitely with 20 RPM, 20 RPD, and 200K TPD per model. No credit card required. OpenAI SDK-compatible.
 [^9]: SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support.
 [^10]: LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title.
+[^11]: SambaNova now requires a payment method for most models: live requests on 2026-08-19 returned PAYMENT_METHOD_REQUIRED (HTTP 402) for DeepSeek-V3.1, DeepSeek-V3.2, Meta-Llama-3.3-70B-Instruct, gpt-oss-120b, and gemma-4-31B-it, while MiniMax-M2.7 still served free without a payment method. The [rate limits page](https://docs.sambanova.ai/docs/en/models/rate-limits) still describes a broader free tier; live behavior takes precedence here.
