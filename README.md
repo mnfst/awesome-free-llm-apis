@@ -119,18 +119,6 @@ Base URL: `https://open.bigmodel.cn/api/paas/v4`
 
 Third-party platforms that host open-weight models from various sources.
 
-### [Cerebras](https://cloud.cerebras.ai/) 🇺🇸
-
-Free tier with payment method required. Ultra-fast inference. 1M tokens/day cap. 64K context on free tier.
-
-Base URL: `https://api.cerebras.ai/v1`
-
-| Model Name                        | Context            | Max Output              | Modality     | Rate Limit              |
-| --------------------------------- | ------------------ | ----------------------- | ------------ | ----------------------- |
-| gpt-oss-120b                      | 131K (65K on free) | 32K (free) / 40K (paid) | Text         | 5 RPM, 30K TPM, 1M TPD  |
-| zai-glm-4.7 (deprecated Aug 2026) | 131K (64K on free) | 40K                     | Text         | 5 RPM, 30K TPM, 1M TPD  |
-| gemma-4-31b                       | 131K (65K on free) | 32K (free) / 40K (paid) | Text + Image | 15 RPM, 30K TPM, 1M TPD |
-
 ### [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸
 
 10,000 Neurons/day free. 50+ models available on free tier.

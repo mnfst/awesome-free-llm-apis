@@ -326,42 +326,6 @@
       ]
     },
     {
-      "name": "Cerebras",
-      "category": "inference_provider",
-      "country": "US",
-      "flag": "🇺🇸",
-      "url": "https://cloud.cerebras.ai/",
-      "baseUrl": "https://api.cerebras.ai/v1",
-      "description": "Free tier with payment method required. Ultra-fast inference. 1M tokens/day cap. 64K context on free tier.",
-      "footnoteRef": null,
-      "models": [
-        {
-          "id": "gpt-oss-120b",
-          "name": "gpt-oss-120b",
-          "context": "131K (65K on free)",
-          "maxOutput": "32K (free) / 40K (paid)",
-          "modality": "Text",
-          "rateLimit": "5 RPM, 30K TPM, 1M TPD"
-        },
-        {
-          "id": "zai-glm-4.7",
-          "name": "zai-glm-4.7 (deprecated Aug 2026)",
-          "context": "131K (64K on free)",
-          "maxOutput": "40K",
-          "modality": "Text",
-          "rateLimit": "5 RPM, 30K TPM, 1M TPD"
-        },
-        {
-          "id": "gemma-4-31b",
-          "name": "gemma-4-31b",
-          "context": "131K (65K on free)",
-          "maxOutput": "32K (free) / 40K (paid)",
-          "modality": "Text + Image",
-          "rateLimit": "15 RPM, 30K TPM, 1M TPD"
-        }
-      ]
-    },
-    {
       "name": "Cloudflare Workers AI",
       "category": "inference_provider",
       "country": "US",
