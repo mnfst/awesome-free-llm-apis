@@ -141,15 +141,13 @@ Free tier, no credit card. Ultra-fast LPU inference. [^2]
 
 Base URL: `https://api.groq.com/openai/v1`
 
-| Model Name              | Context | Max Output | Modality | Rate Limit         |
-| ----------------------- | ------- | ---------- | -------- | ------------------ |
-| llama-3.3-70b-versatile | 131K    | 32K        | Text     | 30 RPM, 1,000 RPD  |
-| llama-3.1-8b-instant    | 131K    | 131K       | Text     | 30 RPM, 14,400 RPD |
-| `openai/gpt-oss-120b`   | 131K    | 65K        | Text     | 30 RPM, 1,000 RPD  |
-| `openai/gpt-oss-20b`    | 131K    | 65K        | Text     | 30 RPM, 1,000 RPD  |
-| `groq/compound`         | 131K    | 8K         | Text     | 30 RPM, 250 RPD    |
-| `groq/compound-mini`    | 131K    | 8K         | Text     | 30 RPM, 250 RPD    |
-| `qwen/qwen3.6-27b`      | 131K    | 16K        | Text     | 30 RPM, 1,000 RPD  |
+| Model Name            | Context | Max Output | Modality | Rate Limit        |
+| --------------------- | ------- | ---------- | -------- | ----------------- |
+| `openai/gpt-oss-120b` | 131K    | 65K        | Text     | 30 RPM, 1,000 RPD |
+| `openai/gpt-oss-20b`  | 131K    | 65K        | Text     | 30 RPM, 1,000 RPD |
+| `groq/compound`       | 131K    | 8K         | Text     | 30 RPM, 250 RPD   |
+| `groq/compound-mini`  | 131K    | 8K         | Text     | 30 RPM, 250 RPD   |
+| `qwen/qwen3.6-27b`    | 131K    | 16K        | Text     | 30 RPM, 1,000 RPD |
 
 ### [Hugging Face](https://huggingface.co/settings/tokens) 🇺🇸
 
@@ -157,14 +155,14 @@ $0.10/month in Inference Provider credits for free users (subject to change). Ro
 
 Base URL: `https://router.huggingface.co/v1`
 
-| Model Name                      | Context | Max Output | Modality                       | Rate Limit              |
-| ------------------------------- | ------- | ---------- | ------------------------------ | ----------------------- |
-| Meta-Llama-3.1-8B-Instruct      | 128K    | ~4K        | Text                           | Credit-metered          |
-| gemma-3-4b-it                   | 131K    | ~4K        | Text                           | Credit-metered          |
-| phi-4                           | 16K     | ~4K        | Text                           | Credit-metered          |
-| Qwen2.5-Coder-7B-Instruct       | 131K    | ~4K        | Text                           | Credit-metered          |
-| Qwen2.5-7B-Instruct             | 131K    | ~4K        | Text                           | Credit-metered          |
-| + thousands of community models | Varies  | Varies     | Text, Image, Audio, Embeddings | 100K credits/month free |
+| Model Name                      | Context | Max Output | Modality                       | Rate Limit     |
+| ------------------------------- | ------- | ---------- | ------------------------------ | -------------- |
+| Meta-Llama-3.1-8B-Instruct      | 128K    | ~4K        | Text                           | Credit-metered |
+| gemma-3-4b-it                   | 131K    | ~4K        | Text                           | Credit-metered |
+| phi-4                           | 16K     | ~4K        | Text                           | Credit-metered |
+| Qwen2.5-Coder-7B-Instruct       | 131K    | ~4K        | Text                           | Credit-metered |
+| Qwen2.5-7B-Instruct             | 131K    | ~4K        | Text                           | Credit-metered |
+| + thousands of community models | Varies  | Varies     | Text, Image, Audio, Embeddings | Credit-metered |
 
 ### [Kilo Code](https://kilo.ai) 🇺🇸
 
@@ -210,50 +208,47 @@ Base URL: `https://api-inference.modelscope.cn/v1`
 
 ### [NVIDIA NIM](https://build.nvidia.com/explore/discover) 🇺🇸
 
-Free with NVIDIA Developer Program membership. 100+ models. Rate-limited (no daily token cap).
+Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per model.
 
 Base URL: `https://integrate.api.nvidia.com/v1`
 
-| Model Name                                | Context | Max Output | Modality                               | Rate Limit |
-| ----------------------------------------- | ------- | ---------- | -------------------------------------- | ---------- |
-| `deepseek-ai/deepseek-v4-flash`           | 1M      | ~64K       | Text                                   | ~40 RPM    |
-| `nvidia/nemotron-3-super-120b-a12b`       | 262K    | 262K       | Text                                   | ~40 RPM    |
-| `nvidia/nemotron-3-nano-30b-a3b`          | 128K    | 32K        | Text                                   | ~40 RPM    |
-| `nvidia/llama-3.1-nemotron-ultra-253b-v1` | 128K    | 4K         | Text                                   | ~40 RPM    |
-| `meta/llama-3.3-70b-instruct`             | 128K    | 4K         | Text                                   | ~40 RPM    |
-| `mistralai/mistral-nemotron`              | 128K    | 8K         | Text                                   | ~40 RPM    |
-| `google/gemma-4-31b-it`                   | 128K    | 8K         | Text                                   | ~40 RPM    |
-| `mistralai/mistral-large-2-instruct`      | 128K    | 4K         | Text                                   | ~40 RPM    |
-| `minimaxai/minimax-m3`                    | 1M      | ~64K       | Text                                   | ~40 RPM    |
-| `mistralai/mistral-medium-3.5-128b`       | 262K    | 262K       | Text                                   | ~40 RPM    |
-| `nvidia/nemotron-3-ultra-550b-a55b`       | 262K    | 262K       | Text                                   | ~40 RPM    |
-| `openai/gpt-oss-120b`                     | 131K    | 131K       | Text                                   | ~40 RPM    |
-| `openai/gpt-oss-20b`                      | 131K    | 131K       | Text                                   | ~40 RPM    |
-| `deepseek-ai/deepseek-v4-pro`             | 128K    | ~64K       | Text                                   | ~40 RPM    |
-| + 85 more models                          | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | ~40 RPM    |
+| Model Name                                | Context | Max Output | Modality                               | Rate Limit         |
+| ----------------------------------------- | ------- | ---------- | -------------------------------------- | ------------------ |
+| `nvidia/nemotron-3-super-120b-a12b`       | 1M      | 262K       | Text                                   | 40 RPM, 10,000 RPD |
+| `nvidia/nemotron-3-nano-30b-a3b`          | 262K    | 32K        | Text                                   | 40 RPM, 10,000 RPD |
+| `nvidia/llama-3.1-nemotron-ultra-253b-v1` | 128K    | 4K         | Text                                   | 40 RPM, 10,000 RPD |
+| `meta/llama-3.3-70b-instruct`             | 128K    | 4K         | Text                                   | 40 RPM, 10,000 RPD |
+| `mistralai/mistral-nemotron`              | 128K    | 8K         | Text                                   | 40 RPM, 10,000 RPD |
+| `google/gemma-4-31b-it`                   | 262K    | 8K         | Text                                   | 40 RPM, 10,000 RPD |
+| `mistralai/mistral-large-2-instruct`      | 128K    | 4K         | Text                                   | 40 RPM, 10,000 RPD |
+| `minimaxai/minimax-m3`                    | 1M      | ~64K       | Text                                   | 40 RPM, 10,000 RPD |
+| `nvidia/nemotron-3-ultra-550b-a55b`       | 1M      | 262K       | Text                                   | 40 RPM, 10,000 RPD |
+| `openai/gpt-oss-120b`                     | 131K    | 131K       | Text                                   | 40 RPM, 10,000 RPD |
+| `openai/gpt-oss-20b`                      | 131K    | 131K       | Text                                   | 40 RPM, 10,000 RPD |
+| + 92 more models                          | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | 40 RPM, 10,000 RPD |
 
 ### [Ollama Cloud](https://ollama.com/settings/keys) 🇺🇸
 
-Free tier with qualitative usage limits. 400+ models from Ollama library. Not OpenAI SDK-compatible; uses [Ollama API](https://docs.ollama.com/cloud). [^3]
+Free tier with usage limits. 16 cloud model families from the Ollama library. OpenAI SDK-compatible via https://ollama.com/v1. [^3]
 
-Base URL: `https://api.ollama.com`
+Base URL: `https://ollama.com/api`
 
 | Model Name             | Context | Max Output      | Modality | Rate Limit                          |
 | ---------------------- | ------- | --------------- | -------- | ----------------------------------- |
-| deepseek-v4-pro        | 128K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
+| deepseek-v4-pro        | 1M      | Model-dependent | Text     | Session/weekly limits (unpublished) |
 | deepseek-v4-flash      | 1M      | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| minimax-m3             | 1M      | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| kimi-k3                | 128K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
+| minimax-m3             | 512K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
+| kimi-k3                | 1M      | Model-dependent | Text     | Session/weekly limits (unpublished) |
 | `gpt-oss:120b`         | 128K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
 | `gpt-oss:20b`          | 131K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
 | nemotron-3-ultra       | 262K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| `mistral-large-3:675b` | 128K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| `qwen3.5:397b`         | 131K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| + 10 more cloud models | Varies  | Varies          | Text     | Session/weekly limits (unpublished) |
+| `mistral-large-3:675b` | 256K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
+| `qwen3.5:397b`         | 256K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
+| + 7 more cloud models  | Varies  | Varies          | Text     | Session/weekly limits (unpublished) |
 
 ### [OpenRouter](https://openrouter.ai/keys) 🇺🇸
 
-~22 free models (marked with `:free` suffix). OpenAI SDK-compatible. [^4]
+17 free models (marked with `:free` suffix). OpenAI SDK-compatible. [^4]
 
 Base URL: `https://openrouter.ai/api/v1`
 
@@ -270,7 +265,7 @@ Base URL: `https://openrouter.ai/api/v1`
 | `nvidia/nemotron-nano-12b-v2-vl:free`    | 128K    | 128K       | Text + Image | 20 RPM, 50 RPD |
 | `poolside/laguna-s-2.1:free`             | 262K    | 32K        | Text (code)  | 20 RPM, 50 RPD |
 | `poolside/laguna-xs-2.1:free`            | 262K    | 32K        | Text (code)  | 20 RPM, 50 RPD |
-| + ~12 more free models                   | Varies  | Varies     | Text / Image | 20 RPM, 50 RPD |
+| + 6 more free models                     | Varies  | Varies     | Text / Image | 20 RPM, 50 RPD |
 
 ### [OVHcloud AI Endpoints](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/) 🇫🇷
 
@@ -292,21 +287,6 @@ Base URL: `https://oai.endpoints.kepler.ai.cloud.ovh.net/v1`
 | Mistral-Small-3.2-24B-Instruct | 128K    | ~4K        | Text          | 2 RPM (anonymous) |
 | Mistral-Nemo-Instruct-2407     | 128K    | ~4K        | Text          | 2 RPM (anonymous) |
 | Mistral-7B-Instruct-v0.3       | 32K     | ~4K        | Text          | 2 RPM (anonymous) |
-
-### [SambaNova](https://cloud.sambanova.ai/apis) 🇺🇸
-
-Free tier, no credit card. Ultra-fast RDU inference. 20 RPM, 200K tokens/day. [^8]
-
-Base URL: `https://api.sambanova.ai/v1`
-
-| Model Name                  | Context | Max Output | Modality             | Rate Limit               |
-| --------------------------- | ------- | ---------- | -------------------- | ------------------------ |
-| DeepSeek-V3.1               | 128K    | ~8K        | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| DeepSeek-V3.2 (Preview)     | 128K    | ~8K        | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| Meta-Llama-3.3-70B-Instruct | 128K    | ~3K        | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| gpt-oss-120b                | 128K    | ~128K      | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| MiniMax-M2.7                | 128K    | ~192K      | Text                 | 20 RPM, 20 RPD, 200K TPD |
-| gemma-4-31B-it (Preview)    | 128K    | ~128K      | Text + Image + Video | 20 RPM, 20 RPD, 200K TPD |
 
 ### [SiliconFlow](https://cloud.siliconflow.cn/account/ak) 🇨🇳
 
@@ -334,13 +314,12 @@ Base URL: `https://api.siliconflow.cn/v1`
 Know a free tier that's missing? [Open a PR](contributing.md). Include the provider, endpoint, rate limits (link to their docs), and a few notable models. Trial credits and time-limited promos don't count.
 
 [^1]: The Gemini API free tier is now available in the EU, UK, and Switzerland; the [available regions](https://ai.google.dev/gemini-api/docs/available-regions) page lists these regions. Google no longer publishes per-model free-tier rate limits; check your quotas in [AI Studio](https://aistudio.google.com/). Free-tier prompts may be used by Google to improve products.
-[^2]: Groq rate limits were reduced in 2026. Most models now get 1,000 RPD on the free tier (down from 14,400). Llama 4 Maverick has been deprecated. See [rate limits](https://console.groq.com/docs/rate-limits).
-[^3]: Ollama Cloud measures usage by GPU time, not tokens or requests. Free tier described as "light usage" with session limits resetting every 5 hours and weekly limits every 7 days. Pro (50x more) and Max (250x more) plans available. Not OpenAI SDK-compatible; uses the Ollama API.
+[^2]: Groq shut down llama-3.3-70b-versatile and llama-3.1-8b-instant on August 16, 2026 ([deprecations](https://console.groq.com/docs/deprecations)). Remaining free-plan limits vary by model: compound and compound-mini get 250 RPD, most others 1,000 RPD ([rate limits](https://console.groq.com/docs/rate-limits)).
+[^3]: Ollama Cloud measures usage by input, cached input, and output tokens weighted per model ([FAQ](https://docs.ollama.com/cloud)). Free tier has session limits resetting every 5 hours and weekly limits resetting every 7 days. Cloud models are also served through Ollama's OpenAI-compatible endpoint at ollama.com/v1.
 [^4]: Free models default to 50 RPD per model. A one-time purchase of $10+ in credits unlocks 1,000 RPD for free models. OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-models-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training.
 [^5]: Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results on 2026-08-19 confirmed models absent from the catalog still answering. All listed rows were verified with live requests on that date. The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs".
 [^6]: API-Inference is free for registered users. Current published limits are 2,000 requests/day per user (total across models), with per-model daily quotas dynamically adjusted and capped at 500; concurrency is also dynamically rate-limited. Requires Alibaba Cloud account binding and real-name verification ([limits](https://modelscope.cn/docs/model-service/API-Inference/limits), [intro](https://modelscope.cn/docs/model-service/API-Inference/intro)).
 [^7]: OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers.
-[^8]: SambaNova grants $5 in initial credits (valid 30 days) on top of the permanent free tier. The free tier itself persists indefinitely with 20 RPM, 20 RPD, and 200K TPD per model. No credit card required. OpenAI SDK-compatible.
 [^9]: SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support.
 [^10]: LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title.
 [^11]: The 10,000 free Neurons are shared across all Workers AI usage, not per model, and all limits reset daily at 00:00 UTC. Going over does not bill you, the request fails. Five models are excluded from Workers Free billing and need the Workers Paid plan or prepaid AI Gateway credits: `@cf/moonshotai/kimi-k2.6`, `@cf/moonshotai/kimi-k2.7-code`, `@cf/zai-org/glm-5.2`, `@cf/deepseek-ai/deepseek-v4-flash-0731`, `@cf/deepseek-ai/deepseek-v4-pro-0813` ([pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
