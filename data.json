@@ -672,14 +672,6 @@
       "footnoteRef": null,
       "models": [
         {
-          "id": "deepseek-ai/deepseek-v4-flash",
-          "name": "deepseek-ai/deepseek-v4-flash",
-          "context": "1M",
-          "maxOutput": "~64K",
-          "modality": "Text",
-          "rateLimit": "40 RPM, 10,000 RPD"
-        },
-        {
           "id": "nvidia/nemotron-3-super-120b-a12b",
           "name": "nvidia/nemotron-3-super-120b-a12b",
           "context": "1M",
@@ -744,14 +736,6 @@
           "rateLimit": "40 RPM, 10,000 RPD"
         },
         {
-          "id": "mistralai/mistral-medium-3.5-128b",
-          "name": "mistralai/mistral-medium-3.5-128b",
-          "context": "262K",
-          "maxOutput": "262K",
-          "modality": "Text",
-          "rateLimit": "40 RPM, 10,000 RPD"
-        },
-        {
           "id": "nvidia/nemotron-3-ultra-550b-a55b",
           "name": "nvidia/nemotron-3-ultra-550b-a55b",
           "context": "1M",
@@ -776,16 +760,8 @@
           "rateLimit": "40 RPM, 10,000 RPD"
         },
         {
-          "id": "deepseek-ai/deepseek-v4-pro",
-          "name": "deepseek-ai/deepseek-v4-pro",
-          "context": "128K",
-          "maxOutput": "~64K",
-          "modality": "Text",
-          "rateLimit": "40 RPM, 10,000 RPD"
-        },
-        {
           "id": null,
-          "name": "+ 85 more models",
+          "name": "+ 92 more models",
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text, Image, Video, Speech, Embeddings",
@@ -985,7 +961,7 @@
         },
         {
           "id": null,
-          "name": "+ ~12 more free models",
+          "name": "+ 6 more free models",
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text / Image",

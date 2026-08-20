@@ -214,7 +214,6 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 
 | Model Name                                | Context | Max Output | Modality                               | Rate Limit         |
 | ----------------------------------------- | ------- | ---------- | -------------------------------------- | ------------------ |
-| `deepseek-ai/deepseek-v4-flash`           | 1M      | ~64K       | Text                                   | 40 RPM, 10,000 RPD |
 | `nvidia/nemotron-3-super-120b-a12b`       | 1M      | 262K       | Text                                   | 40 RPM, 10,000 RPD |
 | `nvidia/nemotron-3-nano-30b-a3b`          | 262K    | 32K        | Text                                   | 40 RPM, 10,000 RPD |
 | `nvidia/llama-3.1-nemotron-ultra-253b-v1` | 128K    | 4K         | Text                                   | 40 RPM, 10,000 RPD |
@@ -223,12 +222,10 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 | `google/gemma-4-31b-it`                   | 262K    | 8K         | Text                                   | 40 RPM, 10,000 RPD |
 | `mistralai/mistral-large-2-instruct`      | 128K    | 4K         | Text                                   | 40 RPM, 10,000 RPD |
 | `minimaxai/minimax-m3`                    | 1M      | ~64K       | Text                                   | 40 RPM, 10,000 RPD |
-| `mistralai/mistral-medium-3.5-128b`       | 262K    | 262K       | Text                                   | 40 RPM, 10,000 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b`       | 1M      | 262K       | Text                                   | 40 RPM, 10,000 RPD |
 | `openai/gpt-oss-120b`                     | 131K    | 131K       | Text                                   | 40 RPM, 10,000 RPD |
 | `openai/gpt-oss-20b`                      | 131K    | 131K       | Text                                   | 40 RPM, 10,000 RPD |
-| `deepseek-ai/deepseek-v4-pro`             | 128K    | ~64K       | Text                                   | 40 RPM, 10,000 RPD |
-| + 85 more models                          | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | 40 RPM, 10,000 RPD |
+| + 92 more models                          | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | 40 RPM, 10,000 RPD |
 
 ### [Ollama Cloud](https://ollama.com/settings/keys) 🇺🇸
 
@@ -268,7 +265,7 @@ Base URL: `https://openrouter.ai/api/v1`
 | `nvidia/nemotron-nano-12b-v2-vl:free`    | 128K    | 128K       | Text + Image | 20 RPM, 50 RPD |
 | `poolside/laguna-s-2.1:free`             | 262K    | 32K        | Text (code)  | 20 RPM, 50 RPD |
 | `poolside/laguna-xs-2.1:free`            | 262K    | 32K        | Text (code)  | 20 RPM, 50 RPD |
-| + ~12 more free models                   | Varies  | Varies     | Text / Image | 20 RPM, 50 RPD |
+| + 6 more free models                     | Varies  | Varies     | Text / Image | 20 RPM, 50 RPD |
 
 ### [OVHcloud AI Endpoints](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/) 🇫🇷
 
