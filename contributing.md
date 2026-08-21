@@ -2,14 +2,20 @@
 
 Thanks for wanting to add to this list!
 
+## How the repo works
+
+`README.md` is generated automatically from `data.json` by CI. Do not edit `README.md` directly; pull requests that only change `README.md` will be asked to move the change to `data.json`.
+
 ## Adding a provider
 
-Open a pull request that adds a new line to the appropriate section in `readme.md`. Your entry should include:
+Open a pull request that adds an entry to `data.json`. Your entry should include:
 
-- Provider name, linked to their API key or signup page.
-- Country flag for where they're headquartered.
-- A short dash-separated description listing top models, rate limits (RPM/RPD), and any notable restrictions.
-- A link to the official docs that confirm the free tier and its limits.
+- Provider name and a link to their API key or signup page (`name`, `url`).
+- Country flag for where they're headquartered (`country`, `flag`).
+- The base URL of the API (`baseUrl`).
+- A short factual description stating the free tier and whether a credit card is required (`description`).
+- A models array with model id, name, context, max output, modality, and rate limit for each notable model.
+- A link in the PR description to the official docs that confirm the free tier and its limits.
 
 ## What counts
 
@@ -25,10 +31,4 @@ Open a pull request that adds a new line to the appropriate section in `readme.m
 
 ## Format
 
-Follow the existing style:
-
-```
-- [Provider Name](https://link-to-api-key-page) FLAG - Model A, Model B, Model C +N more. X RPM, Y RPD.
-```
-
-Keep descriptions on a single line. End with a period.
+Follow the structure of the existing entries in `data.json`: same fields, same notation for sizes (`128K`, `1M`, `~32K`) and rate limits (`30 RPM, 14,400 RPD`), conditions in a numbered footnote.
