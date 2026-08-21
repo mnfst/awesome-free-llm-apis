@@ -159,7 +159,7 @@ tabBtns.forEach(btn => {
 
     // Tab-specific actions
     if (target === 'memory')   { fetchSessions(); if (activeMemSid) startMemPoll(activeMemSid); }
-    if (target === 'providers') fetchStats();
+    if (target === 'providers') { fetchStats(); fetchSearchData(); }
     if (target === 'playground') ensureModels();
     if (target === 'profile')  { fetchUserConfig(); fetchLeaderboard(); }
     if (target === 'wiki')     { initWikiTab(); }
@@ -321,6 +321,83 @@ async function verifyProvider(providerId) {
 
 document.getElementById('refresh-btn').addEventListener('click', fetchStats);
 
+// ─── Search Providers + Recent Search Logs (v1.0.9 SearchRouterMiddleware) ──
+const searchProvidersGrid = document.getElementById('search-providers-grid');
+const searchLogsTbody     = document.getElementById('search-logs-tbody');
+
+function renderSearchProviders(providers) {
+  if (!searchProvidersGrid) return;
+  if (!providers.length) {
+    searchProvidersGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px 0;color:var(--text-muted);">No search providers configured.</div>';
+    return;
+  }
+  searchProvidersGrid.innerHTML = providers.map(p => {
+    const badgeCls = p.available ? 'badge-green' : 'badge-red';
+    const badgeTxt = p.available ? '● Online' : '✕ Unavailable';
+    return `
+    <div class="provider-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div>
+          <div class="provider-name">${esc(p.name)}</div>
+          <div class="provider-id">${esc(p.id)}${p.keyless ? ' · keyless' : ''}</div>
+        </div>
+        <span class="badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      ${p.consecutiveFailures > 0 ? `<div style="font-size:.72rem;color:var(--accent-red);margin-bottom:6px;">⚠ ${p.consecutiveFailures} failure${p.consecutiveFailures > 1 ? 's' : ''}</div>` : ''}
+      <div class="provider-stat"><span>Penalty score</span><span>${p.penaltyScore.toFixed(2)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// Renders the full result list (all URLs + snippets, not a preview slice) inside a
+// <details>/<summary> dropdown — same collapsed-by-default pattern as the Tool
+// Playground's subtask "View Injected Context" cards (addSubtaskResponseBubble above).
+function renderSearchResultsDropdown(results) {
+  if (!Array.isArray(results) || results.length === 0) return '—';
+  return `
+    <details>
+      <summary style="cursor:pointer; font-size:.72rem; color:var(--accent-cyan); outline:none; list-style:none;">
+        📂 ${results.length} result${results.length > 1 ? 's' : ''}
+      </summary>
+      <ul style="margin-top:6px; padding-left:16px; font-size:.72rem; color:var(--text-muted); display:flex; flex-direction:column; gap:8px; list-style-type:circle; max-width:520px;">
+        ${results.map(r => `
+          <li>
+            <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title || r.url)}</a>
+            ${r.snippet ? `<div style="margin-top:2px;">${esc(r.snippet)}</div>` : ''}
+          </li>`).join('')}
+      </ul>
+    </details>`;
+}
+
+function renderSearchLogs(logs) {
+  if (!searchLogsTbody) return;
+  if (!logs.length) {
+    searchLogsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">No search activity yet.</td></tr>';
+    return;
+  }
+  searchLogsTbody.innerHTML = logs.map(l => `
+    <tr>
+      <td style="white-space:nowrap;">${esc(new Date(l.timestamp).toLocaleString())}</td>
+      <td>${esc(l.query)}</td>
+      <td><span class="badge badge-cyan">${esc(l.provider)}</span></td>
+      <td>${fmt(l.resultCount)}</td>
+      <td>${renderSearchResultsDropdown(l.results)}</td>
+    </tr>`).join('');
+}
+
+async function fetchSearchData() {
+  try {
+    const [provRes, logsRes] = await Promise.all([
+      fetch('/api/search-provider-stats'),
+      fetch('/api/search-logs'),
+    ]);
+    if (provRes.ok) renderSearchProviders(await provRes.json());
+    if (logsRes.ok) renderSearchLogs(await logsRes.json());
+  } catch (err) {
+    console.error('[Dashboard] fetchSearchData error:', err);
+  }
+}
+
 // ─── TOOL PLAYGROUND ─────────────────────────────────────────────
 
 // Tool definitions
@@ -413,6 +490,19 @@ const TOOLS = [
       { id: 'what',        label: 'What was done (one item per line)', type: 'textarea', placeholder: 'Added verify-migrations.sh\nIntegrated schema diff checks' },
       { id: 'why',         label: 'Why', type: 'text', placeholder: 'Prevent schema drift during deployments' },
       { id: 'files',       label: 'Files (comma-separated)', type: 'text', placeholder: 'scripts/verify-migrations.sh' },
+    ]
+  },
+  {
+    id: 'quantum_tool', label: 'quantum_tool', icon: '⚛️',
+    tag: 'Multi-Branch Reasoning',
+    fields: [
+      { id: 'action', label: 'Action', type: 'select', options: ['setup', 'step', 'pause', 'continue', 'modify', 'reset', 'status', 'get_state', 'analyze'] },
+      { id: 'sessionId', label: 'Session ID', type: 'text', placeholder: 'quantum-session-1' },
+      { id: 'numBranches', label: 'Number of Branches (for setup)', type: 'number', placeholder: '3' },
+      { id: 'personas', label: 'Personas (comma-separated, for setup/reset)', type: 'text', placeholder: 'Optimist, Skeptic, Pragmatist' },
+      { id: 'gates', label: 'Gates JSON array (for modify)', type: 'textarea', placeholder: '[{"qubit":0,"column":0,"gate":"H"},{"qubit":0,"column":1,"gate":"RY","param":1.2}]' },
+      { id: 'query', label: 'Question (for analyze)', type: 'textarea', placeholder: 'What should we conclude?' },
+      { id: 'temperature', label: 'Compression temperature 0-1 (for analyze)', type: 'number', placeholder: '0.7' },
     ]
   },
   {
@@ -631,6 +721,7 @@ function collectParams(tool) {
     if (!el) return;
 
     if (f.type === 'toggle')       params[f.id] = el.checked;
+    else if (f.type === 'number' && f.id === 'temperature') params[f.id] = el.value ? parseFloat(el.value) : undefined;
     else if (f.type === 'number')  params[f.id] = el.value ? parseInt(el.value, 10) : undefined;
     else if (f.type === 'model-picker') {
       const inp = document.getElementById(`pg-field-${f.id}`);
@@ -642,11 +733,13 @@ function collectParams(tool) {
       params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
     } else if (f.id === 'files') {
       params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
-    } else if (f.id === 'graphNode') {
+    } else if (f.id === 'graphNode' || f.id === 'gates') {
       const raw = el.value.trim();
       if (raw) {
-        try { params[f.id] = JSON.parse(raw); } catch { /* leave unset — treat invalid JSON as "no node" */ }
+        try { params[f.id] = JSON.parse(raw); } catch { /* leave unset — treat invalid JSON as "no value" */ }
       }
+    } else if (f.id === 'personas') {
+      params[f.id] = el.value ? el.value.split(',').map(s => s.trim()).filter(Boolean) : undefined;
     } else {
       const v = el.value.trim();
       if (v) params[f.id] = v;
@@ -1715,6 +1808,12 @@ setInterval(() => {
   if (memActive) fetchSessions();
 }, 10000);
 
+// Auto-refresh search providers/logs periodically when Providers tab is active
+setInterval(() => {
+  const providersActive = document.getElementById('panel-providers')?.classList.contains('active');
+  if (providersActive) fetchSearchData();
+}, 10000);
+
 // ─── WIKI TAB ───────────────────────────────────────────────────
 const wikiWorkspaceInput = document.getElementById('wiki-workspace-input');
 const wikiLoadBtn        = document.getElementById('wiki-load-btn');
@@ -1811,3 +1910,325 @@ wikiLoadBtn?.addEventListener('click', loadWikiList);
 wikiWorkspaceInput?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') loadWikiList();
 });
+
+// ─── Cyber Tool Decision Graph (v1.0.9) ──────────────────────────
+// Visualizes the node/edge graph cyber_tool's 'save_graph'/'load_graph'
+// actions already build for a CTF coaching session (RepositoryGraph under
+// the hood, src/memory/dependency-scanner.ts) — no new backend graph
+// structure needed, just a read + render.
+const cyberGraphSessionInput = document.getElementById('cyber-graph-session-input');
+const cyberGraphLoadBtn      = document.getElementById('cyber-graph-load-btn');
+const cyberGraphSearchInput  = document.getElementById('cyber-graph-search-input');
+const cyberGraphBody         = document.getElementById('cyber-graph-body');
+
+let _cyberGraphData = { nodes: [], edges: [] };
+
+const CYBER_NODE_TYPE_COLOR = {
+  goal: 'var(--accent-purple)',
+  hypothesis: 'var(--accent-cyan)',
+  action: 'var(--accent-amber)',
+  finding: 'var(--accent-green)',
+  deadend: 'var(--accent-red)',
+};
+
+function renderCyberGraph(filterText) {
+  const { nodes, edges } = _cyberGraphData;
+  if (!nodes.length) {
+    cyberGraphBody.innerHTML = '<div class="conv-empty">No decision-graph nodes recorded for this session yet.</div>';
+    return;
+  }
+
+  const q = (filterText || '').trim().toLowerCase();
+  const matches = (n) => !q || n.id.toLowerCase().includes(q) || (n.metadata?.label || '').toLowerCase().includes(q);
+
+  const nodesByType = {};
+  for (const n of nodes) {
+    const t = n.metadata?.ctfType || n.type || 'action';
+    (nodesByType[t] = nodesByType[t] || []).push(n);
+  }
+
+  const columns = ['goal', 'hypothesis', 'action', 'finding', 'deadend']
+    .filter(t => nodesByType[t]?.length)
+    .map(t => {
+      const cards = nodesByType[t].map(n => {
+        const dim = !matches(n);
+        const color = CYBER_NODE_TYPE_COLOR[t] || 'var(--accent-cyan)';
+        return `
+          <div class="provider-card" data-node-id="${esc(n.id)}" style="opacity:${dim ? 0.3 : 1};border-left:3px solid ${color};margin-bottom:8px;">
+            <div class="provider-name" style="font-size:.78rem;">${esc(n.metadata?.label || n.id)}</div>
+            <div class="provider-id">${esc(n.id)}</div>
+          </div>`;
+      }).join('');
+      return `
+        <div style="flex:1;min-width:180px;">
+          <div class="section-sub" style="text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;margin-bottom:8px;color:${CYBER_NODE_TYPE_COLOR[t] || 'var(--text-muted)'};">${esc(t)} (${nodesByType[t].length})</div>
+          ${cards}
+        </div>`;
+    }).join('');
+
+  const edgeLines = edges
+    .filter(e => !q || matches({ id: e.source, metadata: {} }) || matches({ id: e.target, metadata: {} }))
+    .map(e => `<div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text-muted);">${esc(e.source)} → ${esc(e.target)} <span style="color:var(--text-muted-2,var(--text-muted));">(${esc(e.type)})</span></div>`)
+    .join('');
+
+  cyberGraphBody.innerHTML = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">${columns}</div>
+    <div style="padding-top:12px;border-top:1px solid var(--glass-border);">
+      <div class="section-sub" style="margin-bottom:6px;">Edges (${edges.length})</div>
+      ${edgeLines || '<div class="conv-empty">No edges yet.</div>'}
+    </div>`;
+}
+
+async function loadCyberGraph() {
+  const sessionId = cyberGraphSessionInput.value.trim();
+  if (!sessionId) return;
+  cyberGraphBody.innerHTML = '<div class="conv-empty">Loading…</div>';
+  try {
+    const r = await fetch(`/api/cyber_tool/task_graph/${encodeURIComponent(sessionId)}`);
+    const d = await r.json();
+    if (!r.ok || d.success === false) throw new Error(d.error || 'Failed to load graph');
+    _cyberGraphData = { nodes: d.nodes || [], edges: d.edges || [] };
+    renderCyberGraph(cyberGraphSearchInput.value);
+  } catch (err) {
+    cyberGraphBody.innerHTML = `<div class="conv-empty">Failed to load graph: ${esc(err.message)}</div>`;
+  }
+}
+
+cyberGraphLoadBtn?.addEventListener('click', loadCyberGraph);
+cyberGraphSessionInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadCyberGraph(); });
+cyberGraphSearchInput?.addEventListener('input', () => renderCyberGraph(cyberGraphSearchInput.value));
+
+// ─── Keyword & Prompt Steering Inspector Logic ───────────────────
+const btnRunSteeringEval = document.getElementById('btn-run-steering-eval');
+const steeringQueryInput = document.getElementById('steering-query-input');
+const steeringKeywordsInput = document.getElementById('steering-keywords-input');
+const steeringWorkspaceInput = document.getElementById('steering-workspace-input');
+const steeringAgenticToggle = document.getElementById('steering-agentic-toggle');
+
+const steeringSysTokens = document.getElementById('steering-sys-tokens');
+const steeringSysDesc = document.getElementById('steering-sys-desc');
+const steeringPayloadTokens = document.getElementById('steering-payload-tokens');
+const steeringTokenSavings = document.getElementById('steering-token-savings');
+const steeringSavingsDesc = document.getElementById('steering-savings-desc');
+const steeringBloatStatus = document.getElementById('steering-bloat-status');
+
+const steeringMatchedSections = document.getElementById('steering-matched-sections');
+const steeringMemoryGates = document.getElementById('steering-memory-gates');
+const steeringPersonaBadge = document.getElementById('steering-persona-badge');
+const steeringSubtaskView = document.getElementById('steering-subtask-view');
+const steeringRawPromptView = document.getElementById('steering-raw-prompt-view');
+
+let _steeringEvalTimer = null;
+let _latestSteeringTelemetry = null;
+let _currentSteeringTab = 'prompt';
+
+function switchSteeringInspectTab(tab) {
+  _currentSteeringTab = tab;
+  ['prompt', 'workspace', 'history'].forEach(t => {
+    const btn = document.getElementById(`btn-inspect-tab-${t}`);
+    if (btn) {
+      if (t === tab) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+  renderSteeringInspectContent();
+}
+window.switchSteeringInspectTab = switchSteeringInspectTab;
+
+document.getElementById('btn-inspect-tab-prompt')?.addEventListener('click', () => switchSteeringInspectTab('prompt'));
+document.getElementById('btn-inspect-tab-workspace')?.addEventListener('click', () => switchSteeringInspectTab('workspace'));
+document.getElementById('btn-inspect-tab-history')?.addEventListener('click', () => switchSteeringInspectTab('history'));
+
+function renderSteeringInspectContent() {
+  if (!steeringRawPromptView) return;
+  if (!_latestSteeringTelemetry) {
+    steeringRawPromptView.textContent = '(Click "Inspect Live Ingestion & Telemetry" or edit inputs to load assembled system prompt...)';
+    return;
+  }
+
+  const st = _latestSteeringTelemetry;
+  if (_currentSteeringTab === 'prompt') {
+    steeringRawPromptView.textContent = st.fullAssembledSystemPrompt || '(No system prompt generated)';
+  } else if (_currentSteeringTab === 'workspace') {
+    const treeText = st.dirTree ? `=== 📂 WORKSPACE DIRECTORY TREE ===\n${st.dirTree}\n\n` : '';
+    const codeText = `=== 🔍 EXTRACTED WORKSPACE CODE SNIPPETS & RELEVANT FILES ===\n${st.extractedWorkspaceContext || '(No code snippets matched query keywords)'}`;
+    steeringRawPromptView.textContent = `${treeText}${codeText}`;
+  } else if (_currentSteeringTab === 'history') {
+    const histText = st.chatHistory && st.chatHistory.length > 0
+      ? JSON.stringify(st.chatHistory, null, 2)
+      : '(No previous chat history in this session)';
+    steeringRawPromptView.textContent = `=== 💬 SESSION TURNS & CHAT HISTORY ===\n${histText}`;
+  }
+}
+
+function debouncedSteeringEvaluation() {
+  if (_steeringEvalTimer) clearTimeout(_steeringEvalTimer);
+  _steeringEvalTimer = setTimeout(() => {
+    runSteeringEvaluation();
+  }, 350);
+}
+
+async function runSteeringEvaluation() {
+  const query = (steeringQueryInput?.value || '').trim();
+  const rawKeywordsStr = (steeringKeywordsInput?.value || '').trim();
+  const workspaceRoot = (steeringWorkspaceInput?.value || '.').trim();
+  const isAgentic = !!steeringAgenticToggle?.checked;
+
+  const userKeywords = rawKeywordsStr
+    ? rawKeywordsStr.split(',').map(k => k.trim().toLowerCase()).filter(Boolean)
+    : [];
+
+  if (btnRunSteeringEval) {
+    btnRunSteeringEval.disabled = true;
+    btnRunSteeringEval.innerHTML = '<span class="spinner" style="width:12px;height:12px;display:inline-block;border-width:2px;vertical-align:middle;margin-right:6px;"></span> Evaluating...';
+  }
+  if (steeringBloatStatus) {
+    steeringBloatStatus.textContent = 'EVALUATING ⏳';
+  }
+
+  try {
+    const response = await fetch('/api/steering_eval', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        keywords: userKeywords,
+        agentic: isAgentic,
+        workspaceRoot
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success || !data.telemetry) {
+      if (steeringBloatStatus) steeringBloatStatus.textContent = 'ERROR ⚠️';
+      return;
+    }
+
+    const st = data.telemetry;
+    _latestSteeringTelemetry = st;
+    const mem = st.memoryLayers || {};
+    const matched = st.matchedSections || [];
+    const memoryHierarchy = st.memoryHierarchy || [];
+
+    // Persona & keywords badge
+    if (steeringPersonaBadge) {
+      const activeKw = (st.keywords && st.keywords.length > 0) ? st.keywords : userKeywords;
+      const kwPreview = activeKw.length > 0 ? ` &bull; ${activeKw.length} keywords (<code>${esc(activeKw.slice(0, 3).join(', '))}${activeKw.length > 3 ? '...' : ''}</code>)` : ' &bull; 0 keywords';
+      steeringPersonaBadge.innerHTML = `Persona: <code>${esc(st.persona || 'coder')}</code>${kwPreview}`;
+    }
+
+    // Stats
+    const sysTokens = mem.sysPromptTokens || 0;
+    const payloadTokens = mem.totalContextTokens || 0;
+    const agenticBaselinePayload = 3200;
+    const diff = Math.max(0, agenticBaselinePayload - payloadTokens);
+    const savingsPct = isAgentic ? '0.0%' : `${((diff / agenticBaselinePayload) * 100).toFixed(1)}%`;
+
+    if (steeringSysTokens) steeringSysTokens.textContent = `${sysTokens.toLocaleString()} tok`;
+    if (steeringSysDesc) steeringSysDesc.textContent = isAgentic ? 'Multi-Pass Agentic Subtask' : 'Single-Pass System Prompt';
+    if (steeringPayloadTokens) steeringPayloadTokens.textContent = `${payloadTokens.toLocaleString()} tok`;
+    if (steeringTokenSavings) steeringTokenSavings.textContent = savingsPct;
+    if (steeringSavingsDesc) steeringSavingsDesc.textContent = isAgentic ? 'Full 5-layer memory overhead' : `${diff.toLocaleString()} tokens saved vs max budget`;
+
+    if (steeringBloatStatus) {
+      steeringBloatStatus.textContent = matched.length > 0 ? 'ACTIVE ⚡ (Live Targeted)' : 'CLEAN 🛡️ (0 External Bloat)';
+    }
+
+    // Matched prompt.json sections with expandable text
+    if (steeringMatchedSections) {
+      if (matched.length === 0) {
+        steeringMatchedSections.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:12px;background:rgba(255,255,255,.03);border-radius:6px;border:1px dashed var(--glass-border);display:flex;align-items:center;gap:8px;"><span style="font-size:1.1rem;">🛡️</span><span><strong>Zero External Bloat:</strong> No external prompt.json sections matched the query. Baseline system prompt active.</span></div>';
+      } else {
+        steeringMatchedSections.innerHTML = matched.map((sec, idx) => `
+          <details class="qs-tool-card" style="margin:0;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.45);box-shadow:0 0 12px rgba(168,85,247,.12);border-radius:6px;" ${idx === 0 ? 'open' : ''}>
+            <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 14px;">
+              <div>
+                <span class="qs-tool-name" style="color:var(--accent-purple);font-weight:700;font-size:.84rem;">${esc(sec.title || sec.id)}</span>
+                <span class="qs-tool-desc" style="font-size:.74rem;margin-left:8px;">Keywords: <code>${esc((sec.keywords || []).join(', '))}</code> &bull; <span style="color:var(--accent-cyan);font-weight:700;">${sec.tokenCount || 0} tok</span></span>
+              </div>
+              <span class="badge badge-purple" style="font-size:.72rem;padding:3px 8px;box-shadow:0 0 8px rgba(168,85,247,.4);">⚡ Injected & Active</span>
+            </summary>
+            <div style="padding:10px 14px;border-top:1px solid rgba(168,85,247,.2);background:rgba(10,10,15,.7);">
+              <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Injected Prompt Content:</div>
+              <pre style="font-size:.72rem;color:var(--text-secondary);white-space:pre-wrap;margin:0;font-family:monospace;max-height:160px;overflow-y:auto;background:rgba(0,0,0,.4);padding:8px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.05);">${esc(sec.content || '(No content text available)')}</pre>
+            </div>
+          </details>
+        `).join('');
+      }
+    }
+
+    // 5-Layer Memory Priority Hierarchy Deck
+    if (steeringMemoryGates) {
+      const priorityColors = {
+        1: { badge: 'badge-purple', color: 'var(--accent-purple)' },
+        2: { badge: 'badge-cyan', color: 'var(--accent-cyan)' },
+        3: { badge: 'badge-green', color: 'var(--accent-green)' },
+        4: { badge: 'badge-amber', color: 'var(--accent-amber)' },
+        5: { badge: 'badge-blue', color: 'var(--accent-blue)' }
+      };
+
+      steeringMemoryGates.innerHTML = memoryHierarchy.map((layer, idx) => {
+        const pStyle = priorityColors[layer.priority] || { badge: 'badge-purple', color: 'var(--accent-purple)' };
+        const isActive = layer.active && layer.tokens > 0;
+        return `
+          <details class="qs-tool-card" style="margin:0;background:rgba(255,255,255,.02);border:1px solid var(--glass-border);" ${idx === 0 ? 'open' : ''}>
+            <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 14px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="badge ${pStyle.badge}" style="font-weight:700;font-size:.72rem;">Priority ${layer.priority} (${layer.level})</span>
+                <div>
+                  <span style="font-size:.82rem;font-weight:600;color:${pStyle.color};">${esc(layer.name)}</span>
+                  <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">${esc(layer.description)}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="badge ${isActive ? 'badge-green' : 'badge-gray'}" style="font-size:.68rem;">${isActive ? '⚡ Active' : '💤 Inactive / 0 tok'}</span>
+                <span style="font-size:.76rem;font-weight:600;color:var(--text-primary);">${(layer.tokens || 0).toLocaleString()} tok</span>
+              </div>
+            </summary>
+            <div style="padding:10px 14px;border-top:1px solid var(--glass-border);background:rgba(10,10,15,.5);">
+              <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Extracted Memory Content Preview:</div>
+              <pre style="font-size:.72rem;color:var(--text-secondary);white-space:pre-wrap;margin:0;font-family:monospace;max-height:140px;overflow-y:auto;background:rgba(0,0,0,.3);padding:8px;border-radius:4px;">${esc(layer.content || '(Empty)')}</pre>
+            </div>
+          </details>
+        `;
+      }).join('');
+    }
+
+    // Subtask & Raw prompt inspector
+    if (isAgentic || st.subtaskContext) {
+      if (steeringSubtaskView) {
+        steeringSubtaskView.style.display = 'block';
+        const subId = st.subtaskContext?.id || 'subtask-eval-1';
+        const subTitle = st.subtaskContext?.title || (query ? `Execute task: ${query}` : 'System prompt steering subtask');
+        steeringSubtaskView.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(236,72,153,.12);border:1px solid rgba(236,72,153,.35);border-radius:6px;font-size:.76rem;color:#f472b6;">
+            <span class="badge" style="background:#ec4899;color:#fff;font-weight:700;font-size:.68rem;">AGENTIC SUBTASK ACTIVE</span>
+            <span>Subtask ID: <code>${esc(subId)}</code> &bull; <strong>${esc(subTitle)}</strong></span>
+          </div>`;
+      }
+    } else {
+      if (steeringSubtaskView) steeringSubtaskView.style.display = 'none';
+    }
+
+    renderSteeringInspectContent();
+
+  } catch (err) {
+    if (steeringBloatStatus) steeringBloatStatus.textContent = 'ERROR ⚠️';
+  } finally {
+    if (btnRunSteeringEval) {
+      btnRunSteeringEval.disabled = false;
+      btnRunSteeringEval.innerHTML = 'Inspect Live Ingestion & Telemetry';
+    }
+  }
+}
+
+btnRunSteeringEval?.addEventListener('click', runSteeringEvaluation);
+steeringQueryInput?.addEventListener('input', debouncedSteeringEvaluation);
+steeringKeywordsInput?.addEventListener('input', debouncedSteeringEvaluation);
+steeringWorkspaceInput?.addEventListener('input', debouncedSteeringEvaluation);
+steeringAgenticToggle?.addEventListener('change', runSteeringEvaluation);
+
+// Initial run on script load
+runSteeringEvaluation();
+setTimeout(runSteeringEvaluation, 500);
+

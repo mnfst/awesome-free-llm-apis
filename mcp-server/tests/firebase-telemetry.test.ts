@@ -5,8 +5,8 @@ import os from 'os';
 
 // Import our encryption and firebase modules
 import { encrypt, decrypt } from '../src/utils/encryption.js';
-import { initFirebase, syncStats, logErrorTelemetry, getLeaderboard, getUserStats } from '../src/utils/firebase.js';
-import { PersistenceManager, PersistentUsage } from '../src/utils/PersistenceManager.js';
+import { initFirebase, syncStats, logErrorTelemetry, getLeaderboard, getUserStats, logSearchQuery, getRecentSearchLogs } from '../src/utils/firebase.js';
+import { PersistenceManager, PersistentUsage, persistence } from '../src/utils/PersistenceManager.js';
 
 describe('Firebase & Telemetry Encryption Phase 0 Tests', () => {
     const testDir = path.join(os.tmpdir(), 'mcp-firebase-test-' + Date.now());
@@ -138,6 +138,79 @@ describe('Firebase & Telemetry Encryption Phase 0 Tests', () => {
         it('getUserStats() returns null when offline, instead of throwing (dashboard falls back to local totals)', async () => {
             const result = await getUserStats('some-uid');
             expect(result).toBeNull();
+        });
+
+        it('logSearchQuery() returns false when offline instead of throwing', async () => {
+            const result = await logSearchQuery('anonymous', {
+                query: 'test query',
+                provider: 'tavily',
+                sessionId: 'sess-1',
+                resultCount: 2,
+                results: [{ title: 'A', url: 'https://a.example', snippet: 'snippet A' }],
+            });
+            expect(result).toBe(false);
+        });
+
+        it('getRecentSearchLogs() returns an empty array when offline, instead of throwing (dashboard shows "no data")', async () => {
+            const result = await getRecentSearchLogs();
+            expect(Array.isArray(result)).toBe(true);
+            expect(result.length).toBe(0);
+        });
+
+        it('initFirebase() retries a transient network failure during refresh-token exchange instead of immediately minting a new anonymous UID', async () => {
+            // Regression test for the bug where a saved refresh token that hit a single
+            // transient network error at cold-start (before this fix, zero retries) was
+            // indistinguishable from a genuinely rejected token — both silently fell
+            // through to accounts:signUp and produced a brand-new UID every restart.
+            vi.stubEnv('FIREBASE_API_KEY', 'test-api-key-1234567890');
+            vi.stubEnv('FIREBASE_PROJECT_ID', 'test-project');
+
+            const savedState: any = {
+                lastResetDate: new Date().toISOString().split('T')[0],
+                dailyTotalRequests: 0, dailyTotalTokens: 0,
+                lifetimeTotalRequests: 0, lifetimeTotalTokens: 0,
+                providers: {},
+                firebaseUid: 'stable-uid-123',
+                firebaseRefreshToken: 'saved-refresh-token',
+            };
+            vi.spyOn(persistence, 'load').mockResolvedValue(savedState);
+            vi.spyOn(persistence, 'save').mockResolvedValue(undefined);
+
+            let fetchCallCount = 0;
+            const fetchMock = vi.fn(async (url: any) => {
+                const urlStr = String(url);
+                if (urlStr.includes('securetoken.googleapis.com')) {
+                    fetchCallCount++;
+                    if (fetchCallCount === 1) {
+                        // First attempt: transient network failure (must be retried, not
+                        // treated as a rejection).
+                        const err: any = new Error('fetch failed');
+                        throw err;
+                    }
+                    // Second attempt: succeeds with the SAME uid (a real token refresh,
+                    // not a new anonymous account).
+                    return {
+                        ok: true,
+                        json: async () => ({
+                            id_token: 'fresh-id-token',
+                            refresh_token: 'rotated-refresh-token',
+                            user_id: 'stable-uid-123',
+                            expires_in: '3600',
+                        }),
+                    } as any;
+                }
+                if (urlStr.includes('firestore.googleapis.com')) {
+                    // probeFirestore() call — treat as reachable.
+                    return { ok: true, status: 200, json: async () => ({}) } as any;
+                }
+                return { ok: false, status: 404, text: async () => '' } as any;
+            });
+            vi.stubGlobal('fetch', fetchMock);
+
+            const uid = await initFirebase();
+
+            expect(uid).toBe('stable-uid-123');
+            expect(fetchCallCount).toBe(2); // one failed attempt + one retry that succeeded
         });
 
         it('Firebase offline → local UUID fallback, no crash', async () => {

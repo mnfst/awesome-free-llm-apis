@@ -29,12 +29,19 @@ export const EXCLUDE_DIRS = [
     '__pycache__',
     '.pytest_cache',
     '.continue',
+    '.free-llm-mcp',
+    '.agents',
+    '.cache',
+    '.turbo',
+    'data',
     'data/cache',
     'artifacts',
     'out',
     'coverage',
     'bower_components',
-    'jspm_packages'
+    'jspm_packages',
+    'temp',
+    'tmp'
 ];
 
 export const EXCLUDE_EXTENSIONS = [
@@ -44,7 +51,8 @@ export const EXCLUDE_EXTENSIONS = [
     '.exe', '.dll', '.so', '.dylib', '.bin', '.dat',
     '.woff', '.woff2', '.ttf', '.otf',
     '.map', '.log', '.pyc', '.pyo', '.pyd',
-    '.db', '.sqlite', '.obj', '.o', '.a', '.lib'
+    '.db', '.sqlite', '.obj', '.o', '.a', '.lib',
+    '.tmp', '.lock'
 ];
 
 // Local workspace artifacts

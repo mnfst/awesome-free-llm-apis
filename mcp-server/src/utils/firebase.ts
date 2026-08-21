@@ -144,6 +144,12 @@ export async function initFirebase(): Promise<string> {
                 console.error(`[Firebase Debug] Syncing stats. Authenticated UID: "${refreshed.userId}", Target Document ID: "${refreshed.userId}"`);
                 return refreshed.userId;
             }
+            // exchangeRefreshToken() already logged the specific rejection/network
+            // reason above. Surface that this restart is about to lose the
+            // previous identity (new UID, usage/leaderboard history effectively
+            // orphaned under the old one) rather than let it look identical to a
+            // brand-new install.
+            console.warn(`[Firebase] Saved identity (UID: ${savedUid}) could not be restored — provisioning a NEW anonymous account. Previous usage history will appear under the old UID.`);
         }
 
         // Fallback or brand new sign-in: Sign up anonymously via REST
@@ -196,25 +202,56 @@ export async function initFirebase(): Promise<string> {
     }
 }
 
-async function exchangeRefreshToken(refreshToken: string): Promise<{ idToken: string; refreshToken: string; userId: string; expiresIn: number } | null> {
-    try {
-        const url = `https://securetoken.googleapis.com/v1/token?key=${apiKey}`;
-        const res = await fetchWithTimeout(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return {
-            idToken: data.id_token,
-            refreshToken: data.refresh_token,
-            userId: data.user_id,
-            expiresIn: parseInt(data.expires_in, 10)
-        };
-    } catch {
-        return null;
+const EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS = [300, 800];
+
+/**
+ * Exchanges a saved refresh token for a fresh idToken. This is the ONLY thing
+ * standing between "same anonymous identity every restart" and "brand new
+ * anonymous account (new UID, looks like reset history) every restart" — see
+ * initFirebase()'s fallthrough to accounts:signUp when this returns null.
+ *
+ * Previously a single transient network hiccup at cold-start (DNS/TLS not warm
+ * yet, corporate proxy blip) was indistinguishable from a genuinely rejected
+ * refresh token: both just returned null silently, and initFirebase() would
+ * immediately mint a fresh anonymous UID rather than ever seeing an error.
+ * Observed live: two consecutive `npm run dashboard` runs authenticating as
+ * two different UIDs despite a clean shutdown/flush in between. Now retries
+ * transient network errors (mirroring getUserStats/getLeaderboard's
+ * isRetryableNetworkError pattern below) and logs the actual rejection reason
+ * (HTTP status + body) when Google genuinely rejects the token, so a real
+ * "invalid_grant" is distinguishable from a network blip in the logs.
+ */
+export async function exchangeRefreshToken(refreshToken: string): Promise<{ idToken: string; refreshToken: string; userId: string; expiresIn: number } | null> {
+    let lastErr: any;
+    for (let attempt = 0; attempt <= EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS.length; attempt++) {
+        try {
+            const url = `https://securetoken.googleapis.com/v1/token?key=${apiKey}`;
+            const res = await fetchWithTimeout(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`
+            });
+            if (!res.ok) {
+                const body = await res.text().catch(() => '');
+                console.warn(`[Firebase] Refresh token exchange rejected by Google (HTTP ${res.status}): ${body.slice(0, 300)}. Falling back to a new anonymous account.`);
+                return null;
+            }
+            const data = await res.json();
+            return {
+                idToken: data.id_token,
+                refreshToken: data.refresh_token,
+                userId: data.user_id,
+                expiresIn: parseInt(data.expires_in, 10)
+            };
+        } catch (err) {
+            lastErr = err;
+            const isLastAttempt = attempt === EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS.length;
+            if (isLastAttempt || !isRetryableNetworkError(err)) break;
+            await new Promise(resolve => setTimeout(resolve, EXCHANGE_REFRESH_TOKEN_RETRY_DELAYS_MS[attempt]));
+        }
     }
+    console.warn(`[Firebase] Refresh token exchange failed after retries: ${(lastErr as Error)?.message || lastErr}. Falling back to a new anonymous account.`);
+    return null;
 }
 
 async function getValidIdToken(): Promise<string> {
@@ -407,11 +444,155 @@ export async function logScrapingFailure(userId: string, failure: {
 }
 
 /**
+ * Logs a SearchRouterMiddleware search (which provider served it, and every
+ * returned result's title/url/snippet — not just a preview slice) to a dedicated `search_logs` Firestore
+ * collection, mirroring logScrapingFailure's isolated-collection pattern so
+ * search activity is filterable on the dashboard without grepping through
+ * generic chat/tool logs. Fire-and-forget — never let telemetry affect the
+ * actual search result path.
+ */
+export async function logSearchQuery(userId: string, entry: {
+    query: string;
+    provider: string;
+    sessionId?: string;
+    resultCount: number;
+    results?: Array<{ title: string; url: string; snippet?: string }>;
+}): Promise<boolean> {
+    if (await refreshOfflineStatus(userId)) return false;
+    try {
+        const token = await getValidIdToken();
+        const logId = crypto.randomUUID();
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/search_logs/${logId}`;
+
+        // Full result set (not just a top-N slice) — the dashboard needs every
+        // returned URL/snippet, not a preview, per the same expectation as the
+        // "View Injected Context"/subtask <details> dropdowns elsewhere.
+        const results = entry.results || [];
+        const logDocData = {
+            fields: {
+                userId: { stringValue: userId },
+                query: { stringValue: sanitizeText(entry.query.slice(0, 500)) },
+                provider: { stringValue: entry.provider },
+                sessionId: { stringValue: entry.sessionId || '' },
+                resultCount: { integerValue: String(entry.resultCount) },
+                results: {
+                    arrayValue: {
+                        values: results.map(r => ({
+                            mapValue: {
+                                fields: {
+                                    title: { stringValue: sanitizeText(r.title).slice(0, 200) },
+                                    url: { stringValue: r.url.slice(0, 500) },
+                                    snippet: { stringValue: sanitizeText(r.snippet || '').slice(0, 1000) },
+                                }
+                            }
+                        }))
+                    }
+                },
+                timestamp: { integerValue: String(Date.now()) }
+            }
+        };
+
+        const res = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(logDocData)
+        });
+
+        return res.ok;
+    } catch (err) {
+        logFirebaseError('[Firebase] Failed to log search query', err);
+        return false;
+    }
+}
+
+const GET_RECENT_SEARCH_LOGS_LIMIT = 25;
+
+/**
+ * Reads the most recent search_logs entries for dashboard rendering, newest
+ * first. Mirrors getLeaderboard's runQuery/orderBy pattern. Returns an empty
+ * array (not a throw) when offline or misconfigured, since the dashboard
+ * should just show "no data" rather than error.
+ */
+export async function getRecentSearchLogs(): Promise<Array<{
+    id: string;
+    userId: string;
+    query: string;
+    provider: string;
+    sessionId: string;
+    resultCount: number;
+    results: Array<{ title: string; url: string; snippet: string }>;
+    timestamp: number;
+}>> {
+    if (await refreshOfflineStatus()) return [];
+    try {
+        const token = await getValidIdToken();
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+
+        const queryBody = {
+            structuredQuery: {
+                from: [{ collectionId: 'search_logs' }],
+                orderBy: [{ field: { fieldPath: 'timestamp' }, direction: 'DESCENDING' }],
+                limit: GET_RECENT_SEARCH_LOGS_LIMIT
+            }
+        };
+
+        const res = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(queryBody)
+        });
+
+        if (!res.ok) return [];
+
+        const data = await res.json();
+        const list: Array<{
+            id: string; userId: string; query: string; provider: string; sessionId: string;
+            resultCount: number; results: Array<{ title: string; url: string; snippet: string }>; timestamp: number;
+        }> = [];
+
+        if (Array.isArray(data)) {
+            for (const item of data) {
+                const doc = item.document;
+                if (!doc) continue;
+                const pathParts = doc.name.split('/');
+                const docId = pathParts[pathParts.length - 1];
+                const fields = doc.fields || {};
+                const resultValues = fields.results?.arrayValue?.values || [];
+                list.push({
+                    id: docId,
+                    userId: fields.userId?.stringValue || '',
+                    query: fields.query?.stringValue || '',
+                    provider: fields.provider?.stringValue || '',
+                    sessionId: fields.sessionId?.stringValue || '',
+                    resultCount: parseInt(fields.resultCount?.integerValue || '0', 10),
+                    results: resultValues.map((v: any) => ({
+                        title: v.mapValue?.fields?.title?.stringValue || '',
+                        url: v.mapValue?.fields?.url?.stringValue || '',
+                        snippet: v.mapValue?.fields?.snippet?.stringValue || '',
+                    })),
+                    timestamp: parseInt(fields.timestamp?.integerValue || '0', 10),
+                });
+            }
+        }
+        return list;
+    } catch (err) {
+        logFirebaseError('[Firebase] Failed to get recent search logs', err);
+        return [];
+    }
+}
+
+/**
  * Reads a single user's persisted stats doc from Firestore — the source of truth for the
  * dashboard's lifetime totals (the local usage-stats.json's in-memory counters get reset
  * on a small interval, so the dashboard reads this instead of summing local state).
  */
-function isRetryableNetworkError(err: any): boolean {
+export function isRetryableNetworkError(err: any): boolean {
     const errMsg = err?.message || String(err);
     return errMsg.includes('fetch failed') ||
         errMsg.includes('timeout') ||

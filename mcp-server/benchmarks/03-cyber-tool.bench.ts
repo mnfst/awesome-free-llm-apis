@@ -1,0 +1,165 @@
+import { bench, describe, beforeAll, afterAll } from "vitest";
+import { useCacheIsolation } from "../tests/helpers/test-cache-isolation.js";
+import { cyberTool } from "../src/tools/cyber-tool.js";
+import { WikiMemory } from "../src/memory/wiki.js";
+import { countTokens } from "./helpers/token-counter.js";
+import { writeBenchmarkLog } from "./helpers/log-writer.js";
+
+useCacheIsolation();
+
+describe("03-cyber-tool benchmarks (Production cyberTool Execution)", () => {
+  beforeAll(async () => {
+    const wiki = new WikiMemory("global-cyber-tools");
+    await wiki.write(
+      "nmap/flags_and_troubleshooting",
+      "# Nmap Flags & Troubleshooting\n\n- `-sV`: Version detection\n- `-sC`: Default scripts\n- `-p-`: Scan all ports\n\nTroubleshooting: Ensure raw socket capabilities or run with sudo.",
+      ["cyber", "nmap"]
+    );
+  });
+
+  afterAll(async () => {
+    await generateLogReport();
+  });
+
+  // Scenario 1: cyberTool Learn Action
+  bench("cyberTool({ action: 'learn' }) — Methodology & Walkthrough Generation", async () => {
+    const res = await cyberTool({
+      action: "learn",
+      goal: "Investigate SQL Injection and Rate-Limiting Bypass on Target API",
+    });
+    countTokens(JSON.stringify(res));
+  });
+
+  // Scenario 2: cyberTool Wiki Lookup Action
+  bench("cyberTool({ action: 'wiki_lookup' }) — Security Tool Troubleshooting Notes", async () => {
+    const res = await cyberTool({
+      action: "wiki_lookup",
+      toolName: "nmap",
+    });
+    countTokens(JSON.stringify(res));
+  });
+
+  // Scenario 3: cyberTool Tool Memory Action
+  bench("cyberTool({ action: 'tool_memory' }) — Tool Reliability Search", async () => {
+    const res = await cyberTool({
+      action: "tool_memory",
+      query: "sqlmap",
+    });
+    countTokens(JSON.stringify(res));
+  });
+});
+
+async function generateLogReport() {
+  const timestamp = new Date().toISOString();
+
+  // Populate wiki content for nmap so wiki_lookup succeeds
+  const wiki = new WikiMemory("global-cyber-tools");
+  await wiki.write(
+    "nmap/flags_and_troubleshooting",
+    "# Nmap Flags & Troubleshooting\n\n- `-sV`: Version detection\n- `-sC`: Default scripts\n- `-p-`: Scan all ports\n\nTroubleshooting: Ensure raw socket capabilities or run with sudo.",
+    ["cyber", "nmap"]
+  );
+
+  const mcpInputScenario1 = {
+    tool: "cyber_tool",
+    action: "learn",
+    goal: "Investigate SQL Injection and Rate-Limiting Bypass on Target API"
+  };
+
+  const mcpInputScenario2 = {
+    tool: "cyber_tool",
+    action: "wiki_lookup",
+    toolName: "nmap",
+    namespace: "global-cyber-tools"
+  };
+
+  const mcpInputScenario3 = {
+    tool: "cyber_tool",
+    action: "tool_memory",
+    query: "sqlmap"
+  };
+
+  // Scenario 1 Measurement
+  const t0 = performance.now();
+  const learnRes = await cyberTool(mcpInputScenario1 as any);
+  const t1 = performance.now();
+
+  // Scenario 2 Measurement
+  const t2 = performance.now();
+  const lookupRes = await cyberTool(mcpInputScenario2 as any);
+  const t3 = performance.now();
+
+  // Scenario 3 Measurement
+  const t4 = performance.now();
+  const memoryRes = await cyberTool(mcpInputScenario3 as any);
+  const t5 = performance.now();
+
+  const tokLearn = countTokens(JSON.stringify(learnRes));
+  const tokLookup = countTokens(JSON.stringify(lookupRes));
+  const tokMemory = countTokens(JSON.stringify(memoryRes));
+
+  const logContent = `# Benchmark Log: 03-cyber-tool — Production cyberTool Execution
+
+**Timestamp**: ${timestamp}
+
+## 🎯 Production Code Executed
+- **Source File**: \`src/tools/cyber-tool.ts\`
+- **Target Function**: \`export async function cyberTool(input: CyberToolInput)\`
+- **Actions Evaluated**: \`learn\`, \`wiki_lookup\`, \`tool_memory\`
+
+---
+
+## ⚡ Real Scenarios Executed & Input Payload Traces
+
+### 1. **\`cyberTool({ action: 'learn' })\` Methodology & Walkthrough Generation**
+- **Latency**: ${(t1 - t0).toFixed(2)} ms
+- **Token Count**: ${tokLearn} tokens
+
+#### 📥 MCP Server Tool Call Input Payload:
+\`\`\`json
+${JSON.stringify(mcpInputScenario1, null, 2)}
+\`\`\`
+
+#### 📄 Output Methodology Walkthrough:
+\`\`\`markdown
+${learnRes.response || JSON.stringify(learnRes, null, 2)}
+\`\`\`
+
+---
+
+### 2. **\`cyberTool({ action: 'wiki_lookup' })\` Security Tool Troubleshooting Notes**
+- **Latency**: ${(t3 - t2).toFixed(2)} ms
+- **Token Count**: ${tokLookup} tokens
+
+#### 📥 MCP Server Tool Call Input Payload:
+\`\`\`json
+${JSON.stringify(mcpInputScenario2, null, 2)}
+\`\`\`
+
+#### 📄 Output Payload:
+\`\`\`json
+${JSON.stringify(lookupRes, null, 2)}
+\`\`\`
+
+---
+
+### 3. **\`cyberTool({ action: 'tool_memory' })\` Security Tool Reliability Search**
+- **Latency**: ${(t5 - t4).toFixed(2)} ms
+- **Token Count**: ${tokMemory} tokens
+
+#### 📥 MCP Server Tool Call Input Payload:
+\`\`\`json
+${JSON.stringify(mcpInputScenario3, null, 2)}
+\`\`\`
+
+#### 📄 Output Payload:
+\`\`\`json
+${JSON.stringify(memoryRes, null, 2)}
+\`\`\`
+
+---
+*Generated by Vitest Benchmark Suite (03-cyber-tool.bench.ts)*
+`;
+
+  await writeBenchmarkLog("03-cyber-tool.md", logContent);
+}

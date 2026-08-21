@@ -56,6 +56,22 @@ export class StdioDevToolsClient implements DevToolsClient {
         return new StdioDevToolsClient(client, transport);
     }
 
+    static async connectCustom(opts: { command: string; args: string[]; connectTimeoutMs?: number }): Promise<StdioDevToolsClient> {
+        const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+        const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+
+        const transport = new StdioClientTransport({ command: opts.command, args: opts.args });
+        const client = new Client({ name: 'custom_mcp_client', version: '1.0.0' }, { capabilities: {} });
+
+        const timeoutMs = opts.connectTimeoutMs ?? 30_000;
+        await Promise.race([
+            client.connect(transport),
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Custom MCP process (${opts.command}) did not connect within ${timeoutMs}ms`)), timeoutMs)),
+        ]);
+
+        return new StdioDevToolsClient(client, transport);
+    }
+
     async callTool(req: DevToolsCallRequest): Promise<any> {
         return this.client.callTool({ name: req.name, arguments: req.arguments ?? {} });
     }

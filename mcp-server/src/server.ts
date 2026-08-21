@@ -58,7 +58,8 @@ import { getSharedRouter } from './pipeline/instances.js';
 import { execSync } from 'child_process';
 import fs, { promises as fsp } from 'fs';
 import { persistence } from './utils/PersistenceManager.js';
-import { initFirebase, syncStats, getLeaderboard, getUserStats } from './utils/firebase.js';
+import { initFirebase, syncStats, getLeaderboard, getUserStats, getRecentSearchLogs } from './utils/firebase.js';
+import { SearchProviderRegistry } from './search/registry.js';
 import { withFileLock } from './utils/file-lock.js';
 import { writeFileAtomic } from './utils/FileUtils.js';
 import { WorkspaceScanner } from './cache/workspace.js';
@@ -247,6 +248,27 @@ async function main() {
         }
       });
 
+      app.get('/api/prompt_sections', async (req, res) => {
+        try {
+          const promptPath = path.resolve(__dirname, '../../external/agent-prompt/prompt.json');
+          if (fs.existsSync(promptPath)) {
+            const raw = await fs.promises.readFile(promptPath, 'utf-8');
+            const data = JSON.parse(raw);
+            const sections = (data.sections || []).map((sec: any) => ({
+              id: sec.id,
+              title: sec.title,
+              keywords: sec.keywords || [],
+              tokenCount: Math.ceil((sec.content || '').length / 4)
+            }));
+            res.json({ success: true, sections });
+          } else {
+            res.json({ success: false, error: 'prompt.json not found', sections: [] });
+          }
+        } catch (err) {
+          res.status(500).json({ success: false, error: String(err), sections: [] });
+        }
+      });
+
       app.post('/api/user-config', async (req, res) => {
         try {
           const { username, optOutTelemetry } = req.body;
@@ -338,6 +360,34 @@ async function main() {
         try {
           const stats = getSharedRouter().getExecutor().getProviderStats();
           res.json(stats);
+        } catch (err) {
+          res.status(500).json({ error: String(err) });
+        }
+      });
+
+      // Search-provider health for the dashboard's Providers tab Search section (v1.0.9).
+      app.get('/api/search-provider-stats', async (req, res) => {
+        try {
+          const providers = SearchProviderRegistry.getInstance().getProviders();
+          const stats = providers.map(p => ({
+            id: p.id,
+            name: p.name,
+            available: p.isAvailable(),
+            keyless: !p.envVar,
+            consecutiveFailures: p.consecutiveFailures,
+            penaltyScore: p.getPenaltyScore(),
+          }));
+          res.json(stats);
+        } catch (err) {
+          res.status(500).json({ error: String(err) });
+        }
+      });
+
+      // Recent search queries/results logged by SearchRouterMiddleware (v1.0.9).
+      app.get('/api/search-logs', async (req, res) => {
+        try {
+          const logs = await getRecentSearchLogs();
+          res.json(logs);
         } catch (err) {
           res.status(500).json({ error: String(err) });
         }
@@ -469,6 +519,11 @@ async function main() {
             case 'cyber_tool':
               result = await cyberTool(params);
               break;
+            case 'quantum_tool': {
+              const { quantumTool } = await import('./tools/quantum-tool.js');
+              result = await quantumTool(params);
+              break;
+            }
             default:
               res.status(400).json({ error: `Unknown tool: ${tool}` });
               return;
@@ -579,6 +634,42 @@ async function main() {
         try {
           const result = await cyberTool(req.body);
           res.json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
+      // Dashboard-facing convenience wrapper around cyber_tool's existing
+      // 'load_graph' action (v1.0.9) — the decision-graph nodes/edges it
+      // returns are already exactly what the dashboard's task-graph
+      // visualization needs, so this just narrows the generic action-based
+      // endpoint above to a plain GET for that one read.
+      app.get('/api/cyber_tool/task_graph/:sessionId', async (req, res) => {
+        try {
+          const result = await cyberTool({ action: 'load_graph', sessionId: req.params.sessionId });
+          res.json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
+      // Quantum Tool — multi-branch/persona reasoning aid (v1.0.9)
+      app.post('/api/quantum_tool', express.json({ limit: '2mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const { quantumTool } = await import('./tools/quantum-tool.js');
+          const result = await quantumTool(req.body);
+          res.status(result.success ? 200 : 400).json(result);
+        } catch (err: any) {
+          res.status(500).json({ error: String(err?.message || err) });
+        }
+      });
+
+      app.get('/api/quantum_tool/state/:sessionId', async (req, res) => {
+        try {
+          const { quantumTool } = await import('./tools/quantum-tool.js');
+          const result = await quantumTool({ action: 'get_state', sessionId: req.params.sessionId } as any);
+          res.status(result.success ? 200 : 404).json(result);
         } catch (err: any) {
           res.status(500).json({ error: String(err?.message || err) });
         }
@@ -756,6 +847,151 @@ async function main() {
         }
       });
 
+      // POST /api/steering_eval — Live System Prompt Steering & Ingestion Inspection Endpoint
+      app.post('/api/steering_eval', express.json({ limit: '1mb' }), async (req, res) => {
+        if (!checkRateLimit(req, res)) return;
+        try {
+          const { query = '', keywords = [], agentic = false, workspaceRoot = process.cwd(), sessionId = 'steering-eval-session', subtask } = req.body || {};
+          const userKeywords = Array.isArray(keywords)
+            ? keywords
+            : String(keywords).split(',').map((k: string) => k.trim()).filter(Boolean);
+
+          const effectiveKeywords = userKeywords.length > 0
+            ? userKeywords
+            : (query ? (query.toLowerCase().match(/\b[a-z]{3,}\b/g)?.filter((w: string) => !['the','and','for','with','from','that','this','have','are','was','were','lets','check','please','could','would','should'].includes(w)).slice(0, 8) || []) : []);
+
+          let resolvedWsRoot = process.cwd();
+          if (workspaceRoot && typeof workspaceRoot === 'string') {
+            const trimmed = workspaceRoot.trim();
+            if (trimmed && !trimmed.includes('\0')) {
+              try {
+                const candidate = path.isAbsolute(trimmed) ? path.normalize(trimmed) : path.resolve(process.cwd(), trimmed);
+                if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+                  resolvedWsRoot = candidate;
+                }
+              } catch {}
+            }
+          }
+
+          const { evaluatePromptSections, getIntelligentSystemPrompt } = await import('./pipeline/middlewares/prompts.js');
+          const promptEval = await evaluatePromptSections({
+            context: query,
+            keywords: effectiveKeywords,
+            isSubtask: agentic,
+            workspaceRoot: resolvedWsRoot
+          });
+
+          const { WorkspaceContextMiddleware } = await import('./pipeline/middlewares/WorkspaceContextMiddleware.js');
+          const middleware = new WorkspaceContextMiddleware();
+
+          const hasValidSubtask = subtask && typeof subtask === 'object' && !Array.isArray(subtask) &&
+            ((typeof subtask.id === 'string' && subtask.id.trim().length > 0) ||
+             (typeof subtask.title === 'string' && subtask.title.trim().length > 0));
+
+          const subtaskObj = hasValidSubtask
+            ? {
+                id: (typeof subtask.id === 'string' && subtask.id.trim()) || 'subtask-eval-1',
+                title: (typeof subtask.title === 'string' && subtask.title.trim()) || `Execute task: ${query || 'System prompt steering test'}`
+              }
+            : (agentic ? { id: 'subtask-eval-1', title: `Execute task: ${query || 'System prompt steering test'}` } : null);
+
+          const context: any = {
+            request: {
+              model: 'gemini-3.1-flash-lite',
+              agentic: !!agentic,
+              messages: [{ role: 'user', content: query || 'Test query' }]
+            },
+            taskType: 'coder',
+            keywords: effectiveKeywords,
+            workspaceRoot: resolvedWsRoot,
+            sessionId,
+            isOnePass: !agentic,
+            subtask: subtaskObj
+          };
+
+          await middleware.execute(context, async () => {});
+          const steeringTelemetry = context.telemetry?.steeringTelemetry || {};
+          steeringTelemetry.matchedSections = promptEval.matchedSections;
+
+          // Assemble the real subtask prompt if in agentic mode so users see exactly what the model receives
+          let assembledPrompt = promptEval.prompt;
+          if (agentic && subtaskObj) {
+            const taskHeader = `\n\n## 📝 CURRENT SUBTASK\nYou are currently executing this subtask:\n- **Task**: ${subtaskObj.title}\n- **Subtask ID**: ${subtaskObj.id}\n\nStrictly focus on this subtask using the tools provided.`;
+            assembledPrompt = `${promptEval.prompt}${taskHeader}`;
+          }
+          steeringTelemetry.fullAssembledSystemPrompt = assembledPrompt;
+
+          const sysTokens = promptEval.totalPromptTokens || steeringTelemetry.memoryLayers?.sysPromptTokens || Math.ceil(assembledPrompt.length / 3.8);
+          if (!steeringTelemetry.memoryLayers) steeringTelemetry.memoryLayers = {};
+          steeringTelemetry.memoryLayers.sysPromptTokens = sysTokens;
+          steeringTelemetry.memoryLayers.totalContextTokens = (steeringTelemetry.memoryLayers.shortTermTokens || 0) + (steeringTelemetry.memoryLayers.longTermTokens || 0) + (steeringTelemetry.memoryLayers.wikiTokens || 0) + (steeringTelemetry.memoryLayers.grepTokens || 0) + (steeringTelemetry.memoryLayers.groundingTokens || 0) + sysTokens;
+
+          // Structured 5-layer memory hierarchy with explicit priorities and sample extracted text
+          const memoryHierarchy = [
+            {
+              level: 'L1',
+              priority: 1,
+              name: 'Short-Term Session Memory',
+              description: 'Recent conversation turns, immediate user instructions & live subtask execution state',
+              tokens: steeringTelemetry.memoryLayers?.shortTermTokens || Math.ceil((query?.length || 10) / 3.8),
+              active: true,
+              content: context.telemetry?.memoryContext || `Turn 1: User prompt -> "${query || 'Test query'}"`
+            },
+            {
+              level: 'L2',
+              priority: 2,
+              name: 'Long-Term Memory & ADR Decisions',
+              description: 'Project preferences, verified technical rules & architectural decision records (.free-llm-mcp/wiki/adr/)',
+              tokens: steeringTelemetry.memoryLayers?.longTermTokens || 0,
+              active: (steeringTelemetry.memoryLayers?.longTermTokens || 0) > 0,
+              content: context.telemetry?.memoryContext ? `## ADR / Decision Records\n${context.telemetry.memoryContext}` : '(No persistent ADR rules stored for this workspace)'
+            },
+            {
+              level: 'L3',
+              priority: 3,
+              name: 'Workspace Wiki Knowledge',
+              description: 'Curated technical documentation, module catalogues & domain guides (.free-llm-mcp/wiki/)',
+              tokens: steeringTelemetry.memoryLayers?.wikiTokens || 0,
+              active: (steeringTelemetry.memoryLayers?.wikiTokens || 0) > 0,
+              content: context.telemetry?.wikiContext || '(No wiki documentation matched)'
+            },
+            {
+              level: 'L4',
+              priority: 4,
+              name: 'Dynamic Code Snippets (Born-Rule Grep)',
+              description: 'Relevance-scored folder snippets, symbol definitions & dependency graph context',
+              tokens: steeringTelemetry.memoryLayers?.grepTokens || 0,
+              active: (steeringTelemetry.memoryLayers?.grepTokens || 0) > 0,
+              content: context.telemetry?.grepContext || '(No code snippets matched the query keywords)'
+            },
+            {
+              level: 'L5',
+              priority: 5,
+              name: 'External Prompt & Skill Steering',
+              description: 'Keyword-targeted prompt.json sections, persona templates & dynamic skills',
+              tokens: sysTokens,
+              active: sysTokens > 0,
+              content: promptEval.matchedSections.length > 0
+                ? promptEval.matchedSections.map(s => `### ${s.title} (${s.id})\n${s.content || ''}`).join('\n\n')
+                : `### Baseline System Prompt (${sysTokens} tok)\n${assembledPrompt}`
+            }
+          ];
+
+          steeringTelemetry.memoryHierarchy = memoryHierarchy;
+          steeringTelemetry.extractedWorkspaceContext = context.telemetry?.grepContext || '(No code snippets matched)';
+          steeringTelemetry.dirTree = context.telemetry?.dirTree || '';
+          steeringTelemetry.keywords = effectiveKeywords;
+          steeringTelemetry.chatHistory = [{ role: 'user', content: query || 'Test query' }];
+
+          res.json({
+            success: true,
+            telemetry: steeringTelemetry
+          });
+        } catch (err) {
+          res.status(500).json({ success: false, error: String(err) });
+        }
+      });
+
       // POST /api/chat-log/:sessionId  { role, tool, content, latencyMs, ts }
       // Appends one turn atomically using file lock — safe across concurrent MCP instances.
       app.post('/api/chat-log/:sessionId', express.json({ limit: '512kb' }), async (req, res) => {
@@ -870,6 +1106,13 @@ async function main() {
       // Serve dashboard static files
       const dashboardPath = path.join(__dirname, '../dashboard');
       app.use(express.static(dashboardPath));
+
+      // Auto-deploy/check SearXNG Docker container if docker is available
+      import('./search/searxng-deploy.js').then(({ ensureSearxngContainer }) => {
+        ensureSearxngContainer();
+      }).catch(err => {
+        console.error('[SearXNG Startup Check Error]:', err?.message || err);
+      });
 
       const serverInstance = app.listen(port, () => {
         console.error(`MCP Dashboard & SSE Server running on http://localhost:${port}`);

@@ -286,6 +286,7 @@ export class TextRouterMiddleware implements Middleware {
             'deepseek-ai/DeepSeek-V4-Pro',
             'deepseek-ai/deepseek-v4-pro',
             'deepseek-v4-flash',
+            'empero-ai/Qwythos-9B-Claude-Mythos-5-1M',
             'kimi-k2.6',
             '@cf/moonshotai/kimi-k2.6',
             'qwen3-coder:480b',

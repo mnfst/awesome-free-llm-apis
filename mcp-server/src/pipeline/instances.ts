@@ -4,6 +4,7 @@ import { AgenticMiddleware } from './middlewares/AgenticMiddleware.js';
 import { WorkspaceContextMiddleware } from './middlewares/WorkspaceContextMiddleware.js';
 import { ResponseCacheMiddleware } from './middlewares/ResponseCacheMiddleware.js';
 import { StructuralMarkdownMiddleware } from './middlewares/StructuralMiddleware.js';
+import { SearchRouterMiddleware } from './middlewares/SearchRouterMiddleware.js';
 import { LLMExecutor } from '../utils/LLMExecutor.js';
 
 /**
@@ -21,6 +22,7 @@ let _workspaceContextMiddleware: WorkspaceContextMiddleware | null = null;
 let _sharedRouter: TextRouterMiddleware | null = null;
 let _sharedImageRouter: ImageRouterMiddleware | null = null;
 let _agenticMiddleware: AgenticMiddleware | null = null;
+let _searchRouterMiddleware: SearchRouterMiddleware | null = null;
 let _sharedExecutor: LLMExecutor | null = null;
 
 /**
@@ -104,6 +106,16 @@ export function getAgenticMiddleware(): AgenticMiddleware {
 }
 
 /**
+ * Gets the singleton instance of SearchRouterMiddleware.
+ */
+export function getSearchRouterMiddleware(): SearchRouterMiddleware {
+    if (!_searchRouterMiddleware) {
+        _searchRouterMiddleware = new SearchRouterMiddleware();
+    }
+    return _searchRouterMiddleware;
+}
+
+/**
  * Reset all singleton instance references.
  * Intended for test isolation teardown only.
  */
@@ -114,6 +126,7 @@ export function resetAllInstances(): void {
     _sharedRouter = null;
     _sharedImageRouter = null;
     _agenticMiddleware = null;
+    _searchRouterMiddleware = null;
     _sharedExecutor = null;
 }
 

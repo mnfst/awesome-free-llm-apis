@@ -3,6 +3,7 @@ import { parseInput, type BrowserToolInput } from './actionSchemas.js';
 import { getBrowserSessionPool } from './BrowserSessionPool.js';
 import type { BrowserSession } from './BrowserSession.js';
 import { DomStateFingerprinter } from './BrowserSession.js';
+import { parseSnapshot, diffSnapshots, summarizeDiff, looksLikeStructuralInterstitial } from './SnapshotDiffer.js';
 import { evaluateStructured } from './DevToolsCall.js';
 import { EndpointRanker } from './EndpointRanker.js';
 import { EndpointTemplater } from './EndpointTemplater.js';
@@ -189,6 +190,7 @@ async function handleSnapshot(session: BrowserSession, input: BrowserToolInput, 
 async function handleClick(session: BrowserSession, input: BrowserToolInput, sessionId: string): Promise<BrowserActionResult> {
     const { by, value, scrollIntoView = true } = input.params as any;
     const before = session.lastFingerprint;
+    const beforeText = session.lastSnapshotText;
 
     const res = await session.evaluate<{ matched: boolean; label?: string }>(`(args) => {
         const nodes = Array.from(document.querySelectorAll('a, button, div[role="button"], div[role="tab"], div[onclick], [data-id]'));
@@ -238,8 +240,21 @@ async function handleClick(session: BrowserSession, input: BrowserToolInput, ses
 
     const after = await session.snapshot(false);
     const changed = DomStateFingerprinter.hasStateChanged(before, after.fingerprint);
+    const hasBaseline = Boolean(before && beforeText);
     const warnings = changed ? [] : ['CLICK_NO_EFFECT'];
-    return okResult({ action: 'click', sessionId, data: { clicked: res.json.label, domChanged: changed }, warnings });
+    if (!hasBaseline) warnings.push('BASELINE_SNAPSHOT_UNAVAILABLE');
+
+    let domDiffSummary: string | undefined;
+    if (changed && hasBaseline) {
+        const beforeNodes = parseSnapshot(beforeText);
+        const diff = diffSnapshots(beforeNodes, parseSnapshot(after.text));
+        domDiffSummary = summarizeDiff(diff);
+        session.applyStructuralSignal(looksLikeStructuralInterstitial(beforeNodes, diff));
+    } else if (changed) {
+        domDiffSummary = 'No prior snapshot baseline; captured current snapshot without structural diff.';
+    }
+
+    return okResult({ action: 'click', sessionId, data: { clicked: res.json.label, domChanged: changed, domDiffSummary }, warnings });
 }
 
 async function handleScroll(session: BrowserSession, input: BrowserToolInput, sessionId: string): Promise<BrowserActionResult> {
@@ -291,11 +306,27 @@ async function handleWait(session: BrowserSession, input: BrowserToolInput, sess
     }
 
     if (until === 'dom-stable' || until === 'selector' || until === 'text') {
+        const beforeWaitText = session.lastSnapshotText;
+        const hasBaseline = Boolean(session.lastFingerprint && beforeWaitText);
         let lastFp = session.lastFingerprint;
         while (Date.now() < deadline) {
             const { text, fingerprint } = await session.snapshot(false);
             if (until === 'dom-stable' && !DomStateFingerprinter.hasStateChanged(lastFp, fingerprint)) {
-                return okResult({ action: 'wait', sessionId, data: { stable: true } });
+                if (!hasBaseline) {
+                    return okResult({
+                        action: 'wait',
+                        sessionId,
+                        data: {
+                            stable: true,
+                            domDiffSummary: 'No prior snapshot baseline; DOM is stable but structural diff was not computed.',
+                        },
+                        warnings: ['BASELINE_SNAPSHOT_UNAVAILABLE'],
+                    });
+                }
+                const beforeWaitNodes = parseSnapshot(beforeWaitText);
+                const diff = diffSnapshots(beforeWaitNodes, parseSnapshot(text));
+                session.applyStructuralSignal(looksLikeStructuralInterstitial(beforeWaitNodes, diff));
+                return okResult({ action: 'wait', sessionId, data: { stable: true, domDiffSummary: summarizeDiff(diff) } });
             }
             if (until === 'selector' && value) {
                 const found = await session.evaluate<boolean>(`(a) => !!document.querySelector(a.value)`, { value });

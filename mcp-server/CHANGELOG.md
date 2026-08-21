@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.0.9 – SearchRouterMiddleware, Cyber/Quantum Tool Graphs, Hermes Skills, Local LLM Patch & Browser Snapshot Diffing (August 2026)
+
+### 🚀 Highlights
+
+- **`SearchRouterMiddleware`** (`src/pipeline/middlewares/SearchRouterMiddleware.ts`): search-classified `use_free_llm` tasks now fall back through Parallel AI → Tavily → Jina → Brave → SearXNG (self-hosted, terminal fallback) instead of routing search through a general chat model. Each provider (`src/search/providers/*.ts`) implements the existing `BaseProvider` circuit-breaker (429 → flat cooldown, 5xx → exponential backoff), normalized into a shared `UnifiedSearchResult[]`. Every query is logged (fire-and-forget) to a new Firestore `search_logs` collection via `logSearchQuery` (`src/utils/firebase.ts`) and rendered on the dashboard's Providers tab — full result lists (not truncated previews) behind a `<details>` dropdown per query, mirroring the existing subtask-context dropdown pattern.
+- **`cyber_tool` task-graph visualization**: `GET /api/cyber_tool/task_graph/:sessionId` (`src/server.ts`) surfaces the CTF decision graph (`goal/hypothesis/action/finding/deadend` nodes) that `save_graph`/`load_graph` already persisted — no new graph format, purely a dashboard rendering gap closed. Rendered in the Wiki tab, grouped into columns by `ctfType`.
+- **Hermes Skills integration**: `external/hermes/` bundles 36 real skills fetched once from `github.com/nousresearch/hermes-agent` (`scripts/fetch-hermes-skills.ts`, one-time bootstrap — committed to the repo, never fetched at request time). `execute_skill`/`load_skill_prompt` auto-detect Hermes skills alongside the existing workspace/global `agentic-awesome` skills (`source: 'hermes' | 'agentic-awesome'`), injecting an adapter note that steers the model toward this server's own tools instead of raw filesystem operations a Hermes skill might assume.
+- **`quantum_tool`** (new): a multi-branch/persona HITL reasoning aid using quantum-circuit vocabulary as a metaphor — branch "confidence" is grounded in real single-qubit rotation math (`RY`/`RZ` recover and reapply `phi = 2*asin(sqrt(confidence))`; `Z`/`RZ` are correctly no-ops on measurement probability, not simplifications), with an `analyze` action that calls a real LLM to synthesize across branches. See [`references/quantum_tool.md`](docs/skill/references/quantum_tool.md).
+- **`local_llm_patch`** (new, standalone — not yet wired into MCP/server): a single-file patch stub against a genuinely local Ollama server (`src/providers/ollama-local.ts`, `http://localhost:11434`, no auth). Candidate models are *ranked* by coding-oriented naming, never *filtered* by name — whether a model can actually serve `/api/chat` (as opposed to being embedding-only) is only knowable by trying it for real, so the tool tries ranked candidates in order and treats a real API failure as the only valid signal to fall through to the next one. See [`references/local_llm_patch.md`](docs/skill/references/local_llm_patch.md) for the full non-goals list (no multi-file patches, no dataflow analysis, no `repo_graph.json` semantic RAG, no auto-apply — all deferred to v1.1.0's full `coding_agents`).
+- **Browser snapshot structural diff**: `src/browser/SnapshotDiffer.ts` parses `take_snapshot`'s flat accessibility-tree text into an id-keyed node list and diffs two snapshots the same way `src/memory/graph-diff.ts` diffs repo graphs. `click` now attaches a `domDiffSummary` (e.g. `"+22 nodes mounted under \"Lineups\""`) whenever the DOM changed; `wait until:'dom-stable'` emits one summary diff on exit without adding cost to its 300ms polling loop. `BlockDetector` gained a second, structural interstitial signal (a near-total top-level wipeout replaced by a small added set) alongside its existing text-marker scan. `DomStateFingerprinter`, previously duplicated between `BrowserSession.ts` and `browser-action.ts`, is now defined once.
+- **Firebase identity-churn fix**: `exchangeRefreshToken()` had no retry logic and silently minted a brand-new anonymous account on any transient network failure during token refresh. It now retries with backoff (matching the pattern already used by `getUserStats()`/`getLeaderboard()`), logs the real HTTP rejection reason, and warns explicitly when falling through to a new account despite having saved credentials.
+- **`docs/` reference refactor**: `references/usages.md` split into one `.md` file per tool (`references/use_free_llm.md`, `references/browser_tool.md`, `references/cyber_tool.md`, `references/quantum_tool.md`, `references/local_llm_patch.md`, etc.), linked individually from `SKILL.md` so the skill doc stays focused on agentic workflow guidance rather than a growing test matrix.
+- `empero-ai/Qwythos-9B-Claude-Mythos-5-1M` confirmed present in the HuggingFace provider list and reachable via `TextRouterMiddleware` routing (verify-only, no code change needed).
+
+### Next updates (→ v1.1.0)
+
+- **Firebase Auth hardening** (password-based login for the dashboard/MCP server, moving cached tokens from in-memory to a credential file): scoped in the original v1.0.9 plan but pushed out — the identity-churn bug above was fixed as a smaller, isolated correction instead of bundling it with the larger auth-hardening rework. Could be avoided if username based IDOR vulnerability is potentially exploitable, so the fix is deferred to v1.1.0.
+- `local_llm_patch` MCP/server wiring (`src/mcp/index.ts` tool registration, `POST /api/local_llm_patch`, dashboard Tool Playground entry) — the tool itself is implemented and tested but intentionally left unwired pending explicit sign-off on exposing a local-only, unauthenticated code-patching surface.
+- `repo_graph.json` → `VectorStore` semantic RAG for coding agents, and LSP-grounded variable-level dataflow analysis — both explicitly out of scope for the single-file `local_llm_patch` granularity; real, separately-scoped work for v1.1.0's full `coding_agents`.
+- `extract`/`deep_scrape` subtree-targeting via the new snapshot diff (mapping a diffed node back to a DOM selector) — the diff shape needs to prove out on `click`/`wait` first.
+- `osint` tool (new) — a multi-step OSINT workflow that uses `search_tool`, `cyber_tool`, and `browser_tool` to gather information about a target domain, IP, or individual. The tool will be able to perform WHOIS lookups, DNS enumeration, subdomain discovery, and other OSINT techniques. To be integrated in the `cyber_tool` itself.
+
+---
+
 ## v1.0.8 – Dynamic Intelligent Browser Scraper, Cyber Tool Registry, File-Lock Concurrency & Flat Schema Exports (July 2026)
 
 ### 🚀 Highlights
@@ -29,17 +53,38 @@
 - **Unit & Integration Testing Hardening**:
   - Achieved 100% green test status across 16/16 unit test suites (`npx vitest run`).
 
-### Next Updates (→ v1.0.9)
+### Next Updates (v1.0.9, shipped — see the v1.0.9 section above for what actually landed)
 
+- Add `empero-ai/Qwythos-9B-Claude-Mythos-5-1M` to HuggingFace provider list and `TextRouterMiddleware` routing. (Done)
+- Migrate the search_tool call from gemini to route these in a `SearchRouterMiddleware` to free search providers like SearXNG, Jina, Tavily, Brave Search, Exa, Perplexity, and Parallel. The routing should be based on the availability of the free tier and the rate limits of each provider:
+
+  | Provider     | Free Tier               | Notes |
+  |--------------|-------------------------|-------|
+  | **SearXNG**  | ✅ Free                 | Open-source meta-search engine. You self-host it, so there is no per-query cost. The most "free" option here. |
+  | **Jina**     | 🟡 Limited free         | Offers a free tier/rate limit for its Reader/Search endpoints; paid beyond that. |
+  | **Tavily**   | 🟡 Free tier            | Provides a free plan with limited monthly credits, then usage-based pricing. |
+  | **Brave Search** | 🟡 Free tier        | Free API plan with rate limits; paid plans available for higher usage. |
+  | **Exa**      | 🟡 Free tier            | Offers a free developer tier, then usage-based pricing. |
+  | **Perplexity** | 🟡 Free / Experimental | Sonar API may have experimental/free access, but it is generally a paid API requiring an API key and credits. |
+  | **Parallel** | 🟡 Depends              | According to the `omp.sh` documentation, Parallel is listed, but each source is configured individually; there is no clear general free tier. |
+- `cyber_tool` should be properly logged/task graph should be rendered with search and visualization.
+- Firebase persistance for both mcp and dashboard should be established rather than key rotation.(If needed we can use password based login for firebase and also we can use the firebase auth to login to the dashboard and also to the mcp server.) **→ Deferred to a future release** (see v1.0.9 section above); a smaller, isolated identity-churn bug was fixed instead.
 - ~~`coding_agents` tool~~ **→ Deferred to v1.0.9**: Scope split into:
   - v1.0.8: `browser_tool` + `cyber_tool` file-locked userprofile registry foundation
-  - v1.0.9: `local_llm_patch` stub (Ollama-driven single-file patching)
+  - v1.0.9: `local_llm_patch` stub (Ollama-driven single-file patching) (Done, unwired — see v1.0.9 section above)
   - v1.1.0: Full `coding_agents` with LSP grounding + diff preview
-- `cyber_agents`: Isolated cyber routing middleware separate from main pipeline.
-- 'docs/' refactor: 'references/' should maintain different .md files for each tool, remove the usages.md and architecture.md and move the relevant content to the tool-specific .md files, so that the SKILL.md remains lightweight and focused on the agentic workflow, and the tool-specific .md files can be used as a reference for the tools and their usage.
-- **Browser snapshot diff understanding mechanism**: `wait until:'dom-stable'` and the click/pagination-loop guards currently only know two things about a DOM state transition — did the sha256 fingerprint change, yes/no (`DomStateFingerprinter.hasStateChanged`). That's enough to detect a no-op click but not enough to explain *what* changed, so the LLM re-derives it from a full new snapshot every time. Planned: a real structural diff between the previous and current snapshot (added/removed/mutated accessibility nodes, not just a hash flip) so `click`/`wait`/`deep_scrape` can report *what* appeared (e.g. "a Lineups panel with 22 player rows mounted") instead of only *that* something did, and so `extract` can target just the newly-mounted subtree instead of re-scanning the whole page. Also intended to give the Cloudflare/CAPTCHA block detector (above) a second, structural signal — a whole subtree swapped for a single interstitial widget — independent of the current text-marker scan.
+- [Hermes Skills Integration](docs/plans/hermes-agent-skills.md) – fetch, index, and execute remote skills from the `hermes-agent` repo. (Done)
+- `quantum_tool` - new tool for quantum cirtuit based reasoning for reseatch purposes. (Done)
+- 'docs/' refactor: 'references/' should maintain different .md files for each tool, remove the usages.md and architecture.md and move the relevant content to the tool-specific .md files, so that the SKILL.md remains lightweight and focused on the agentic workflow, and the tool-specific .md files can be used as a reference for the tools and their usage. (Done — `usages.md` split; `architecture.md` kept as-is, since it documents cross-cutting pipeline mechanics rather than a single tool.)
+- **Browser snapshot diff understanding mechanism**: `wait until:'dom-stable'` and the click/pagination-loop guards currently only know two things about a DOM state transition — did the sha256 fingerprint change, yes/no (`DomStateFingerprinter.hasStateChanged`). That's enough to detect a no-op click but not enough to explain *what* changed, so the LLM re-derives it from a full new snapshot every time. (Done — see v1.0.9 section above.)
 - **GitHub Models provider fully deprecated**: Removed `GitHubModelsProvider` from `ProviderRegistry` (persistent instability / recurring "scheduled retirement brownout" outages made it unreliable for routing). Provider class kept in `src/providers/github-models.ts` for reference only, marked `@deprecated`. Also dropped its `data.json`/README entries, dashboard row, skill-doc mentions, `TextRouterMiddleware` low-cost-provider entry, `update-models.ts` scraper wiring, and dedicated smoke-test script.
-- **Provider model list sync (post upstream merge)**: Verified newly-added/removed upstream model IDs via smoke tests and applied confirmed results to `src/providers/*.ts`: added Cerebras `gemma-4-31b`; Groq `openai/gpt-oss-20b` + `groq/compound`; Hugging Face `Qwen2.5-Coder-7B-Instruct`, `gemma-3-4b-it`, `Llama-3.1-8B-Instruct`, `phi-4` (and removed dead `Mistral-7B-Instruct-v0.3`); Kilo Code `ling-3.0-flash`, `nemotron-3-ultra-550b-a55b`, `laguna-s-2.1`, `step-3.7-flash` (all `:free`); NVIDIA `minimax-m3`, `deepseek-v4-pro`; OpenRouter `laguna-s-2.1:free` (and removed several confirmed-404 `:free` entries); Gemini `gemini-3.6-flash`, `gemini-2.5-flash-lite`. Skipped adds with only ambiguous (rate-limited/timeout) or malformed-response smoke-test results pending re-verification.
+
+### Next Updates (→ v1.1.0)
+
+- Full `coding_agents`: multi-file patches, LSP-grounded dataflow analysis, diff-preview UI, and `local_llm_patch` MCP/server wiring.
+- `repo_graph.json` → `VectorStore` semantic RAG for coding agents (embedding generation, cache invalidation on graph changes, new retrieval API).
+- Firebase Auth hardening: `signInWithPassword()`, credential file persistence under `~/.free-llm-mcp/`, dashboard login form.
+- `extract`/`deep_scrape` subtree-targeting via `SnapshotDiffer` (map a diffed node back to a DOM selector).
 
 ---
 
@@ -115,60 +160,3 @@
 - Wiki maintenance and update mechanism to be added to the middleware to keep the wiki up to date with the latest changes in the project and also to be able to add and relate them using a rag based mechanism.
 - Wiki rendering with link clicking and also to be able to add and apply entanglement to the wiki as required.
 - Conversation mechanism for all tools to be displayed in the dashboard with filtering and search capabilities.
-
----
-
-## v1.0.5 – Hedged Execution, Tool Consolidation + Workspace Persistence (May 2026)
-
-**Released:** 2026-05-07 (Updated)
-
-### 🚀 Highlights
-
-- **Tool Consolidation**: Successfully deprecated and removed the legacy `store_memory` tool in favor of a structured workspace-aware architecture.
-- **Structured Knowledge Harvesting (`store_workspace_skill`)**: Introduced a high-fidelity tool for explicitly capturing research findings, architectural decisions, and multi-step implementation details using the `@skill-writer` schema.
-- **Proactive Workspace Indexing (`index_workspace`)**: Integrated deep semantic indexing of the entire codebase, enabling agents to operate with high-fidelity grounding without manual memory storage of code snippets.
-- **Gemini-Exclusive Search Hardening**: Restricted Google Search capabilities to Gemini-based workflows, ensuring optimal performance and grounding through `gemini-2.5-flash`.
-- **Search Suppression in Agentic Loops**: Implemented logic to disable Google Search for subsequent subtasks in a decomposed chain, preventing redundant lookups and token wastage.
-- **Hedged Execution Strategy (`IntelligentRouterMiddleware`)**: Substantially reduces latency during partial provider outages by racing executing provider requests against a parallel timeout delayed request.
-- **Graceful Execution Abortion**: Requests aborted due to successful parallel resolution automatically close open network sockets using `AbortController` signals to reduce token wastage.
-- **Deep Reasoning Accommodations**: Automatically boosts `max_tokens` limits (up to 8192) and increases hedge delay parameters up to 20 seconds specifically for high-capacity models (DeepSeek-R1, O1, O3, Gemini Pro).
-- **Agentic Pipeline Stabilization & Circular Dependency Resolution**: Successfully decoupled `AgenticMiddleware`, `LLMExecutor`, and tool-specific modules from the main `pipeline/index.js` barrel file. This eliminated runtime `TypeError` crashes and ensured reliable middleware initialization.
-- **Optimized Routing for Semantic Tasks**: Adjusted the `IntelligentRouterMiddleware` to prioritize "lighter" models (e.g., Gemini Flash, Mistral Small) for `SemanticSearch` and `Summarization` tasks, significantly improving response speed for utility operations.
-- **Test Suite Isolation**: Standardized `memoryManager.clear()` and `sharedResponseCache.flush()` in integration tests to ensure deterministic performance and prevent state bleeding across scenarios.
-- **Documentation Overhaul**: Pruned legacy references to `code_mode` and `store_memory` from all public guides (`README.md`, `guide.md`, `SKILL.md`, `mcp-development.md`) to maintain a clean, agent-first interface.
-
-### ✨ New Features
-
-- **`store_workspace_skill` Tool**: Captures `what`, `why`, and `files` involved in a task to build a persistent, reusable skill database.
-- **`index_workspace` Tool**: Manually triggers a vector re-index of the project root to ensure semantic search accuracy.
-- **Type-Safe Tool Responses**: Implemented Discriminated Unions for workspace tool outputs to ensure reliable agent parsing.
-
-### 🔧 Improvements
-
-- **Zero-Config Session IDs**: Refined the deterministic `sessionId` derivation from `workspace_root`, ensuring stable persistence across restarts without manual ID management.
-- **TypeScript Hardening**: Standardized response schemas for all persistent workspace tools.
-- **Public API Cleanup**: Reduced the public tool count to six focused, high-impact utilities.
-
-### ⚠️ Breaking Changes
-
-- **REMOVED**: `store_memory` tool. Agents should migrate to `store_workspace_skill` for structured persistence or rely on `index_workspace` for semantic code retrieval.
-- **DOCUMENTATION ONLY**: `code_mode` has been removed from all public documentation to favor cleaner agent interactions, although the underlying sandboxed runtime remains available in the codebase for internal use.
-
-## Next update
-
-- Remove the kluster from providers list(done)
-- create  a ci workflow to automatically audit the providers for any depreciations and also to check if the models are still available and if not then we can replace them with the latest ones.(done)
-- Add new 'vision_tool' to make use of free vision models to analyse images.(using `file:///` in `workspace_root` as the image path,Done)
-- Add skill loading and prompt tool to make use of free skill loading agents to dynamically load and integrate the use of 'awesome-antigravity-skills' repo for agentic tasks and integrate it in the middleware without overhead.
-- Add **Privacy-Sensitive Data redaction** for llm calls in middleware to prevent the leaking of sensitive data to third party free providers.(e.g. API Keys,passwords,PII, etc), partially implementeed by sanitize.ts but needs to be hardened and made more robust.(Done)
-- Add mechanism to preserve the context of the conversation in case of a response like `\"read_file\". Let's try that.\n\n```json{\n  \"tool\": \"read_file\",\n  \"args\": {\n    \"path\": \"core/gemini_processor.py\"\n  }}```{\n  \"tool\": \"read_file\",\n  \"args\": {\n    \"path\": \"core/gemini_processor.py\"\n  }}` where the llm is explicitly asking to use a tool, we can preserve the context of the conversation and the intent of the user by not treating it as a normal response and instead directly calling the tool and returning its response to the llm without losing the context of the conversation.(Not implemented as of now but we can add a mechanism in the middleware to detect such responses and handle them accordingly by directly calling the tool and returning its response to the llm without losing the context of the conversation.)
-- Make Skill script generation more robust: currently the generated skill script is enclosed in ````python\n{script}\n``` and is saved under _py instead of .py, we can make it more robust by using a more unique delimiter and also by adding some metadata to the generated script to make it easier to parse and use in the future.(fixed)
-- `load_skill_prompt` tool to dynamically load the skill prompt from the 'awesome-antigravity-skills' repo  and also to integrate it in the middleware without overhead by adding a mechanism to cache the loaded skill prompts and also to update the cached skill prompts if there are any changes in the 'awesome-antigravity-skills' repo.
-- Output to the agent should be in markdown format, not in json format.
-- To be able to implement a line by line cosine similarity matching for very similar files and update memory with how both are different to avoid contextual confusions.(Improvise the memory manager to be more robust and also to be able to connect files in a project and be able to update the memory with the changes in the files and also to be able to use the memory to answer questions related to the project, integrate the usage of git diff, git log, etc to be able to keep the memory updated with the changes in the project and it shouldnt forget the workspace state after a simple git pull and checkout. Also use queues.json and make the knowlege.md the core of the memory and relate it with other files and docs to identify discrepancies and inform the user without wasting llm calls.)[Done but need enhancment what if the codebase is too large? Integrate with karathy]
-- Post process 'free_llm_api' tool output to markdown format.
-- Improve the middleware to be more robust and also observe and handle the edge cases where the llm is not able to generate the response inthe desired format.By logging and sending a firebase alert for such cases and also by adding a mechanism to handle such cases gracefully without breaking the flow of the conversation.(Note the firebase db itself is not implemented.It is to be implemented in v1.0.6 update.)
-- Need a model weighted max_tokens for token calculation based on the model size and not a fixed value.(check if model names like 'gemma4-31b-e4b' or something triggers smaller max_tokens, what about timeout values, we can have a dynamic timeout value based on the model size and the task at hand, for example for a deep reasoning task we can have a higher timeout value and for a simple task we can have a lower timeout value.)
-- Merge the parent repo but no new providers. Audit the models to check for depreciations. (not merged but audited)
-- Update the prompt loading mechnism the postbuild job, NORT_STAR sub prompt is often loaded need the keywords to be specific enough to avoid loading the same prompt multiple times and also to avoid loading unnecessary prompts which are not needed for the task at hand. (Not implemented)
-- Using karpathy's memory.md as the reference for memory management and implementation with memory maps to connect files in a project. 

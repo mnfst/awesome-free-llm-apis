@@ -265,3 +265,35 @@ To prevent corruption and race conditions during concurrent workspace indexing o
     1.  The recorded holder PID is no longer alive in the OS.
     2.  The lock file age (`mtime`) exceeds the `STALE_LOCK_MS` (30 seconds) timeout.
 *   **Timeout & Retries**: Requests poll every 50ms and throw a timeout error if the lock cannot be acquired within `timeoutMs`.
+
+---
+
+## 10. Quantum Reasoning Circuit Topologies & Telemetry Matrices (v1.0.9)
+
+`quantum_tool` provides a mathematically grounded multi-perspective reasoning framework modeling hypothesis branches as qubits.
+
+### 🔬 Supported Circuit Archetypes
+1. **`superposition_exploration`**: Disperses initial certainty across branches via Hadamard transformations ($H$) followed by gentle exploration rotations ($R_Y$) and neighbor entanglement ($CNOT$).
+2. **`adversarial_debate`**: Sets polarized proponent and opponent branches ($R_Y(1.8)$ vs $R_Y(-1.8)$), triggers counter-argument phase inversions ($X$), and applies cross-examination gates ($CNOT$).
+3. **`consensus_alignment`**: Aligns parallel specialist branches through converging parameterized rotations ($R_Y(0.85)$) and phase markers ($CZ$).
+4. **`grover_amplification`**: Focuses synthesis weight onto a target candidate hypothesis while maintaining alternative contexts.
+5. **`entangled_verification`**: Establishes paired worker/verifier Bell states ($H$ + $CNOT$) with cross-pair correlation checks ($CZ$).
+
+### 📈 Real-Time Telemetry & Token Efficiency Matrix
+Every step and synthesis return execution timing and token efficiency metrics:
+- **`executionMetrics`**: `totalDurationMs`, `gateExecutionMs`, `llmInferenceMs`.
+- **`tokenEfficiencyMatrix`**: `rawPromptTokens`, `compressedPromptTokens`, `tokenSavingsPct`, `symbolDensity`, `tokensPerBranch`, `tokensPerSecond`.
+- **`quantumStateMetrics`**: `circuitDepth`, `activeGateCount`, `confidenceDivergence` ($\sigma^2$), `entropyScore`, `resolvedBranchesCount`, `superpositionBranchesCount`.
+
+---
+
+## 11. Unified Userdir Storage & Reinforced Memory Decay (v1.0.9)
+
+To ensure workspace isolation without polluting project trees:
+- **Unified Path**: All persistent vector indices, SQLite databases, and long-term project caches reside strictly under `~/.free-llm-mcp/data/`.
+- **Strict Index Exclusions**: `WorkspaceIndexer` and `WorkspaceWalker` strictly exclude `.free-llm-mcp/cache/*`, `repo_graph.json`, and wiki metadata to prevent recursive indexing loops.
+- **Reinforced Ebbinghaus Memory Decay**: Stored memory entries decay over time based on an exponential power law scaled by reinforcement strength:
+  $$S = S_0 \cdot \left(1 + 0.5 \cdot (\text{sourceCount} - 1)\right)$$
+  $$\text{Decay Multiplier} = e^{-\frac{\Delta t}{S}}$$
+- **Test Telemetry Sandboxing**: All test runners and CI suites sandbox telemetry under `os.tmpdir()`, preventing test runs from modifying user stats or triggering Firebase resets.
+

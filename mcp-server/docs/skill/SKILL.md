@@ -3,14 +3,14 @@ name: free-llms
 description: "Orchestrate multiple free LLM providers, manage persistent workspace memory, and utilize keyword-based steering for project-specific reference extraction and various agentic workflows."
 metadata:
   category: utility
-  triggers: free models, llm cost, fallback, routing, token tracking, workspace memory, context-aware steering, reference extractor, keyword classification, project discovery, gemini, groq, cohere, cloudflare, deepseek, qwen, compression, execute skill, vision tool, agentic, reasoning, planning, subtask decomposition, pdf grounding, semantic wiki, adr tracking
+  triggers: free models, llm cost, fallback, routing, token tracking, workspace memory, context-aware steering, reference extractor, keyword classification, project discovery, gemini, groq, cohere, cloudflare, deepseek, qwen, compression, execute skill, vision tool, agentic, reasoning, planning, subtask decomposition, pdf grounding, semantic wiki, adr tracking, prompt json, keywords steering
 ---
 
 # Free LLM APIs — Usage Guide
 
 Discipline for orchestrating multiple free LLM providers via the `@mcp:free-llm-apis` MCP server.
 
-> **v1.0.6 Update**: Decoupled routing layers, centralized task classification, and new `execute_skill` and `vision_tool` integrations.
+> **v1.0.9 Update**: Consolidated 11 subsystem benchmarks, strict `keywords[]` context bloat prevention, section-based `prompt.json` prompt steering, and local dashboard integration.
 
 ---
 
@@ -20,6 +20,7 @@ Discipline for orchestrating multiple free LLM providers via the `@mcp:free-llm-
 - **Resilient Workflows**: Automatic fallback ensures completion even during rate limits.
 - **Stateful Context**: Persist findings or decisions across multiple turns/sessions.
 - **Architectural Steering**: Project-specific documentation or architectural maps guide implementation.
+- **Keyword-Driven Context Protection**: Feed external system prompts situationally via `keywords[]` without context window bloat.
 
 ---
 
@@ -32,6 +33,33 @@ Discipline for orchestrating multiple free LLM providers via the `@mcp:free-llm-
 | Deep Reasoning | `deepseek-ai/DeepSeek-R1` | `openrouter` | Chain-of-thought |
 | High-Tier Reasoning | `nvidia/nemotron-3-ultra-550b-a55b` | `nvidia` | Planning/subtask planner |
 | Bulk Tasks | `Qwen/Qwen2.5-72B-Instruct` | `siliconflow` | 1,000 RPM — best for bulk |
+
+---
+
+## 🔑 Keyword Ingestion & System Prompt Steering
+
+The `keywords[]` parameter serves two distinct steering intents depending on which tool is invoked:
+
+1. **`use_free_llm` Intent**: Steers system reference section injection, memory layer isolation gates (`<memory_context_isolation_gate>`, `<wiki_context_isolation_gate>`), and persona ranking for completion tasks.
+2. **`load_skill_prompt` Intent**: Steers dynamic skill discovery, querying the local skill catalog and 36 bundled Hermes skills (`searchHermesSkills`) to retrieve target `SKILL.md` prompt instructions.
+
+### 📋 `use_free_llm` System Prompt Ingestion Summary by Keyword
+
+| Keyword Category | Trigger Keywords | System Prompt Instructions & Context Injected |
+|------------------|------------------|-----------------------------------------------|
+| **Security & Auth** | `security`, `auth`, `jwt`, `rate-limit`, `isolation` | Injects security governance rules, authorization verification frames, rate-limiting guidelines, and isolation boundary directives. |
+| **Debugging & Errors** | `debug`, `error`, `exception`, `traceback`, `crash` | Injects systematic debugging workflows, stack trace analysis rules, CLI diagnostics tips, and root-cause analysis directives. |
+| **Reliability & Harness** | `reliability`, `harness`, `evals`, `checkpoint`, `loops` | Injects harness engineering principles, subtask failure recovery workflows, multi-step idempotency rules, and state checkpoint controls. |
+| **Architecture & Memory** | `memory`, `wiki`, `vectorstore`, `adr`, `architecture` | Injects `<memory_context_isolation_gate>` and `<wiki_context_isolation_gate>` containing active ADR decision logs and architecture notes. |
+| **Browser & Automation** | `browser`, `scrape`, `devtools`, `extract` | Injects ARIA-role node discovery guidelines, network response interceptor protocols, and pausable scraping checkpoint controls. |
+| **Cyber Coaching** | `cyber`, `ctf`, `nmap`, `sqlmap`, `ffuf` | Injects security coach persona, CTF decision-graph guidelines (`ctf-graph/{sessionId}`), and binary tool run suggestion memory. |
+
+### 🛠️ `load_skill_prompt` Dynamic Skill Discovery Intent
+
+- **Skill Search Mode (`type: 'search'`)**: Uses `keywords[]` to match against local skill manifests (`.free-llm-mcp/skills/`) and bundled Hermes skills (`src/external/hermes/`).
+- **Prompt Auto-Extraction**: If `keywords` parameter is omitted during skill search, keywords are automatically derived from the `name` string (`name.split(/\s+/)`).
+- **Empty Keywords Guard (`keywords: []`)**: Passing `keywords: []` on skill search returns `{ success: true, skills: [] }` immediately with **0 tokens bloat**.
+- **Hermes Adapter Note**: Ingesting a Hermes skill prepends a 101-token override note enforcing native server tools (`manage_memory`, `browser_tool`).
 
 ---
 
@@ -59,6 +87,7 @@ When `"agentic": true` is enabled, the pipeline decomposes the user's goal into 
 ```json
 {
   "messages": [{ "role": "user", "content": "> read auth.ts\n> search for API keys\n- implement new middleware" }],
+  "keywords": ["security", "auth", "middleware"],
   "agentic": true,
   "workspace_root": "c:/Users/mahes/project"
 }
@@ -85,36 +114,37 @@ If you genuinely need *both* — e.g. "read this PDF spec and implement it in `s
 
 ---
 
-### `load_skill_prompt` [NEW]
-Search for or load a dynamic skill from the remote awesome-antigravity-skills index and save it locally.
+### `load_skill_prompt`
+Search for or load a dynamic skill from the agentic-awesome skills index or bundled Hermes manifest (`src/external/hermes/`).
 
 - **Parameters**:
   - `type` (required): `"load"` to download/load a specific skill, or `"search"` to find skills.
   - `name` (required if type is `"load"`): The name or ID of the skill to load.
-  - `keywords` (required if type is `"search"`): Array of string keywords to search for.
+  - `keywords` (optional): Array of string keywords to search for skills. If omitted, extracted automatically from `name`.
+  - `source` (optional): `"agentic-awesome"` or `"hermes"`.
   - `workspaceDir` (optional): Absolute path to the workspace directory for local storage.
-- **How it Works**: If type is `"search"`, queries the local index of skills matching keywords. If type is `"load"`, fetches all files of the target skill from GitHub, saves them to the local config/workspace directory, and returns the parsed `SKILL.md` system prompt ready for injection.
+- **How it Works**: If type is `"search"`, queries local skill indices and bundled Hermes skills using `keywords[]`. If `keywords: []` is empty, returns `{ success: true, skills: [] }` to prevent context bloat. If type is `"load"`, loads SKILL.md prompt ready for system injection.
 
 ---
 
-### `execute_skill` [NEW]
-Execute a prompt using a specific local skill's instructions and reference files.
+### `execute_skill`
+Execute a prompt using a specific local or Hermes skill's instructions and reference files.
 
 - **Parameters**:
-  - `skill` (required): Name of the skill directory under `.free-llm-mcp/skills/` or the global config.
+  - `skill` (required): Name of the skill directory under `.free-llm-mcp/skills/` or bundled Hermes skills.
   - `input` (required): The prompt or instruction to run.
   - `model` (optional): Specific model override.
   - `workspace_root` (optional): Absolute path to the project root.
-- **How it Works**: Automatically extracts relative file paths referenced in `SKILL.md` (e.g., `references/*.md`, `resources/*`), loads their contents, and injects them as system context before executing the model.
+- **How it Works**: Automatically extracts relative file paths referenced in `SKILL.md` (e.g., `references/*.md`), loads their contents, injects a 101-token Hermes adapter note if applicable, and executes the model.
 
 ---
 
-### `vision_tool` [NEW]
-Analyze local images or remote image URLs.
+### `vision_tool`
+Analyze local images or remote image URLs in single-pass (`isOnePass: true`) or multi-pass agentic mode (`isOnePass: false`).
 - **Parameters**:
   - `image_path` (required): Absolute path or `file:///` URI to the local image.
   - `prompt` (optional): Text prompt accompanying the image.
-- **How it Works**: Resolves Windows-specific paths (handling spaces and backslashes), converts the image to base64, and routes it to an available vision provider (e.g., Gemini or Llama-3.2-Vision).
+- **How it Works**: Resolves Windows paths, converts image to base64, and routes to an available vision provider (Gemini, Llama-Vision).
 
 ---
 
@@ -133,60 +163,91 @@ Save structured knowledge and scripts into the workspace.
 ---
 
 ### `browser_tool` [v1.0.8]
-Owns a real, live `chrome-devtools-mcp` browser session per `sessionId` with a granular action surface — full reference in [browser_tool.md](../browser_tool.md).
+Owns a real, live `chrome-devtools-mcp` browser session per `sessionId` with a granular action surface — full reference in [browser_tool.md](references/browser_tool.md).
 - **Parameters**:
   - `action` (required): `navigate` | `snapshot` | `click` | `scroll` | `wait` | `evaluate` | `network` | `api_replay` | `extract` | `deep_scrape` | `screenshot` | `checkpoint` | `session` | `site_memory` | `scrape` (legacy one-call macro).
   - `url` (required for `navigate`/`scrape`; optional elsewhere): Target website URL.
   - `sessionId` (optional): Reuses a live pooled browser session + checkpoint across calls.
-  - `params` (optional): Action-specific object — see [browser_tool.md](../browser_tool.md) for the per-action schema.
+  - `params` (optional): Action-specific object — see [browser_tool.md](references/browser_tool.md) for the per-action schema.
   - `userInstructions` (optional): Prompt/instructions for extraction actions.
   - `outputDir` (optional): Directory for exported datasets/checkpoints/network dumps.
   - `strict` (optional, default `true`): Extraction failures return `data: null` + errors instead of a best-effort guess.
-- **How it Works**: `BrowserSessionPool` spawns/reuses a real `chrome-devtools-mcp` child process per session. Discovers interactive nodes purely by ARIA role/text (zero hardcoded selectors), captures network response bodies via an injected interceptor (chrome-devtools-mcp's own network tooling doesn't expose them), ranks/replays private API endpoints, detects Cloudflare/CAPTCHA block pages, persists pausable checkpoints to `data/scrapes/checkpoints/`, and exports nested data to flat CSV via `UniversalTabularSchemaFlattener`. Requires Node >= 20 and a locally discoverable Chrome (`CHROME_PATH` to override).
+- **How it Works**: `BrowserSessionPool` spawns/reuses a real `chrome-devtools-mcp` child process per session. Discovers interactive nodes purely by ARIA role/text, captures network response bodies via an injected interceptor, ranks/replays private API endpoints, detects Cloudflare/CAPTCHA block pages, persists pausable checkpoints, and flattens structured datasets.
 
 ---
 
-### `cyber_tool` [NEW]
-Educational cyber security coach plus isolated security binary tool registry and dedicated wiki manager. **Never executes commands** — `learn`/`coach` only teach the exact command, why, expected output, and safety notes for the human to run themselves.
+### `cyber_tool`
+Educational cyber security coach plus isolated security binary tool registry and dedicated wiki manager.
 - **Parameters**:
   - `action` (required): `'list_tools'`, `'get_tool'`, `'register_tool'`, `'wiki_lookup'`, `'learn'`, `'coach'`, `'save_graph'`, `'load_graph'`, or `'tool_memory'`.
   - `toolName` (optional): Security tool name (e.g. `sqlmap`, `nmap`, `ffuf`).
-  - `githubUrl` (optional): Target GitHub repository URL for registration.
-  - `sessionId` (optional): Session/CTF-challenge id — keys the progress record and decision graph for `learn`/`coach`/`save_graph`/`load_graph`.
-  - `goal` (optional): Natural-language objective for `learn`, e.g. `"find SQLi on a lab web app"`.
-  - `level` (optional): `'beginner' | 'intermediate' | 'advanced'` — defaults to `'beginner'`.
-  - `observation` (optional): For `coach` — what the learner ran and what they observed.
-  - `graphNode` (optional): For `save_graph` — `{ id, label, type?: 'goal'|'hypothesis'|'action'|'finding'|'deadend', from? }` to add a decision-graph node, optionally linked from a prior node.
-  - `memoryOp` (optional): For `tool_memory` — `'read'` or `'write'`.
-  - `note` (optional): For `tool_memory` write — the run suggestion to append.
-- **How it Works (registry/wiki)**: Manages dynamic security binary URL resolution via atomic process-safe `.lock` files in `~/.free-llm-mcp/cyber-tools-registry.json` and stores flag remediations and troubleshooting logs in the isolated `cyber-tools` wiki namespace.
-- **How it Works (coach)**: `learn` calls the security-tuned `TaskType.Cyber` model/persona (via `use_free_llm`'s routing) to generate a numbered walkthrough, and seeds a progress record plus a CTF decision-graph root node. `coach` explicitly loads and injects the saved progress, decision graph, and (if `toolName` is given) that tool's run-suggestion memory into the LLM call — so a challenge resumes with its full reasoning trail — then returns the single next command and extends the graph (marking a `deadend` node on failure-sounding observations).
-- **Decision graph**: `save_graph`/`load_graph` persist/reload a CTF reasoning graph as wiki page `ctf-graph/{sessionId}` (node/edge JSON body, with the page's `links` field mirroring the edges), so a challenge's decision trail can be saved and dynamically reloaded across sessions.
-- **Per-tool memory**: `tool_memory` reads/writes a per-CLI-tool "library" of run suggestions (wiki page `{toolName}/run_suggestions`), separate from the static `{toolName}/flags_and_troubleshooting` page, plus reliability stats from `GlobalWikiManager`.
+  - `sessionId` (optional): Session/CTF-challenge id.
+  - `goal` (optional): Natural-language objective for `learn`.
+- **How it Works**: Manages dynamic security binary URL resolution and CTF decision-graph nodes in wiki namespace `ctf-graph/{sessionId}`.
+
+---
+
+### `quantum_tool` [v1.0.9]
+Multi-perspective reasoning tool using quantum-circuit vocabulary as a metaphor for hypothesis exploration with real single-qubit rotation composition.
+- **Parameters**:
+  - `action` (required): `'setup'` | `'step'` | `'pause'` | `'continue'` | `'modify'` | `'reset'` | `'status'` | `'get_state'` | `'analyze'`.
+  - `sessionId` (required): Unique session ID.
+  - `presetCircuit` (optional): `'superposition_exploration'` | `'adversarial_debate'` | `'consensus_alignment'` | `'grover_amplification'` | `'entangled_verification'`.
+  - `numBranches` (optional): Number of reasoning qubits/branches (default 3).
+  - `personas` (optional): Custom persona titles for branches.
+  - `gates` (optional): Custom gate operations (`H`, `X`, `Y`, `Z`, `RY`, `RZ`, `CNOT`, `CZ`, `SWAP`, `MEASURE`, `BARRIER`).
+  - `query` (required for `analyze`): Question to synthesize across branches.
+  - `temperature` (optional): Symbol-density compression budget (0..1).
+- **Telemetry**: Returns `executionMetrics` (latencies), `tokenEfficiencyMatrix` (compression stats, token savings %, tokens per branch/sec), and `quantumStateMetrics` (circuit depth, active gate count, confidence divergence, entropy score). Full reference in [quantum_tool.md](references/quantum_tool.md).
 
 ---
 
 ### `index_workspace`
-Proactively index all relevant files in the workspace for semantic search.
+Proactively index all relevant files in the workspace for semantic search with automatic exclusion of caches, graph metadata, and userdir data.
+
+---
+
+### `validate_provider`
+Test connectivity, live authentication, and measure response latency for a target provider (e.g. `groq`, `openrouter`, `gemini`).
+
+---
+
+### `get_token_stats`
+Audit real-time rate limits, quota counters, and global server totals across all registered providers.
+
+---
+
+### `list_models` / `listAvailableFreeModels`
+Query all available models across providers with optional filtering by provider or availability status.
+
+---
+
+### `code_mode`
+Execute code in a secure sandbox with automatic mode detection (`coding`, `research`, `chat`), stateful file writes (`file:<path>`), and compression ratio tracking.
+
+---
+
+### `coach_tool`
+Interactive learning coach tool that breaks down concepts into structured explanation frames (`Concept`, `Example`, `Exercise`, `Hint`) with strict token budget enforcement.
+
+---
+
+### `local_llm_patch`
+Context-aware surgical code patch generator utilizing workspace grounding and fast local diff application.
 
 ---
 
 ## 🧭 Prompting & Steering Directives
 
-These are the mechanisms that change how a prompt is processed. They're independent of each other — a single request can use all four at once.
-
 ### 1. The `override` keyword (in-prompt, bypasses `.gitignore`)
-Typing the literal word **`override`** (or `all files`, `gitignored`, `ignored`) anywhere in your prompt text tells the workspace context gatherer to **scan every file, including `.gitignore`d ones**, instead of the default tracked-files-only scan. Use this when you need the agent to see build output, `node_modules` config, `.env` templates, or other normally-excluded files.
+Typing the literal word **`override`** anywhere in your prompt text tells the workspace context gatherer to **scan every file, including `.gitignore`d ones**.
 
 ```
 "Check the override — read all files under dist/ for the compiled output"
 ```
 
-This only affects which files are visible to context-gathering; it does not change model choice, persona, or task type.
-
 ### 2. Task-lane DSL prefixes (in-prompt, controls sequential vs. parallel subtasks)
-Prefix individual lines of a multi-step prompt to force execution order — this takes precedence over the automatic planner's heuristics:
-- `>` — run this subtask **in parallel** with others (auto-downgraded to sequential if two parallel tasks share the same classified `TaskType`, to avoid race conditions).
+- `>` — run this subtask **in parallel** with others.
 - `-`, `*`, or `1.` — run this subtask **sequentially**.
 
 ```
@@ -196,97 +257,50 @@ Prefix individual lines of a multi-step prompt to force execution order — this
 ```
 
 ### 3. Persona auto-detection (in-prompt phrasing, changes context ranking and response style)
-The server classifies every prompt into a **persona** by scanning its raw text for phrase patterns (first match wins, checked in this order):
-
-| Persona | Triggered by phrases like... |
-|---|---|
-| `debugger` | error, exception, bug, crash, stack trace, leak, broken, "why does", type error, undefined, null, failed, issue, schema, variable, parameter |
-| `researcher` | `pdf://`, paper, citation, arxiv, research, study, thesis, literature |
-| `student` | "explain how", "how to", tutorial, "what is", learn, teaching, concept |
-| `marketer` | seo, marketing, campaign, keyword, traffic, ad |
-| `planner` | plan, roadmap, timeline, milestone, phase, step |
-| `coder` | implement, refactor, class, function, method, interface, module, compile, run, build, test, package.json, tsconfig.json |
-| `generic` | (fallback — none of the above matched) |
-
-`debugger` is checked first (its patterns are broad on purpose — debugging sessions need the widest context), `coder` last before the fallback. The detected persona re-ranks which workspace files/wiki entries are considered relevant (e.g. `researcher`/`student` favor theoretical/reference material over implementation files) and, for `debugger`, appends token-efficient CLI-reading tips to the response.
-
-**Pin a persona explicitly** by adding a line to your workspace's `AGENTS.md` — this always wins over heuristic detection:
+Scans prompt text for keywords to assign a persona (`debugger`, `researcher`, `student`, `marketer`, `planner`, `coder`, `generic`). Pin explicitly in `AGENTS.md`:
 ```
 preferred persona: coder
 ```
 
-### 4. The `keywords` parameter (API param, steers *documentation section* selection — not persona)
-`keywords` is a `string[]` field on `use_free_llm` (and `load_skill_prompt`'s search mode) — **not** something you type inside the prompt text. It's a separate, explicit steering signal that boosts which sections of injected reference documentation get prioritized/kept when the system prompt is assembled (each matching section gets a scoring boost). It has no effect on persona or task-lane routing.
-
-```json
-{
-  "messages": [{ "role": "user", "content": "Add rate limiting to the login endpoint" }],
-  "keywords": ["security", "jwt", "rate-limit"],
-  "agentic": true,
-  "workspace_root": "c:/Users/mahes/project"
-}
-```
+### 4. The `keywords` parameter (API param, steers prompt injection & skill search)
+`keywords` is a `string[]` field passed on `use_free_llm` and `load_skill_prompt`. It is the primary explicit steering signal for section-level prompt injection (`prompt.json`), wiki note matching, and dynamic skill discovery (see [Keyword Ingestion & System Prompt Steering](#-keyword-ingestion--system-prompt-steering) above).
 
 ---
 
 ## ⚠️ Agentic Behavior & Limits
 
-- **Subtask cap**: The pipeline executes at most **3 subtasks** per request. For larger plans, break your request into multiple calls or use the `continue` resume command.
-- **Time budget & background execution**: Each call is also bounded by a wall-clock budget (`MCP_SUBTASK_BUDGET_MS`, default 20s — kept under typical MCP client tool-call timeouts). If the budget runs out before all subtasks finish, the call returns immediately with whatever completed so far plus a resume handle, and the server **keeps working on the rest in the background**. Re-calling with the same `sessionId` while that background run is still active returns a status snapshot instead of starting a duplicate run — safe to do on a client-side timeout/retry, and it doubles as polling. Explicit controls:
-  - `"action": "status"` — instantly reports progress (no LLM call).
-  - `"action": "continue"` — resumes a paused/yielded queue (same effect as `continue <PROMPT_ID> ...`).
-  - `"action": "abort"` — cancels an in-progress background run; the queue stays resumable.
-  ```json
-  { "messages": [{ "role": "user", "content": "" }], "sessionId": "my-project", "action": "status" }
-  ```
-- **Pipeline Pause**: If a subtask requires a terminal command, or a subtask fails, execution pauses and you will receive a `⚠️ Pipeline Paused` / `❌ Subtask Execution Failed` message. Reply with `continue <PROMPT_ID> <output>` (or `"action": "continue"`) to resume. Budget-triggered pauses (above) are different — those auto-resume on the very next call and don't require a `continue` reply.
-- **Agentic gate**: Set `ENABLE_AGENTIC_MIDDLEWARE=true` in the server environment, or explicitly pass `"agentic": true` in your request to activate subtask decomposition.
-- **`AGENTS.md` Workspace Rules**: The pipeline automatically detects and loads the `AGENTS.md` file located at the workspace root or under `.agents/AGENTS.md`. Use this file to define project-specific coding standards, behavioral rules, and model routing preferences that the agent must follow.
-
----
-
-### 1. PDF-Based Learning & Visual Grounding
-You can steer the agent to learn directly from local manuals, API specs, or datasheets by referencing specific pages using a `#page=N` hash:
-- **Steering Syntax**: `Read the specification in [manual.pdf](file:///c:/project/docs/manual.pdf#page=12)`
-- **Physical vs. Printed Offsets**: The server automatically manages a PDF Index Offset Cache (`pdf:index:<pdf_slug>`). If physical page 5 of the PDF corresponds to printed page 1, it caches an offset of `4`. The server will automatically translate your requested printed page number `12` to physical page `16` before extraction.
-- **Visual Grounding**: The server extracts the page text via `PyMuPDF` and renders the page to a base64 image. Both are injected directly into the LLM context.
-- **Offset Verification**: If a PDF's offset is incorrect, you can manually update the offset cache using `store_workspace_skill` with the key `pdf:index:<pdf_slug>` and value `{"offset": N}`.
-
-### 2. Semantic Wiki Maintenance & ADR Tracking
-The server maintains a structured wiki under `.free-llm-mcp/wiki/` containing markdown files with YAML frontmatter. This is your project's "truth engine" for architectural decisions.
-- **ADR Auto-Extraction**: The system scans all completed subtask outputs for decision patterns. When it detects phrases like `"decided to"`, `"chose X over Y"`, or `"decision:"`, it automatically extracts them into a structured Architecture Decision Record (ADR) file in the wiki (e.g., `adr_001.md`).
-- **Manual ADR Maintenance**: To ensure the agent respects architectural boundaries, you can manually write or update ADR files in `.free-llm-mcp/wiki/`. Use the following format:
-  ```markdown
-  ---
-  title: use_redis_session_store
-  tier: semantic
-  tags: [architecture, adr, database]
-  links: [session_id]
-  adr_ref: adr_001
-  ---
-  # ADR 001: Use Redis Session Store
-  We decided to use Redis for session management instead of JWT tokens because of performance overhead.
-  ```
-- **Attestation**: During workspace indexing, the agent reads these ADRs and cross-references them against your source files. If a code change violates an active ADR, the agent will flag a warning.
+- **Subtask cap**: Pipeline executes at most **3 subtasks** per request.
+- **Time budget & background execution**: Bounded by wall-clock budget (`MCP_SUBTASK_BUDGET_MS`, default 20s). Background runs can be checked via `"action": "status"` or resumed via `"action": "continue"`.
+- **Pipeline Pause**: Pauses on terminal commands or subtask failure. Resume with `"action": "continue"`.
+- **Agentic gate**: Set `ENABLE_AGENTIC_MIDDLEWARE=true` or pass `"agentic": true`.
+- **`AGENTS.md` Workspace Rules**: Auto-loaded from workspace root or `.agents/AGENTS.md`.
 
 ---
 
 ## 📚 Deep Dives & References
 
 - [**System Architecture**](references/architecture.md): Deep dive into grounding protocols, decoupled routing mechanics, and advanced agentic patterns.
-- [**Skill & Sandbox Logic**](references/code-mode-logic.md): Guide to creating custom skills for `execute_skill` and how the internal QuickJS sandbox executes code.
-- [**Memory Usage Guide**](references/memory-usage.md): Architectural details of the persistent memory system, wiki structure, and PDF offset caching.
-- [**Documentation Maintainer**](references/doc-maintainer.md): Context-aware best practices for codebase documentation.
-- [**System Tool Usage Matrix**](references/usages.md): Full test matrix with actual responses and latency measurements.
+- [**Skill & Sandbox Logic**](references/code-mode-logic.md): Guide to creating custom skills for `execute_skill` and QuickJS sandbox execution.
+- [**Memory Usage Guide**](references/memory-usage.md): Architectural details of persistent memory, wiki structure, and PDF offset caching.
+- [**Per-Tool Reference Documentation**]:
+  - [`use_free_llm`](references/use_free_llm.md)
+  - [`load_skill_prompt`](references/load_skill_prompt.md)
+  - [`execute_skill`](references/execute_skill.md)
+  - [`vision_tool`](references/vision_tool.md)
+  - [`browser_tool`](references/browser_tool.md)
+  - [`cyber_tool`](references/cyber_tool.md)
+  - [`quantum_tool`](references/quantum_tool.md)
+  - [`local_llm_patch`](references/local_llm_patch.md)
+  - [`manage_memory`](references/manage_memory.md)
+  - [`store_workspace_skill`](references/store_workspace_skill.md)
 
 ---
 
-## 🔍 Quick Agent Diagnostics
+## 🔍 Quick Agent Diagnostics & Dashboard
 
-If a tool call fails or returns an error, follow this sequence:
-1. **Verify Server Health**: Call `validate_provider` with the target provider (e.g., `groq`) to check connectivity.
-2. **Check Token Budgets**: Call `get_token_stats` to see if a provider is rate-limited or lacks credentials.
-3. **Monitor Visual Dashboard**: Inform the user they can view real-time latency and token statistics on the local dashboard at `http://localhost:3000` (if running in SSE mode).
+1. **Verify Server Health**: Call `validate_provider` with target provider (e.g. `groq`).
+2. **Check Token Budgets**: Call `get_token_stats` to audit quota consumption.
+3. **Monitor Visual Dashboard (`http://localhost:3000`)**: Open `http://localhost:3000` to view real-time latency, token usage by memory layer, `keywords[]` match highlights, and `agentic: true` vs `agentic: false` payload comparisons.
 
 > [!WARNING]
 > **Consecutive Subtask Failures**: If the agent experiences consecutive failures during execution, it is likely due to:
@@ -297,12 +311,11 @@ If a tool call fails or returns an error, follow this sequence:
 > 
 > ```text
 > --- 5. REASONING / PLANNING PROVIDERS ---
-> (Crtical for agentic subtask decomposition)
+> (Critical for agentic subtask decomposition)
 > 
 > huggingface
 > modelscope
 > gemini
 > openrouter
 > nvidia
-> kilocode
 > ```

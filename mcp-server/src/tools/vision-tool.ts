@@ -10,6 +10,8 @@ import {
   getSharedImageRouter 
 } from '../pipeline/instances.js';
 
+import { renderPdfPage } from '../utils/PdfRenderer.js';
+
 export interface VisionToolInput {
   workspace_root?: string;
   image_path: string; // file:/// absolute URI
@@ -33,7 +35,13 @@ export async function visionTool(input: VisionToolInput): Promise<{ response: st
       decodedPath = decodedPath.substring(1);
     }
   }
-  const imageFsPath = path.resolve(decodedPath);
+
+  // Handle trailing :<pageNum> suffix (e.g. file:///path/to/doc.pdf:2)
+  const pageMatch = decodedPath.match(/^(.*\.pdf):(\d+)$/i);
+  const cleanPath = pageMatch ? pageMatch[1] : decodedPath;
+  const pageNum = pageMatch ? parseInt(pageMatch[2], 10) || 1 : 1;
+
+  const imageFsPath = path.resolve(cleanPath);
 
   if (workspace_root) {
     const ws = path.resolve(workspace_root);
@@ -48,6 +56,36 @@ export async function visionTool(input: VisionToolInput): Promise<{ response: st
   }
 
   const userPrompt = prompt || 'Analyze this image and provide a concise technical markdown report.';
+  const isPdf = imageFsPath.toLowerCase().endsWith('.pdf');
+
+  let effectiveImageUrl = image_path;
+  let effectivePrompt = userPrompt;
+  let extractedPdfText: string | undefined;
+  let pdfMetadata: any;
+
+  if (isPdf) {
+    const renderResult = await renderPdfPage(imageFsPath, pageNum);
+    if (!renderResult) {
+      throw new Error(`Failed to render PDF page ${pageNum} from ${imageFsPath}`);
+    }
+
+    extractedPdfText = renderResult.text;
+    pdfMetadata = {
+      totalPages: renderResult.total_pages,
+      pageNum,
+      imageCoverageRatio: renderResult.image_coverage_ratio,
+      imageBlocks: renderResult.image_blocks
+    };
+
+    if (renderResult.image_path && await fs.stat(renderResult.image_path).then(() => true).catch(() => false)) {
+      const pngBuffer = await fs.readFile(renderResult.image_path);
+      effectiveImageUrl = `data:image/png;base64,${pngBuffer.toString('base64')}`;
+    }
+
+    if (extractedPdfText && extractedPdfText.trim()) {
+      effectivePrompt = `${userPrompt}\n\n[Extracted Page Text (page ${pageNum}/${renderResult.total_pages})]:\n${extractedPdfText.trim()}`;
+    }
+  }
 
   // Build a dedicated vision pipeline utilizing the ImageRouterMiddleware
   const pipeline = new PipelineExecutor();
@@ -63,15 +101,17 @@ export async function visionTool(input: VisionToolInput): Promise<{ response: st
         {
           role: 'user',
           content: [
-            { type: 'text', text: userPrompt },
-            { type: 'image_url', image_url: { url: image_path } }
+            { type: 'text', text: effectivePrompt },
+            { type: 'image_url', image_url: { url: effectiveImageUrl } }
           ]
         }
       ]
     },
     taskType: TaskType.Vision,
     workspaceRoot: workspace_root,
-    isOnePass: true
+    isOnePass: true,
+    extractedPdfText,
+    pdfMetadata
   };
 
   const finalContext = await pipeline.execute(context);

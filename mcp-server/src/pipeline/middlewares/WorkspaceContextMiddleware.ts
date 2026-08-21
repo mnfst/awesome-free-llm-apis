@@ -11,23 +11,39 @@ import { getMessageContent, prependToMessageContent, appendToMessageContent } fr
 import { GithubRepoScanner, GLOBAL_CYBER_WIKI_NS } from '../../utils/GithubRepoScanner.js';
 import { CYBER_TERMS_REGEX } from '../../utils/TaskClassifier.js';
 import { taskTypeToPersona } from '../../utils/PersonaMapper.js';
+import { EXCLUDE_DIRS, EXCLUDE_EXTENSIONS } from './constants.js';
 
 const workspaceScanner = new WorkspaceScanner(process.cwd());
 
 /**
- * Generates a lightweight directory tree up to 2 levels deep to provide structural context.
+ * Generates a clean, lightweight directory tree (up to 2 levels deep, max 30 entries)
+ * filtering out cache hashes, temporary files, data dirs, and build artifacts to prevent token bloat.
  */
-async function getDirectoryTree(dirPath: string, maxDepth = 2, currentDepth = 0): Promise<string> {
-    if (currentDepth > maxDepth) return '';
+async function getDirectoryTree(dirPath: string, maxDepth = 2, currentDepth = 0, state = { count: 0 }, maxEntries = 30): Promise<string> {
+    if (currentDepth > maxDepth || state.count >= maxEntries) return '';
     try {
         const entries = await fs.readdir(dirPath, { withFileTypes: true });
         let tree = '';
         const indent = '  '.repeat(currentDepth);
-        for (const entry of entries) {
-            if (['node_modules', '.git', 'dist', 'build', '.next', 'venv', '__pycache__'].includes(entry.name)) continue;
+
+        const filtered = entries.filter(entry => {
+            const name = entry.name;
+            if (name.startsWith('.') && name !== '.env' && name !== '.env.example') return false;
+            if (EXCLUDE_DIRS.includes(name) || ['data', 'cache', 'temp', 'tmp', 'projects', 'scrapes'].includes(name)) return false;
+            const ext = path.extname(name).toLowerCase();
+            if (EXCLUDE_EXTENSIONS.includes(ext) || ext === '.tmp' || ext === '.lock' || ext === '.log') return false;
+            return true;
+        });
+
+        for (const entry of filtered) {
+            if (state.count >= maxEntries) {
+                tree += `${indent}... [tree truncated for concise context]\n`;
+                break;
+            }
             tree += `${indent}- ${entry.name}${entry.isDirectory() ? '/' : ''}\n`;
+            state.count++;
             if (entry.isDirectory()) {
-                tree += await getDirectoryTree(path.join(dirPath, entry.name), maxDepth, currentDepth + 1);
+                tree += await getDirectoryTree(path.join(dirPath, entry.name), maxDepth, currentDepth + 1, state, maxEntries);
             }
         }
         return tree;
@@ -413,7 +429,9 @@ export class WorkspaceContextMiddleware implements Middleware {
         if (context.workspaceRoot && userContent) {
             try {
                 dirTree = await getDirectoryTree(context.workspaceRoot);
-                const queryKeywords = context.keywords || [];
+                const queryKeywords = (context.keywords && context.keywords.length > 0)
+                    ? context.keywords
+                    : (userContent ? (userContent.toLowerCase().match(/\b[a-z]{3,}\b/g)?.filter(w => !['the','and','for','with','from','that','this','have','are','was','were','lets','check','please','could','would','should'].includes(w)).slice(0, 8) || []) : []);
                 grepResults = await ContextGatherer.gatherContext({
                     workspaceRoot: context.workspaceRoot,
                     query: userContent,
@@ -539,6 +557,8 @@ export class WorkspaceContextMiddleware implements Middleware {
         }
         (context as any).grepContext = workspaceContextStr || undefined;
 
+        let fullSystemPrompt = '';
+
         // Only inject a system prompt when NOT in agentic mode.
         // In agentic mode, AgenticMiddleware owns the system prompt to prevent
         // double-injection which garbles model responses.
@@ -557,7 +577,7 @@ export class WorkspaceContextMiddleware implements Middleware {
 
                 const CONTEXT_START_MARKER = '<!-- WORKSPACE_CONTEXT_START -->';
                 const CONTEXT_END_MARKER = '<!-- WORKSPACE_CONTEXT_END -->';
-                const fullSystemPrompt = `\n${CONTEXT_START_MARKER}\n${dynamicPrompt}${highLevelStepsSection}${groundingGate}\n${CONTEXT_END_MARKER}\n`;
+                fullSystemPrompt = `\n${CONTEXT_START_MARKER}\n${dynamicPrompt}${highLevelStepsSection}${groundingGate}\n${CONTEXT_END_MARKER}\n`;
                 
                 const messages = context.request.messages;
                 const sysMsgIdx = messages.findIndex(m => m.role === 'system');
@@ -588,6 +608,44 @@ export class WorkspaceContextMiddleware implements Middleware {
         } else {
             console.error(`[WorkspaceContextMiddleware] Agentic mode: skipping own system prompt injection, delegating to AgenticMiddleware.`);
         }
+
+        const nonSystemMessages = (context.request.messages || []).filter((m: any) => m.role !== 'system');
+        const messagesText = nonSystemMessages.map((m: any) => getMessageContent(m.content)).join(' ');
+        const shortTermTokens = Math.ceil(messagesText.length / 3.8);
+        const longTermTokens = Math.ceil((memoryContext?.length || 0) / 3.8);
+        const wikiTokens = Math.ceil((wikiContext?.length || 0) / 3.8);
+        const grepTokens = Math.ceil((workspaceContextStr?.length || 0) / 3.8);
+        const groundingTokens = Math.ceil((groundingGate?.length || 0) / 3.8);
+        const sysPromptTokens = Math.ceil((fullSystemPrompt?.length || 0) / 3.8);
+
+        const steeringTelemetry = {
+            persona: (context as any).taskType || 'coder',
+            matchedKeywords: (context as any).keywords || [],
+            memoryLayers: {
+                shortTermTokens,
+                longTermTokens,
+                wikiTokens,
+                grepTokens,
+                groundingTokens,
+                sysPromptTokens,
+                totalContextTokens: shortTermTokens + longTermTokens + wikiTokens + grepTokens + groundingTokens + sysPromptTokens
+            },
+            groundingGate: groundingGate || null,
+            dirTree: dirTree || null,
+            fullAssembledSystemPrompt: fullSystemPrompt || '(Delegated to AgenticMiddleware)',
+            subtaskContext: (context as any).subtask || null,
+            durationMs: Date.now() - startMs
+        };
+
+        (context as any).telemetry = {
+            memoryContext,
+            grepContext: workspaceContextStr || undefined,
+            wikiContext,
+            groundingGate,
+            dirTree,
+            durationMs: Date.now() - startMs,
+            steeringTelemetry
+        };
 
         console.error(`[WorkspaceContextMiddleware] ${Date.now() - startMs}ms context injected for session=${sessionId}`);
         

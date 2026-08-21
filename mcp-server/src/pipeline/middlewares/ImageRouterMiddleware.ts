@@ -131,15 +131,29 @@ export class ImageRouterMiddleware implements Middleware {
         }
 
         try {
-            const buffer = await fs.readFile(imageFsPath);
             const ext = path.extname(imageFsPath).toLowerCase().replace('.', '');
             const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
+
+            if (ext === 'pdf') {
+                try {
+                    const { renderPdfPage } = await import('../../utils/PdfRenderer.js');
+                    const rendered = await renderPdfPage(imageFsPath, 1);
+                    if (rendered?.image_path) {
+                        const pngBuffer = await fs.readFile(rendered.image_path);
+                        return `data:image/png;base64,${pngBuffer.toString('base64')}`;
+                    }
+                } catch (pdfErr: any) {
+                    console.error(`[ImageRouterMiddleware] On-demand PDF render failed for ${imageFsPath}:`, pdfErr.message);
+                    return null;
+                }
+            }
 
             if (!ALLOWED_EXTENSIONS.includes(ext)) {
                 console.warn(`[ImageRouterMiddleware] Unsupported image extension: .${ext}`);
                 return null;
             }
 
+            const buffer = await fs.readFile(imageFsPath);
             const mimeType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
             const base64Data = buffer.toString('base64');
             return `data:${mimeType};base64,${base64Data}`;

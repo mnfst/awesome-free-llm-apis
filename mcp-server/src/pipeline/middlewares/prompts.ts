@@ -622,3 +622,45 @@ export async function getIntelligentSystemPrompt(
     assembled += `\n\n${GROUNDING_PROTOCOL}`;
     return assembled;
 }
+
+export interface PromptSectionMeta {
+    id: string;
+    title: string;
+    keywords: string[];
+    tokenCount: number;
+    content?: string;
+}
+
+export interface PromptEvaluationResult {
+    prompt: string;
+    matchedSections: PromptSectionMeta[];
+    totalPromptTokens: number;
+}
+
+export async function evaluatePromptSections(options: PromptOptions): Promise<PromptEvaluationResult> {
+    const prompt = await getIntelligentSystemPrompt(options);
+    const promptData = await loadPromptData();
+    const sections = promptData?.sections || [];
+
+    const matchedSections: PromptSectionMeta[] = [];
+    for (const sec of sections) {
+        if (!sec.title) continue;
+        // A section is matched if and only if it was selected and injected into the assembled prompt
+        if (prompt.includes(sec.title)) {
+            const secContent = sec.content || sec.title || sec.id;
+            matchedSections.push({
+                id: sec.id,
+                title: sec.title,
+                keywords: sec.keywords || [],
+                tokenCount: Math.ceil(secContent.length / 3.8),
+                content: secContent
+            });
+        }
+    }
+
+    return {
+        prompt,
+        matchedSections,
+        totalPromptTokens: Math.ceil(prompt.length / 3.8)
+    };
+}

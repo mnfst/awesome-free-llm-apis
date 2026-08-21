@@ -1,11 +1,12 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import crypto from 'node:crypto';
 import { ProviderRegistry } from '../providers/registry.js';
 import { getMessageContent } from '../utils/MessageUtils.js';
 import { ScraperExporter } from '../utils/ScraperExporter.js';
 import { ContextSanitizer, NetworkStateTracker } from '../utils/NetworkStateTracker.js';
 import { logToolCall } from '../utils/ChatLogger.js';
+import { DomStateFingerprinter } from '../browser/BrowserSession.js';
+export { DomStateFingerprinter };
 
 export interface ScrapingSessionCheckpoint {
     sessionId: string;
@@ -21,6 +22,8 @@ export interface ScrapingSessionCheckpoint {
     discoveredNodes: Array<{ index: number; label: string; tag: string; role?: string; href?: string }>;
     discoveredSections: string[];
     userPreferences?: Record<string, any>;
+    /** Last domDiffSummary produced by SnapshotDiffer (see dispatch.ts's handleClick/handleWait) — a short human-readable string, not raw SnapshotNode[]; those stay in-memory only so checkpoints remain small/portable. */
+    lastDiffSummary?: string;
     lastUpdated: string;
 }
 
@@ -57,23 +60,6 @@ export interface ScrapeResult {
     /** @since 2.0 — structured errors; `error` (singular) is kept as a deprecated alias for the first message. */
     errors?: Array<{ stage: string; code: string; message: string; recoverable: boolean }>;
     error?: string;
-}
-
-export class DomStateFingerprinter {
-    static computeHash(snapshotText: string): string {
-        if (!snapshotText) return '';
-        const normalized = snapshotText
-            .split('\n')
-            .map(l => l.trim())
-            .filter(l => !l.includes('timestamp') && !l.includes('ms'))
-            .join('\n');
-        return crypto.createHash('sha256').update(normalized).digest('hex').slice(0, 16);
-    }
-
-    static hasStateChanged(previousHash: string, currentHash: string): boolean {
-        if (!previousHash || !currentHash) return true;
-        return previousHash !== currentHash;
-    }
 }
 
 export class ScrapingSessionCheckpointManager {

@@ -63,6 +63,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
         Quick Start
       </button>
+      <button class="tab-btn" data-tab="steering" role="tab" aria-selected="false" id="tab-steering">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4"/></svg>
+        Keyword & Prompt Steering
+      </button>
     </nav>
 
     <!-- ══════════════════════════════════════════════════════════
@@ -161,6 +165,32 @@
         <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text-muted);">
           <div class="spinner" style="width:24px;height:24px;margin:0 auto 12px;"></div>
           Connecting to MCP server…
+        </div>
+      </div>
+
+      <!-- Search Providers (v1.0.9 SearchRouterMiddleware) -->
+      <div style="margin-top:32px;">
+        <div class="section-title">Search Providers</div>
+        <div class="section-sub">Fallback chain: Parallel AI → Tavily → Jina → Brave → SearXNG · used by <code>google_search</code>/semantic-search requests</div>
+      </div>
+      <div class="providers-grid" id="search-providers-grid" style="margin-top:12px;">
+        <div style="grid-column:1/-1;text-align:center;padding:24px 0;color:var(--text-muted);">Loading…</div>
+      </div>
+
+      <div style="margin-top:28px;">
+        <div class="section-title">Recent Search Queries</div>
+        <div class="section-sub">Last 25 searches served through SearchRouterMiddleware, newest first</div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="card-body" style="padding:0;">
+          <table class="qs-table" id="search-logs-table" style="width:100%;">
+            <thead>
+              <tr><th>Time</th><th>Query</th><th>Provider</th><th>Count</th><th>Results</th></tr>
+            </thead>
+            <tbody id="search-logs-tbody">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">Loading…</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -310,6 +340,27 @@
             <div class="conv-empty">Select a page from the list.</div>
           </div>
           <div class="wiki-related" id="wiki-related"></div>
+        </div>
+      </div>
+
+      <!-- Cyber Tool Decision Graph (v1.0.9) -->
+      <div style="margin-top:28px;">
+        <div class="section-title">🕸 Cyber Tool Decision Graph</div>
+        <div class="section-sub">Visualizes the goal/hypothesis/action/finding/dead-end graph a <code>cyber_tool</code> coaching session built via <code>save_graph</code>/<code>load_graph</code>.</div>
+      </div>
+      <div class="card" style="margin-top:12px;margin-bottom:12px;">
+        <div class="card-body">
+          <div class="session-controls">
+            <label class="field-label" style="margin:0;white-space:nowrap;" for="cyber-graph-session-input">Session ID</label>
+            <input type="text" id="cyber-graph-session-input" class="session-input" placeholder="cyber_tool sessionId">
+            <button class="btn btn-primary btn-sm" id="cyber-graph-load-btn">Load Graph</button>
+            <input type="text" id="cyber-graph-search-input" class="session-input" placeholder="Filter nodes by label/id…" style="max-width:220px;">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="cyber-graph-body">
+          <div class="conv-empty">Enter a session ID and click Load Graph.</div>
         </div>
       </div>
     </section>
@@ -478,6 +529,26 @@
               <tr><td>Ollama Cloud</td><td><code>OLLAMA_API_KEY</code></td><td><a href="https://ollama.com/settings/keys" target="_blank" rel="noopener noreferrer">ollama.com/settings/keys</a></td></tr>
               <tr><td>OpenRouter</td><td><code>OPENROUTER_API_KEY</code></td><td><a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a></td></tr>
               <tr><td>SiliconFlow</td><td><code>SILICONFLOW_API_KEY</code></td><td><a href="https://cloud.siliconflow.cn/account/ak" target="_blank" rel="noopener noreferrer">cloud.siliconflow.cn/account/ak</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Search & Web Grounding Providers -->
+      <div class="section-title" style="margin-bottom:14px;">🌐 Search & Web Grounding Providers</div>
+      <div class="section-sub" style="margin-bottom:14px;">Used automatically by <code>SearchRouterMiddleware</code> and web search tools with multi-provider fallback.</div>
+      <div class="card" style="margin-bottom:28px;">
+        <div class="card-body" style="overflow-x:auto;">
+          <table class="qs-table" id="qs-search-provider-table">
+            <thead><tr><th>Search Provider</th><th>Env Var</th><th>URL / Get API Key</th><th>Type & Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Parallel AI</td><td><code>PARALLEL_API_KEY</code></td><td><a href="https://parallel.ai" target="_blank" rel="noopener noreferrer">parallel.ai</a></td><td><span class="badge badge-green">Keyless / Optional Key</span> High-throughput AI search</td></tr>
+              <tr><td>Tavily Search</td><td><code>TAVILY_API_KEY</code></td><td><a href="https://app.tavily.com/home" target="_blank" rel="noopener noreferrer">app.tavily.com/home</a></td><td><span class="badge badge-purple">Free API Key</span> 2-phase search & page extraction</td></tr>
+              <tr><td>TinyFish Search</td><td><code>TINYFISH_API_KEY</code></td><td><a href="https://tinyfish.ai" target="_blank" rel="noopener noreferrer">tinyfish.ai</a></td><td><span class="badge badge-purple">Free API Key</span> 30 RPM search & 150 RPM fetch</td></tr>
+              <tr><td>Jina AI</td><td><code>JINA_API_KEY</code></td><td><a href="https://jina.ai" target="_blank" rel="noopener noreferrer">jina.ai</a></td><td><span class="badge badge-green">Keyless / Optional Key</span> Search (`s.jina.ai`) + Reader (`r.jina.ai`)</td></tr>
+              <tr><td>Brave Search</td><td><code>BRAVE_API_KEY</code></td><td><a href="https://brave.com/search/api" target="_blank" rel="noopener noreferrer">brave.com/search/api</a></td><td><span class="badge badge-purple">Free API Key</span> Privacy-first web search API</td></tr>
+              <tr><td>SearXNG (Self-Hosted)</td><td><code>SEARXNG_URL</code> / <code>SEARXNG_BASE_URL</code></td><td><a href="https://docs.searxng.org" target="_blank" rel="noopener noreferrer">docs.searxng.org</a> &bull; <code>http://localhost:8080</code></td><td><span class="badge badge-cyan">Self-Hosted</span> Unlimited terminal fallback</td></tr>
+              <tr><td>DuckDuckGo (DDGS)</td><td><code>(Keyless)</code></td><td><a href="https://duckduckgo.com" target="_blank" rel="noopener noreferrer">duckduckgo.com</a></td><td><span class="badge badge-green">Keyless</span> Instant answer search engine</td></tr>
             </tbody>
           </table>
         </div>
@@ -678,6 +749,105 @@
         </details>
       </div>
 
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TAB 8: KEYWORD & PROMPT STEERING
+    ══════════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="panel-steering" role="tabpanel" aria-labelledby="tab-steering">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <span class="section-title" style="margin:0;font-size:1rem;color:var(--accent-purple);">🎯 Keyword-Driven System Prompt Steering & Memory Hierarchy Studio</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
+            Inspect how user prompts and <code>keywords[]</code> trigger targeted external sections from <code>prompt.json</code>, prioritize the 5-layer workspace memory hierarchy (L1 Session &rarr; L2 ADR &rarr; L3 Wiki &rarr; L4 Code Grep &rarr; L5 Prompts), and build exact system prompts in single-pass and multi-pass agentic execution.
+          </div>
+
+          <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Sample User Query / Subtask Goal:</label>
+              <input type="text" id="steering-query-input" class="form-input" value="Fix bug in auth middleware and check security rate limiting" placeholder="Type prompt query..." style="width:100%;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Explicit keywords[] Array:</label>
+              <input type="text" id="steering-keywords-input" class="form-input" value="security, auth, rate-limit, debug" placeholder="e.g. security, auth, rate-limit" style="width:100%;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Workspace Root Folder Path:</label>
+              <input type="text" id="steering-workspace-input" class="form-input" value="." placeholder="Workspace directory path..." style="width:100%;">
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+            <label style="display:inline-flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;">
+              <input type="checkbox" id="steering-agentic-toggle">
+              <span style="font-weight:600;">Enable agentic: true (Multi-Pass Subtask Engine)</span>
+            </label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div id="steering-persona-badge" class="badge badge-purple" style="font-size:.78rem;padding:4px 10px;">Mapped Persona: <code>coder</code></div>
+              <button id="btn-run-steering-eval" class="btn btn-purple btn-sm">Inspect Live Ingestion & Telemetry</button>
+            </div>
+          </div>
+
+          <!-- Live Token & Context Comparison Cards -->
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card">
+              <div class="stat-label c-purple">System Prompt Overhead</div>
+              <div class="stat-value c-purple" id="steering-sys-tokens">0 tok</div>
+              <div class="stat-sub" id="steering-sys-desc">Single-Pass Mode (isOnePass: true)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label c-cyan">Total Injected Context</div>
+              <div class="stat-value c-cyan" id="steering-payload-tokens">0 tok</div>
+              <div class="stat-sub">Live 5-layer memory footprint</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label c-green">Net Token Savings</div>
+              <div class="stat-value c-green" id="steering-token-savings">0.0%</div>
+              <div class="stat-sub" id="steering-savings-desc">0 tokens saved vs Agentic</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label c-amber">Context Bloat Guard</div>
+              <div class="stat-value c-amber" id="steering-bloat-status">READY ⚡</div>
+              <div class="stat-sub">Live telemetry connected</div>
+            </div>
+          </div>
+
+          <!-- Matched prompt.json Sections -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="section-title" style="font-size:.88rem;margin:0;">📄 Injected External prompt.json Sections</div>
+            <span style="font-size:.72rem;color:var(--text-muted);">Expand section to inspect injected prompt text</span>
+          </div>
+          <div id="steering-matched-sections" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- 5-Layer Memory Priority Hierarchy Deck -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="section-title" style="font-size:.88rem;margin:0;">🧠 5-Layer Workspace Memory Hierarchy & Ingestion Gates</div>
+            <span style="font-size:.72rem;color:var(--text-muted);">Priority ordered: P1 (Top) &rarr; P5 (Base)</span>
+          </div>
+          <div id="steering-memory-gates" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Subtask Context & Multi-Tab Raw Inspector -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="section-title" style="font-size:.88rem;margin:0;">🔍 Assembled Prompt & Workspace Context Inspector</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline btn-xs active" id="btn-inspect-tab-prompt" onclick="switchSteeringInspectTab('prompt')">📑 Assembled Prompt</button>
+              <button class="btn btn-outline btn-xs" id="btn-inspect-tab-workspace" onclick="switchSteeringInspectTab('workspace')">📂 Extracted Workspace & Tree</button>
+              <button class="btn btn-outline btn-xs" id="btn-inspect-tab-history" onclick="switchSteeringInspectTab('history')">💬 Chat & Session Turns</button>
+            </div>
+          </div>
+          <div style="background:rgba(0,0,0,.3);border:1px solid var(--glass-border);border-radius:6px;padding:12px;">
+            <div id="steering-subtask-view" style="font-size:.78rem;color:var(--accent-purple);margin-bottom:8px;font-weight:600;display:none;"></div>
+            <pre id="steering-raw-prompt-view" style="font-size:.72rem;color:var(--text-secondary);max-height:300px;overflow-y:auto;white-space:pre-wrap;margin:0;font-family:monospace;background:rgba(10,10,15,.6);padding:10px;border-radius:4px;">(Click "Inspect Live Ingestion & Telemetry" or edit inputs to load assembled system prompt...)</pre>
+          </div>
+
+        </div>
+      </div>
     </section>
 
   </main>

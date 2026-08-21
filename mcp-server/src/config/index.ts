@@ -1,8 +1,16 @@
+import os from 'os';
+import path from 'path';
+
+const defaultStorageDir = process.env.FREE_LLM_MCP_HOME
+  ? path.join(process.env.FREE_LLM_MCP_HOME, 'data')
+  : path.join(os.homedir(), '.free-llm-mcp', 'data');
+
 export const config = {
   port: parseInt(process.env.PORT ?? '3000', 10),
   logLevel: process.env.LOG_LEVEL ?? 'info',
-  memoryStorePath: process.env.MEMORY_STORE_PATH ?? './data/memory.json',
-  cacheStorePath: process.env.CACHE_STORE_PATH ?? './data/cache.json',
+  memoryStorePath: process.env.MEMORY_STORE_PATH ?? path.join(defaultStorageDir, 'memory.json'),
+  cacheStorePath: process.env.CACHE_STORE_PATH ?? path.join(defaultStorageDir, 'cache.json'),
+  vectorStorageRoot: process.env.VECTOR_STORAGE_ROOT ?? path.join(defaultStorageDir, 'vector-indices'),
   pricing: {
     huggingfaceMonthlyCreditsUsd: 0.10,
   },

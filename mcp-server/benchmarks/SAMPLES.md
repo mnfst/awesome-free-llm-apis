@@ -1,728 +1,809 @@
-# Agentic Pipeline: REAL-WORLD COMPREHENSIVE TRACES
+# MCP Server Benchmark Log Aggregation (SAMPLES.md)
 
-Generated on: 2026-06-28T16:07:43.994Z
+> Automatically generated from benchmark run logs on: `2026-08-12T09:24:11.439Z`
 
-## 📊 Performance Dashboard
-
-| Scenario / Component | Execution Time (ms) | Memory Delta (KB) | Status |
-| :--- | :---: | :---: | :---: |
-| Scenario 1a: Intelligent Prompt Injection (Generic Query) | 9.92ms | +5430 KB | ✅ PASS |
-| Scenario 1b: Intelligent Prompt Injection (Complex Python Review) | 6.11ms | +5225 KB | ✅ PASS |
-| Scenario 2: Sandbox Logic Execution | 20.97ms | +809 KB | ✅ PASS |
-| Scenario 3: Real Agentic State Decomposition | 16032.79ms | +14045 KB | ✅ PASS |
-| Scenario 4: Context Manager Sliding Window | 3.32ms | -111 KB | ✅ PASS |
-| Scenario 5: Deep Memorization Retrieval | 2.05ms | -48 KB | ✅ PASS |
-| Scenario 6: Project State Synthesis | 11914.82ms | +2 KB | ✅ PASS |
-| Scenario 7: Real Routing Intelligence Overhead | 22.93ms | +1004 KB | ✅ PASS |
+This document aggregates the full execution logs across all 12 core subsystem benchmarks of the MCP server, capturing dual-layer input payloads (MCP tool calls & internal agentic prompts).
 
 ---
 
-## Scenario 1a: Intelligent Prompt Injection (Generic Query)
-> Component: `src/pipeline/middlewares/prompts.ts`
+## File: `01-pipeline.md`
 
-### Input Query
-> "I am building a research agent. Show me the Subsystem Reference Map and guidelines for architectural momentum."
+# Benchmark Log: 01-pipeline — Production WorkspaceContextMiddleware & 4-Layer Memory
 
-### Real Compressed System Prompt Output
-```markdown
-# ROLE
-You are the principal architect and builder of a maximally capable, self-improving agentic operating system for computer-based work.
+**Timestamp**: 2026-08-09T06:46:01.858Z
 
-The long-term objective is not merely “an AI coding assistant”. The objective is a system that can increasingly perform, coordinate, verify, and improve work across the full range of tasks a skilled human can do on a computer, including:
-- software engineering
-- debugging
-- browser workflows
-- desktop workflows
-- research
-- planning
-- writing
-- operations
-- analysis
-- finance support
-- customer support
-- sales and marketing operations
-- scientific workflows
-- multi-step project execution
-- company-running routines
-
-That means the target is one system that can move fluidly across scales:
-- a simple request answered immediately
-- a bounded task completed and verified
-- a complex project decomposed and driven forward over time
-- a long-running operating loop such as product work, company operations, or scientific research
-
-Treat this as a serious systems-engineering program with measurable progress, failure modes, economics, safety boundaries, and long-horizon capability growth.
-
-Your job is to build the system, not just describe it.
-
-If a choice arises between:
-- a beautiful description and a working system, choose the working system
-- a clever architecture and an observable one, choose the observable one
-- a hidden memory trick and a transparent state model, choose the transparent one
-- an unverified claim and a measurable result, choose the measurable result
-
-
-## SUBSYSTEM REFERENCE MAP
-
-- [agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) - Kubernetes-native research and execution sandboxes.
-- [Hermes Agent](https://github.com/NousResearch/hermes-agent) - Self-improving agent with autonomous skill creation.
-- Multi-agent orchestration and agent operating systems
-- Research and web intelligence
-- [GPT Researcher](https://github.com/assafelovic/gpt-researcher) - Python framework for high-fidelity autonomous research.
-- [Everything Claude Code](https://github.com/affaan-m/everything-claude-code) - Performance-tuned coding harness and research-first methodology.
-- [Letta](https://github.com/letta-ai/letta) - Stateful agent memory and persistent identity in Python.
-- [AutoGen](https://github.com/microsoft/autogen) - Multi-agent conversation framework in Python and .NET.
-- [CAMEL](https://github.com/camel-ai/camel) - Scalable multi-agent society simulation in Python.
-- [AgentScope](https://github.com/agentscope-ai/agentscope) - Asynchronous multi-agent programming in Python.
-- [MetaGPT](https://github.com/FoundationAgents/MetaGPT) - SOP-driven multi-agent software company in Python.
-- [OpenClaw](https://github.com/openclaw/openclaw) - Unified agent platform with browser and desktop automation in Python.
-- [Paperclip](https://github.com/paperclipai/paperclip) - Business-scale agent orchestration and governance in Python.
-- [Daytona](https://github.com/daytonaio/daytona) - Persistent developer environments for agent execution in Go.
-- Coding-agent operating stacks and methodology
-
-## RESEARCH APPENDIX
-
-- [OpenAI Deep Research](https://openai.com/index/introducing-deep-research/)
-  Good pattern for asynchronous research, multi-step browsing, citations, progress tracking, and interruptibility.
-- [OpenAI New Tools for Building Agents](https://openai.com/index/new-tools-for-building-agents/)
-  Good platform-level pattern: unify model calls, built-in tools, and observability for production agents.
-- [Mem0](https://github.com/mem0ai/mem0)
-  Useful pattern: memory as an explicit subsystem with user/session/agent abstractions.
-- [SWE-agent](https://github.com/SWE-agent/SWE-agent)
-  Strong coding-agent benchmark culture and sandboxed execution patterns.
-- [OpenAI ChatGPT Agent](https://openai.com/index/introducing-chatgpt-agent/)
-  Important signal that research mode and action mode are converging.
-- [Hermes Agent](https://github.com/NousResearch/hermes-agent)
-  Self-improving agent with skill creation, online skill refinement, cross-session memory, scheduled automations, and isolated subagents.
-- [mini-SWE-agent](https://github.com/SWE-agent/mini-swe-agent)
-  Good reminder that simple control flow can stay highly competitive and easier to evaluate.
-- [Claude Agent SDK](https://platform.claude.com/docs/en/agent-sdk/overview)
-  Same agent loop and tools exposed as a library is the right direction for portability.
-- [Closing the Agent Loop: Devin Autofixes Review Comments](https://cognition.ai/blog/closing-the-agent-loop-devin-autofixes-review-comments)
-  Strong pattern: writer agent plus reviewer plus bot-triggered autofix loop.
-- [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/)
-  Separates agents from workflows and adds session state, middleware, checkpointing, and type-safe routing.
-- [agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox)
-  Useful pattern: Kubernetes-native sandbox runtime with stable identity, persistence, and pause or resume.
-- [CAMEL](https://github.com/camel-ai/camel)
-  Useful pattern: large-scale multi-agent societies, stateful memory, and benchmark-driven agent-system design.
-- [Agent Trace: Capturing the Context Graph of Code](https://cognition.ai/blog/agent-trace)
-  Strong pattern: preserve why code changed, not just the diff.
-- [GPT Researcher](https://github.com/assafelovic/gpt-researcher)
-  Useful pattern: planner/executor/publisher research architecture with citations and parallelized information gathering.
-- [Everything Claude Code](https://github.com/affaan-m/everything-claude-code)
-  Useful pattern: large-scale harness optimization through skills, instincts, memory, security, and research-first coding workflows.
-
-## EXTERNAL INTELLIGENCE LOOP
-
-The system should also keep learning from the outside world, not only from its own failures.
-
-Build a recurring external intelligence loop that monitors:
-- major open-source architecture-bearing agent and AI repos
-- GitHub releases and changelogs
-- model provider blogs and API updates
-- protocol and tooling ecosystems like MCP and agent-to-agent standards
-- benchmark updates
-- relevant research papers
-- security advisories for dependencies and tools
-
-Prioritize open-source sources first. Treat product marketing as weak evidence unless it leads to a concrete architectural insight worth testing.
-Only ingest a repo or project into the learning loop if it clearly demonstrates one or more of:
-- durable execution
-- explicit workflow or state-machine control
-- checkpointing and resumability
-- typed tool or data contracts
-- memory or retrieval architecture
-- model routing or inference infrastructure
-- sandboxed execution
-- validation and eval loops
-- human approvals and control-plane visibility
-- traceability, observability, or portable protocol design
-
-Recommended feed categories:
-- open-source orchestration runtimes and workflow engines
-- open-source model gateways and inference infrastructure
-- open-source memory, retrieval, and artifact systems
-- open-source sandbox, browser, and execution infrastructure
-- open-source eval, trace, and observability systems
-- open-source science reproducibility, experiment registry, and data-lineage systems
-- open protocols and interoperability standards
-- research papers on agents, long-horizon reasoning, browser use, tool use, memory, and evaluation
-- official provider announcements that materially change available capabilities or prices
-
-Maintain a living subsystem map for:
-- research and web intelligence
-- memory and context assembly
-- planning, tasks, and durable workflows
-- multi-agent orchestration
-- guardrails and policy enforcement
-- evals, tracing, and observability
-- tool, auth, and integration layers
-- execution sandboxes and browser infrastructure
-- control planes and human-facing operations surfaces
-
-## RESEARCH-INFORMED SYSTEMS TO STUDY AND STEAL FROM
-
-The following references were selected from primary sources current as of March 28, 2026. They are not here because they are popular tools. They are here because they publicly demonstrate architecture that matters for building a serious self-improving agent system.
-
-## MOMENTUM ENGINE AND COMPOUNDING LOOP
-
-The system must not only be capable. It must maintain momentum.
-
-## MOMENTUM PRINCIPLE
-
-At all times, the system should know:
-- what it is doing now
-- what it should do next
-- what is blocked
-- what improvement work should happen in the background
-- what recurring loops keep the system getting better even when no new user request arrives
-
-If any of those are missing, momentum is broken.
-
-## DEFAULT MOMENTUM QUEUES
-
-Maintain at least these live queues:
-
-
-## 🔗 REFERENCE SUGGESTION PROTOCOL
-When your output contains matches from the 'RESEARCH APPENDIX' or 'SUBSYSTEM REFERENCE MAP', you MUST:
-1. Provide the direct URL to the project/appendix item.
-2. Briefly explain why this reference is relevant to the user's current task.
-3. Use the following format for references:
-   - [Project Name](URL): Description / Useful pattern.
-
-
-
-## 🔍 GROUNDING
-- Cite files as: `[RETRIEVED] filename` — only from injected `[Context]` blocks.
-- No `[Context]` block for a topic = pipeline found no match. Say: "Workspace context unavailable for [X]."
-- Never infer file content from training data. Ask the user to share the file instead.
-
-```
+## 🎯 Target Query Context & Production Execution
+- **Source Middleware**: `WorkspaceContextMiddleware` (`src/pipeline/middlewares/WorkspaceContextMiddleware.ts`)
+- **User Query**: `Fix bug in WorkspaceContextMiddleware.ts where memory layers bleed`
+- **Confused User Query Test**: `what is this site about and fix the bug in the code`
 
 ---
 
-## Scenario 1b: Intelligent Prompt Injection (Complex Python Review)
-> Component: `src/pipeline/middlewares/prompts.ts`
-
-### Input Query
-> "You are an expert Python developer and code reviewer. Please review the following implementation plan for bug fixes in a learning agent codebase.
-Implementation Plan:
-# Implementation Plan - Bug Fixes for Input Validation and Skills Registry
-This plan addresses three bugs/investigations identified by gemini-code-assist in the core/ directory.
-## Proposed Changes
-### [Component: Input Validation](file:///c:/Users/mahes/OneDrive/Desktop/Python-Projects/Study-AI-Agent/core/input_validator.py)
-#### [MODIFY] [input_validator.py](file:///c:/Users/mahes/OneDrive/Desktop/Python-Projects/Study-AI-Agent/core/input_validator.py)
-1.  **Optimization**: Pre-calculate the TF vectors for _SEED_PHRASES.
-2.  **Logic Fix**: Update classify_query_semantics to correctly identify when tfidf scores are too low."
-
-### Real Compressed System Prompt Output
-```markdown
-# ROLE
-You are the principal architect and builder of a maximally capable, self-improving agentic operating system for computer-based work.
-
-The long-term objective is not merely “an AI coding assistant”. The objective is a system that can increasingly perform, coordinate, verify, and improve work across the full range of tasks a skilled human can do on a computer, including:
-- software engineering
-- debugging
-- browser workflows
-- desktop workflows
-- research
-- planning
-- writing
-- operations
-- analysis
-- finance support
-- customer support
-- sales and marketing operations
-- scientific workflows
-- multi-step project execution
-- company-running routines
-
-That means the target is one system that can move fluidly across scales:
-- a simple request answered immediately
-- a bounded task completed and verified
-- a complex project decomposed and driven forward over time
-- a long-running operating loop such as product work, company operations, or scientific research
-
-Treat this as a serious systems-engineering program with measurable progress, failure modes, economics, safety boundaries, and long-horizon capability growth.
-
-Your job is to build the system, not just describe it.
-
-If a choice arises between:
-- a beautiful description and a working system, choose the working system
-- a clever architecture and an observable one, choose the observable one
-- a hidden memory trick and a transparent state model, choose the transparent one
-- an unverified claim and a measurable result, choose the measurable result
-
-
-## CLOSED-SOURCE ARCHITECTURE SIGNALS
-
-  - Sources: https://openai.github.io/openai-agents-python/ , https://openai.com/index/new-tools-for-building-agents/ , https://openai.com/index/introducing-deep-research/ , https://openai.com/index/introducing-chatgpt-agent/
-
-  - Learn from cross-surface task intake across web, Slack, tickets, CLI, and API; automatic repo indexing; codebase Q&A before execution; review-specific interfaces; autofix loops against review bots and CI; scheduled agents; managed parallel agents; and Agent Trace for preserving context graph lineage.
-  - Steal the idea that coding agents become much more powerful when paired with review agents, recurring sessions, and durable traceability of why code changed.
-  - Sources: https://cognition.ai/blog/how-cognition-uses-devin-to-build-devin , https://cognition.ai/blog/closing-the-agent-loop-devin-autofixes-review-comments , https://cognition.ai/blog/agent-trace , https://cognition.ai/blog/devin-can-now-schedule-devins
-
-## RELIABILITY MATH AND HARNESS ENGINEERING
-
-For serious business workflows, reliability compounds across steps.
-
-- Examples include compliance review, audits, onboarding, financial reports, risk analysis, impact assessments, and contract workflows
-
-## ANTI-STALL RULES
-
-When momentum drops, react mechanically:
-
-  - fill the idle time with eval work, memory cleanup, dashboard improvements, backlog grooming, or external intelligence review
-
-## SPECIALIZED HARNESS LIBRARY
-
-The end state should not be one giant generalist agent. It should be a platform that combines:
-- a general-purpose supervisor for open-ended work
-- a task and workflow engine
-- a library of specialized harnesses for recurring high-value workflows
-
-- Includes tests, diffs, review, CI checks, rollback, and release gating
-
-- For contract review, compliance checks, document analysis, clause extraction, redlining, and executive summaries
-
-- For literature review, experiment planning, dataset validation, analysis pipelines, and reporting
-
-## RECOMMENDED DEFAULT IMPLEMENTATION CHOICES
-
-If the runtime allows it, prefer these defaults unless you have a specific reason not to:
-
-- Reason: vague free-text tasks make routing, review, and learning much worse
-
-- Reason: the same model and same prompt should not handle planning, coding, review, browser QA, and self-improvement identically
-
-## SYSTEM LAYERS TO BUILD
-
-LAYER A: CONTROL PLANE
-
-Build a control plane that can become the human-facing operating center. It should eventually support:
-- authentication and identity
-- machine registry
-- agent registry
-- session history
-- goal intake
-- task queue visibility
-- approvals
-- audit logs
-- cost tracking
-- trust levels
-- project dashboards
-- recurring workflows
-- incident views
-- shared project memory
-- file access and remote execution when available
-
-
-
-LAYER B: EXECUTION FABRIC
-
-Build worker processes or daemons that:
-- poll for claimable tasks
-- filter by skills and permissions
-- operate in isolated work contexts when possible
-- stream intermediate output
-- record tool usage
-- emit metrics
-- recover from crash or disconnection
-- support persistent mode
-- hand off state across restarts
-
-
-
-LAYER C: TASK GRAPH ENGINE
-
-Build a task engine where:
-- goals decompose into tasks
-- tasks can depend on other tasks
-- tasks can fan out and fan in
-- tasks can create sub-tasks
-- tasks can be blocked, retried, escalated, or cancelled
-- tasks carry explicit Definition of Done
-- tasks store evidence and artifacts
-- tasks store budget, urgency, and policy level
-
-Every task should ideally carry fields like:
-- id
-- goal_id
-- project_id
-- description
-- skill_tags
-- status
-- depends_on
-- owner
-- reviewer
-- priority
-- risk_level
-- budget_limit
-- tokens_used
-- attempts
-- verification_plan
-- evidence
-- artifacts
-- escalation_reason
-- created_at
-- updated_at
-
-
-
-LAYER D: SKILL AND PROFILE SYSTEM
-
-Do not hard-code intelligence into one giant prompt. Build a profile system.
-
-Profiles should define:
-- what task types they handle
-- what tools they can use
-- what model routing they prefer
-- what rules apply
-- what verification standard they use
-- what escalation rules they follow
-
-Typical profiles include:
-- planner
-- task specifier
-- candidate generator
-- tester
-- reviewer
-- security auditor
-- research analyst
-- browser operator
-- desktop operator
-- document analyst
-- deployer
-- QA evaluator
-- self improver
-- incident responder
-- coordinator
-- finance operator
-- science operator
-
-Treat profiles as loadable behavior packs, not sacred identities.
-
-
-
-LAYER E: MEMORY SYSTEM
-
-Build memory as a layered system, not one generic notes file.
-
-Use at least these memory types:
-- hot memory: current contract, current plan, current tasks, current blockers
-- warm memory: active project knowledge, architecture decisions, current conventions
-- cold memory: archived sessions, incident logs, old plans, historical outcomes
-- episodic memory: what happened in specific runs
-- semantic memory: distilled facts, decisions, rules, and stable concepts
-- procedural memory: reusable workflows, skills, playbooks, and checklists
-- preference memory: user, team, and environment preferences
-- temporal memory: facts with superseded history and freshness metadata
-
-If useful, support:
-- searchable knowledge index
-- related-knowledge links
-- provenance on learned facts
-- confidence and freshness scores
-- promotion from episodic to semantic memory
-
-
-
-LAYER F: TOOL ADAPTERS
-
-The system should normalize tools behind stable capability categories instead of binding itself tightly to one vendor or protocol.
-
-Capability categories include:
-- shell execution
-- file read/write/edit/search
-- git operations
-- web search and fetch
-- browser navigation and form interaction
-- desktop input and window management
-- screenshot and OCR
-- database query and migration
-- document processing
-- spreadsheet processing
-- email or messaging actions
-- calendar actions
-- deployment actions
-- monitoring and alerting
-
-If a tool category is unavailable natively:
-- emulate it where safe
-- add an adapter
-- or constrain the current milestone honestly
-
-
-
-LAYER G: MODEL ROUTING AND ECONOMICS
-
-Build a model-routing layer so the system does not treat all tasks equally.
-
-It should support:
-- cheap models for drafts, classification, tagging, summarization
-- stronger models for planning, debugging, review, adversarial checking, and difficult reason
-[...SECTION TRUNCATED...]
-
-
-## AUTONOMY LEVELS
-
-At minimum support:
-- supervised: almost all meaningful actions need human approval
-- guided: low-risk actions can proceed, risky ones pause
-- autonomous: most routine work can proceed within policy and budget
-- trusted: high-confidence operation in bounded domains with post-hoc audit
-
-LAYER I: EVALUATION AND LEARNING ENGINE
-
-Build an evaluation program that includes:
-- coding tasks
-- review tasks
-- test-writing tasks
-- browser tasks
-- desktop tasks
-- documentation tasks
-- research tasks
-- project-management tasks
-- business-operation tasks
-- scientific workflow tasks
-- long-horizon tasks
-- failure-injection tasks
-- policy and safety tasks
-- uncertainty-handling tasks
-- scope-control tasks
-- malicious or adversarial input tasks
-
-LAYER J: SELF-IMPROVEMENT ENGINE
-
-
-## 🔍 GROUNDING
-- Cite files as: `[RETRIEVED] filename` — only from injected `[Context]` blocks.
-- No `[Context]` block for a topic = pipeline found no match. Say: "Workspace context unavailable for [X]."
-- Never infer file content from training data. Ask the user to share the file instead.
-
-```
+## 🔍 4-Layer Memory Layer Telemetry
+- **Memory Context Injected**: `CLEARED`
+- **Grep Context Injected**: `NONE`
+- **Wiki Context Injected**: `NONE`
+- **Grounding Gate**: `NONE`
+- **Middleware Execution Latency**: `2889 ms`
 
 ---
 
-## Scenario 2: Sandbox Logic Execution
-> Component: `src/sandbox/executor.ts` (QuickJS)
+## ⚡ Agentic Mode (`isOnePass: false`) vs. Non-Agentic Mode (`isOnePass: true`) Comparison
 
-### Raw Large Data Input
+| Pipeline Dimension | Agentic Mode (`isOnePass: false`) | Non-Agentic Mode (`isOnePass: true`) | Net Difference / Savings |
+|---|---|---|---|
+| **System Prompt Tokens** | **2144 tokens** | **2186 tokens** | **-42 tokens** |
+| **Total Payload Tokens** | **119 tokens** | **2323 tokens** | **-2204 tokens** |
+| **Middleware Execution** | Multi-pass `AgenticMiddleware` subtask loop | Direct single-pass LLM completion | Avoids task graph decomposition |
+| **Memory Isolation Gates** | Enforces all 4 memory layer gates | Light persona & system guidelines | Minimal context footprint |
+
+---
+
+## 🛡️ Confused User Prompt & Hallucination Prevention Guard
+
+| Diagnostic Property | Value | Explanation |
+|---|---|---|
+| **`isUserConfused(query)`** | `false` | Detected conflicting/vague user intent |
+| **Enforced Strategy** | `FULL_AGENTIC_LOOP` | **Bypasses multi-pass agentic loop** to avoid context bloat & hallucinated citations |
+
+---
+
+## 📄 Complete Executed Messages Payload (Non-Agentic Mode — 2323 tokens)
+
 ```json
-{"logs":"Server started at :8080\\nERROR: Connection refused to Redis at 127.0.0.1:6379\\nDEBUG: Retrying in 5s...\\nERROR: Auth failed for user 'admin'","config":{"severity":"ERROR"}}
+[
+  {
+    "role": "system",
+    "content": "\n<!-- WORKSPACE_CONTEXT_START -->\n# ROLE\nYou are the principal architect and builder of a maximally capable, self-improving agentic operating system for computer-based work.\n\nThe long-term objective is not merely “an AI coding assistant”. The objective is a system that can increasingly perform, coordinate, verify, and improve work across the full range of tasks a skilled human can do on a computer, including:\n- software engineering\n- debugging\n- browser workflows\n- desktop workflows\n- research\n- planning\n- writing\n- operations\n- analysis\n- finance support\n- customer support\n- sales and marketing operations\n- scientific workflows\n- multi-step project execution\n- company-running routines\n\nThat means the target is one system that can move fluidly across scales:\n- a simple request answered immediately\n- a bounded task completed and verified\n- a complex project decomposed and driven forward over time\n- a long-running operating loop such as product work, company operations, or scientific research\n\nTreat this as a serious systems-engineering program with measurable progress, failure modes, economics, safety boundaries, and long-horizon capability growth.\n\nYour job is to build the system, not just describe it.\n\nIf a choice arises between:\n- a beautiful description and a working system, choose the working system\n- a clever architecture and an observable one, choose the observable one\n- a hidden memory trick and a transparent state model, choose the transparent one\n- an unverified claim and a measurable result, choose the measurable result\n\n\n## SYSTEM LAYERS TO BUILD\n\nLAYER A: CONTROL PLANE\n\nBuild a control plane that can become the human-facing operating center. It should eventually support:\n- authentication and identity\n- machine registry\n- agent registry\n- session history\n- goal intake\n- task queue visibility\n- approvals\n- audit logs\n- cost tracking\n- trust levels\n- project dashboards\n- recurring workflows\n- incident views\n- shared project memory\n- file access and remote execution when available\n\n\n\nLAYER B: EXECUTION FABRIC\n\nBuild worker processes or daemons that:\n- poll for claimable tasks\n- filter by skills and permissions\n- operate in isolated work contexts when possible\n- stream intermediate output\n- record tool usage\n- emit metrics\n- recover from crash or disconnection\n- support persistent mode\n- hand off state across restarts\n\n\n\nLAYER C: TASK GRAPH ENGINE\n\nBuild a task engine where:\n- goals decompose into tasks\n- tasks can depend on other tasks\n- tasks can fan out and fan in\n- tasks can create sub-tasks\n- tasks can be blocked, retried, escalated, or cancelled\n- tasks carry explicit Definition of Done\n- tasks store evidence and artifacts\n- tasks store budget, urgency, and policy level\n\nEvery task should ideally carry fields like:\n- id\n- goal_id\n- project_id\n- description\n- skill_tags\n- status\n- depends_on\n- owner\n- reviewer\n- priority\n- risk_level\n- budget_limit\n- tokens_used\n- attempts\n- verification_plan\n- evidence\n- artifacts\n- escalation_reason\n- created_at\n- updated_at\n\n\n\nLAYER D: SKILL AND PROFILE SYSTEM\n\nDo not hard-code intelligence into one giant prompt. Build a profile system.\n\nProfiles should define:\n- what task types they handle\n- what tools they can use\n- what model routing they prefer\n- what rules apply\n- what verification standard they use\n- what escalation rules they follow\n\nTypical profiles include:\n- planner\n- task specifier\n- candidate generator\n- tester\n- reviewer\n- security auditor\n- research analyst\n- browser operator\n- desktop operator\n- document analyst\n- deployer\n- QA evaluator\n- self improver\n- incident responder\n- coordinator\n- finance operator\n- science operator\n\nTreat profiles as loadable behavior packs, not sacred identities.\n\n\n\nLAYER E: MEMORY SYSTEM\n\nBuild memory as a layered system, not one generic notes file.\n\nUse at least these memory types:\n- hot memory: current contract, current plan, current tasks, current blockers\n- warm memory: active project knowledge, architecture decisions, current conventions\n- cold memory: archived sessions, incident logs, old plans, historical outcomes\n- episodic memory: what happened in specific runs\n- semantic memory: distilled facts, decisions, rules, and stable concepts\n- procedural memory: reusable workflows, skills, playbooks, and checklists\n- preference memory: user, team, and environment preferences\n- temporal memory: facts with superseded history and freshness metadata\n\nIf useful, support:\n- searchable knowledge index\n- related-knowledge links\n- provenance on learned facts\n- confidence and freshness scores\n- promotion from episodic to semantic memory\n\n\n\nLAYER F: TOOL ADAPTERS\n\nThe system should normalize tools behind stable capability categories instead of binding itself tightly to one vendor or protocol.\n\nCapability categories include:\n- shell execution\n- file read/write/edit/search\n- git operations\n- web search and fetch\n- browser navigation and form interaction\n- desktop input and window management\n- screenshot and OCR\n- database query and migration\n- document processing\n- spreadsheet processing\n- email or messaging actions\n- calendar actions\n- deployment actions\n- monitoring and alerting\n\nIf a tool category is unavailable natively:\n- emulate it where safe\n- add an adapter\n- or constrain the current milestone honestly\n\n\n\nLAYER G: MODEL ROUTING AND ECONOMICS\n\nBuild a model-routing layer so the system does not treat all tasks equally.\n\nIt should support:\n- cheap models for drafts, classification, tagging, summarization\n- stronger models for planning, debugging, review, adversarial checking, and difficult reason\n[...SECTION TRUNCATED...]\n\n\n## RUNTIME AGNOSTIC, ARCHITECTURE SPECIFIC\n\nBe agnostic about the host system, but not vague about architecture.\n\nDo not assume one specific product, IDE, SDK, or vendor.\nDo choose concrete architecture:\n- explicit task graphs\n- workflows and harnesses\n- visible sessions\n- durable memory\n- control-plane state\n- verifier layers\n- adapters for tools and models\n- approvals, budgets, and evals\n\nThe correct target is often:\n- one universal user-facing agent surface\n- many internal routing layers based on task, skill, playbook, harness, model, machine, and verifier\n\n## NON-NEGOTIABLE DESIGN BETS\n\nIf you are forced to choose a default architecture, choose this:\n- one strong generalist execution agent\n- one explicit task graph and workflow layer\n- one verifier or reviewer layer\n- one durable memory and artifact layer\n- one control plane for humans\n\nDo not default to a swarm of agents talking to each other. Most systems should begin with a strong single-agent baseline plus explicit workflows, then add multi-agent patterns only where they clearly outperform simpler control flow.\nThe target end state should still support controlled parallelism on one machine and coordinated same-project work across multiple machines once the simpler baseline is reliable.\n\n## RECOMMENDED DEFAULT IMPLEMENTATION CHOICES\n\nIf the runtime allows it, prefer these defaults unless you have a specific reason not to:\n\n- Track budget at multiple layers:\n\n## EXTERNAL INTELLIGENCE LOOP\n\nThe system should also keep learning from the outside world, not only from its own failures.\n\nMaintain a living subsystem map for:\n- research and web intelligence\n- memory and context assembly\n- planning, tasks, and durable workflows\n- multi-agent orchestration\n- guardrails and policy enforcement\n- evals, tracing, and observability\n- tool, auth, and integration layers\n- execution sandboxes and browser infrastructure\n- control planes and human-facing operations surfaces\n\n## ADVANCED EXPANSION IDEAS\n\nOnce the core system is working, consider adding advanced capability-building layers like:\n- a capability frontier map showing what the system can do by domain, risk level, autonomy level, and success rate\n- automatic skill extraction from successful task trajectories\n- automatic eval generation from real failures, incidents, and human corrections\n- workflow compilers that turn successful repeated work into reusable recipes\n- simulation or sandbox environments for testing risky workflows before touching production systems\n- shadow-mode business operations where the system proposes actions without executing them\n- shadow-mode scientific programs where the system generates hypotheses and plans before running expensive experiments\n- internal red-team agents that attack prompts, policies, and workflows to expose failure modes\n- adversarial reviewer or judge profiles for high-risk changes\n- consensus or voting mechanisms when important decisions benefit from multiple perspectives\n- environment snapshotting so complex tasks can resume cleanly after interruption\n- worktree or branch isolation per task when git is available\n- local caches for documentation, research, and repeated external queries\n- knowledge freshness monitors that detect stale facts and force revalidation\n- workflow chain builders that automatically launch follow-up tasks after specific triggers\n- anomaly detectors for cost spikes, repeated retries, queue jams, and unusual tool usage\n- capability-specific trust scores instead of one global trust score\n- domain-specific dashboards for engineering, support, finance, growth, and science\n- structured entity graphs linking people, projects, documents, tasks, KPIs, incidents, and experiments\n- policy simulation tools for testing what the system would have done under different approval or trust settings\n- tool invention layers that wrap repeated shell or browser sequences into reusable tools or macros\n- trajectory replay and critique so the system can learn from entire execution paths, not just final outcomes\n- memory consolidation jobs that periodically compress episodic logs into higher-quality semantic and procedural memory\n- automatic benchmark rotation so the system does not overfit to a stale eval set\n- proactive opportunity discovery that generates goals from neglected docs, stale repos, unanswered tickets, KPI shifts, and experiment gaps\n\n## OPEN SOURCE ARCHITECTURE REFERENCES\n\n- Steal the idea that production runtime, secure sandboxing, and developer authoring surfaces should be distinct but compatible layers.\n- Learn from memory-first stateful agents, durable agent identity, explicit memory blocks, and treating agents as persistent entities rather than disposable chat sessions.\n\n\n## 🔍 GROUNDING\n- Cite files as: `[RETRIEVED] filename` — only from injected `[Context]` blocks.\n- No `[Context]` block for a topic = pipeline found no match. Say: \"Workspace context unavailable for [X].\"\n- Never infer file content from training data. Ask the user to share the file instead.\n\n\n## HIGH-LEVEL STEPS\nWhen responding to a task, always begin with a numbered list of at most **2** high-level steps.\n<!-- WORKSPACE_CONTEXT_END -->\n"
+  },
+  {
+    "role": "user",
+    "content": "Fix bug in WorkspaceContextMiddleware.ts where memory layers bleed"
+  }
+]
 ```
 
-### Real Execution Result
+---
+*Generated by Vitest Benchmark Suite (01-pipeline.bench.ts)*
+
+---
+
+## File: `02-search-router.md`
+
+# Benchmark Log: 02-search-router — Production SearchRouterMiddleware Execution
+
+**Timestamp**: 2026-08-09T07:22:05.639Z
+
+## 🎯 Production Code Executed
+- **Source Middleware**: `SearchRouterMiddleware` (`src/pipeline/middlewares/SearchRouterMiddleware.ts`)
+- **Input Search Query**: `"latest deepseek-r1 benchmarks security rate-limit"`
+- **Target Category**: `TaskType.SemanticSearch`
+- **Chosen Search Provider**: `searxng (terminal fallback)`
+- **Execution Latency**: 3456.56 ms
+
+---
+
+## 🔍 Normalized Search Provider Output Results (`UnifiedSearchResult[]`)
+
+```json
+[
+  {
+    "provider": "searxng",
+    "title": "DeepSeek-R1 Benchmarks & Rate Limiting Overview",
+    "url": "https://searxng.example.com/search?q=deepseek-r1",
+    "snippet": "Comprehensive performance and security analysis for DeepSeek-R1 models across reasoning tasks and rate-limited API endpoints.",
+    "score": 1
+  },
+  {
+    "provider": "searxng",
+    "title": "Security Best Practices: Rate Limiting & Auth Middleware",
+    "url": "https://docs.example.com/security/rate-limit",
+    "snippet": "Architectural design guidelines for implementing sliding-window rate limiters and auth isolation gates in Node.js servers.",
+    "score": 0.95
+  }
+]
+```
+
+---
+
+## 📄 Formatted Pipeline Response Body (`context.response`)
+
+```markdown
+1. **DeepSeek-R1 Benchmarks & Rate Limiting Overview**
+   https://searxng.example.com/search?q=deepseek-r1
+   Comprehensive performance and security analysis for DeepSeek-R1 models across reasoning tasks and rate-limited API endpoints.
+
+2. **Security Best Practices: Rate Limiting & Auth Middleware**
+   https://docs.example.com/security/rate-limit
+   Architectural design guidelines for implementing sliding-window rate limiters and auth isolation gates in Node.js servers.
+```
+
+---
+
+## 📊 Fallback Chain Status Matrix
+
+```json
+[
+  {
+    "id": "parallel",
+    "name": "Parallel AI",
+    "available": true,
+    "penalty": 0.2
+  },
+  {
+    "id": "tavily",
+    "name": "Tavily",
+    "available": false,
+    "penalty": 0
+  },
+  {
+    "id": "jina",
+    "name": "Jina AI",
+    "available": true,
+    "penalty": 0.2
+  },
+  {
+    "id": "brave",
+    "name": "Brave Search",
+    "available": false,
+    "penalty": 0
+  },
+  {
+    "id": "searxng",
+    "name": "SearXNG",
+    "available": false,
+    "penalty": 0
+  }
+]
+```
+
+---
+*Generated by Vitest Benchmark Suite (02-search-router.bench.ts)*
+
+---
+
+## File: `03-cyber-tool.md`
+
+# Benchmark Log: 03-cyber-tool
+
+**Timestamp**: 2026-08-06T06:05:23.635Z
+
+## Scenarios Executed
+
+1. **CTF Task-Graph Node Serialization (10 nodes)**
+   - Latency: 1.29 ms
+   - Serialized Node Count: 10
+   - Serialized Edge Count: 9
+   - Token Count: 569 tokens
+
+2. **Load Graph & Column Grouping by ctfType**
+   - Latency: 0.80 ms
+   - Nodes Grouped: 10
+   - Column Groups: goal, hypothesis, action, finding, deadend
+   - Grouped Data Tokens: 372 tokens
+
+3. **Wiki Lookup in Global-Cyber-Tools Namespace**
+   - Latency: 12.94 ms
+   - Tool Name: nmap
+   - Page Found: true
+   - Result Token Count: 134 tokens
+
+---
+*Generated by Vitest Benchmark Suite (03-cyber-tool.bench.ts)*
+
+---
+
+## File: `04-hermes-skills.md`
+
+# Benchmark Log: 04-hermes-skills
+
+**Timestamp**: 2026-08-06T06:05:21.188Z
+
+## Scenarios Executed
+
+1. **Hermes Skill Source Detection**
+   - Latency: 264.41 ms
+   - Target Skill: `systematic-debugging`
+   - Hermes Match Found: true (`systematic-debugging`)
+   - Non-existent Match Result: null (fallback to agentic-awesome)
+   - Output Data Token Count: 55 tokens
+
+2. **Adapter Injection Token Overhead**
+   - Latency: 18.48 ms
+   - Target Skill: `systematic-debugging`
+   - Raw Skill Tokens: 3299 tokens
+   - Adapted Skill Tokens: 3400 tokens
+   - Adapter Note Tokens: 101 tokens
+   - Token Overhead Added: +101 tokens
+
+3. **execute_skill End-to-End Token Cost**
+   - Latency: 3.70 ms
+   - Input Skill: `systematic-debugging`
+   - User Prompt: "Debug an unexpected null pointer exception in user authentication flow."
+   - Execution Success: true
+   - Response Result Token Count: 18 tokens
+
+---
+*Generated by Vitest Benchmark Suite (04-hermes-skills.bench.ts)*
+
+---
+
+## File: `05-quantum-tool.md`
+
+# Benchmark Log: 05-quantum-tool
+
+**Timestamp**: 2026-08-06T06:05:15.824Z
+
+## Scenarios Executed
+
+1. **RY Confidence Math Round-Trip Fidelity**
+   - Latency: 0.14 ms
+   - Test Operations Count: 20
+   - Max Round-Trip Error: 8.0000e-1
+   - Average Error: 8.7010e-2
+   - Math Formula: `phi = 2 * asin(sqrt(confidence))`, `confidence = sin(phi / 2)^2`
+
+2. **Multi-Branch State Serialization (5 branches + gates)**
+   - Latency: 944.92 ms
+   - Branch Count: 5
+   - Gate Count: 5
+   - Current Step: 2
+   - State JSON Size: 1312 bytes
+   - State Token Count: 478 tokens
+
+3. **Analyze Synthesis Prompt Token Cost**
+   - Latency: 28.36 ms
+   - Query: "What is the recommended consensus strategy for migrating database schemas under high write load?"
+   - Active Branches: 3 (Optimistic, Pessimistic, Pragmatic)
+   - Prompt Token Count: 171 tokens
+   - Output Response Tokens: 72 tokens
+
+---
+*Generated by Vitest Benchmark Suite (05-quantum-tool.bench.ts)*
+
+---
+
+## File: `06-local-llm-patch-coach.md`
+
+# Benchmark Log: 06-local-llm-patch-coach
+
+**Timestamp**: 2026-08-09T07:20:33.610Z
+
+## 🎯 Code Context Language Inference & 4-Phase Protocol Breakdown
+
+The LLM receives a generic code-editing system prompt (`"You are a precise code-editing assistant..."`) and infers the target language architecture (TypeScript, Python, Go) organically from the provided `filePath` and `fileContent`.
+
+---
+
+## 💻 Multi-Language Target Executions (`REAL_OLLAMA_HTTP`)
+
+
+### 🌐 Target Language: TypeScript (`src/memory/index.ts`)
+- **Instruction**: `"Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store"`
+
+#### 📄 Input Code Context:
+```
+export class MemoryManager {
+  private shortTerm = new Map<string, any>();
+  public getShortTerm() { return this.shortTerm; }
+}
+```
+
+#### 📋 Phase 1 Coach Explanation Frame:
+> **Concept**: Concept: Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store
+> **Example**: `Example: Illustrative code pattern or minimal snippet implementing 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store'`
+> **Exercise**: Exercise: Modify the target file according to 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store'
+> **Hint**: *Hint: Ensure changes are scoped precisely and existing tests pass.*
+
 ```json
 {
-  "errorCount": 1,
-  "findings": [
-    "Connection refused to Redis at 127.0.0.1:6379\\nDEBUG"
+  "concept": "Concept: Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store",
+  "example": "Example: Illustrative code pattern or minimal snippet implementing 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store'",
+  "exercise": "Exercise: Modify the target file according to 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store'",
+  "hint": "Hint: Ensure changes are scoped precisely and existing tests pass."
+}
+```
+
+#### 💻 Phase 3 Executed Patch Output:
+```diff
+```typescript
+import fs from 'fs';
+
+export class MemoryManager {
+  private shortTerm = new Map<string, any>();
+  private longTerm: { [key: string]: any } = {};
+
+  public getShortTerm() { return this.shortTerm; }
+
+  public resetAll() {
+    this.shortTerm.clear();
+    this.longTerm = {};
+    this.saveLongTerm();
+  }
+
+  private saveLongTerm() {
+    fs.writeFileSync('longTerm.json', JSON.stringify(this.longTerm, null, 2));
+  }
+}
+```
+```
+
+#### 🧠 Phase 4 Reflection:
+```text
+Applied 'Add resetAll() method to MemoryManager that clears shortTerm Map and reinitializes longTerm JSON file store': Patched src/memory/index.ts successfully
+```
+
+---
+
+### 🌐 Target Language: Python (`services/auth.py`)
+- **Instruction**: `"Add revoke_token(token) method to AuthService that removes token from _tokens dictionary"`
+
+#### 📄 Input Code Context:
+```
+class AuthService:
+    def __init__(self):
+        self._tokens = {}
+
+    def validate(self, token: str) -> bool:
+        return token in self._tokens
+
+```
+
+#### 📋 Phase 1 Coach Explanation Frame:
+> **Concept**: Concept: Add revoke_token(token) method to AuthService that removes token from _tokens dictionary
+> **Example**: `Example: Illustrative code pattern or minimal snippet implementing 'Add revoke_token(token) method to AuthService that removes token from _tokens dictionary'`
+> **Exercise**: Exercise: Modify the target file according to 'Add revoke_token(token) method to AuthService that removes token from _tokens dictionary'
+> **Hint**: *Hint: Ensure changes are scoped precisely and existing tests pass.*
+
+```json
+{
+  "concept": "Concept: Add revoke_token(token) method to AuthService that removes token from _tokens dictionary",
+  "example": "Example: Illustrative code pattern or minimal snippet implementing 'Add revoke_token(token) method to AuthService that removes token from _tokens dictionary'",
+  "exercise": "Exercise: Modify the target file according to 'Add revoke_token(token) method to AuthService that removes token from _tokens dictionary'",
+  "hint": "Hint: Ensure changes are scoped precisely and existing tests pass."
+}
+```
+
+#### 💻 Phase 3 Executed Patch Output:
+```diff
+```python
+class AuthService:
+    def __init__(self):
+        self._tokens = {}
+
+    def validate(self, token: str) -> bool:
+        return token in self._tokens
+
+    def revoke_token(self, token: str) -> None:
+        if token in self._tokens:
+            del self._tokens[token]
+```
+```
+
+#### 🧠 Phase 4 Reflection:
+```text
+Applied 'Add revoke_token(token) method to AuthService that removes token from _tokens dictionary': Patched services/auth.py successfully
+```
+
+---
+
+### 🌐 Target Language: Go (`pkg/logger/logger.go`)
+- **Instruction**: `"Add SetLevel(level string) method to Logger struct"`
+
+#### 📄 Input Code Context:
+```
+package logger
+
+type Logger struct {
+	level string
+}
+
+func NewLogger(level string) *Logger {
+	return &Logger{level: level}
+}
+
+```
+
+#### 📋 Phase 1 Coach Explanation Frame:
+> **Concept**: Concept: Add SetLevel(level string) method to Logger struct
+> **Example**: `Example: Illustrative code pattern or minimal snippet implementing 'Add SetLevel(level string) method to Logger struct'`
+> **Exercise**: Exercise: Modify the target file according to 'Add SetLevel(level string) method to Logger struct'
+> **Hint**: *Hint: Ensure changes are scoped precisely and existing tests pass.*
+
+```json
+{
+  "concept": "Concept: Add SetLevel(level string) method to Logger struct",
+  "example": "Example: Illustrative code pattern or minimal snippet implementing 'Add SetLevel(level string) method to Logger struct'",
+  "exercise": "Exercise: Modify the target file according to 'Add SetLevel(level string) method to Logger struct'",
+  "hint": "Hint: Ensure changes are scoped precisely and existing tests pass."
+}
+```
+
+#### 💻 Phase 3 Executed Patch Output:
+```diff
+```go
+package logger
+
+type Logger struct {
+	level string
+}
+
+func NewLogger(level string) *Logger {
+	return &Logger{level: level}
+}
+
+func (l *Logger) SetLevel(level string) {
+	l.level = level
+}
+```
+```
+
+#### 🧠 Phase 4 Reflection:
+```text
+Applied 'Add SetLevel(level string) method to Logger struct': Patched pkg/logger/logger.go successfully
+```
+
+
+---
+
+## 🏆 Ollama Model Candidate Ranking (`REAL_OLLAMA_TAGS`)
+
+Production ranking via `rankCandidateModels()` from `src/providers/ollama-local.ts`:
+
+**Available Models**: `hf.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF:Q4_K_M`, `BGE-M3:latest`, `qwen2.5-coder:7b`, `nomic-embed-text:latest`, `mistral-nemo:latest`
+
+**Ranked Candidates (Coding Preferred)**:
+1. `qwen2.5-coder:7b` ⭐ (Coding Model Preferred)
+2. `hf.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF:Q4_K_M`
+3. `BGE-M3:latest`
+4. `nomic-embed-text:latest`
+5. `mistral-nemo:latest`
+
+---
+*Generated by Vitest Benchmark Suite (06-local-llm-patch-coach.bench.ts)*
+
+---
+
+## File: `07-browser-snapshot-diff.md`
+
+# Benchmark Log: 07-browser-snapshot-diff
+
+**Timestamp**: 2026-08-07T13:28:26.971Z
+
+## 🎯 Target Page & Scrape Context
+- **Live Scrape Target**: `http://localhost:3000`
+- **Scrape Status**: `LIVE_HTTP_SUCCESS`
+- **Parsed Nodes Count**: 15 nodes
+
+---
+
+## ⚡ Browser Snapshot & Interstitial Diff Breakdown
+
+| Scenario | Latency | Key Metric | Tokens / Summary |
+|---|---|---|---|
+| **1. Click -> Expand (+22 nodes)** | 0.88 ms | Added 22 nodes | **8 tokens** ("+22 nodes mounted under "Home".") |
+| **2. DOM-Stable Exit** | 0.09 ms | Stable Signal Exit: `true` | Added: 0, Removed: 0 |
+| **3. Cloudflare Structural Wipeout** | 0.23 ms | Structural Signal: `true` | **19 tokens** (Blocked: `true`) |
+| **4. Live Scrape (localhost:3000)** | — | Status: `LIVE_HTTP_SUCCESS` | Parsed 15 snapshot nodes |
+
+---
+
+## 📄 Scenario 1: Expand Diff Summary
+```text
++22 nodes mounted under "Home".
+```
+
+---
+
+## 🛡️ Scenario 3: Cloudflare Detection Output
+```json
+{
+  "blocked": true,
+  "type": "cloudflare",
+  "evidence": "checking your browser before accessing"
+}
+```
+
+---
+*Generated by Vitest Benchmark Suite (07-browser-snapshot-diff.bench.ts)*
+
+---
+
+## File: `08-firebase-retry.md`
+
+# Benchmark Log: 08-firebase-retry — Production exchangeRefreshToken Integration
+
+**Timestamp**: 2026-08-09T06:44:32.582Z
+
+## 🎯 Production Code Executed
+- **Source File**: `src/utils/firebase.ts`
+- **Target Method**: `export async function exchangeRefreshToken(refreshToken: string)`
+- **Network Classifier**: `export function isRetryableNetworkError(err: any)`
+
+---
+
+## ⚡ Real Implementation Scenarios Executed
+
+### 1. **Instant Token Refresh Success (0 Retries)**
+- **Latency**: 0.84 ms
+- **Token Count**: 33 tokens
+- **Output Payload**:
+```json
+{
+  "idToken": "id-tok-0",
+  "refreshToken": "ref-tok-0",
+  "userId": "user-uid-0",
+  "expiresIn": 3600
+}
+```
+
+---
+
+### 2. **Transient Network Error Recovery (1 Retry with Exponential Backoff)**
+- **Latency**: 803.10 ms
+- **Token Count**: 33 tokens
+- **Output Payload**:
+```json
+{
+  "idToken": "id-tok-1",
+  "refreshToken": "ref-tok-1",
+  "userId": "user-uid-1",
+  "expiresIn": 3600
+}
+```
+
+---
+
+### 3. **Exhausted Network Retries Fallback (3 Retries Failed)**
+- **Latency**: 1119.26 ms
+- **Token Count**: 40 tokens
+- **Return Value**: `null` (Triggers provision of NEW anonymous account in `initFirebase()`)
+
+---
+*Generated by Vitest Benchmark Suite (08-firebase-retry.bench.ts)*
+
+---
+
+## File: `09-vision-tool.md`
+
+# Benchmark Log: 09-vision-tool — Vision Pipeline Execution
+
+**Timestamp**: 2026-08-09T06:37:23.171Z
+
+## 🎯 Tool Input Call Payload
+```json
+{
+  "image_path": "file:///C:/Users/mahes/OneDrive/Desktop/Python-Projects/awesome-free-llm-apis/mcp-server/benchmarks/fixtures/sample.png",
+  "prompt": "Analyze this UI diagram for architectural patterns and vision accessibility.",
+  "model": "gemini-3.1-flash-lite",
+  "resolvedFsPath": "C:\\Users\\mahes\\OneDrive\\Desktop\\Python-Projects\\awesome-free-llm-apis\\mcp-server\\benchmarks\\fixtures\\sample.png",
+  "imageSizeBytes": 70,
+  "base64Preview": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42m..."
+}
+```
+
+---
+
+## 🖼️ Base64 Image Ingestion & Resolution Details
+- **URI**: `file:///C:/Users/mahes/OneDrive/Desktop/Python-Projects/awesome-free-llm-apis/mcp-server/benchmarks/fixtures/sample.png`
+- **FS Path**: `C:\Users\mahes\OneDrive\Desktop\Python-Projects\awesome-free-llm-apis\mcp-server\benchmarks\fixtures\sample.png`
+- **File Size**: 70 bytes
+- **Base64 Data URI**: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==`
+
+---
+
+## ⚡ Vision Tool Execution Status
+- **Status**: `[FALLBACK_KEY_UNAVAILABLE] No available providers for vision routing.`
+- **Model Used**: `gemini-3.1-flash-lite`
+- **Output Token Count**: **257 tokens**
+
+---
+
+## 📄 Real Vision Tool Output Response (257 tokens)
+```markdown
+## 👁️ Vision Tool Analysis Report
+
+**Input File**: `file:///C:/Users/mahes/OneDrive/Desktop/Python-Projects/awesome-free-llm-apis/mcp-server/benchmarks/fixtures/sample.png`
+**Prompt**: "Analyze this UI diagram for architectural patterns and vision accessibility."
+**Base64 Encoded Image Data**: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==`
+
+### Visual Feature Extraction:
+- **Image Format**: PNG (1x1 Pixel Baseline Fixture)
+- **Resolution**: 1x1 pixels (70 bytes)
+- **Base64 Payload**: `iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==`
+- **Visual Contrast**: 100% Solid Color Pixel Matrix
+- **Accessibility Verification**: Baseline visual element passed image router segmentation.
+```
+
+---
+*Generated by Vitest Benchmark Suite (09-vision-tool.bench.ts)*
+
+---
+
+## File: `10-execute-skill.md`
+
+# Benchmark Log: 10-execute-skill — Source Detection & Hermes Adapter Overhead
+
+**Timestamp**: 2026-08-07T10:37:31.653Z
+
+## 🎯 Benchmark Target Skill & Prompt Context
+- **Target Skill**: `code-refactor`
+- **Source Auto-Detect**: `findHermesSkill('code-refactor')` -> `agentic-awesome-fallback`
+
+---
+
+## ⚡ Skill Routing & Adapter Overhead Breakdown
+
+| Dimension | Measured Value | Description |
+|---|---|---|
+| **Hermes Manifest Lookup** | **0.12 ms** | Auto-detection search across bundled Hermes skill manifest |
+| **Hermes Adapter Note** | **101 tokens** | Tool surface overrides injected ahead of Hermes `SKILL.md` |
+| **Base SKILL.md Content** | **73 tokens** | Raw skill instructions |
+| **Total Injected System Prompt** | **174 tokens** | Adapter Note + Base SKILL.md content |
+| **Extracted File References** | **3 files** | `references/functional-patterns.md`, `examples/refactor-demo.ts`, `references/error-handling.md` |
+
+---
+
+## 📄 Injected Hermes Adapter Note (101 tokens)
+```markdown
+## MCP Environment Overrides
+This skill originates from the Hermes-Agent skill set, authored for a different environment. In THIS environment:
+- Do NOT create files or folders directly. Use `manage_memory` for persistent storage instead.
+- For fetching external/web data, use `browser_tool`.
+- For searching existing code or prior notes, use the workspace context tools (grep/wiki) already available to you — not a raw filesystem search.
+Follow the skill's methodology below, but execute it through this server's tools.
+```
+
+---
+
+## 📄 Extracted Referenced Files (3 files)
+```json
+[
+  "references/functional-patterns.md",
+  "examples/refactor-demo.ts",
+  "references/error-handling.md"
+]
+```
+
+---
+*Generated by Vitest Benchmark Suite (10-execute-skill.bench.ts)*
+
+---
+
+## File: `11-wiki-mechanisms.md`
+
+# Benchmark Log: 11-wiki-mechanisms — GlobalWikiManager, CTF Graph & ADR Validation
+
+**Timestamp**: 2026-08-07T13:26:27.450Z
+
+## 🎯 Target Wiki Namespace & Target Query
+- **Namespace**: `cyber-tools-bench`
+- **Query**: `SQL Injection` -> Found **1 pages**
+
+---
+
+## ⚡ Wiki Mechanisms & CTF Graph Breakdown
+
+| Component | Operation | Result / Payload Size | Status |
+|---|---|---|---|
+| **GlobalWikiManager** | `GlobalWikiManager.flushToWiki(wiki)` | Persisted Tool Reliability statistics page | ✅ FLUSHED |
+| **Wiki Storage** | `wiki.write()`, `wiki.search()` | Ingested `ctf-notes/sqli-bypass` (71 tok) | ✅ SUCCESS |
+| **CTF Task Graph** | Node Serialization & Column Grouping | 15 nodes grouped into 4 CTF types | **592 tokens** |
+| **ADR Validator** | `parseAndValidateDecisions()` | Validated 2 architectural decision records | ✅ VALIDATED |
+
+---
+
+## 📄 CTF Task Graph Grouped Columns
+```json
+{
+  "concept": [
+    "task_0: CTF Task 0: Evaluate vulnerability hypothesis 0",
+    "task_4: CTF Task 4: Evaluate vulnerability hypothesis 4",
+    "task_8: CTF Task 8: Evaluate vulnerability hypothesis 8",
+    "task_12: CTF Task 12: Evaluate vulnerability hypothesis 12"
+  ],
+  "code": [
+    "task_1: CTF Task 1: Evaluate vulnerability hypothesis 1",
+    "task_5: CTF Task 5: Evaluate vulnerability hypothesis 5",
+    "task_9: CTF Task 9: Evaluate vulnerability hypothesis 9",
+    "task_13: CTF Task 13: Evaluate vulnerability hypothesis 13"
+  ],
+  "doc": [
+    "task_2: CTF Task 2: Evaluate vulnerability hypothesis 2",
+    "task_6: CTF Task 6: Evaluate vulnerability hypothesis 6",
+    "task_10: CTF Task 10: Evaluate vulnerability hypothesis 10",
+    "task_14: CTF Task 14: Evaluate vulnerability hypothesis 14"
+  ],
+  "external": [
+    "task_3: CTF Task 3: Evaluate vulnerability hypothesis 3",
+    "task_7: CTF Task 7: Evaluate vulnerability hypothesis 7",
+    "task_11: CTF Task 11: Evaluate vulnerability hypothesis 11"
   ]
 }
 ```
 
 ---
 
-## Scenario 3: Real Agentic State Decomposition
-> Component: `src/pipeline/middlewares/AgenticMiddleware.ts`
-
-### Multiline Goal Input
-> "1. Research Redis Auth
-2. Build JWT helper
-3. Deploy to Vercel"
-
-### Real Generated Momentum Queues (queues.json)
+## 📄 Validated ADR Decisions (2 items)
 ```json
-{}
+[
+  {
+    "title": "ADR-001: Adopt WorkspaceContextMiddleware",
+    "content": "Adopted 4-layer memory context isolation gate.",
+    "tags": [
+      "adr",
+      "architecture"
+    ],
+    "links": [
+      "Architecture Overview"
+    ]
+  },
+  {
+    "title": "ADR-002: Hermes Skill Adapter Note",
+    "content": "Inject Hermes environment override note ahead of SKILL.md content.",
+    "tags": [
+      "adr",
+      "hermes"
+    ],
+    "links": [
+      "Skill Engine"
+    ]
+  }
+]
 ```
 
 ---
-
-## Scenario 4: Context Manager Sliding Window
-> Component: `src/utils/ContextManager.ts`
-
-### Compression Metrics
-- Original History Size: 40 messages (~760 tokens)
-- Compressed Size: 6 messages (~114 tokens)
-- **Token Reduction: 85.0%**
-
-### Real Summary Injection
-> "Detailed message 0 containing metadata about the system architecture, specifically focusing on the Router implementation details."
+*Generated by Vitest Benchmark Suite (11-wiki-mechanisms.bench.ts)*
 
 ---
 
-## Scenario 5: Deep Memorization Retrieval
-> Target Fact: "The fallback encryption salt is 'PEPPER-99-ALPHA'." (Deep in history)
+## File: `12-pdf-indexing.md`
 
-### Retention Strategy
-- Window Budget: 200 tokens
-- Input Size: ~191 tokens
-- Resulting Summary (Compressed Trace)
-> "Irrelevant padding message 0"
+# Benchmark Log: 12-pdf-indexing — STTP PDF Chunking, RAG Retrieval & Wiki Creation
+
+**Timestamp**: 2026-08-07T13:28:02.631Z
+
+## 🎯 Target PDF File & Query Context
+- **Source Document**: `docs/architecture.pdf`
+- **Raw Document Size**: 722 characters (129 tokens)
+- **RAG Target Query**: `memory layers security isolation gate`
 
 ---
 
-## Scenario 6: Project State Synthesis
-### Real Synthesis into System Message
+## ⚡ PDF Indexing Pipeline Breakdown
+
+| Pipeline Stage | Operation / Utility | Output / Result | Status |
+|---|---|---|---|
+| **1. Text Chunking** | `chunkText(text, 200, 30)` | Produced 5 text chunks | ✅ COMPLETED |
+| **2. Vector Embedding** | `vectorStore.upsert()` | Embedded 5 chunks into vector index | ✅ INDEXED |
+| **3. RAG Retrieval** | `vectorStore.search(k=2)` | Retrieved **2 relevant chunks** | ✅ RETRIEVED |
+| **4. Wiki Memory Note** | `wiki.write('pdf-wiki/architecture-pdf')` | Created durable markdown summary note | ✅ PERSISTED |
+
+---
+
+## 📄 Top RAG Retrieved Chunk (42 tokens)
 ```markdown
-# ROLE
-You are the principal architect and builder of a maximally capable, self-improving agentic operating system for computer-based work.
+he server orchestrates 4 distinct memory layers: ShortTermMemory, LongTermMemory, WikiMemory, and VectorStore.
 
-
-## FILESYSTEM-FIRST PROJECT OPERATING SYSTEM
-
-Treat each project folder as a durable operating system for that project.
-
-This means:
-- conversations are not the canonical project memory
-- hidden prompt context is not the canonical project memory
-- vendor-specific session history is not the canonical project memory
-- the project files are the canonical project memory
-
-Agent rules for this file pack:
-- read before acting
-- update during execution, not only at the end
-- write evidence and artifacts as they are produced
-- record decisions when direction changes
-- record failures when important attempts fail
-- leave an explicit handoff with next actions, blockers, and open questions
-
-Databases, queues, dashboards, and control planes are allowed and often useful.
-But they should mirror, index, lock, search, visualize, or accelerate the project state, not replace the project files as the only durable continuation surface.
-
-## CORE PRINCIPLES
-
-10. Filesystem-first project state.
-
-## PORTFOLIO MEMORY AND SEARCH
-
-The user should be able to search across:
-- tasks
-- files
-- sessions
-- documents
-- decisions
-- incidents
-- KPIs
-- customers
-- experiments
-- workflows
-
-## EXTERNAL KNOWLEDGE MEMORY
-
-Maintain a dedicated memory layer for outside intelligence with fields like:
-- source
-- url
-- date
-- category
-- claim
-- relevance
-- confidence
-- suggested experiment
-- status
-- outcome
-
-## NON-NEGOTIABLE DESIGN BETS
-
-If you are forced to choose a default architecture, choose this:
-- one strong generalist execution agent
-- one explicit task graph and workflow layer
-- one verifier or reviewer layer
-- one durable memory and artifact layer
-- one control plane for humans
-
-Do not default to a swarm of agents talking to each other. Most systems should begin with a strong single-agent baseline plus explicit workflows, then add multi-agent patterns only where they clearly outperform simpler control flow.
-The target end state should still support controlled parallelism on one machine and coordinated same-project work across multiple machines once the simpler baseline is reliable.
-
-4. Make per-project state file-first.
-
-
-## 🔍 GROUNDING
-- Cite files as: `[RETRIEVED] filename` — only from injected `[Context]` blocks.
-- No `[Context]` block for a topic = pipeline found no match. Say: "Workspace context unavailable for [X]."
-- Never infer file content from training data. Ask the user to share the file instead.
-
-
-## 📝 CURRENT SUBTASK
-You are currently executing this subtask:
-- **Task**: Update the project state.
-
-Strictly focus on this subtask using the tools provided.
-
-## 🔄 PRIOR EXECUTION TRAIL (Quantum-Weighted Context)
-
-### |Subtask: Update the project state.⟩ (Entanglement Distance: 2, Priority: MEDIUM (Summary))
-**Status**: Completed
-**Files Modified**: `task_graph.json`, `decisions.md`, `handoff.md`, `decisions.md`, `tasks.md`, `handoff.md`, `project_state.json`, `decisions/2024-02-20.md`, `handoff.md`, `system/design_bets.md`
-**Execution Output**:
-```
-1. Check for existing project files (like tasks, decisions, handoff) in the context.
-2. If they exist, update them with new tasks, decisions, blockers, or next actions.
-3. If they don't exist, propose creating them with the current state's information.
-4. Ensure all changes are written to files, not just kept in conversation.
-5. Follow the filesystem-first principle by making all project state durable in files.
-**Required updates** (Please confirm/create these files):
-1. `decisions/2024-02-20.md` [NEW]```markdown
-## System Architecture Decision
-- **Date**: 2024-02-20
-- **Summary**: Committed to single-agent baseline with explicit workflow layer
-- **Rationale**: Reduces coordination overhead while maintaining upgrade path to parallelism
-- **Status**: Final
-```
-
-2. `handoff.md` [UPDATE]```markdown
-### Next Actions
-- [ ] Create task graph schema
-- [ ] Design verification test cases
-
-### Blockers
-❗ No clear versioning strategy for memory layer
-
-### Open Questions
-? How to handle cross-project dependencies?
-```
-3. `system/design_bets.md` [NEW]```markdown
-1. **Filesystem Sovereignty**  
-2. **Layered Verification**  
-3. **Human Control Plane**  
-```
-
-**Validation Needed**  
-Please either:  
-1) Share existing files for updating, or  
-2) Confirm creation of new files above
-
-This maintains durable state while leaving clear continuation signals.
-```
-```
-
-### |Subtask: Update the project state.⟩ (Entanglement Distance: 2, Priority: MEDIUM (Summary))
-**Status**: Completed
-**Files Modified**: `decisions/2024-02-20.md`, `handoff.md`, `system/design_bets.md`, `system/design_bets.md`, `decisions/2024-02-20.md`, `handoff.md`
-**Execution Output**:
-```
-**Project State Updated**  
-```[RETRIEVED] system/design_bets.md[RETRIEVED] decisions/2024-02-20.md [RETRIEVED] handoff.md
-
-**Current System Snapshot**  
-```
-**Next Recommended Action**  
-```markdown
-1. [Urgent] Resolve versioning strategy blocker
-2. [High] Create task graph schema prototype
-```
-```
-
+2. Security & Verification
+Security controls are enforced via the Isolation Gate Protoco
 ```
 
 ---
 
-## Scenario 7: Routing Intelligence Overhead
-### Measurement (Average of 100 Runs)
-- **TextRouterMiddleware Overhead: 0.0157ms**
-- **ImageRouterMiddleware Overhead: 0.2116ms**
+## 📄 Generated PDF Wiki Summary Note (67 tokens)
+```markdown
+# PDF Architecture Report Summary
 
-**Conclusion**: The decoupled routing layers add negligible latency (<0.1ms per request) while providing type-safe path resolution and optimal model selection.
+- Extracted 5 chunks from `docs/architecture.pdf`.
+- Top RAG Match: he server orchestrates 4 distinct memory layers: ShortTermMemory, LongTermMemory, WikiMemory, and VectorStore.
+
+2. Security & Verification
+Security controls are enforced via the Isolation Gate Protoco
+```
+
+---
+*Generated by Vitest Benchmark Suite (12-pdf-indexing.bench.ts)*
+
+---
+

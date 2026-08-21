@@ -42,9 +42,9 @@ export class ContextManager {
         }
 
         // Optimization: If the string is massive (> 20k chars), 
-        // return a safe upper bound estimate immediately
+        // return an accurate fast upper bound estimate immediately (~3.8 chars/token)
         if (totalChars > 20000) {
-            return Math.ceil(totalChars / 2); // Same factor as LLMExecutor
+            return Math.ceil(totalChars / 3.8);
         }
 
         let total = 0;

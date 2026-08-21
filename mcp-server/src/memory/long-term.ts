@@ -47,8 +47,8 @@ export class LongTermMemory {
 
   private debouncedPersist: (() => void) & { flush: () => void };
 
-  constructor(storePath = './data/memory.json') {
-    this.storePath = storePath;
+  constructor(storePath?: string) {
+    this.storePath = storePath || process.env.MEMORY_STORE_PATH || './data/memory.json';
     this.debouncedPersist = debounce(() => {
       this.persist().catch(err => console.error('Failed to persist memory:', err));
     }, 1000);

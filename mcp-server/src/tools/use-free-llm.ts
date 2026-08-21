@@ -78,7 +78,8 @@ import {
   getSharedImageRouter,
   getAgenticMiddleware,
   getWorkspaceContextMiddleware,
-  getStructuralMarkdownMiddleware
+  getStructuralMarkdownMiddleware,
+  getSearchRouterMiddleware
 } from '../pipeline/instances.js';
 
 /**
@@ -217,6 +218,31 @@ export async function resolveFileRefs(
 
       if (!isAuthorized) {
         console.error(`[v1.0.4][resolveRefs] Security block: ${absPath} is outside allowed boundaries`);
+        continue;
+      }
+
+      if (absPath.toLowerCase().endsWith('.pdf')) {
+        if (pdfPagesResolved >= MAX_PDF_PAGES_PER_PASS) {
+          const sentinel = `[PDF-PAGE-DEFERRED: ${uriPath} — resolve in a follow-up request; max ${MAX_PDF_PAGES_PER_PASS} PDF pages per pass.]`;
+          newContent = newContent.replace(fullMatch, sentinel);
+          console.error(`[v1.0.4][resolveRefs] PDF page cap reached (${MAX_PDF_PAGES_PER_PASS}) — deferring ${uriPath}`);
+          continue;
+        }
+        const res = await resolvePdfRef(absPath, workspaceRoot);
+        pdfPagesResolved++;
+        if (res) {
+          resolvedContent = res.resolvedContent;
+          newContent = newContent.replace(fullMatch, `${fullMatch}\n\n${resolvedContent}`);
+          if (res.imageBase64) {
+            imageAttachments.push(res.imageBase64);
+          } else if (res.imagePath) {
+            imageAttachments.push(res.imagePath);
+          }
+        } else {
+          const baseName = path.basename(absPath);
+          const sentinel = `[NOT_FOUND_HARD_STOP: ${baseName} (${fullMatch}) could not be resolved. Provide the correct file:/// path.]`;
+          newContent = newContent.replace(fullMatch, sentinel);
+        }
         continue;
       }
 
@@ -609,11 +635,14 @@ export async function useFreeLLM(input: UseFreeLLMInput): Promise<ChatResponse> 
   // 1. StructuralMarkdownMiddleware - Inject full session memory into agentic requests (v1.0.4)
   // 2. ResponseCache - Check for cached responses
   // 3. AgenticMiddleware - Handle agentic/reasoning mode if enabled
-  // 4. IntelligentRouter - Select provider/model and execute (includes token management and LLM execution)
+  // 4. SearchRouterMiddleware - Free-provider fallback search (Parallel/Tavily/Jina/Brave/SearXNG),
+  //    short-circuits before the LLM routers when google_search/SemanticSearch is requested (v1.0.9)
+  // 5. IntelligentRouter - Select provider/model and execute (includes token management and LLM execution)
   pipeline.use(getStructuralMarkdownMiddleware());
   pipeline.use(getSharedResponseCache());
   pipeline.use(getWorkspaceContextMiddleware());
   pipeline.use(getAgenticMiddleware());
+  pipeline.use(getSearchRouterMiddleware());
   pipeline.use(getSharedImageRouter());
   pipeline.use(getSharedRouter());
 

@@ -34,8 +34,8 @@ try {
     execSync(`"${sysPython}" -m venv "${venvDir}"`, { stdio: 'inherit' });
   }
 
-  console.log('Installing/upgrading Python dependencies (pymupdf, google-genai)...');
-  execSync(`"${pythonPath}" -m pip install pymupdf google-genai`, { stdio: 'inherit' });
+  console.log('Installing/upgrading Python dependencies (pymupdf, google-genai, duckduckgo-mcp-server)...');
+  execSync(`"${pythonPath}" -m pip install pymupdf google-genai duckduckgo-mcp-server`, { stdio: 'inherit' });
   console.log('Python virtual environment setup complete.');
 } catch (err) {
   console.error('Warning: Python virtual environment setup failed. Details:', err.message);
@@ -87,3 +87,26 @@ try {
 } catch (err) {
     console.error('Warning: Prompt synchronization failed. Details:', err.message);
 }
+
+// Step 3: Deploy SearXNG Docker container if docker --version is available
+try {
+  console.log('Checking Docker availability for SearXNG deployment...');
+  const { ensureSearxngContainer } = await import('../../dist/search/searxng-deploy.js');
+  ensureSearxngContainer();
+} catch (err) {
+  console.warn('Warning: SearXNG Docker deployment check skipped. Details:', err.message);
+}
+
+// Step 4: Ensure cyber tools index is synchronized
+try {
+  const cyberToolsPath = resolve(root, 'external/cyber-tools-index/tools_config.json');
+  if (!existsSync(cyberToolsPath)) {
+    console.log('Synchronizing cyber-tools-index from remote repository...');
+    const { fetchCyberToolsIndex } = await import('../fetch-cyber-tools.js');
+    await fetchCyberToolsIndex();
+  }
+} catch (err) {
+  console.warn('Warning: Cyber tools index sync skipped. Details:', err.message);
+}
+
+

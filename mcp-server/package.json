@@ -1,6 +1,6 @@
 {
   "name": "free-llm-mcp-server",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "type": "module",
   "description": "MCP server for free LLM APIs",
   "bin": {
@@ -15,11 +15,14 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "smoke-test": "tsx --env-file=.env scripts/verification/smoke-test.ts",
+    "smoke-test:searxng": "tsx --env-file=.env scripts/verification/searxng-smoke-test.ts",
     "smoke-test:vision": "tsx --env-file=.env scripts/verification/vision-smoke-test.ts",
     "smoke:suite": "tsx --env-file=.env scripts/smoke/run-smoke-suite.ts",
     "samples": "tsx --env-file=.env benchmarks/generate-live-samples.ts",
     "dashboard": "tsx --env-file=.env src/server.ts --sse",
-    "report": "tsx --env-file=.env scripts/evaluation/model-report.ts"
+    "report": "tsx --env-file=.env scripts/evaluation/model-report.ts",
+    "fetch-hermes": "tsx scripts/fetch-hermes-skills.ts",
+    "fetch-cyber-tools": "node scripts/fetch-cyber-tools.js"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
@@ -42,6 +45,7 @@
     "remark-parse": "^11.0.0",
     "unist-util-visit": "^5.1.0",
     "vectra": "^0.12.3",
+    "yaml": "^2.4.2",
     "zod": "^3.23.8"
   },
   "overrides": {
