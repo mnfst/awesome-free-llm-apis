@@ -64,6 +64,7 @@ export async function manageMemory(input: ManageMemoryInput) {
             const MAX_MEMORY_TOKENS = 8000;
             let currentTokens = contextManager.countStringTokens(JSON.stringify(results));
 
+            let truncatedSingle = false;
             if (currentTokens > MAX_MEMORY_TOKENS) {
                 while (results.length > 1 && currentTokens > MAX_MEMORY_TOKENS) {
                     results.pop(); // Remove largest or last item
@@ -74,22 +75,19 @@ export async function manageMemory(input: ManageMemoryInput) {
                     const single = results[0] as any;
                     if (single && typeof single.content === 'string' && single.content.length > 20000) {
                         single.content = single.content.slice(0, 20000) + '... [truncated]';
+                        truncatedSingle = true;
                         currentTokens = contextManager.countStringTokens(JSON.stringify(results));
                     }
                 }
-
-                return {
-                    results,
-                    meta: {
-                        total_found: allResults.length,
-                        note: `Truncated to ${results.length} results (${currentTokens} tokens) to prevent context overflow.`
-                    }
-                };
             }
 
+            const wasTruncated = results.length < allResults.length || truncatedSingle;
             return {
                 results,
-                meta: { total_found: allResults.length }
+                meta: {
+                    total_found: allResults.length,
+                    ...(wasTruncated ? { note: `Truncated to ${results.length} results (${currentTokens} tokens) to prevent context overflow.` } : {})
+                }
             };
         }
         default:

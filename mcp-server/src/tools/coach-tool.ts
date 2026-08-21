@@ -114,8 +114,10 @@ export class CoachTool {
       if (single.explanation) {
         delete single.explanation;
       }
-      if (single.instruction.length > 2500) {
-        single.instruction = single.instruction.slice(0, 2500) + '... [truncated]';
+      totalTokens = this.calculateHistoryTokens();
+      while (totalTokens > CoachTool.MAX_TOKEN_BUDGET && single.instruction.length > 50) {
+        single.instruction = single.instruction.slice(0, Math.floor(single.instruction.length * 0.7)) + '... [truncated]';
+        totalTokens = this.calculateHistoryTokens();
       }
     }
   }

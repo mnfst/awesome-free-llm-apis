@@ -196,7 +196,7 @@ function createSession(sessionId: string, numBranches: number, personas?: string
   return state;
 }
 
-export function calculateQuantumMetrics(state: QuantumCircuitState, durationMs: number, llmStats?: QuantumCompressionStats & { llmInferenceMs?: number }): QuantumCircuitTelemetry {
+export function calculateQuantumMetrics(state: QuantumCircuitState, durationMs: number, llmStats?: QuantumCompressionStats & { llmInferenceMs?: number }, isStepAction: boolean = false): QuantumCircuitTelemetry {
   const confidences = state.branches.map(b => Math.max(0.001, Math.min(0.999, b.confidence)));
   const n = confidences.length || 1;
   const meanConf = confidences.reduce((a, b) => a + b, 0) / n;
@@ -216,7 +216,7 @@ export function calculateQuantumMetrics(state: QuantumCircuitState, durationMs: 
   const telemetry: QuantumCircuitTelemetry = {
     executionMetrics: {
       totalDurationMs: durationMs,
-      gateExecutionMs: durationMs,
+      gateExecutionMs: isStepAction ? durationMs : undefined,
       llmInferenceMs: llmStats?.llmInferenceMs,
     },
     quantumStateMetrics: {
@@ -426,7 +426,7 @@ export async function quantumTool(input: QuantumToolInput) {
         if (state.step >= state.maxStep) state.isComplete = true;
         state.mermaid = renderMermaid(state);
         const durationMs = Date.now() - start;
-        const telemetry = calculateQuantumMetrics(state, durationMs);
+        const telemetry = calculateQuantumMetrics(state, durationMs, undefined, true);
         result = { success: true, sessionId, appliedGates: columnGates.length, state, telemetry };
       }
     } else if (action === 'pause') {

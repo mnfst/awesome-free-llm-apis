@@ -30,9 +30,11 @@ async function runQuantumBenchmarks() {
     console.error(`  - Initial gates: ${setupRes.state.gates.length}`);
 
     let stepCount = 0;
-    while (!setupRes.state.isComplete && stepCount < 4) {
+    let isComplete = setupRes.state.isComplete;
+    while (!isComplete && stepCount < 4) {
       const stepRes = await quantumTool({ action: 'step', sessionId });
       if (!stepRes.success) break;
+      isComplete = stepRes.state.isComplete;
       stepCount++;
     }
 
