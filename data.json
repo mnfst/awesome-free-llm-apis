@@ -248,7 +248,7 @@
       "footnoteRef": 13,
       "models": [
         {
-          "id": "mistral-medium-2604",
+          "id": "mistral-medium-3-5",
           "name": "Mistral Medium 3.5 (128B)",
           "context": "256K",
           "maxOutput": "—",
@@ -276,7 +276,7 @@
           "name": "Ministral 3 8B",
           "context": "256K",
           "maxOutput": "—",
-          "modality": "Text",
+          "modality": "Text + Vision",
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
@@ -292,7 +292,7 @@
           "name": "Ministral 3 3B",
           "context": "256K",
           "maxOutput": "—",
-          "modality": "Text",
+          "modality": "Text + Vision",
           "rateLimit": "~1 RPS, 500K TPM"
         },
         {
@@ -300,7 +300,7 @@
           "name": "Ministral 3 14B",
           "context": "256K",
           "maxOutput": "—",
-          "modality": "Text",
+          "modality": "Text + Vision",
           "rateLimit": "~1 RPS, 500K TPM"
         }
       ]
@@ -1185,7 +1185,7 @@
     },
     {
       "id": 13,
-      "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/user-management-finops/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)). Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
+      "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
     }
   ],
   "glossary": [
