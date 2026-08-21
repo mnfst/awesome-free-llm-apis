@@ -622,7 +622,7 @@
         {
           "id": "liquid/lfm-2.5-2.6b:free",
           "name": "liquid/lfm-2.5-2.6b:free",
-          "context": "128K",
+          "context": "64K",
           "maxOutput": "8K",
           "modality": "Text",
           "rateLimit": "200 req/hr"
