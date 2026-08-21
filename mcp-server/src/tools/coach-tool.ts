@@ -108,6 +108,16 @@ export class CoachTool {
       }
       totalTokens = this.calculateHistoryTokens();
     }
+
+    if (totalTokens > CoachTool.MAX_TOKEN_BUDGET && this.history.length === 1) {
+      const single = this.history[0];
+      if (single.explanation) {
+        delete single.explanation;
+      }
+      if (single.instruction.length > 2500) {
+        single.instruction = single.instruction.slice(0, 2500) + '... [truncated]';
+      }
+    }
   }
 
   public getHistory(): readonly CoachSessionEntry[] {

@@ -69,6 +69,15 @@ export async function manageMemory(input: ManageMemoryInput) {
                     results.pop(); // Remove largest or last item
                     currentTokens = contextManager.countStringTokens(JSON.stringify(results));
                 }
+
+                if (results.length === 1 && currentTokens > MAX_MEMORY_TOKENS) {
+                    const single = results[0] as any;
+                    if (single && typeof single.content === 'string' && single.content.length > 20000) {
+                        single.content = single.content.slice(0, 20000) + '... [truncated]';
+                        currentTokens = contextManager.countStringTokens(JSON.stringify(results));
+                    }
+                }
+
                 return {
                     results,
                     meta: {

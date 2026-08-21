@@ -49,8 +49,45 @@ export function quantumCompress(text: string, temperature = 0.5): string {
   const keptMiddle = middle.slice(0, Math.max(0, keepCount - 2));
 
   const kept = [first, ...keptMiddle, last]
-    .filter((v, idx, arr) => arr.findIndex(x => x.i === v.i) === idx) // dedupe if keepCount collided with first/last
+    .filter((v, idx, arr) => arr.findIndex(x => x.i === v.i) === idx)
     .sort((a, b) => a.i - b.i);
 
   return kept.map(k => k.s).join(' ');
+}
+
+export interface QuantumCompressionStats {
+  compressedText: string;
+  rawLength: number;
+  compressedLength: number;
+  rawTokensEstimate: number;
+  compressedTokensEstimate: number;
+  compressionRatio: number;
+  symbolDensity: number;
+}
+
+/**
+ * Compresses text and computes detailed token metrics and symbol density statistics.
+ */
+export function quantumCompressWithStats(text: string, temperature = 0.5): QuantumCompressionStats {
+  const rawLength = text.length;
+  const rawTokensEstimate = Math.ceil(rawLength / 3.8);
+  const sentences = splitSentences(text);
+  const avgDensity = sentences.length > 0
+    ? sentences.reduce((sum, s) => sum + symbolDensity(s), 0) / sentences.length
+    : 0;
+
+  const compressedText = quantumCompress(text, temperature);
+  const compressedLength = compressedText.length;
+  const compressedTokensEstimate = Math.ceil(compressedLength / 3.8);
+  const compressionRatio = rawLength > 0 ? Math.max(0, (rawLength - compressedLength) / rawLength) : 0;
+
+  return {
+    compressedText,
+    rawLength,
+    compressedLength,
+    rawTokensEstimate,
+    compressedTokensEstimate,
+    compressionRatio,
+    symbolDensity: Math.round(avgDensity * 1000) / 1000,
+  };
 }

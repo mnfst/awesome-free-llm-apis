@@ -187,8 +187,53 @@ Educational cyber security coach plus isolated security binary tool registry and
 
 ---
 
+### `quantum_tool` [v1.0.9]
+Multi-perspective reasoning tool using quantum-circuit vocabulary as a metaphor for hypothesis exploration with real single-qubit rotation composition.
+- **Parameters**:
+  - `action` (required): `'setup'` | `'step'` | `'pause'` | `'continue'` | `'modify'` | `'reset'` | `'status'` | `'get_state'` | `'analyze'`.
+  - `sessionId` (required): Unique session ID.
+  - `presetCircuit` (optional): `'superposition_exploration'` | `'adversarial_debate'` | `'consensus_alignment'` | `'grover_amplification'` | `'entangled_verification'`.
+  - `numBranches` (optional): Number of reasoning qubits/branches (default 3).
+  - `personas` (optional): Custom persona titles for branches.
+  - `gates` (optional): Custom gate operations (`H`, `X`, `Y`, `Z`, `RY`, `RZ`, `CNOT`, `CZ`, `SWAP`, `MEASURE`, `BARRIER`).
+  - `query` (required for `analyze`): Question to synthesize across branches.
+  - `temperature` (optional): Symbol-density compression budget (0..1).
+- **Telemetry**: Returns `executionMetrics` (latencies), `tokenEfficiencyMatrix` (compression stats, token savings %, tokens per branch/sec), and `quantumStateMetrics` (circuit depth, active gate count, confidence divergence, entropy score). Full reference in [quantum_tool.md](references/quantum_tool.md).
+
+---
+
 ### `index_workspace`
-Proactively index all relevant files in the workspace for semantic search.
+Proactively index all relevant files in the workspace for semantic search with automatic exclusion of caches, graph metadata, and userdir data.
+
+---
+
+### `validate_provider`
+Test connectivity, live authentication, and measure response latency for a target provider (e.g. `groq`, `openrouter`, `gemini`).
+
+---
+
+### `get_token_stats`
+Audit real-time rate limits, quota counters, and global server totals across all registered providers.
+
+---
+
+### `list_models` / `listAvailableFreeModels`
+Query all available models across providers with optional filtering by provider or availability status.
+
+---
+
+### `code_mode`
+Execute code in a secure sandbox with automatic mode detection (`coding`, `research`, `chat`), stateful file writes (`file:<path>`), and compression ratio tracking.
+
+---
+
+### `coach_tool`
+Interactive learning coach tool that breaks down concepts into structured explanation frames (`Concept`, `Example`, `Exercise`, `Hint`) with strict token budget enforcement.
+
+---
+
+### `local_llm_patch`
+Context-aware surgical code patch generator utilizing workspace grounding and fast local diff application.
 
 ---
 

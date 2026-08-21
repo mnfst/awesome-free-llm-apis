@@ -1,21 +1,10 @@
 import { logToolCall } from '../utils/ChatLogger.js';
-import { quantumCompress } from '../utils/quantum-compression.js';
+import { quantumCompress, quantumCompressWithStats, QuantumCompressionStats } from '../utils/quantum-compression.js';
 import { TaskType } from '../pipeline/middleware.js';
 
-/**
- * quantum_tool — a HITL, multi-branch reasoning aid. "Qubits" are reasoning
- * branches/personas, not physical qubits; gates are quantum-math-grounded
- * operations on each branch's stance/confidence (see applyGate below — RY/RZ
- * use real single-qubit rotation composition, Z/RZ correctly leave
- * computational-basis probabilities unchanged per actual quantum mechanics,
- * rather than being arbitrary hand-wavy state tweaks). 'analyze' is the only
- * step that calls a real LLM (useFreeLLM), to reason over the accumulated
- * branch states — everything else is local, deterministic state management.
- * Per the v1.0.9 changelog's own framing this is scoped for research/
- * exploration use, not a production decision-making system.
- */
-
 export type GateName = 'H' | 'X' | 'Y' | 'Z' | 'RY' | 'RZ' | 'CNOT' | 'CZ' | 'SWAP' | 'MEASURE' | 'BARRIER';
+
+export type PresetCircuitType = 'superposition_exploration' | 'adversarial_debate' | 'consensus_alignment' | 'grover_amplification' | 'entangled_verification';
 
 export interface GateOp {
   qubit: number;
@@ -34,6 +23,31 @@ export interface QuantumBranch {
   evidence: string[];
 }
 
+export interface QuantumCircuitTelemetry {
+  executionMetrics: {
+    circuitSetupMs?: number;
+    gateExecutionMs?: number;
+    llmInferenceMs?: number;
+    totalDurationMs: number;
+  };
+  tokenEfficiencyMatrix?: {
+    rawPromptTokens: number;
+    compressedPromptTokens: number;
+    tokenSavingsPct: number;
+    symbolDensity: number;
+    tokensPerBranch: number;
+    tokensPerSecond?: number;
+  };
+  quantumStateMetrics: {
+    circuitDepth: number;
+    activeGateCount: number;
+    confidenceDivergence: number; // Variance sigma^2 = (1/N) * sum((c_i - c_mean)^2)
+    entropyScore: number;         // Binary Shannon entropy
+    resolvedBranchesCount: number; // confidence >= 0.8 or <= 0.2
+    superpositionBranchesCount: number; // 0.4 <= confidence <= 0.6
+  };
+}
+
 export interface QuantumCircuitState {
   sessionId: string;
   step: number;
@@ -42,6 +56,7 @@ export interface QuantumCircuitState {
   gates: GateOp[];
   isPaused: boolean;
   isComplete: boolean;
+  presetCircuit?: PresetCircuitType;
   llmResponses: Array<{ id: string; timestamp: number; step: number; role: 'assistant'; content: string; query: string }>;
   circuitModifications: Array<{ timestamp: number; change: string }>;
   mermaid: string;
@@ -52,6 +67,7 @@ export interface QuantumToolInput {
   sessionId: string;
   numBranches?: number;
   personas?: string[];
+  presetCircuit?: PresetCircuitType;
   gates?: GateOp[];
   query?: string;
   temperature?: number;
@@ -64,9 +80,99 @@ function freshBranch(id: number, persona: string): QuantumBranch {
   return { id: `q${id}`, persona, stance: 'neutral', confidence: 0.5, evidence: [] };
 }
 
-function createSession(sessionId: string, numBranches: number, personas?: string[]): QuantumCircuitState {
-  const branches = Array.from({ length: numBranches }, (_, i) =>
-    freshBranch(i, personas?.[i] || `Branch ${i}`));
+function applyPresetCircuit(state: QuantumCircuitState, preset: PresetCircuitType) {
+  const n = state.branches.length;
+  switch (preset) {
+    case 'superposition_exploration': {
+      for (let i = 0; i < n; i++) {
+        state.gates.push({ qubit: i, column: 0, gate: 'H' });
+      }
+      for (let i = 0; i < n; i++) {
+        state.gates.push({ qubit: i, column: 1, gate: 'RY', param: 0.35 * (i + 1) });
+      }
+      for (let i = 0; i < n - 1; i++) {
+        state.gates.push({ qubit: i, column: 2, gate: 'CNOT', target: i + 1 });
+      }
+      break;
+    }
+    case 'adversarial_debate': {
+      state.gates.push({ qubit: 0, column: 0, gate: 'RY', param: 1.8 });
+      if (n > 1) state.gates.push({ qubit: 1, column: 0, gate: 'RY', param: -1.8 });
+      if (n > 2) state.gates.push({ qubit: 2, column: 0, gate: 'H' });
+
+      if (n > 1) state.gates.push({ qubit: 1, column: 1, gate: 'X' });
+
+      if (n > 1) state.gates.push({ qubit: 0, column: 2, gate: 'CNOT', target: 1 });
+      if (n > 2) state.gates.push({ qubit: 1, column: 2, gate: 'CZ', target: 2 });
+
+      state.gates.push({ qubit: 0, column: 3, gate: 'MEASURE' });
+      if (n > 1) state.gates.push({ qubit: 1, column: 3, gate: 'MEASURE' });
+      break;
+    }
+    case 'consensus_alignment': {
+      for (let i = 0; i < n; i++) {
+        state.gates.push({ qubit: i, column: 0, gate: 'H' });
+        state.gates.push({ qubit: i, column: 1, gate: 'RY', param: 0.85 });
+      }
+      for (let i = 0; i < n - 1; i++) {
+        state.gates.push({ qubit: i, column: 2, gate: 'CZ', target: i + 1 });
+      }
+      for (let i = 0; i < n; i++) {
+        state.gates.push({ qubit: i, column: 3, gate: 'MEASURE' });
+      }
+      break;
+    }
+    case 'grover_amplification': {
+      for (let i = 0; i < n; i++) {
+        state.gates.push({ qubit: i, column: 0, gate: 'H' });
+      }
+      state.gates.push({ qubit: 0, column: 1, gate: 'Z' });
+      state.gates.push({ qubit: 0, column: 2, gate: 'RY', param: 1.4 });
+      for (let i = 0; i < n; i++) {
+        state.gates.push({ qubit: i, column: 3, gate: 'MEASURE' });
+      }
+      break;
+    }
+    case 'entangled_verification': {
+      for (let i = 0; i < n; i += 2) {
+        state.gates.push({ qubit: i, column: 0, gate: 'H' });
+        if (i + 1 < n) {
+          state.gates.push({ qubit: i, column: 1, gate: 'CNOT', target: i + 1 });
+        }
+      }
+      if (n >= 4) {
+        state.gates.push({ qubit: 1, column: 2, gate: 'CZ', target: 3 });
+      }
+      for (let i = 1; i < n; i += 2) {
+        state.gates.push({ qubit: i, column: 3, gate: 'MEASURE' });
+      }
+      break;
+    }
+  }
+}
+
+function getDefaultPersonasForPreset(preset?: PresetCircuitType): string[] | undefined {
+  switch (preset) {
+    case 'adversarial_debate':
+      return ['Proponent', 'Opponent', 'Synthesizer'];
+    case 'superposition_exploration':
+      return ['Hypothesis Alpha', 'Hypothesis Beta', 'Hypothesis Gamma'];
+    case 'consensus_alignment':
+      return ['Domain Specialist A', 'Domain Specialist B', 'Integrator'];
+    case 'grover_amplification':
+      return ['Target Candidate', 'Alternative A', 'Alternative B', 'Alternative C'];
+    case 'entangled_verification':
+      return ['Worker Alpha', 'Verifier Alpha', 'Worker Beta', 'Verifier Beta'];
+    default:
+      return undefined;
+  }
+}
+
+function createSession(sessionId: string, numBranches: number, personas?: string[], presetCircuit?: PresetCircuitType): QuantumCircuitState {
+  const resolvedPersonas = personas || getDefaultPersonasForPreset(presetCircuit);
+  const finalNumBranches = resolvedPersonas ? Math.max(numBranches, resolvedPersonas.length) : numBranches;
+  const branches = Array.from({ length: finalNumBranches }, (_, i) =>
+    freshBranch(i, resolvedPersonas?.[i] || `Branch ${i}`));
   const state: QuantumCircuitState = {
     sessionId,
     step: 0,
@@ -75,13 +181,69 @@ function createSession(sessionId: string, numBranches: number, personas?: string
     gates: [],
     isPaused: false,
     isComplete: false,
+    presetCircuit,
     llmResponses: [],
     circuitModifications: [],
     mermaid: '',
   };
+
+  if (presetCircuit) {
+    applyPresetCircuit(state, presetCircuit);
+  }
+
   state.mermaid = renderMermaid(state);
   sessions.set(sessionId, state);
   return state;
+}
+
+export function calculateQuantumMetrics(state: QuantumCircuitState, durationMs: number, llmStats?: QuantumCompressionStats & { llmInferenceMs?: number }): QuantumCircuitTelemetry {
+  const confidences = state.branches.map(b => Math.max(0.001, Math.min(0.999, b.confidence)));
+  const n = confidences.length || 1;
+  const meanConf = confidences.reduce((a, b) => a + b, 0) / n;
+  const variance = confidences.reduce((sum, c) => sum + (c - meanConf) ** 2, 0) / n;
+
+  const entropy = confidences.reduce((sum, p) => {
+    const q = 1 - p;
+    return sum - (p * Math.log2(p) + q * Math.log2(q));
+  }, 0) / n;
+
+  const resolved = state.branches.filter(b => b.confidence >= 0.8 || b.confidence <= 0.2).length;
+  const superposition = state.branches.filter(b => b.confidence >= 0.4 && b.confidence <= 0.6).length;
+
+  const columns = state.gates.map(g => g.column);
+  const depth = columns.length > 0 ? Math.max(...columns) + 1 : 0;
+
+  const telemetry: QuantumCircuitTelemetry = {
+    executionMetrics: {
+      totalDurationMs: durationMs,
+      gateExecutionMs: durationMs,
+      llmInferenceMs: llmStats?.llmInferenceMs,
+    },
+    quantumStateMetrics: {
+      circuitDepth: depth,
+      activeGateCount: state.gates.length,
+      confidenceDivergence: Math.round(variance * 10000) / 10000,
+      entropyScore: Math.round(entropy * 1000) / 1000,
+      resolvedBranchesCount: resolved,
+      superpositionBranchesCount: superposition,
+    }
+  };
+
+  if (llmStats) {
+    const rawTokens = llmStats.rawTokensEstimate || 100;
+    const compTokens = llmStats.compressedTokensEstimate || rawTokens;
+    const savings = rawTokens > 0 ? Math.max(0, Math.round(((rawTokens - compTokens) / rawTokens) * 100)) : 0;
+    telemetry.tokenEfficiencyMatrix = {
+      rawPromptTokens: rawTokens,
+      compressedPromptTokens: compTokens,
+      tokenSavingsPct: savings,
+      symbolDensity: llmStats.symbolDensity || 0.5,
+      tokensPerBranch: Math.round((compTokens / n) * 10) / 10,
+      tokensPerSecond: llmStats.llmInferenceMs ? Math.round((compTokens / (llmStats.llmInferenceMs / 1000))) : undefined,
+    };
+  }
+
+  return telemetry;
 }
 
 function requireSession(sessionId: string): QuantumCircuitState {
@@ -205,25 +367,28 @@ function renderMermaid(state: QuantumCircuitState): string {
   return lines.join('\n');
 }
 
-async function callAnalyzeLLM(state: QuantumCircuitState, query: string, temperature: number, sessionId: string): Promise<string> {
+async function callAnalyzeLLM(state: QuantumCircuitState, query: string, temperature: number, sessionId: string): Promise<{ content: string; stats: QuantumCompressionStats; llmInferenceMs: number }> {
   const branchSummary = state.branches
     .map(b => `- ${b.persona} (${b.id}): stance=${b.stance}, confidence=${b.confidence.toFixed(2)}. Evidence: ${b.evidence.join(' ') || '(none yet)'}`)
     .join('\n');
 
   const rawPrompt = `You are reasoning across ${state.branches.length} parallel perspective branches on a question, built up over ${state.step} circuit steps.\n\nBranch states:\n${branchSummary}\n\nUser question: ${query}\n\nSynthesize a reasoned answer that explicitly weighs the branches by their confidence, notes where they agree/disagree, and flags any branch still near 0.5 confidence (unresolved).`;
 
-  const compressed = quantumCompress(rawPrompt, temperature);
+  const stats = quantumCompressWithStats(rawPrompt, temperature);
 
+  const llmStart = Date.now();
   const { useFreeLLM } = await import('./use-free-llm.js');
   const result = await useFreeLLM({
-    messages: [{ role: 'user', content: compressed }],
+    messages: [{ role: 'user', content: stats.compressedText }],
     taskType: TaskType.Reasoning,
     sessionId,
     isOnePass: true,
   } as any);
+  const llmInferenceMs = Date.now() - llmStart;
 
   const choices: Array<{ message?: { content?: string } }> = Array.isArray((result as any)?.choices) ? (result as any).choices : [];
-  return choices.map(c => c?.message?.content ?? '').filter(Boolean).join('\n\n') || '(no response generated)';
+  const content = choices.map(c => c?.message?.content ?? '').filter(Boolean).join('\n\n') || '(no response generated)';
+  return { content, stats, llmInferenceMs };
 }
 
 export async function quantumTool(input: QuantumToolInput) {
@@ -235,15 +400,19 @@ export async function quantumTool(input: QuantumToolInput) {
 
   try {
     if (action === 'setup') {
-      const state = createSession(sessionId, input.numBranches ?? 3, input.personas);
-      result = { success: true, sessionId, state };
+      const state = createSession(sessionId, input.numBranches ?? 3, input.personas, input.presetCircuit);
+      const durationMs = Date.now() - start;
+      const telemetry = calculateQuantumMetrics(state, durationMs);
+      result = { success: true, sessionId, state, telemetry };
     } else if (action === 'modify') {
       const state = requireSession(sessionId);
       const newGates = input.gates || [];
       state.gates.push(...newGates);
       state.circuitModifications.push({ timestamp: Date.now(), change: `Added ${newGates.length} gate(s) at column(s) ${[...new Set(newGates.map(g => g.column))].join(',')}` });
       state.mermaid = renderMermaid(state);
-      result = { success: true, sessionId, state };
+      const durationMs = Date.now() - start;
+      const telemetry = calculateQuantumMetrics(state, durationMs);
+      result = { success: true, sessionId, state, telemetry };
     } else if (action === 'step') {
       const state = requireSession(sessionId);
       if (state.isPaused) {
@@ -256,31 +425,43 @@ export async function quantumTool(input: QuantumToolInput) {
         state.step += 1;
         if (state.step >= state.maxStep) state.isComplete = true;
         state.mermaid = renderMermaid(state);
-        result = { success: true, sessionId, appliedGates: columnGates.length, state };
+        const durationMs = Date.now() - start;
+        const telemetry = calculateQuantumMetrics(state, durationMs);
+        result = { success: true, sessionId, appliedGates: columnGates.length, state, telemetry };
       }
     } else if (action === 'pause') {
       const state = requireSession(sessionId);
       state.isPaused = true;
-      result = { success: true, sessionId, state };
+      const durationMs = Date.now() - start;
+      const telemetry = calculateQuantumMetrics(state, durationMs);
+      result = { success: true, sessionId, state, telemetry };
     } else if (action === 'continue') {
       const state = requireSession(sessionId);
       state.isPaused = false;
-      result = { success: true, sessionId, state };
+      const durationMs = Date.now() - start;
+      const telemetry = calculateQuantumMetrics(state, durationMs);
+      result = { success: true, sessionId, state, telemetry };
     } else if (action === 'reset') {
       const existing = requireSession(sessionId);
-      const state = createSession(sessionId, existing.branches.length, existing.branches.map(b => b.persona));
-      result = { success: true, sessionId, state };
+      const state = createSession(sessionId, existing.branches.length, existing.branches.map(b => b.persona), existing.presetCircuit);
+      const durationMs = Date.now() - start;
+      const telemetry = calculateQuantumMetrics(state, durationMs);
+      result = { success: true, sessionId, state, telemetry };
     } else if (action === 'status' || action === 'get_state') {
       const state = requireSession(sessionId);
       state.mermaid = renderMermaid(state);
-      result = { success: true, sessionId, state };
+      const durationMs = Date.now() - start;
+      const telemetry = calculateQuantumMetrics(state, durationMs);
+      result = { success: true, sessionId, state, telemetry };
     } else if (action === 'analyze') {
       const state = requireSession(sessionId);
       if (!input.query) throw new Error('query is required for action:"analyze"');
-      const content = await callAnalyzeLLM(state, input.query, input.temperature ?? 0.7, sessionId);
+      const { content, stats, llmInferenceMs } = await callAnalyzeLLM(state, input.query, input.temperature ?? 0.7, sessionId);
       const entry = { id: `resp-${Date.now()}`, timestamp: Date.now(), step: state.step, role: 'assistant' as const, content, query: input.query };
       state.llmResponses.push(entry);
-      result = { success: true, sessionId, response: entry };
+      const durationMs = Date.now() - start;
+      const telemetry = calculateQuantumMetrics(state, durationMs, { ...stats, llmInferenceMs });
+      result = { success: true, sessionId, response: entry, telemetry };
     } else {
       throw new Error(`Unknown quantum_tool action: ${action}`);
     }
