@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-20",
+  "lastUpdated": "2026-08-21",
   "providers": [
     {
       "name": "Aion Labs",
@@ -16,7 +16,7 @@
           "name": "aion-labs/aion-2.0",
           "context": "128K",
           "maxOutput": "32K",
-          "modality": "Text (roleplay)",
+          "modality": "Text (reasoning)",
           "rateLimit": "15 RPM, 20K TPD"
         },
         {
@@ -24,7 +24,7 @@
           "name": "aion-labs/aion-rp-llama-3.1-8b",
           "context": "32K",
           "maxOutput": "32K",
-          "modality": "Text (roleplay)",
+          "modality": "Text",
           "rateLimit": "15 RPM, 20K TPD"
         },
         {
@@ -32,7 +32,7 @@
           "name": "aion-labs/aion-3.0",
           "context": "128K",
           "maxOutput": "32K",
-          "modality": "Text (roleplay, reasoning)",
+          "modality": "Text (reasoning)",
           "rateLimit": "15 RPM, 20K TPD"
         },
         {
@@ -40,7 +40,7 @@
           "name": "aion-labs/aion-3.0-mini",
           "context": "128K",
           "maxOutput": "32K",
-          "modality": "Text (roleplay, reasoning)",
+          "modality": "Text (reasoning)",
           "rateLimit": "15 RPM, 20K TPD"
         }
       ]
@@ -156,6 +156,14 @@
       "footnoteRef": 1,
       "models": [
         {
+          "id": "gemini-3.7-flash",
+          "name": "Gemini 3.7 Flash",
+          "context": "1M",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
+          "rateLimit": "—"
+        },
+        {
           "id": "gemini-3.6-flash",
           "name": "Gemini 3.6 Flash",
           "context": "1M",
@@ -210,6 +218,22 @@
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
           "rateLimit": "5 RPM, 50 RPD"
+        },
+        {
+          "id": "gemma-4-31b-it",
+          "name": "Gemma 4 31B",
+          "context": "256K",
+          "maxOutput": "32K",
+          "modality": "Text",
+          "rateLimit": "—"
+        },
+        {
+          "id": "gemma-4-26b-a4b-it",
+          "name": "Gemma 4 26B A4B",
+          "context": "256K",
+          "maxOutput": "32K",
+          "modality": "Text",
+          "rateLimit": "—"
         }
       ]
     },
@@ -356,7 +380,7 @@
           "name": "@cf/google/gemma-4-26b-a4b-it",
           "context": "256K",
           "maxOutput": "Shared w/ context",
-          "modality": "Text",
+          "modality": "Text + Vision",
           "rateLimit": "10K neurons/day (shared)"
         },
         {
@@ -510,9 +534,9 @@
       "category": "inference_provider",
       "country": "US",
       "flag": "🇺🇸",
-      "url": "https://kilo.ai",
+      "url": "https://app.kilo.ai/profile",
       "baseUrl": "https://api.kilo.ai/api/gateway",
-      "description": "Free models with no credit card required. `kilo-auto/free` auto-router dynamically routes to models in the free pool.",
+      "description": "Free models with no credit card and no API key required. `kilo-auto/free` auto-router dynamically routes to models in the free pool.",
       "footnoteRef": 5,
       "models": [
         {
@@ -521,15 +545,15 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "stepfun/step-3.7-flash:free",
           "name": "stepfun/step-3.7-flash:free",
           "context": "262K",
           "maxOutput": "262K",
-          "modality": "Text",
-          "rateLimit": "~200 req/hr"
+          "modality": "Text + Vision",
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "nvidia/nemotron-3-super-120b-a12b:free",
@@ -537,15 +561,15 @@
           "context": "262K",
           "maxOutput": "262K",
           "modality": "Text",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
           "name": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
           "context": "256K",
           "maxOutput": "65K",
-          "modality": "Text (reasoning)",
-          "rateLimit": "~200 req/hr"
+          "modality": "Multimodal",
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "poolside/laguna-s-2.1:free",
@@ -553,7 +577,7 @@
           "context": "262K",
           "maxOutput": "32K",
           "modality": "Text (code)",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "poolside/laguna-xs-2.1:free",
@@ -561,7 +585,7 @@
           "context": "262K",
           "maxOutput": "32K",
           "modality": "Text (code)",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "cohere/north-mini-code:free",
@@ -569,7 +593,7 @@
           "context": "256K",
           "maxOutput": "64K",
           "modality": "Text (code)",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "openrouter/free",
@@ -577,23 +601,31 @@
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "tencent/hy3:free",
           "name": "tencent/hy3:free",
-          "context": "—",
-          "maxOutput": "—",
+          "context": "262K",
+          "maxOutput": "128K",
           "modality": "Text",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
         },
         {
           "id": "nvidia/nemotron-3.5-lightning:free",
           "name": "nvidia/nemotron-3.5-lightning:free",
-          "context": "—",
-          "maxOutput": "—",
+          "context": "1M",
+          "maxOutput": "65K",
           "modality": "Text",
-          "rateLimit": "~200 req/hr"
+          "rateLimit": "200 req/hr"
+        },
+        {
+          "id": "liquid/lfm-2.5-2.6b:free",
+          "name": "liquid/lfm-2.5-2.6b:free",
+          "context": "128K",
+          "maxOutput": "8K",
+          "modality": "Text",
+          "rateLimit": "200 req/hr"
         }
       ]
     },
@@ -604,24 +636,32 @@
       "flag": "🇬🇧",
       "url": "https://token.llm7.io",
       "baseUrl": "https://api.llm7.io/v1",
-      "description": "API gateway with a free tier. Anonymous access is now limited to select models; a free token from token.llm7.io unlocks the rest.",
+      "description": "API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.",
       "footnoteRef": 10,
       "models": [
         {
           "id": "gpt-oss:20b",
           "name": "gpt-oss:20b",
-          "context": "—",
+          "context": "128K",
           "maxOutput": "—",
-          "modality": "Text (reasoning)",
-          "rateLimit": "30 RPM (120 with token)"
+          "modality": "Text",
+          "rateLimit": "10 RPM, 60 req/hr (anonymous)"
         },
         {
-          "id": null,
-          "name": "+ ~40 more models (token required)",
-          "context": "Varies",
-          "maxOutput": "Varies",
+          "id": "mistral-Nemo-Instruct-2407",
+          "name": "mistral-Nemo-Instruct-2407",
+          "context": "128K",
+          "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "30 RPM (120 with token)"
+          "rateLimit": "10 RPM, 60 req/hr (anonymous)"
+        },
+        {
+          "id": "minimax-m2.7",
+          "name": "minimax-m2.7",
+          "context": "180K",
+          "maxOutput": "—",
+          "modality": "Text (reasoning)",
+          "rateLimit": "10 RPM, 60 req/hr (anonymous)"
         }
       ]
     },
@@ -638,7 +678,7 @@
         {
           "id": "Qwen/Qwen3.5-35B-A3B",
           "name": "Qwen/Qwen3.5-35B-A3B",
-          "context": "—",
+          "context": "256K",
           "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "2,000 RPD total; <=500 RPD/model (dynamic)"
@@ -646,7 +686,7 @@
         {
           "id": "Qwen/Qwen3.5-27B",
           "name": "Qwen/Qwen3.5-27B",
-          "context": "—",
+          "context": "256K",
           "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "2,000 RPD total; <=500 RPD/model (dynamic)"
@@ -1084,24 +1124,16 @@
       "flag": "🇨🇳",
       "url": "https://cloud.siliconflow.cn/account/ak",
       "baseUrl": "https://api.siliconflow.cn/v1",
-      "description": "Permanently free models, no credit card required. Identity verification required. 200+ paid models also available.",
+      "description": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
       "footnoteRef": 9,
       "models": [
         {
           "id": "Qwen/Qwen3-8B",
           "name": "Qwen/Qwen3-8B",
-          "context": "131K",
-          "maxOutput": "131K",
+          "context": "128K",
+          "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "30 RPM, 60K TPM"
-        },
-        {
-          "id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
-          "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
-          "context": "131K",
-          "maxOutput": "Configurable",
-          "modality": "Text (reasoning)",
-          "rateLimit": "30 RPM, 60K TPM"
+          "rateLimit": "1,000 RPM, 50,000 TPM"
         }
       ]
     }
@@ -1109,7 +1141,7 @@
   "footnotes": [
     {
       "id": 1,
-      "text": "The Gemini API free tier is now available in the EU, UK, and Switzerland; the [available regions](https://ai.google.dev/gemini-api/docs/available-regions) page lists these regions. Google no longer publishes per-model free-tier rate limits; check your quotas in [AI Studio](https://aistudio.google.com/). Free-tier prompts may be used by Google to improve products."
+      "text": "The Gemini API free tier is available to developers in the EU, UK, and Switzerland; the [available regions](https://ai.google.dev/gemini-api/docs/available-regions) page lists these regions. The [terms](https://ai.google.dev/gemini-api/terms) still require you to use only Paid Services when you make an API Client available to users in the European Economic Area, Switzerland, or the UK. Google no longer publishes per-model free-tier rate limits; check your quotas in [AI Studio](https://aistudio.google.com/). Free-tier prompts may be used by Google to improve products, except for users in the EEA, Switzerland and the UK, where the paid-services data terms also govern the unpaid quota, so those prompts are not used to improve Google products. `gemini-3.1-flash-lite` is on the [deprecation schedule](https://ai.google.dev/gemini-api/docs/deprecations), with a shutdown date of May 7, 2027 and `gemini-3.5-flash-lite` as its replacement; the row stays because the model is live and free today."
     },
     {
       "id": 2,
@@ -1125,7 +1157,7 @@
     },
     {
       "id": 5,
-      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results on 2026-08-19 confirmed models absent from the catalog still answering. All listed rows were verified with live requests on that date. The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\"."
+      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Every row listed here answered a live request between 2026-08-19 and 2026-08-21. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): \"Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services.\""
     },
     {
       "id": 6,
@@ -1141,7 +1173,7 @@
     },
     {
       "id": 10,
-      "text": "LLM7.io rotated its catalog in August 2026; previously listed models now return model_unavailable, and the catalog itself changes frequently (43 models at last check). Anonymous access (no key) was confirmed on gpt-oss:20b on 2026-08-19; most other models require a token, available free from the API key page linked in the title."
+      "text": "LLM7.io rotates its catalog frequently, so the model list changes between checks. Access is tier-based, not token-based: `turbo` models are reachable anonymously or with a free token, `pro` models need the paid plan ([models API](https://docs.llm7.io/guides/models-api)). Anonymous access is capped at 1 RPS, 10 RPM, 60 requests per hour and 500,000 tokens per 24 hours; a free token raises that to 2 RPS, 40 RPM, 100 requests per hour and 1,000,000 tokens per 24 hours ([limits](https://docs.llm7.io/limits)). A paid Pro plan is available at $12/month. Anonymous access with no key was confirmed by live request on 2026-08-21."
     },
     {
       "id": 11,
