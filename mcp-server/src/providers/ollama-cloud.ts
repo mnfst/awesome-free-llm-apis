@@ -9,29 +9,14 @@ export class OllamaCloudProvider extends BaseProvider {
   envVar = 'OLLAMA_API_KEY';
   rateLimits: RateLimits = {};
   models: ProviderModel[] = [
-  { id: 'gpt-oss:20b', name: 'GPT OSS (20B)' },
-  { id: 'nemotron-3-ultra', name: 'Nemotron 3 Ultra' },
-  { id: 'qwen3-coder:480b', name: 'Qwen 3 Coder (480B)' },
-  { id: 'ministral-3:14b', name: 'Ministral 3 (14B)' },
-  { id: 'gemma3:27b', name: 'Gemma 3 (27B)' },
-  { id: 'glm-4.7', name: 'GLM 4.7' },
-  { id: 'qwen3-coder-next', name: 'Qwen 3 Coder Next' },
-  { id: 'ministral-3:3b', name: 'Ministral 3 (3B)' },
-  { id: 'kimi-k2.6', name: 'Kimi K2.6' },
-  { id: 'minimax-m2.1', name: 'MiniMax M2.1' },
-  { id: 'devstral-small-2:24b', name: 'Devstral Small 2 (24B)' },
-  { id: 'gemma3:4b', name: 'Gemma 3 (4B)' },
-  { id: 'gemma3:12b', name: 'Gemma 3 (12B)' },
-  { id: 'nemotron-3-super', name: 'Nemotron 3 Super' },
-  { id: 'gpt-oss:120b', name: 'GPT OSS (120B)' },
-  { id: 'nemotron-3-nano:30b', name: 'Nemotron 3 Nano (30B)' },
-  { id: 'gemma4:31b', name: 'Gemma 4 (31B)' },
-  { id: 'rnj-1:8b', name: 'RNJ 1 (8B)' },
-  { id: 'minimax-m3', name: 'MiniMax M3' },
-  { id: 'minimax-m2.5', name: 'MiniMax M2.5' },
-  { id: 'ministral-3:8b', name: 'Ministral 3 (8B)' },
-  { id: 'devstral-2:123b', name: 'Devstral 2 (123B)' }
-];
+    { id: 'gpt-oss:20b', name: 'GPT OSS (20B)' },
+    { id: 'gpt-oss:120b', name: 'GPT OSS (120B)' },
+    { id: 'nemotron-3-ultra', name: 'Nemotron 3 Ultra' },
+    { id: 'nemotron-3-super', name: 'Nemotron 3 Super' },
+    { id: 'nemotron-3-nano:30b', name: 'Nemotron 3 Nano (30B)' },
+    { id: 'gemma4:31b', name: 'Gemma 4 (31B)' },
+    { id: 'minimax-m3', name: 'MiniMax M3' },
+  ];
 
   /**
    * Ollama's native /api/chat expects `content` as a plain string with images passed

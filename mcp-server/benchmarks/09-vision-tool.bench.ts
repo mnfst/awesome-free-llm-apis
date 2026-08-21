@@ -33,7 +33,7 @@ describe('09 — Vision Tool: End-to-End Vision Tool Pipeline Benchmark', () => 
   });
 });
 
-async function generateLogReport() {
+export async function generateLogReport() {
   const timestamp = new Date().toISOString();
 
   // Read image stat and base64 for full input transparency

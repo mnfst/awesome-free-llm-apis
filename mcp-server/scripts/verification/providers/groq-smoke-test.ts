@@ -52,20 +52,20 @@ async function runGroqSmokeTest() {
     const { added, removed } = CHANGED_MODELS.groq;
 
     console.error(`\n=== Groq Changed-Model Smoke Test ===`);
-    console.error(`Added models: ${added.length} | Removed models: ${removed.length}\n`);
-
-    console.error(`--- Added models ---\n`);
-    const addedResults = [];
-    for (const id of added) addedResults.push(await testModel(groq, id));
+    const configuredResults = [];
+    console.error(`--- Testing ${groq.models.length} Configured Models in GroqProvider ---\n`);
+    for (const model of groq.models) {
+        configuredResults.push(await testModel(groq, model.id));
+    }
 
     console.error(`--- Removed models (checking if they still work) ---\n`);
     const removedResults = [];
     for (const id of removed) removedResults.push(await testModel(groq, id));
 
     console.log(`\n=== Results Summary: Groq ===`);
-    console.log(`\nAdded models:`);
-    addedResults.forEach(r => console.log(`  [${r.status}] ${r.id}${r.status !== 'FREE' ? ` — ${r.error}` : ''}`));
-    console.log(`\nRemoved models (still-works vs confirmed-dead):`);
+    console.log(`\nConfigured models in provider (${configuredResults.length}):`);
+    configuredResults.forEach(r => console.log(`  [${r.status}] ${r.id}${r.status !== 'FREE' ? ` — ${r.error}` : ''}`));
+    console.log(`\nRemoved models (still-works vs confirmed-dead) (${removedResults.length}):`);
     if (removedResults.length === 0) {
         console.log('  None removed for this provider.');
     } else {

@@ -52,20 +52,20 @@ async function runNvidiaSmokeTest() {
     const { added, removed } = CHANGED_MODELS.nvidia;
 
     console.error(`\n=== NVIDIA NIM Changed-Model Smoke Test ===`);
-    console.error(`Added models: ${added.length} | Removed models: ${removed.length}\n`);
-
-    console.error(`--- Added models ---\n`);
-    const addedResults = [];
-    for (const id of added) addedResults.push(await testModel(nvidia, id));
+    const configuredResults = [];
+    console.error(`--- Testing ${nvidia.models.length} Configured Models in NvidiaProvider ---\n`);
+    for (const model of nvidia.models) {
+        configuredResults.push(await testModel(nvidia, model.id));
+    }
 
     console.error(`--- Removed models (checking if they still work) ---\n`);
     const removedResults = [];
     for (const id of removed) removedResults.push(await testModel(nvidia, id));
 
     console.log(`\n=== Results Summary: NVIDIA NIM ===`);
-    console.log(`\nAdded models:`);
-    addedResults.forEach(r => console.log(`  [${r.status}] ${r.id}${r.status !== 'FREE' ? ` — ${r.error}` : ''}`));
-    console.log(`\nRemoved models (still-works vs confirmed-dead):`);
+    console.log(`\nConfigured models in provider (${configuredResults.length}):`);
+    configuredResults.forEach(r => console.log(`  [${r.status}] ${r.id}${r.status !== 'FREE' ? ` — ${r.error}` : ''}`));
+    console.log(`\nRemoved models (still-works vs confirmed-dead) (${removedResults.length}):`);
     if (removedResults.length === 0) {
         console.log('  None removed for this provider.');
     } else {

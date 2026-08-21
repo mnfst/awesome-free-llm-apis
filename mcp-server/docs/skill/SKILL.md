@@ -311,11 +311,14 @@ preferred persona: coder
 > 
 > ```text
 > --- 5. REASONING / PLANNING PROVIDERS ---
-> (Critical for agentic subtask decomposition)
+> (Critical for agentic subtask decomposition, ordered by active model count)
 > 
-> huggingface
-> modelscope
-> gemini
-> openrouter
-> nvidia
+> nvidia       (7 models)
+> openrouter   (4 models)
+> kilocode     (3 models)
+> huggingface  (2 models)
+> cloudflare   (1 model)
+> cohere       (1 model)
+> gemini       (1 model)
+> modelscope   (1 model)
 > ```
