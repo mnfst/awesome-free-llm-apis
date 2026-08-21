@@ -25,10 +25,11 @@ export class ProviderRegistry {
       new GeminiProvider(),
       new MistralProvider(),
       new ZhipuProvider(),
-      new CerebrasProvider(),
-      new CloudflareProvider(),
+      // v1.1.0 Deprecated: CerebrasProvider removed from the registry (free tier replaced
+      // by mandatory payment method requirement). See cerebras.ts.
       // v1.0.9 Deprecated: GitHubModelsProvider removed from the registry (persistent
       // instability / scheduled retirement brownouts on GitHub's side). See github-models.ts.
+      new CloudflareProvider(),
       new GroqProvider(),
       new HuggingFaceProvider(),
       new LLM7Provider(),

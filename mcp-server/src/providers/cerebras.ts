@@ -1,6 +1,11 @@
 import { BaseProvider } from './base.js';
 import type { ProviderModel, RateLimits } from './types.js';
 
+/**
+ * @deprecated as of v1.1.0 — Cerebras free tier was replaced by one-time trial
+ * credits behind a mandatory payment method requirement. No longer registered
+ * in ProviderRegistry. Kept here for reference only.
+ */
 export class CerebrasProvider extends BaseProvider {
   name = 'Cerebras';
   id = 'cerebras';
@@ -13,3 +18,4 @@ export class CerebrasProvider extends BaseProvider {
     { id: 'gemma-4-31b', name: 'Gemma 4 31B' },
   ];
 }
+

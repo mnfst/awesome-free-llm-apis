@@ -18,8 +18,9 @@ async function testModel(provider: KiloCodeProvider, id: string) {
             max_tokens: 5
         });
         const duration = Date.now() - start;
+        const content = res.choices[0]?.message?.content ?? '';
         console.error(`    Status: SUCCESS / FREE (${duration}ms)`);
-        console.error(`    Response: "${res.choices[0].message.content.trim()}"`);
+        console.error(`    Response: "${content.trim()}"`);
         return { id, status: 'FREE' as const };
     } catch (error: any) {
         const errMsg = error.message || '';
