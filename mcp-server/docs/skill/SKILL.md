@@ -301,3 +301,21 @@ preferred persona: coder
 1. **Verify Server Health**: Call `validate_provider` with target provider (e.g. `groq`).
 2. **Check Token Budgets**: Call `get_token_stats` to audit quota consumption.
 3. **Monitor Visual Dashboard (`http://localhost:3000`)**: Open `http://localhost:3000` to view real-time latency, token usage by memory layer, `keywords[]` match highlights, and `agentic: true` vs `agentic: false` payload comparisons.
+
+> [!WARNING]
+> **Consecutive Subtask Failures**: If the agent experiences consecutive failures during execution, it is likely due to:
+> 1. **Invalid or Missing API Keys** for the selected provider.
+> 2. **Lack of Active Reasoning/Planning Providers** configured in the server. Reasoning models are required to decompose goals into subtasks.
+>
+> Ensure at least one of the following reasoning/planning providers is active with valid credentials:
+> 
+> ```text
+> --- 5. REASONING / PLANNING PROVIDERS ---
+> (Critical for agentic subtask decomposition)
+> 
+> huggingface
+> modelscope
+> gemini
+> openrouter
+> nvidia
+> ```
