@@ -238,6 +238,58 @@
       ]
     },
     {
+      "name": "HelyxAI",
+      "category": "provider_api",
+      "country": "US",
+      "flag": "🇺🇸",
+      "url": "https://helyxai.space",
+      "baseUrl": "https://helyxai.space/v1",
+      "description": "Offers a free tier with 100k daily tokens shared across multiple models (5k for Gemini Flash Lite).",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "DeepSeek-V4-Flash",
+          "name": "DeepSeek-V4 Flash",
+          "context": "1,049,000",
+          "maxOutput": "384,000",
+          "modality": "Text",
+          "rateLimit": "100K TPD"
+        },
+        {
+          "id": "gemini-3.1-flash-lite",
+          "name": "Gemini 3.1 Flash Lite",
+          "context": "1,048,576",
+          "maxOutput": "65,536",
+          "modality": "Text",
+          "rateLimit": "5K TPD"
+        },
+        {
+          "id": "gemma-4-31b-it",
+          "name": "Gemma4 31B",
+          "context": "262,000",
+          "maxOutput": "8,192",
+          "modality": "Text",
+          "rateLimit": "100K TPD"
+        },
+        {
+          "id": "gpt-oss-120b",
+          "name": "GPT OSS 120b",
+          "context": "128,000",
+          "maxOutput": "8,192",
+          "modality": "Text",
+          "rateLimit": "100K TPD"
+        },
+        {
+          "id": "Qwen3-32B",
+          "name": "Qwen3 32b",
+          "context": "131,072",
+          "maxOutput": "8,192",
+          "modality": "Text",
+          "rateLimit": "100K TPD"
+        }
+      ]
+    },
+    {
       "name": "Mistral AI",
       "category": "provider_api",
       "country": "FR",
