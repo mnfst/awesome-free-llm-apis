@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-21",
+  "lastUpdated": "2026-08-24",
   "providers": [
     {
       "name": "Aion Labs",
@@ -1118,6 +1118,42 @@
       ]
     },
     {
+      "name": "SambaNova Cloud",
+      "category": "inference_provider",
+      "country": "US",
+      "flag": "🇺🇸",
+      "url": "https://cloud.sambanova.ai/apis",
+      "baseUrl": "https://api.sambanova.ai/v1",
+      "description": "Free Tier applies whenever no payment method is linked to the account; linking one moves you to the Developer Tier. No credit card required. OpenAI SDK-compatible.",
+      "footnoteRef": 14,
+      "models": [
+        {
+          "id": "DeepSeek-V3.1",
+          "name": "DeepSeek-V3.1",
+          "context": "131K",
+          "maxOutput": "~7K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 20 RPD, 200,000 TPD"
+        },
+        {
+          "id": "Meta-Llama-3.3-70B-Instruct",
+          "name": "Meta-Llama-3.3-70B-Instruct",
+          "context": "131K",
+          "maxOutput": "~3K",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 20 RPD, 200,000 TPD"
+        },
+        {
+          "id": "gpt-oss-120b",
+          "name": "gpt-oss-120b",
+          "context": "131K",
+          "maxOutput": "—",
+          "modality": "Text",
+          "rateLimit": "20 RPM, 20 RPD, 200,000 TPD"
+        }
+      ]
+    },
+    {
       "name": "SiliconFlow",
       "category": "inference_provider",
       "country": "CN",
@@ -1186,6 +1222,10 @@
     {
       "id": 13,
       "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
+    },
+    {
+      "id": 14,
+      "text": "SambaNova's Free Tier is defined by the absence of a linked payment method rather than by a time window, and every free model shares the same allowance: 20 RPM, 20 RPD and 200,000 TPD ([rate limits](https://docs.sambanova.ai/docs/en/models/rate-limits)). RPM and RPD are both 20, so one busy minute spends the whole day. Two further models, `DeepSeek-V3.2` (32K context) and `gemma-4-31B-it` (262K context), carry the same free limits but are labelled preview and documented for evaluation only, so they are not listed above. Context and max-output figures come from the public, unauthenticated catalogue at `https://api.sambanova.ai/v1/models`, read 2026-08-24; that endpoint reports `max_completion_tokens` equal to the context length for `gpt-oss-120b`, i.e. no separate output cap, which is why its Max Output is left blank. Linking a payment method moves the account to the Developer Tier (60-240 RPM depending on model), and TPD is tracked for the Free Tier only."
     }
   ],
   "glossary": [
