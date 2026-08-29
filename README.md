@@ -303,6 +303,17 @@ Base URL: `https://api.siliconflow.cn/v1`
 | --------------- | ------- | ---------- | -------- | --------------------- |
 | `Qwen/Qwen3-8B` | 128K    | —          | Text     | 1,000 RPM, 50,000 TPM |
 
+### [TeamoRouter](https://teamorouter.cn) 🇨🇳
+
+Permanent free tiers of DeepSeek V4 Pro and V4 Flash, granted at registration with no credit card required; the `-free` model IDs run the same weights as the paid tier. OpenAI SDK-compatible, and also speaks the Anthropic Messages protocol natively, so one key works with OpenAI SDK apps, Claude Code and Codex. [^14]
+
+Base URL: `https://api.teamorouter.cn/v1`
+
+| Model Name                | Context | Max Output | Modality | Rate Limit   |
+| ------------------------- | ------- | ---------- | -------- | ------------ |
+| `deepseek-v4-flash-free`  | 1M      | 384K       | Text     | 50 req/day   |
+| `deepseek-v4-pro-free`    | 1M      | —          | Text     | 200 req/day  |
+
 ## Glossary
 
 | Abbreviation | Meaning             |
@@ -329,3 +340,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^11]: The 10,000 free Neurons are shared across all Workers AI usage, not per model, and all limits reset daily at 00:00 UTC. Going over does not bill you, the request fails. Five models are excluded from Workers Free billing and need the Workers Paid plan or prepaid AI Gateway credits: `@cf/moonshotai/kimi-k2.6`, `@cf/moonshotai/kimi-k2.7-code`, `@cf/zai-org/glm-5.2`, `@cf/deepseek-ai/deepseek-v4-flash-0731`, `@cf/deepseek-ai/deepseek-v4-pro-0813` ([pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
 [^12]: Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time.
 [^13]: Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values.
+[^14]: TeamoRouter is a commercial multi-protocol relay (paid catalog includes Claude, GPT and Gemini families; Alipay/WeChat top-up). The two `-free` model IDs are permanent free tiers, not trials: `deepseek-v4-flash-free` allows 50 requests/day and `deepseek-v4-pro-free` 200/day, both running the same model binaries as the paid tier. V4 Flash is a 284B-parameter MoE (MIT license) with a 384K max output; V4 Pro's max output cap is not published. The endpoint also accepts Anthropic Messages-format requests, and the legacy `teamorouter.com` host remains live as a fallback.
