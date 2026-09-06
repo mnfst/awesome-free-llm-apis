@@ -138,6 +138,18 @@ Base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
 | `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 80K     | Shared w/ context | Text (reasoning)               | 10K neurons/day (shared) |
 | + 72 more models                               | Varies  | Varies            | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
 
+### [FHRouter](https://fhrouter.com/token)
+
+Free models included on every account, no credit card required. Fair-use daily allowance per account ([how free models work](https://fhrouter.com/docs/free-models)); the free set rotates and currently includes frontier-class models. All other models are pay-as-you-go.
+
+Base URL: `https://fhrouter.com/v1`
+
+| Model Name         | Context | Max Output | Modality         | Rate Limit            |
+| ------------------ | ------- | ---------- | ---------------- | --------------------- |
+| `grok-4.6`         | —       | —          | Text             | Fair-use daily share |
+| `deepseek-v4-flash` | —      | —          | Text             | Fair-use daily share |
+| `glm-5.3-flash`    | —       | —          | Text (reasoning) | Fair-use daily share |
+
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
 Free tier, no credit card. Ultra-fast LPU inference. [^2]
