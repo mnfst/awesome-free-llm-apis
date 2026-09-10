@@ -342,6 +342,26 @@
       ]
     },
     {
+      "name": "BazaarLink",
+      "category": "inference_provider",
+      "country": "TW",
+      "flag": "🇹🇼",
+      "url": "https://bazaarlink.ai/free",
+      "baseUrl": "https://api.bazaarlink.ai/v1",
+      "description": "Permanent free tier, no credit card required. Dynamically routes to available free-tier models via an OpenAI-compatible endpoint.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "auto:free",
+          "name": "auto:free",
+          "context": "Varies",
+          "maxOutput": "Varies",
+          "modality": "Text",
+          "rateLimit": "10 RPM, 50 RPD"
+        }
+      ]
+    },
+    {
       "name": "Cloudflare Workers AI",
       "category": "inference_provider",
       "country": "US",
@@ -1211,3 +1231,4 @@
     }
   ]
 }
+
