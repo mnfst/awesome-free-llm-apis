@@ -78,6 +78,7 @@ Base URL: `https://generativelanguage.googleapis.com/v1beta`
 
 | Model Name            | Context | Max Output | Modality                     | Rate Limit        |
 | --------------------- | ------- | ---------- | ---------------------------- | ----------------- |
+| Gemini 3.8 Flash      | 1M      | 65K        | Text + Image + Audio + Video | —                 |
 | Gemini 3.7 Flash      | 1M      | 65K        | Text + Image + Audio + Video | —                 |
 | Gemini 3.6 Flash      | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 1,500 RPD |
 | Gemini 3.5 Flash      | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 1,500 RPD |
