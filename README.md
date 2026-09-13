@@ -138,6 +138,18 @@ Base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
 | `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 80K     | Shared w/ context | Text (reasoning)               | 10K neurons/day (shared) |
 | + 72 more models                               | Varies  | Varies            | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
 
+### [Gonka Broker](https://app.gonkabroker.com/signup) 🇺🇸
+
+Permanent free tier, no credit card required. 1M+ tokens/month across all models, resets monthly. Model lineup rotates with network governance — live list at /v1/models.
+
+Base URL: `https://proxy.gonkabroker.com/v1`
+
+| Model Name                           | Context | Max Output | Modality   | Rate Limit                |
+| ------------------------------------ | ------- | ---------- | ---------- | ------------------------- |
+| `MiniMaxAI/MiniMax-M2.7`             | 204K    | 16K        | Text       | 1M+ tokens/month (shared) |
+| `deepseek-ai/DeepSeek-V4-Flash-0731` | 400K    | 16K        | Text       | 1M+ tokens/month (shared) |
+| `BAAI/bge-m3`                        | 8K      | —          | Embeddings | 1M+ tokens/month (shared) |
+
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 
 Free tier, no credit card. Ultra-fast LPU inference. [^2]

@@ -28,7 +28,7 @@ Ask the user what matters most, then recommend accordingly:
 - See [references/provider-apis.md](references/provider-apis.md) for setup instructions.
 
 **Inference providers** -- third-party platforms hosting open-weight models:
-- GitHub Models, NVIDIA NIM, Groq, Cerebras, Cloudflare Workers AI, LLM7.io, Kluster AI, OpenRouter, Hugging Face
+- GitHub Models, Gonka Broker, NVIDIA NIM, Groq, Cerebras, Cloudflare Workers AI, LLM7.io, Kluster AI, OpenRouter, Hugging Face
 - See [references/inference-providers.md](references/inference-providers.md) for setup instructions.
 
 ## Workflow
