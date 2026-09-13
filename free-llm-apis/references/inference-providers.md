@@ -79,7 +79,7 @@ export NVIDIA_API_KEY="your-key-here"
 
 ## Gonka Broker
 
-**Models:** MiniMax M2.7, Kimi K2.6, BGE-M3 (embeddings) — lineup rotates; live list at https://proxy.gonkabroker.com/v1/models
+**Models:** MiniMax M2.7, DeepSeek V4 Flash, BGE-M3 (embeddings) — lineup rotates; live list at https://proxy.gonkabroker.com/v1/models
 **Limits:** 1M+ tokens/month across all models, resets monthly
 
 ### Get your API key

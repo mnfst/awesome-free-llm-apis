@@ -144,11 +144,11 @@ Permanent free tier, no credit card required. 1M+ tokens/month across all models
 
 Base URL: `https://proxy.gonkabroker.com/v1`
 
-| Model Name               | Context | Max Output | Modality   | Rate Limit                |
-| ------------------------ | ------- | ---------- | ---------- | ------------------------- |
-| `MiniMaxAI/MiniMax-M2.7` | 204K    | 16K        | Text       | 1M+ tokens/month (shared) |
-| `moonshotai/Kimi-K2.6`   | 262K    | 8K         | Text       | 1M+ tokens/month (shared) |
-| `BAAI/bge-m3`            | 8K      | —          | Embeddings | 1M+ tokens/month (shared) |
+| Model Name                           | Context | Max Output | Modality   | Rate Limit                |
+| ------------------------------------ | ------- | ---------- | ---------- | ------------------------- |
+| `MiniMaxAI/MiniMax-M2.7`             | 204K    | 16K        | Text       | 1M+ tokens/month (shared) |
+| `deepseek-ai/DeepSeek-V4-Flash-0731` | 400K    | 16K        | Text       | 1M+ tokens/month (shared) |
+| `BAAI/bge-m3`                        | 8K      | —          | Embeddings | 1M+ tokens/month (shared) |
 
 ### [Groq](https://console.groq.com/keys) 🇺🇸
 

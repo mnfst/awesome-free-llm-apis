@@ -436,10 +436,10 @@
           "rateLimit": "1M+ tokens/month (shared)"
         },
         {
-          "id": "moonshotai/Kimi-K2.6",
-          "name": "moonshotai/Kimi-K2.6",
-          "context": "262K",
-          "maxOutput": "8K",
+          "id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+          "name": "deepseek-ai/DeepSeek-V4-Flash-0731",
+          "context": "400K",
+          "maxOutput": "16K",
           "modality": "Text",
           "rateLimit": "1M+ tokens/month (shared)"
         },
