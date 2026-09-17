@@ -303,6 +303,18 @@ Base URL: `https://api.siliconflow.cn/v1`
 | --------------- | ------- | ---------- | -------- | --------------------- |
 | `Qwen/Qwen3-8B` | 128K    | —          | Text     | 1,000 RPM, 50,000 TPM |
 
+### [TideLink](https://tidelink.xyz?cid=gh) 🌐
+
+Permanent free tier (GLM-4-Flash family), no credit card required. OpenAI SDK-compatible. Usage-based gateway; paid/BYOK unlocks 20+ providers.
+
+Base URL: `https://tidelink.xyz/v1`
+
+| Model Name                | Context | Max Output | Modality      | Rate Limit       |
+| ------------------------- | ------- | --------- | ------------- | ---------------- |
+| `glm-4.7-flash`           | 128K    | Varies    | Text          | 10 RPM, 100K TPD |
+| `glm-4.6v-flash`          | 128K    | Varies    | Text + Vision | 10 RPM, 100K TPD |
+| `glm-4-flash`             | 128K    | Varies    | Text          | 10 RPM, 100K TPD |
+| `glm-4v-flash`            | 128K    | Varies    | Text + Vision | 10 RPM, 100K TPD |
 ## Glossary
 
 | Abbreviation | Meaning             |

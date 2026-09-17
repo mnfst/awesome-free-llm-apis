@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-21",
+  "lastUpdated": "2026-09-10",
   "providers": [
     {
       "name": "Aion Labs",
@@ -1134,6 +1134,34 @@
           "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "1,000 RPM, 50,000 TPM"
+        }
+      ]
+    },
+    {
+      "name": "TideLink",
+      "category": "inference_provider",
+      "country": "CN",
+      "flag": "🇨🇳",
+      "url": "https://tidelink.xyz/dashboard.html",
+      "baseUrl": "https://tidelink.xyz/v1",
+      "description": "Free tier, no credit card required. GLM-4-Flash and GLM-4V-Flash are free with a 10 RPM limit. OpenAI-compatible gateway that aggregates GLM, Qwen, DeepSeek, Hunyuan and Doubao behind a single API key.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "glm-4-flash",
+          "name": "glm-4-flash",
+          "context": "128K",
+          "maxOutput": "—",
+          "modality": "Text",
+          "rateLimit": "10 RPM"
+        },
+        {
+          "id": "glm-4v-flash",
+          "name": "glm-4v-flash",
+          "context": "16K",
+          "maxOutput": "—",
+          "modality": "Text + Vision",
+          "rateLimit": "10 RPM"
         }
       ]
     }
