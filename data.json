@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-21",
+  "lastUpdated": "2026-09-18",
   "providers": [
     {
       "name": "Aion Labs",
@@ -1134,6 +1134,26 @@
           "maxOutput": "—",
           "modality": "Text",
           "rateLimit": "1,000 RPM, 50,000 TPM"
+        }
+      ]
+    },
+    {
+      "name": "EVO-AI",
+      "category": "inference_provider",
+      "country": "CN",
+      "flag": "🇨🇳",
+      "url": "http://47.253.174.153:80/press",
+      "baseUrl": "http://47.253.174.153:80/api",
+      "description": "Distributed self-evolving language model. Permanent free tier, no API key, no signup. 813K-param base model evolves via (1+λ)-ES. A2A JSON-RPC 2.0 compatible.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "evo-ai-distributed",
+          "name": "EVO-AI Distributed Network (813K)",
+          "context": "1K",
+          "maxOutput": "~200",
+          "modality": "Text",
+          "rateLimit": "No auth, rate limit by IP"
         }
       ]
     }
