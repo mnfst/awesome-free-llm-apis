@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-21",
+  "lastUpdated": "2026-09-23",
   "providers": [
     {
       "name": "Aion Labs",
@@ -1136,7 +1136,59 @@
           "rateLimit": "1,000 RPM, 50,000 TPM"
         }
       ]
-    }
+    },
+  {
+    "name": "ZeroLimitAI",
+    "category": "inference_provider",
+    "country": "ES",
+    "flag": "🇪🇸",
+    "url": "https://www.zerolimitai.com/developer",
+    "baseUrl": "https://www.zerolimitai.com/api/v1",
+    "description": "Permanent free tier, no credit card, and the key never expires: 50 RPD (100 RPD for the first week). One OpenAI-compatible endpoint that routes each request to whichever free model is answering best right now, with automatic failover when one rate-limits.",
+    "footnoteRef": 14,
+    "models": [
+      {
+        "id": "auto",
+        "name": "auto (ZeroOptimize routes the request)",
+        "context": "varies",
+        "maxOutput": "varies",
+        "modality": "Text",
+        "rateLimit": "60 RPM, 50 RPD"
+      },
+      {
+        "id": "qwen/qwen3.8-27b:free",
+        "name": "Qwen: Qwen3.8 27B (free)",
+        "context": "262K",
+        "maxOutput": "235K",
+        "modality": "Text + Image",
+        "rateLimit": "60 RPM, 50 RPD"
+      },
+      {
+        "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "name": "NVIDIA: Nemotron 3 Ultra (free)",
+        "context": "1M",
+        "maxOutput": "65K",
+        "modality": "Text",
+        "rateLimit": "60 RPM, 50 RPD"
+      },
+      {
+        "id": "z-ai/glm-5.2:free",
+        "name": "Z.ai: GLM 5.2 (free)",
+        "context": "32K",
+        "maxOutput": "29K",
+        "modality": "Text",
+        "rateLimit": "60 RPM, 50 RPD"
+      },
+      {
+        "id": "inclusionai/ling-3.0-flash-fin:free",
+        "name": "inclusionAI: Ling 3.0 Flash Fin (free)",
+        "context": "262K",
+        "maxOutput": "32K",
+        "modality": "Text",
+        "rateLimit": "60 RPM, 50 RPD"
+      }
+    ]
+  }
   ],
   "footnotes": [
     {
@@ -1186,6 +1238,10 @@
     {
       "id": 13,
       "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
+    },
+    {
+      "id": 14,
+      "text": "ZeroLimitAI is a router rather than a model host: each request goes to whichever free model is ranked best and healthy at that moment, so two identical calls can be answered by different models — the response's `model` field names the one that replied, and an id the endpoint does not serve is routed rather than refused (the `X-ZeroOptimize-Substituted-From` header reports it). The model list is regenerated daily and published at the [leaderboard](https://www.zerolimitai.com/leaderboard) and in [ClawLabsAI/free-ai-models](https://github.com/ClawLabsAI/free-ai-models); `GET /api/v1/models` requires a key, the published ranking does not. The free tier is 100 requests/day for the first week after sign-up and 50 requests/day from then on, counted per account (extra keys do not widen it), plus 60 RPM per key; keys do not expire and no credit card is required. Function calling is supported; embeddings and image inputs are not. Inference runs only on free models, so the models table above is the upstream catalogue, not capacity ZeroLimitAI hosts itself."
     }
   ],
   "glossary": [
