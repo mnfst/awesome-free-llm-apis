@@ -428,7 +428,7 @@
       "footnoteRef": 2,
       "models": [
         {
-          "id": "openai/gpt-gsk_cQOx7QYAGf1oUPM9LWeeWGdyb3FYTH7pynlYw3qYYv2H9rYq4JHposs-120b",
+          "id": "openai/gpt-oss-120b",
           "name": "openai/gpt-oss-120b",
           "context": "131K",
           "maxOutput": "65K",
