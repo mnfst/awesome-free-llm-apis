@@ -1,0 +1,68 @@
+[
+  {
+    "provider": "LLM7.io",
+    "modelId": "deepseek-r1-0528",
+    "verdict": "FAIL",
+    "httpStatus": 400,
+    "latencyMs": 67,
+    "errorClass": "NOT_FOUND",
+    "responseSnippet": "{\"error\":{\"message\":\"Model 'deepseek-r1-0528' is currently unavailable.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"model_unavailable\"}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "LLM7.io",
+    "modelId": "deepseek-v3-0324",
+    "verdict": "FAIL",
+    "httpStatus": 400,
+    "latencyMs": 54,
+    "errorClass": "NOT_FOUND",
+    "responseSnippet": "{\"error\":{\"message\":\"Model 'deepseek-v3-0324' is currently unavailable.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"model_unavailable\"}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "LLM7.io",
+    "modelId": "gemini-2.5-flash-lite",
+    "verdict": "FAIL",
+    "httpStatus": 400,
+    "latencyMs": 49,
+    "errorClass": "NOT_FOUND",
+    "responseSnippet": "{\"error\":{\"message\":\"Model 'gemini-2.5-flash-lite' is currently unavailable.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"model_unavailable\"}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "LLM7.io",
+    "modelId": "gpt-4o-mini",
+    "verdict": "FAIL",
+    "httpStatus": 400,
+    "latencyMs": 58,
+    "errorClass": "NOT_FOUND",
+    "responseSnippet": "{\"error\":{\"message\":\"Model 'gpt-4o-mini' is currently unavailable.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"model_unavailable\"}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "LLM7.io",
+    "modelId": "mistral-small-3.1-24b",
+    "verdict": "FAIL",
+    "httpStatus": 400,
+    "latencyMs": 50,
+    "errorClass": "NOT_FOUND",
+    "responseSnippet": "{\"error\":{\"message\":\"Model 'mistral-small-3.1-24b' is currently unavailable.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"model_unavailable\"}}",
+    "billed": null,
+    "evidenceUrl": null
+  },
+  {
+    "provider": "LLM7.io",
+    "modelId": "qwen2.5-coder-32b",
+    "verdict": "FAIL",
+    "httpStatus": 400,
+    "latencyMs": 48,
+    "errorClass": "NOT_FOUND",
+    "responseSnippet": "{\"error\":{\"message\":\"Model 'qwen2.5-coder-32b' is currently unavailable.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"model_unavailable\"}}",
+    "billed": null,
+    "evidenceUrl": null
+  }
+]

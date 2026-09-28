@@ -1,0 +1,16 @@
+{
+  "modelResults": [
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "modelId": "Llama-3.1-8B-Instruct",
+      "verdict": "FAIL",
+      "httpStatus": 404,
+      "latencyMs": 132,
+      "errorClass": "NOT_FOUND",
+      "responseSnippet": "{\"error\":{\"code\":\"model_not_found\",\"message\":\"The model `Llama-3.1-8B-Instruct` does not exist.\",\"param\":null,\"type\":\"invalid_request_error\"}}",
+      "billed": null,
+      "evidenceUrl": null
+    }
+  ],
+  "baseUrlChecks": []
+}
