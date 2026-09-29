@@ -61,6 +61,7 @@ const KEY = {
   MODELSCOPE:  env.MODELSCOPE_API_KEY  || process.env.MODELSCOPE_API_KEY,
   KILO:        env.KILO_API_KEY        || process.env.KILO_API_KEY,
   OVH:         env.OVH_API_KEY         || process.env.OVH_API_KEY,
+  REQUESTY:    env.REQUESTY_API_KEY    || process.env.REQUESTY_API_KEY,
 };
 
 // ---------------------------------------------------------------------------
@@ -295,6 +296,7 @@ function getProviderConfig(providerName, baseUrl) {
   if (name.includes('modelscope')) return { key: KEY.MODELSCOPE, type: 'standard' };
   if (name.includes('kilo')) return { key: KEY.KILO, type: 'standard' };
   if (name.includes('ovhcloud') || name.includes('ovh')) return { key: KEY.OVH, type: 'standard' };
+  if (name.includes('requesty')) return { key: KEY.REQUESTY, type: 'standard' };
   if (name.includes('llm7')) return { key: null, type: 'standard', keyless: true };
   return { key: null, type: 'standard' };
 }
