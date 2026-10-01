@@ -205,10 +205,10 @@ x402 pay-per-request API with a free tier. Free access needs no key or account: 
 
 Base URL: `https://sol.mapleai.shop/v1` (mirrors: `https://base.mapleai.shop/v1`, `https://polygon.mapleai.shop/v1`, `https://arc.mapleai.shop/v1`)
 
-| What | Model Name | Context | Max Output | Modality | Rate Limit |
-| ---- | ---------- | ------- | ---------- | -------- | ---------- |
-| Chat | `nvidia/gpt-oss-20b` | 128K | 2048 tokens | Text (reasoning) | 10 req / 10 min + 100 req / day per IP |
-| Embeddings | `nvidia/nemotron-3-embed-1b` | 32K | 2048-dim vectors | Text → Embeddings | per-IP (free, no key) |
+| Model Name | Context | Max Output | Modality | Rate Limit |
+| ---------- | ------- | ---------- | -------- | ---------- |
+| `nvidia/gpt-oss-20b` | 128K | 2048 tokens | Text (reasoning) | 10 req / 10 min + 100 req / day per IP |
+| `nvidia/nemotron-3-embed-1b` | 32K | 2048-dim vectors | Text → Embeddings | Free, no key; rate-limited per IP |
 
 ### [ModelScope](https://modelscope.cn/my/myaccesstoken) 🇨🇳
 
