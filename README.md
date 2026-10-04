@@ -303,6 +303,20 @@ Base URL: `https://api.siliconflow.cn/v1`
 | --------------- | ------- | ---------- | -------- | --------------------- |
 | `Qwen/Qwen3-8B` | 128K    | —          | Text     | 1,000 RPM, 50,000 TPM |
 
+### [UnoRouter](https://unorouter.com/token) 🇩🇪
+
+130+ free models from about 50 providers behind one OpenAI-compatible key. [^14]
+
+Base URL: `https://api.unorouter.com/v1`
+
+| Model Name               | Context | Max Output | Modality                     | Rate Limit  |
+| ------------------------ | ------- | ---------- | ---------------------------- | ----------- |
+| `glm-5.3-flash:free`     | 1M      | Varies     | Text + Image (reasoning)     | 1 RPM/model |
+| `deepseek-v4-flash:free` | 1M      | Varies     | Text (reasoning)             | 1 RPM/model |
+| `gemini-3.6-flash:free`  | 1M      | Varies     | Text + Image + Audio + Video | 1 RPM/model |
+| `minimax-m2.7:free`      | 205K    | Varies     | Text (reasoning)             | 1 RPM/model |
+| `gpt-oss-20b:free`       | 128K    | Varies     | Text (reasoning)             | 1 RPM/model |
+
 ## Glossary
 
 | Abbreviation | Meaning             |
@@ -329,3 +343,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^11]: The 10,000 free Neurons are shared across all Workers AI usage, not per model, and all limits reset daily at 00:00 UTC. Going over does not bill you, the request fails. Five models are excluded from Workers Free billing and need the Workers Paid plan or prepaid AI Gateway credits: `@cf/moonshotai/kimi-k2.6`, `@cf/moonshotai/kimi-k2.7-code`, `@cf/zai-org/glm-5.2`, `@cf/deepseek-ai/deepseek-v4-flash-0731`, `@cf/deepseek-ai/deepseek-v4-pro-0813` ([pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
 [^12]: Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time.
 [^13]: Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values.
+[^14]: One key and one API for free models from about 50 upstream free providers, with automatic failover between them. Free models carry a `:free` suffix: about 1 request per minute per model per user, HTTP 429 with Retry-After when exceeded. Sign-in with Discord, GitHub or Google, no credit card. The lineup follows what the upstream providers offer, so it changes over time ([free tier details](https://unorouter.com/en/blog/free-models-aggregated), [live model list](https://unorouter.com/en/models)). The gateway, storefront, sync engine and infrastructure config are open source ([github.com/unorouter](https://github.com/unorouter)).
