@@ -79,14 +79,15 @@ export NVIDIA_API_KEY="your-key-here"
 
 ## Gonka Broker
 
-**Models:** MiniMax M2.7, DeepSeek V4 Flash, BGE-M3 (embeddings) — lineup rotates; live list at https://proxy.gonkabroker.com/v1/models
-**Limits:** 1M+ tokens/month across all models, resets monthly
+**Models:** MiniMax M2.7, DeepSeek V4 Flash, GLM-5.3-Flash, BGE-M3 (embeddings) — lineup rotates; live list at https://proxy.gonkabroker.com/v1/models
+**Limits:** ~1M tokens/month (shared, varies by model; cheaper models stretch further), resets monthly, unused tokens don't carry over. On free-tier funds requests are capped at a lower RPM — the current cap is returned as `maxRpm` by `/test-auth`.
 
 ### Get your API key
 
 1. Go to [gonkabroker.com](https://app.gonkabroker.com/signup) and sign up with email or Google.
-2. Open the **API Keys** tab and create a key.
-3. Copy the key (starts with `gnk-prx-`, shown only once).
+2. Verify a real (non-VoIP) phone number via SMS to receive the free grant (one grant per number).
+3. Open the **API Keys** tab and create a key.
+4. Copy the key (starts with `gnk-prx-`, shown only once).
 
 ### Usage example
 
