@@ -507,10 +507,14 @@ async function run() {
 async function runSelfTest() {
   console.log('=== Self-test ===');
 
-  // 1. Test against a known-good provider (LLM7.io, keyless)
-  console.log('Self-test 1: LLM7.io keyless call with gpt-4o-mini ...');
+  // 1. Test against a known-good provider (LLM7.io, keyless). LLM7 rotates its
+  // catalog, so use the first model data.json currently lists for it.
+  const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data.json'), 'utf8'));
+  const llm7 = data.providers.find(p => p.name === 'LLM7.io');
+  const llm7Model = (llm7 && llm7.models[0] && llm7.models[0].id) || 'gpt-oss:20b';
+  console.log(`Self-test 1: LLM7.io keyless call with ${llm7Model} ...`);
   const startMs = Date.now();
-  const res1 = await callStandard('https://api.llm7.io/v1', 'gpt-4o-mini', null);
+  const res1 = await callStandard('https://api.llm7.io/v1', llm7Model, null);
   const parsed1 = parseCompletion(res1.body || '');
   const v1 = verdict(res1.status, res1.body || '', parsed1);
   console.log(`  Status: ${res1.status}, Verdict: ${v1}`);

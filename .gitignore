@@ -1,1 +1,6 @@
 .claude/
+.env
+.env.*
+!.env.verify.example
+node_modules/
+.DS_Store
