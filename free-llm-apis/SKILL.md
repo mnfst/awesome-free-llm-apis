@@ -7,7 +7,7 @@ description: Guide users through obtaining and configuring free API keys for LLM
 
 Help users pick a free LLM provider and configure it. Every provider here has a permanent free tier with no credit card; three of them need no API key at all.
 
-Provider data follows the repository's `data.json` (2026-10-05, plus the 2026-10-08 nightly refresh) and live checks run on 2026-10-08. Free tiers and model lists change often: before hardcoding a model ID, list the provider's current models (`GET {base_url}models`).
+Provider data follows the repository's `data.json` and live checks run on 2026-10-08 and 2026-10-09. Free tiers and model lists change often: before hardcoding a model ID, list the provider's current models (`GET {base_url}models`).
 
 ## Provider Selection
 
@@ -60,7 +60,7 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-Replace KEY, BASE_URL, and MODEL_NAME with values from the provider's setup guide. For keyless providers use `api_key="anonymous"`: the OpenAI SDK requires a non-empty key, and Kilo Code rejects arbitrary placeholders such as `"unused"` with HTTP 401.
+Replace KEY, BASE_URL, and MODEL_NAME with values from the provider's setup guide. For Kilo Code and LLM7.io without a key, use `api_key="anonymous"`: the OpenAI SDK requires a non-empty key, and Kilo Code rejects arbitrary placeholders such as `"unused"` with HTTP 401. OVHcloud's anonymous tier rejects every `Bearer` value, so call it with plain HTTP and no `Authorization` header (see its section).
 
 ## No longer free or no longer available
 

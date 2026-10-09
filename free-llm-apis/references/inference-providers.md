@@ -10,7 +10,7 @@ Third-party platforms that host open-weight models from various sources. The fir
 
 ### Get access
 
-Nothing to create. Pass `api_key="anonymous"`: an arbitrary placeholder such as `"unused"` is rejected with HTTP 401. A free account at [Kilo](https://app.kilo.ai/profile) gives a personal token.
+Nothing to create. Kilo's [authentication docs](https://kilo.ai/docs/gateway/authentication) describe anonymous access as omitting the `Authorization` header, which the OpenAI SDK cannot do. With the SDK, pass `api_key="anonymous"`: this is observed behavior (tested 2026-10-08), not documented, while an arbitrary placeholder such as `"unused"` is rejected with HTTP 401. A free account at [Kilo](https://app.kilo.ai/profile) gives a personal token.
 
 ### Usage example
 
@@ -42,8 +42,8 @@ export KILO_API_KEY="your-token-here"
 
 ## LLM7.io (no key)
 
-**Models (catalog rotates):** DeepSeek V4 Pro, DeepSeek V4 Flash (400K context), GLM-5.2, MiniMax M3, MiniMax M2.7, GPT-OSS 20B +more `turbo` models
-**Limits:** Anonymous access works, but its limits are not published and are tight: a few quick calls can return HTTP 429 "Retry after 300 seconds". A free token raises them to 1 RPS, 60 RPM, 250 requests/hour, 100K tokens/day; the free quota may be reduced without notice. `pro` models need the paid plan.
+**Models (catalog rotates):** DeepSeek V4 Flash (400K context), GLM-5.2 (~1M context), MiniMax M3, MiniMax M2.7, GPT-OSS 20B, Mistral Nemo +more `turbo` models
+**Limits:** Anonymous access works, but its limits are not published and are tight: a few quick calls can return HTTP 429 "Retry after 300 seconds". A free token raises them to 1 RPS, 60 RPM, 250 requests/hour, 100K tokens/day; the free quota may be reduced without notice. `pro` models (for example `deepseek-v4-pro`) need the paid plan: check the `tier` field of `GET https://api.llm7.io/v1/models` before picking one.
 
 ### Get access
 
@@ -60,13 +60,13 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="deepseek-v4-pro",
+    model="DeepSeek-V4-Flash-0731",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 print(response.choices[0].message.content)
 ```
 
-Use `DeepSeek-V4-Flash-0731` for long contexts (400K) and `gpt-oss:20b` for the fastest answers.
+Use `glm-5.2` for the longest contexts (~1M) and `gpt-oss:20b` for the fastest answers.
 
 ### Environment variable
 
@@ -81,7 +81,7 @@ export LLM7_API_KEY="your-token-here"
 
 **Models:** Qwen3.5 397B, GPT-OSS 120B, GPT-OSS 20B, Llama 3.3 70B, Qwen3 32B, Mistral Small 3.2 +more, hosted in EU data centers
 **Limits:** Anonymous tier: 2 requests per minute per IP, per model, no signup. An API key (Public Cloud project) raises this to 400 RPM but is billed pay-as-you-go per token.
-**Notes:** On 2026-10-08 anonymous requests from one residential IP received HTTP 429 even after waiting a minute. If that happens, use another keyless provider.
+**Notes:** On 2026-10-08 anonymous requests from one residential IP received HTTP 429 even after waiting a minute. If that happens, use another keyless provider. Model list: [AI Endpoints catalog](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/).
 
 ### Usage example
 
@@ -97,7 +97,7 @@ curl https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions \
 
 ## NVIDIA NIM
 
-**Models:** Nemotron 3 Ultra 550B, Nemotron 3 Super 120B, GLM-5.3, Llama 3.1 Nemotron Ultra 253B, Gemma 4 31B, Mistral Large 2, GPT-OSS 20B +100 more
+**Models:** Nemotron 3 Ultra 550B, Nemotron 3 Super 120B, Llama 3.1 Nemotron Ultra 253B, Gemma 4 31B, Mistral Large 2, GPT-OSS 20B +92 more (100+ models in total)
 **Limits:** 40 RPM, 10,000 RPD per model. Free with NVIDIA Developer Program membership.
 **Notes:** `meta/llama-3.3-70b-instruct` has been retired (HTTP 410).
 
@@ -173,7 +173,7 @@ export GROQ_API_KEY="your-key-here"
 
 ## Cloudflare Workers AI
 
-**Models:** GPT-OSS 120B, Llama 3.3 70B (fp8-fast), Llama 4 Scout, Gemma 4 26B, GLM-4.7-Flash, Mistral Small 3.1 +60 more
+**Models:** GPT-OSS 120B, Llama 3.3 70B (fp8-fast), Llama 4 Scout, Gemma 4 26B, GLM-4.7-Flash, Mistral Small 3.1, DeepSeek R1 Distill Qwen 32B +55 more (60+ models in total)
 **Limits:** 10,000 neurons/day shared across all models, reset at 00:00 UTC. Over the limit, requests fail instead of being billed. Seven models (Kimi K2.x, GLM-5.x, DeepSeek V4) need the Workers Paid plan.
 
 ### Get your API key
@@ -250,7 +250,7 @@ export OPENROUTER_API_KEY="your-key-here"
 
 ## Ollama Cloud
 
-**Models:** DeepSeek V4 Pro, DeepSeek V4 Flash, Kimi K3, MiniMax M3, GPT-OSS 120B, Nemotron 3 Ultra, Mistral Large 3 675B, Qwen3.5 397B
+**Models:** DeepSeek V4 Pro, DeepSeek V4 Flash, Kimi K3, MiniMax M3, GPT-OSS 120B, GPT-OSS 20B, Nemotron 3 Ultra, Mistral Large 3 675B, Qwen3.5 397B +7 more (16 model families)
 **Limits:** Session limits reset every 5 hours and weekly limits every 7 days; numbers are not published. Usage is weighted per model.
 
 ### Get your API key

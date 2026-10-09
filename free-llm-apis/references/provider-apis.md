@@ -4,8 +4,9 @@ APIs run by the companies that train or fine-tune the models themselves.
 
 ## Google Gemini
 
-**Models:** Gemini 3.8 Flash, 3.7 Flash, 3.6 Flash, 3.5 Flash, 3.5 Flash-Lite, 2.5 Flash, 2.5 Pro +more (1M context, multimodal)
-**Limits:** Google no longer publishes per-model free limits; check your quotas in AI Studio. Last published values: 15 RPM / 1,500 RPD (Flash), 30 RPM / 1,500 RPD (Flash-Lite), 5 RPM / 50 RPD (2.5 Pro).
+**Models:** Gemini 3.8 Flash, 3.7 Flash, 3.6 Flash, 3.5 Flash, 3.5 Flash-Lite, 2.5 Flash +more (1M context, multimodal)
+**Limits:** Google no longer publishes per-model free limits; check your quotas in AI Studio. Last published values: 15 RPM / 1,500 RPD (Flash), 30 RPM / 1,500 RPD (Flash-Lite).
+**Not on the free tier:** Pro models. With a free key on 2026-10-08, `gemini-3.1-pro-preview` and `gemini-pro-latest` returned HTTP 429 (no free quota) and `gemini-2.5-pro` returned 404 ("no longer available to new users").
 **Region:** The free tier is available in the EU, UK and Switzerland. The terms still require Paid Services if you make an API client available to users there. Prompts from users in those regions are not used to improve Google products.
 
 ### Get your API key
@@ -32,7 +33,7 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-For higher request rates use `gemini-3.5-flash-lite`. `gemini-3.1-flash-lite` shuts down on 2027-05-07.
+For faster answers use `gemini-3.5-flash`, and `gemini-3.5-flash-lite` for higher request rates: on 2026-10-08, a first call to `gemini-3.8-flash` took over two minutes, while `gemini-3.5-flash` answered in about a second. `gemini-3.1-flash-lite` shuts down on 2027-05-07.
 
 ### Environment variable
 
@@ -47,7 +48,7 @@ export OPENAI_BASE_URL="https://generativelanguage.googleapis.com/v1beta/openai/
 
 ## Mistral AI
 
-**Models:** Mistral Medium 3.5, Mistral Large 3 (2512), Mistral Small (2603), Codestral (2508), Ministral 3B / 8B / 14B
+**Models:** Mistral Medium 3.5, Mistral Large 3 (2512), Mistral Small 4 (2603), Codestral (2508), Ministral 3 3B / 8B / 14B
 **Limits:** Free mode is the default for new accounts: $10/month in API credits, shared across Studio, the API and Vibe Code. Numeric rate limits are shown on the Limits page of the admin panel (last published: ~1 RPS, 500K TPM).
 **Data:** Free-mode inputs and outputs may be used to train Mistral models; you can opt out at any time.
 
@@ -132,7 +133,7 @@ export CO_API_KEY="your-key-here"
 
 ### Get your API key
 
-1. Sign up on the international platform [Z.ai](https://z.ai) or on [BigModel](https://open.bigmodel.cn/usercenter/apikeys).
+1. Sign up on the international platform and open [Z.ai API Keys](https://z.ai/manage-apikey/apikey-list), or use [BigModel](https://open.bigmodel.cn/usercenter/apikeys).
 2. Go to API Keys and create a new key.
 3. Copy the key.
 
@@ -153,12 +154,12 @@ response = client.chat.completions.create(
 print(response.choices[0].message.content)
 ```
 
-Use the base URL of the platform where you created the key: `https://api.z.ai/api/paas/v4/` (international) or `https://open.bigmodel.cn/api/paas/v4/` (BigModel).
+Use the base URL that matches the platform you signed up on: `https://api.z.ai/api/paas/v4/` (international) or `https://open.bigmodel.cn/api/paas/v4/` (BigModel).
 
 ### Environment variable
 
 ```bash
-export ZHIPU_API_KEY="your-key-here"
+export ZAI_API_KEY="your-key-here"
 ```
 
 ---
