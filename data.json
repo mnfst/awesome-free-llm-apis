@@ -670,6 +670,42 @@
       ]
     },
     {
+      "name": "Kiri Router",
+      "category": "inference_provider",
+      "country": "NG",
+      "flag": "🇳🇬",
+      "url": "https://router.kiri.ng",
+      "baseUrl": "https://router.kiri.ng/v1",
+      "description": "OpenAI-compatible gateway with a permanent free tier. No API key or credit card required.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "deepseek-v4-flash-free",
+          "name": "deepseek-v4-flash-free",
+          "context": "1M",
+          "maxOutput": "384K",
+          "modality": "Text",
+          "rateLimit": "No fixed limit (fair use)"
+        },
+        {
+          "id": "mimo-v2.6-flash-free",
+          "name": "mimo-v2.6-flash-free",
+          "context": "1M",
+          "maxOutput": "131K",
+          "modality": "Text",
+          "rateLimit": "No fixed limit (fair use)"
+        },
+        {
+          "id": "ling-3.0-flash-fin-free",
+          "name": "ling-3.0-flash-fin-free",
+          "context": "262K",
+          "maxOutput": "236K",
+          "modality": "Text",
+          "rateLimit": "No fixed limit (fair use)"
+        }
+      ]
+    },
+    {
       "name": "LLM7.io",
       "category": "inference_provider",
       "country": "GB",
