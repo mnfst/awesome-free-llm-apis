@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-05",
+  "lastUpdated": "2026-10-10",
   "providers": [
     {
       "name": "Aion Labs",
@@ -468,7 +468,7 @@
       "flag": "🇺🇸",
       "url": "https://huggingface.co/settings/tokens",
       "baseUrl": "https://router.huggingface.co/v1",
-      "description": "$0.10/month in Inference Provider credits for free users (subject to change). Routes to Fireworks, Together, Hyperbolic, Nebius, Novita, DeepInfra and others. Thousands of models.",
+      "description": "No included Inference Provider credits for free users: usage is pay-as-you-go and requires purchasing credits (PRO includes $2/month). Routes to Cerebras, Groq, Together, Fireworks, Novita, DeepInfra and others. Thousands of models.",
       "footnoteRef": null,
       "models": [
         {
@@ -498,14 +498,6 @@
         {
           "id": "Qwen/Qwen2.5-Coder-7B-Instruct",
           "name": "Qwen2.5-Coder-7B-Instruct",
-          "context": "131K",
-          "maxOutput": "~4K",
-          "modality": "Text",
-          "rateLimit": "Credit-metered"
-        },
-        {
-          "id": "Qwen/Qwen2.5-7B-Instruct",
-          "name": "Qwen2.5-7B-Instruct",
           "context": "131K",
           "maxOutput": "~4K",
           "modality": "Text",
@@ -596,14 +588,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "tencent/hy3:free",
-          "name": "tencent/hy3:free",
-          "context": "262K",
-          "maxOutput": "128K",
-          "modality": "Text",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "nvidia/nemotron-3.5-lightning:free",
           "name": "nvidia/nemotron-3.5-lightning:free",
           "context": "1M",
@@ -666,6 +650,14 @@
           "maxOutput": "460K",
           "modality": "Text + Vision",
           "rateLimit": "200 req/hr"
+        },
+        {
+          "id": "stepfun/step-5-preview-free",
+          "name": "stepfun/step-5-preview-free",
+          "context": "1M",
+          "maxOutput": "64K",
+          "modality": "Text + Vision",
+          "rateLimit": "200 req/hr"
         }
       ]
     },
@@ -709,6 +701,14 @@
           "context": "400K",
           "maxOutput": "—",
           "modality": "Text (reasoning)",
+          "rateLimit": "60 RPM, 250 req/hr (free token)"
+        },
+        {
+          "id": "gemma4:31b",
+          "name": "gemma4:31b",
+          "context": "262K",
+          "maxOutput": "—",
+          "modality": "Text",
           "rateLimit": "60 RPM, 250 req/hr (free token)"
         }
       ]
@@ -824,7 +824,7 @@
       "flag": "🇺🇸",
       "url": "https://ollama.com/settings/keys",
       "baseUrl": "https://ollama.com/api",
-      "description": "Free tier with usage limits. 16 cloud model families from the Ollama library. OpenAI SDK-compatible via https://ollama.com/v1.",
+      "description": "Free plan with monthly starter usage credits for starter cloud models. 17 cloud model families from the Ollama library. OpenAI SDK-compatible via https://ollama.com/v1.",
       "footnoteRef": 3,
       "models": [
         {
@@ -833,31 +833,23 @@
           "context": "1M",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "deepseek-v4-flash",
-          "name": "deepseek-v4-flash",
-          "context": "1M",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         },
         {
           "id": "minimax-m3",
           "name": "minimax-m3",
           "context": "512K",
           "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "modality": "Text + Image",
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         },
         {
           "id": "kimi-k3",
           "name": "kimi-k3",
           "context": "1M",
           "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "modality": "Text + Image",
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         },
         {
           "id": "gpt-oss:120b",
@@ -865,47 +857,39 @@
           "context": "128K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         },
         {
           "id": "gpt-oss:20b",
           "name": "gpt-oss:20b",
-          "context": "131K",
+          "context": "128K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         },
         {
           "id": "nemotron-3-ultra",
           "name": "nemotron-3-ultra",
-          "context": "262K",
+          "context": "256K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         },
         {
           "id": "mistral-large-3:675b",
           "name": "mistral-large-3:675b",
           "context": "256K",
           "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "qwen3.5:397b",
-          "name": "qwen3.5:397b",
-          "context": "256K",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "modality": "Text + Image",
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         },
         {
           "id": null,
-          "name": "+ 7 more cloud models",
+          "name": "+ 11 more cloud models",
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits (unpublished), 1 concurrent request"
         }
       ]
     },
@@ -952,22 +936,6 @@
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
-          "id": "nvidia/nemotron-nano-9b-v2:free",
-          "name": "nvidia/nemotron-nano-9b-v2:free",
-          "context": "128K",
-          "maxOutput": "—",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "nvidia/nemotron-nano-12b-v2-vl:free",
-          "name": "nvidia/nemotron-nano-12b-v2-vl:free",
-          "context": "128K",
-          "maxOutput": "128K",
-          "modality": "Text + Image",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
           "id": "poolside/laguna-s-2.1:free",
           "name": "poolside/laguna-s-2.1:free",
           "context": "262K",
@@ -989,22 +957,6 @@
           "context": "262K",
           "maxOutput": "235K",
           "modality": "Text",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "inclusionai/ling-3.0-flash-sante:free",
-          "name": "inclusionai/ling-3.0-flash-sante:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "qwen/qwen3.8-27b:free",
-          "name": "qwen/qwen3.8-27b:free",
-          "context": "262K",
-          "maxOutput": "235K",
-          "modality": "Text + Image + Video",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
@@ -1045,6 +997,14 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text",
+          "rateLimit": "20 RPM, 50 RPD"
+        },
+        {
+          "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "name": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "context": "256K",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
@@ -1124,14 +1084,6 @@
           "rateLimit": "2 RPM (anonymous)"
         },
         {
-          "id": "Qwen3-32B",
-          "name": "Qwen3-32B",
-          "context": "131K",
-          "maxOutput": "~32K",
-          "modality": "Text",
-          "rateLimit": "2 RPM (anonymous)"
-        },
-        {
           "id": "Qwen2.5-VL-72B-Instruct",
           "name": "Qwen2.5-VL-72B-Instruct",
           "context": "32K",
@@ -1189,7 +1141,7 @@
     },
     {
       "id": 3,
-      "text": "Ollama Cloud measures usage by input, cached input, and output tokens weighted per model ([FAQ](https://docs.ollama.com/cloud)). Free tier has session limits resetting every 5 hours and weekly limits resetting every 7 days. Cloud models are also served through Ollama's OpenAI-compatible endpoint at ollama.com/v1."
+      "text": "Ollama Cloud measures usage in tokens at each model's rates ([pricing](https://ollama.com/pricing)). The Free plan includes starter usage credits and access to starter models (not listed by Ollama); adding credits unlocks all models. Free usage resets monthly from the sign-up date, with 1 concurrent request; the old session and weekly limits no longer apply. Cloud models are also served through Ollama's OpenAI-compatible endpoint at ollama.com/v1."
     },
     {
       "id": 4,
@@ -1197,7 +1149,7 @@
     },
     {
       "id": 5,
-      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): \"Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services.\""
+      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (stepfun/step-5-preview-free on 2026-10-10) from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): \"Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services.\""
     },
     {
       "id": 6,
