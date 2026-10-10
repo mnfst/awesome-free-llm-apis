@@ -1176,6 +1176,42 @@
           "rateLimit": "1,000 RPM, 50,000 TPM"
         }
       ]
+    },
+    {
+      "name": "onomeo",
+      "category": "inference_provider",
+      "country": "-",
+      "flag": "🌐",
+      "url": "https://onomeo.com/dashboard",
+      "baseUrl": "https://onomeo.com/v1",
+      "description": "About 30 free models behind one OpenAI-compatible endpoint, no credit card required. Free models are limited by call count (30 calls per 5 hours per account, 90 for 35 days after a payment). Claude, GPT and other big models and a DeepSeek coding line are pay as you go from a US-dollar balance (optional, top up from US$5). Public beta: not every feature is guaranteed to work; we are actively collecting feedback and welcome it.",
+      "footnoteRef": 14,
+      "models": [
+        {
+          "id": "deepseek-v4.1-flash",
+          "name": "deepseek-v4.1-flash",
+          "context": "1M",
+          "maxOutput": "384K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "12 RPM, 30 req/5h"
+        },
+        {
+          "id": "glm-5.2",
+          "name": "glm-5.2",
+          "context": "1M",
+          "maxOutput": "128K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "12 RPM, 30 req/5h"
+        },
+        {
+          "id": "nvidia/nemotron-3-super-120b-a12b",
+          "name": "nvidia/nemotron-3-super-120b-a12b",
+          "context": "256K",
+          "maxOutput": "256K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "12 RPM, 30 req/5h"
+        }
+      ]
     }
   ],
   "footnotes": [
@@ -1226,6 +1262,10 @@
     {
       "id": 13,
       "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
+    },
+    {
+      "id": 14,
+      "text": "Free models, including the three listed here, are limited by calls: 12 RPM per key and 30 calls per account in any 5-hour window (a long request counts as several calls, one per 50,000 counted characters), plus a site-wide shared pool of free calls that can run out at busy times. For 35 days after a payment the per-account limit is 90 calls per 5 hours. Claude, GPT and other big models and the DeepSeek coding line are paid: they are charged by usage from a US-dollar balance, at per-model prices listed on the [models page](https://onomeo.com/models#pricing). Topping up is optional and starts at US$5 by card or PayPal; the balance does not expire, nothing renews automatically, and during the beta an account can use at most US$0.50 a day on the big models. Image generation on the web page is free, 10 images a day per account. The free models run on the free tier each model provider offers, and onomeo puts them behind one key, so availability changes; many upstream providers may use prompts for training, and each model page says which. `GET https://onomeo.com/api/info` needs no key and returns the live model list and limits. Public beta: not every feature is guaranteed to work, and we are actively collecting feedback, which is welcome at https://onomeo.com/feedback."
     }
   ],
   "glossary": [
