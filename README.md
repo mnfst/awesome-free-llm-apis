@@ -205,6 +205,17 @@ Base URL: `https://api.llm7.io/v1`
 | minimax-m2.7               | 180K    | —          | Text (reasoning) | 60 RPM, 250 req/hr (free token) |
 | DeepSeek-V4-Flash-0731     | 400K    | —          | Text (reasoning) | 60 RPM, 250 req/hr (free token) |
 
+### [MapleAI](https://sol.mapleai.shop) 🇪🇺
+
+x402 pay-per-request API with a free tier. Free access needs no key or account: the OpenAI-compatible chat endpoint plus embeddings are rate-limited per agent IP; everything above is paid per call in USDC on Solana, Base, Polygon or Arc via the x402 standard.
+
+Base URL: `https://sol.mapleai.shop/v1` (mirrors: `https://base.mapleai.shop/v1`, `https://polygon.mapleai.shop/v1`, `https://arc.mapleai.shop/v1`)
+
+| Model Name | Context | Max Output | Modality | Rate Limit |
+| ---------- | ------- | ---------- | -------- | ---------- |
+| `nvidia/gpt-oss-20b` | 128K | 2048 tokens | Text (reasoning) | 10 req / 10 min + 100 req / day per IP |
+| `nvidia/nemotron-3-embed-1b` | 32K | 2048-dim vectors | Text → Embeddings | Free, no key; rate-limited per IP |
+
 ### [ModelScope](https://modelscope.cn/my/myaccesstoken) 🇨🇳
 
 Free API-Inference for registered users. Requires Alibaba Cloud account binding + real-name verification. [^6]
