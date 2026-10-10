@@ -308,6 +308,17 @@ Base URL: `https://api.siliconflow.cn/v1`
 | --------------- | ------- | ---------- | -------- | --------------------- |
 | `Qwen/Qwen3-8B` | 128K    | —          | Text     | 1,000 RPM, 50,000 TPM |
 
+### [FreeAIapikey](https://freeaiapikey.com) 🇺🇸
+
+OpenAI-compatible API gateway with **100,000 free tokens daily** (no credit card required). Access to GPT-5.5, GPT-5.6 Sol, GPT-6 Sol, GPT-6 Astra, Claude Opus 4.7/4.8/5/5.5, and Claude Sonnet 5. 
+
+Base URL: `https://api.freeaiapikey.com/v1`
+
+Docs: https://freeaiapikey.com/docs
+
+Models: 9 frontier models available via OpenAI-compatible API. $2 free credit on signup.
+
+
 ## Glossary
 
 | Abbreviation | Meaning             |
