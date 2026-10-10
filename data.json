@@ -940,7 +940,7 @@
           "name": "google/gemma-4-26b-a4b-it:free",
           "context": "262K",
           "maxOutput": "32K",
-          "modality": "Text + Image",
+          "modality": "Text + Image + Video",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
