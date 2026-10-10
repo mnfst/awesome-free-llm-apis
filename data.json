@@ -426,6 +426,58 @@
       ]
     },
     {
+      "name": "FreeTheAI",
+      "category": "inference_provider",
+      "country": "US",
+      "flag": "🇺🇸",
+      "url": "https://freetheai.org/dashboard/api-keys",
+      "baseUrl": "https://api.freetheai.org/v1",
+      "description": "Free models with no credit card. Sign up with an email, create a key, and check in once a day on the site to unlock the free models.",
+      "footnoteRef": 14,
+      "models": [
+        {
+          "id": "fta/zai/glm-5.3",
+          "name": "fta/zai/glm-5.3",
+          "context": "1M",
+          "maxOutput": "131K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "50 RPD (shared)"
+        },
+        {
+          "id": "fta/zai/glm-5.3-flash",
+          "name": "fta/zai/glm-5.3-flash",
+          "context": "1M",
+          "maxOutput": "131K",
+          "modality": "Text + Vision",
+          "rateLimit": "50 RPD (shared)"
+        },
+        {
+          "id": "fta/mmx/minimax-m3",
+          "name": "fta/mmx/minimax-m3",
+          "context": "1M",
+          "maxOutput": "512K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "50 RPD (shared)"
+        },
+        {
+          "id": "fta/olf/gpt-oss:120b",
+          "name": "fta/olf/gpt-oss:120b",
+          "context": "131K",
+          "maxOutput": "33K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "50 RPD (shared)"
+        },
+        {
+          "id": "fta/olf/nemotron-3-ultra",
+          "name": "fta/olf/nemotron-3-ultra",
+          "context": "262K",
+          "maxOutput": "128K",
+          "modality": "Text",
+          "rateLimit": "50 RPD (shared)"
+        }
+      ]
+    },
+    {
       "name": "Groq",
       "category": "inference_provider",
       "country": "US",
@@ -1226,6 +1278,10 @@
     {
       "id": 13,
       "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
+    },
+    {
+      "id": 14,
+      "text": "FreeTheAI's 50 requests a day are shared across all free models and reset at 00:00 UTC; linking Discord adds 50 more ([plans](https://freetheai.org/plans)). Free models unlock after a short daily check-in on the site, and signup accepts Gmail, Outlook, Yahoo, and iCloud addresses. The same key also works with the Anthropic Messages and OpenAI Responses APIs."
     }
   ],
   "glossary": [
