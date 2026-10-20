@@ -1,0 +1,29 @@
+name: Validate provider data
+
+on:
+  pull_request:
+    paths:
+      - 'data.json'
+      - 'scripts/validate-data.js'
+      - '.github/workflows/validate-data.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'data.json'
+      - 'scripts/validate-data.js'
+      - '.github/workflows/validate-data.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate data.json
+        run: node scripts/validate-data.js
+
