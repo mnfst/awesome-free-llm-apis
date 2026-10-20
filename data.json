@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-05",
+  "lastUpdated": "2026-10-20",
   "providers": [
     {
       "name": "Aion Labs",
@@ -177,7 +177,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "15 RPM, 1,500 RPD"
+          "rateLimit": "Project-specific; see AI Studio"
         },
         {
           "id": "gemini-3.5-flash",
@@ -185,7 +185,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "15 RPM, 1,500 RPD"
+          "rateLimit": "Project-specific; see AI Studio"
         },
         {
           "id": "gemini-3.5-flash-lite",
@@ -193,7 +193,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "30 RPM, 1,500 RPD"
+          "rateLimit": "Project-specific; see AI Studio"
         },
         {
           "id": "gemini-3.1-flash-lite",
@@ -201,7 +201,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "30 RPM, 1,500 RPD"
+          "rateLimit": "Project-specific; see AI Studio"
         },
         {
           "id": "gemini-2.5-flash",
@@ -209,7 +209,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "15 RPM, 1,500 RPD"
+          "rateLimit": "Project-specific; see AI Studio"
         },
         {
           "id": "gemini-2.5-flash-lite",
@@ -217,7 +217,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "30 RPM, 1,500 RPD"
+          "rateLimit": "Project-specific; see AI Studio"
         },
         {
           "id": "gemini-2.5-pro",
@@ -225,7 +225,7 @@
           "context": "1M",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "5 RPM, 50 RPD"
+          "rateLimit": "Project-specific; see AI Studio"
         },
         {
           "id": "gemma-4-31b-it",
@@ -823,41 +823,17 @@
       "country": "US",
       "flag": "🇺🇸",
       "url": "https://ollama.com/settings/keys",
-      "baseUrl": "https://ollama.com/api",
-      "description": "Free tier with usage limits. 16 cloud model families from the Ollama library. OpenAI SDK-compatible via https://ollama.com/v1.",
+      "baseUrl": "https://ollama.com/v1",
+      "description": "Free plan includes monthly starter usage for a limited set of cloud models; other models require usage credits.",
       "footnoteRef": 3,
       "models": [
         {
-          "id": "deepseek-v4-pro",
-          "name": "deepseek-v4-pro",
-          "context": "1M",
+          "id": "gemma4:31b",
+          "name": "gemma4:31b",
+          "context": "256K",
           "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "deepseek-v4-flash",
-          "name": "deepseek-v4-flash",
-          "context": "1M",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "minimax-m3",
-          "name": "minimax-m3",
-          "context": "512K",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "kimi-k3",
-          "name": "kimi-k3",
-          "context": "1M",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "modality": "Text + Image",
+          "rateLimit": "Monthly starter credits; 1 concurrent request"
         },
         {
           "id": "gpt-oss:120b",
@@ -865,7 +841,7 @@
           "context": "128K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits; 1 concurrent request"
         },
         {
           "id": "gpt-oss:20b",
@@ -873,39 +849,31 @@
           "context": "131K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits; 1 concurrent request"
+        },
+        {
+          "id": "nemotron-3-nano:30b",
+          "name": "nemotron-3-nano:30b",
+          "context": "1M",
+          "maxOutput": "Model-dependent",
+          "modality": "Text",
+          "rateLimit": "Monthly starter credits; 1 concurrent request"
+        },
+        {
+          "id": "nemotron-3-super",
+          "name": "nemotron-3-super",
+          "context": "256K",
+          "maxOutput": "Model-dependent",
+          "modality": "Text",
+          "rateLimit": "Monthly starter credits; 1 concurrent request"
         },
         {
           "id": "nemotron-3-ultra",
           "name": "nemotron-3-ultra",
-          "context": "262K",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "mistral-large-3:675b",
-          "name": "mistral-large-3:675b",
           "context": "256K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "qwen3.5:397b",
-          "name": "qwen3.5:397b",
-          "context": "256K",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": null,
-          "name": "+ 7 more cloud models",
-          "context": "Varies",
-          "maxOutput": "Varies",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "Monthly starter credits; 1 concurrent request"
         }
       ]
     },
@@ -1189,7 +1157,7 @@
     },
     {
       "id": 3,
-      "text": "Ollama Cloud measures usage by input, cached input, and output tokens weighted per model ([FAQ](https://docs.ollama.com/cloud)). Free tier has session limits resetting every 5 hours and weekly limits resetting every 7 days. Cloud models are also served through Ollama's OpenAI-compatible endpoint at ollama.com/v1."
+      "text": "Ollama's free plan includes a monthly amount of starter usage that resets on the signup date, and one concurrent request; adding usage credits unlocks all cloud models ([pricing](https://ollama.com/pricing)). The six model variants shown above match the free-usage list captured in [issue #112](https://github.com/mnfst/awesome-free-llm-apis/issues/112); starter eligibility can change, so check Ollama's pricing and usage pages for current account availability. OpenAI-compatible access uses `https://ollama.com/v1` ([docs](https://docs.ollama.com/api/openai-compatibility))."
     },
     {
       "id": 4,
@@ -1251,3 +1219,4 @@
     }
   ]
 }
+
