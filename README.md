@@ -33,6 +33,16 @@
 - [Inference providers](#inference-providers)
 - [Glossary](#glossary)
 
+## Glossary
+
+| Abbreviation | Meaning             |
+| ------------ | ------------------- |
+| **RPM**      | Requests per minute |
+| **RPD**      | Requests per day    |
+| **TPM**      | Tokens per minute   |
+| **TPD**      | Tokens per day      |
+| **RPS**      | Requests per second |
+
 ## Provider APIs
 
 APIs run by the companies that train or fine-tune the models themselves.
@@ -76,19 +86,19 @@ Free tier, no credit card. Free-tier prompts may be used by Google to improve pr
 
 Base URL: `https://generativelanguage.googleapis.com/v1beta`
 
-| Model Name            | Context | Max Output | Modality                     | Rate Limit        |
-| --------------------- | ------- | ---------- | ---------------------------- | ----------------- |
-| Gemini 3.8 Flash      | 1M      | 65K        | Text + Image + Audio + Video | —                 |
-| Gemini 3.7 Flash      | 1M      | 65K        | Text + Image + Audio + Video | —                 |
-| Gemini 3.6 Flash      | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 1,500 RPD |
-| Gemini 3.5 Flash      | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 1,500 RPD |
-| Gemini 3.5 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 30 RPM, 1,500 RPD |
-| Gemini 3.1 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 30 RPM, 1,500 RPD |
-| Gemini 2.5 Flash      | 1M      | 65K        | Text + Image + Audio + Video | 15 RPM, 1,500 RPD |
-| Gemini 2.5 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | 30 RPM, 1,500 RPD |
-| Gemini 2.5 Pro        | 1M      | 65K        | Text + Image + Audio + Video | 5 RPM, 50 RPD     |
-| Gemma 4 31B           | 256K    | 32K        | Text                         | —                 |
-| Gemma 4 26B A4B       | 256K    | 32K        | Text                         | —                 |
+| Model Name            | Context | Max Output | Modality                     | Rate Limit                      |
+| --------------------- | ------- | ---------- | ---------------------------- | ------------------------------- |
+| Gemini 3.8 Flash      | 1M      | 65K        | Text + Image + Audio + Video | —                               |
+| Gemini 3.7 Flash      | 1M      | 65K        | Text + Image + Audio + Video | —                               |
+| Gemini 3.6 Flash      | 1M      | 65K        | Text + Image + Audio + Video | Project-specific; see AI Studio |
+| Gemini 3.5 Flash      | 1M      | 65K        | Text + Image + Audio + Video | Project-specific; see AI Studio |
+| Gemini 3.5 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | Project-specific; see AI Studio |
+| Gemini 3.1 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | Project-specific; see AI Studio |
+| Gemini 2.5 Flash      | 1M      | 65K        | Text + Image + Audio + Video | Project-specific; see AI Studio |
+| Gemini 2.5 Flash-Lite | 1M      | 65K        | Text + Image + Audio + Video | Project-specific; see AI Studio |
+| Gemini 2.5 Pro        | 1M      | 65K        | Text + Image + Audio + Video | Project-specific; see AI Studio |
+| Gemma 4 31B           | 256K    | 32K        | Text                         | —                               |
+| Gemma 4 26B A4B       | 256K    | 32K        | Text                         | —                               |
 
 ### [Mistral AI](https://console.mistral.ai/api-keys) 🇫🇷
 
@@ -235,22 +245,18 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 
 ### [Ollama Cloud](https://ollama.com/settings/keys) 🇺🇸
 
-Free tier with usage limits. 16 cloud model families from the Ollama library. OpenAI SDK-compatible via https://ollama.com/v1. [^3]
+Free plan includes monthly starter usage for a limited set of cloud models; other models require usage credits. [^3]
 
-Base URL: `https://ollama.com/api`
+Base URL: `https://ollama.com/v1`
 
-| Model Name             | Context | Max Output      | Modality | Rate Limit                          |
-| ---------------------- | ------- | --------------- | -------- | ----------------------------------- |
-| deepseek-v4-pro        | 1M      | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| deepseek-v4-flash      | 1M      | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| minimax-m3             | 512K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| kimi-k3                | 1M      | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| `gpt-oss:120b`         | 128K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| `gpt-oss:20b`          | 131K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| nemotron-3-ultra       | 262K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| `mistral-large-3:675b` | 256K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| `qwen3.5:397b`         | 256K    | Model-dependent | Text     | Session/weekly limits (unpublished) |
-| + 7 more cloud models  | Varies  | Varies          | Text     | Session/weekly limits (unpublished) |
+| Model Name            | Context | Max Output      | Modality     | Rate Limit                                    |
+| --------------------- | ------- | --------------- | ------------ | --------------------------------------------- |
+| `gemma4:31b`          | 256K    | Model-dependent | Text + Image | Monthly starter credits; 1 concurrent request |
+| `gpt-oss:120b`        | 128K    | Model-dependent | Text         | Monthly starter credits; 1 concurrent request |
+| `gpt-oss:20b`         | 131K    | Model-dependent | Text         | Monthly starter credits; 1 concurrent request |
+| `nemotron-3-nano:30b` | 1M      | Model-dependent | Text         | Monthly starter credits; 1 concurrent request |
+| nemotron-3-super      | 256K    | Model-dependent | Text         | Monthly starter credits; 1 concurrent request |
+| nemotron-3-ultra      | 256K    | Model-dependent | Text         | Monthly starter credits; 1 concurrent request |
 
 ### [OpenRouter](https://openrouter.ai/keys) 🇺🇸
 
@@ -308,23 +314,13 @@ Base URL: `https://api.siliconflow.cn/v1`
 | --------------- | ------- | ---------- | -------- | --------------------- |
 | `Qwen/Qwen3-8B` | 128K    | —          | Text     | 1,000 RPM, 50,000 TPM |
 
-## Glossary
-
-| Abbreviation | Meaning             |
-| ------------ | ------------------- |
-| **RPM**      | Requests per minute |
-| **RPD**      | Requests per day    |
-| **TPM**      | Tokens per minute   |
-| **TPD**      | Tokens per day      |
-| **RPS**      | Requests per second |
-
 ## Contributing
 
 Know a free tier that's missing? [Open a PR](contributing.md). Include the provider, endpoint, rate limits (link to their docs), and a few notable models. Trial credits and time-limited promos don't count.
 
 [^1]: The Gemini API free tier is available to developers in the EU, UK, and Switzerland; the [available regions](https://ai.google.dev/gemini-api/docs/available-regions) page lists these regions. The [terms](https://ai.google.dev/gemini-api/terms) still require you to use only Paid Services when you make an API Client available to users in the European Economic Area, Switzerland, or the UK. Google no longer publishes per-model free-tier rate limits; check your quotas in [AI Studio](https://aistudio.google.com/). Free-tier prompts may be used by Google to improve products, except for users in the EEA, Switzerland and the UK, where the paid-services data terms also govern the unpaid quota, so those prompts are not used to improve Google products. `gemini-3.1-flash-lite` is on the [deprecation schedule](https://ai.google.dev/gemini-api/docs/deprecations), with a shutdown date of May 7, 2027 and `gemini-3.5-flash-lite` as its replacement; the row stays because the model is live and free today.
 [^2]: Groq shut down qwen/qwen3.6-27b on September 14, 2026 (replaced by qwen/qwen3.8-27b) and groq/compound and groq/compound-mini on September 21, 2026 ([deprecations](https://console.groq.com/docs/deprecations)). Free-plan limits vary by model; the chat models listed get 1,000 RPD ([rate limits](https://console.groq.com/docs/rate-limits)).
-[^3]: Ollama Cloud measures usage by input, cached input, and output tokens weighted per model ([FAQ](https://docs.ollama.com/cloud)). Free tier has session limits resetting every 5 hours and weekly limits resetting every 7 days. Cloud models are also served through Ollama's OpenAI-compatible endpoint at ollama.com/v1.
+[^3]: Ollama's free plan includes a monthly amount of starter usage that resets on the signup date, and one concurrent request; adding usage credits unlocks all cloud models ([pricing](https://ollama.com/pricing)). The six model variants shown above match the free-usage list captured in [issue #112](https://github.com/mnfst/awesome-free-llm-apis/issues/112); starter eligibility can change, so check Ollama's pricing and usage pages for current account availability. OpenAI-compatible access uses `https://ollama.com/v1` ([docs](https://docs.ollama.com/api/openai-compatibility)).
 [^4]: Free models default to 50 RPD per model. A one-time purchase of $10+ in credits unlocks 1,000 RPD for free models. OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-models-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training.
 [^5]: Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): "Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services."
 [^6]: API-Inference is free for registered users. Current published limits are 2,000 requests/day per user (total across models), with per-model daily quotas dynamically adjusted and capped at 500; concurrency is also dynamically rate-limited. Requires Alibaba Cloud account binding and real-name verification ([limits](https://modelscope.cn/docs/model-service/API-Inference/limits), [intro](https://modelscope.cn/docs/model-service/API-Inference/intro)).
@@ -334,3 +330,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^11]: The 10,000 free Neurons are shared across all Workers AI usage, not per model, and all limits reset daily at 00:00 UTC. Going over does not bill you, the request fails. Seven models are excluded from Workers Free billing and need the Workers Paid plan or prepaid AI Gateway credits: `@cf/moonshotai/kimi-k2.6`, `@cf/moonshotai/kimi-k2.7-code`, `@cf/zai-org/glm-5.2`, `@cf/zai-org/glm-5.3`, `@cf/zai-org/glm-5.3-flash`, `@cf/deepseek-ai/deepseek-v4-flash-0731`, `@cf/deepseek-ai/deepseek-v4-pro-0813` ([pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
 [^12]: Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time.
 [^13]: Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values.
+

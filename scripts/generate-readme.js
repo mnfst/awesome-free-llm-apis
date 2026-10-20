@@ -100,6 +100,10 @@ const parts = [
 	'- [Inference providers](#inference-providers)',
 	'- [Glossary](#glossary)',
 	'',
+	'## Glossary',
+	'',
+	glossaryTable,
+	'',
 	'## Provider APIs',
 	'',
 	'APIs run by the companies that train or fine-tune the models themselves.',
@@ -112,10 +116,6 @@ const parts = [
 	'',
 	inferenceProviders.map(buildProviderSection).join('\n\n'),
 	'',
-	'## Glossary',
-	'',
-	glossaryTable,
-	'',
 	'## Contributing',
 	'',
 	'Know a free tier that\'s missing? [Open a PR](contributing.md). Include the provider, endpoint, rate limits (link to their docs), and a few notable models. Trial credits and time-limited promos don\'t count.',
@@ -127,3 +127,4 @@ const parts = [
 const output = parts.join('\n');
 fs.writeFileSync(path.join(ROOT, 'README.md'), output);
 console.log('README.md generated successfully.');
+
