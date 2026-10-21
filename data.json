@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-05",
+  "lastUpdated": "2026-10-22",
   "providers": [
     {
       "name": "Aion Labs",
@@ -1176,6 +1176,58 @@
           "rateLimit": "1,000 RPM, 50,000 TPM"
         }
       ]
+    },
+    {
+      "name": "NovAI",
+      "category": "inference_provider",
+      "country": "HK",
+      "flag": "🇭🇰",
+      "url": "https://aiapi-pro.com/register",
+      "baseUrl": "https://aiapi-pro.com/v1",
+      "description": "OpenAI-compatible gateway for 111 Chinese models (DeepSeek, Qwen, GLM, Kimi, Doubao, MiniMax, Hunyuan, Kling). Five models are free to call with no credit card: 10 free-model calls per day and 5 requests per minute.",
+      "footnoteRef": 13,
+      "models": [
+        {
+          "id": "glm-4.7-flash",
+          "name": "glm-4.7-flash",
+          "context": "202K",
+          "maxOutput": "—",
+          "modality": "Text",
+          "rateLimit": "10 calls/day, 5 RPM"
+        },
+        {
+          "id": "glm-4.1v-thinking-flash",
+          "name": "glm-4.1v-thinking-flash",
+          "context": "128K",
+          "maxOutput": "—",
+          "modality": "Text (reasoning)",
+          "rateLimit": "10 calls/day, 5 RPM"
+        },
+        {
+          "id": "glm-4.6v-flash",
+          "name": "glm-4.6v-flash",
+          "context": "—",
+          "maxOutput": "—",
+          "modality": "Text + Vision",
+          "rateLimit": "10 calls/day, 5 RPM"
+        },
+        {
+          "id": "cogview-3-flash",
+          "name": "cogview-3-flash",
+          "context": "—",
+          "maxOutput": "—",
+          "modality": "Image",
+          "rateLimit": "10 calls/day, 5 RPM"
+        },
+        {
+          "id": "cogvideox-flash",
+          "name": "cogvideox-flash",
+          "context": "—",
+          "maxOutput": "—",
+          "modality": "Video",
+          "rateLimit": "5/day, 5 RPM"
+        }
+      ]
     }
   ],
   "footnotes": [
@@ -1226,6 +1278,10 @@
     {
       "id": 13,
       "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
+    },
+    {
+      "id": 13,
+      "text": "The five free models are listed on https://aiapi-pro.com/transparency.html and in the machine-readable feed https://aiapi-pro.com/china-ai-leaderboard.json, where each carries `\"unit\": \"Free\"`. No card is required. The free tier is capped at 10 free-model calls per day (5 free video generations per day) and 5 requests per minute, resetting at 00:00 UTC+8. The $2 signup credit expires after 14 days and is a grant, not part of the free tier."
     }
   ],
   "glossary": [
