@@ -7,7 +7,48 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data.json'), 'utf8'));
 
-const OKAPI_URL = 'https://okapi.bot';
+const SPONSORS_PAGE = 'https://github.com/sponsors/mnfst';
+// GitHub traffic stats only cover 14 days: refresh this figure once a month.
+const MONTHLY_VIEWS = '145,000';
+
+// Gold sponsors also need a `tagline`: one line describing their product.
+const SPONSORS = [
+	{name: 'Okapi', url: 'https://okapi.bot', tier: 'sponsor', logoLight: 'media/okapi-logo-light.svg', logoDark: 'media/okapi-logo-dark.svg'},
+];
+
+const LOGO_WIDTH = {gold: 280, sponsor: 140};
+
+function sponsorLogo({name, url, logoLight, logoDark}, width) {
+	return `\t<a href="${url}">
+\t\t<picture>
+\t\t\t<source media="(prefers-color-scheme: dark)" srcset="${logoDark}">
+\t\t\t<img src="${logoLight}" width="${width}" alt="${name}">
+\t\t</picture>
+\t</a>`;
+}
+
+function sponsorsSection() {
+	const gold = SPONSORS.filter(s => s.tier === 'gold');
+	const sponsors = SPONSORS.filter(s => s.tier === 'sponsor');
+	const goldBlocks = gold.map(s => `<p align="center">\n${sponsorLogo(s, LOGO_WIDTH.gold)}\n\t<br>\n\t<sub>${s.tagline}</sub>\n</p>`);
+	if (gold.length === 0) {
+		goldBlocks.push(`<p align="center">\n${sponsorLogo({
+			name: 'Your logo here',
+			url: SPONSORS_PAGE,
+			logoLight: 'media/sponsor-slot-light.svg',
+			logoDark: 'media/sponsor-slot-dark.svg',
+		}, LOGO_WIDTH.gold)}\n</p>`);
+	}
+
+	const sections = [`<h3 align="center">Gold sponsors</h3>\n\n${goldBlocks.join('\n\n')}`];
+	if (sponsors.length > 0) {
+		sections.push(`<h3 align="center">Sponsors</h3>\n\n<p align="center">\n${sponsors.map(s => sponsorLogo(s, LOGO_WIDTH.sponsor)).join('\n')}\n</p>`);
+	}
+
+	sections.push(`<p align="center"><sub>About ${MONTHLY_VIEWS} views a month from developers · <a href="${SPONSORS_PAGE}">Become a sponsor</a></sub></p>`);
+
+	return sections.join('\n\n');
+}
 
 const HEADER = `<h1 align="center">
 \t<a href="https://github.com/mnfst/awesome-free-llm-apis">
@@ -29,16 +70,7 @@ const HEADER = `<h1 align="center">
 
 <hr>
 
-<h3 align="center">Sponsors</h3>
-
-<p align="center">
-\t<a href="${OKAPI_URL}">
-\t\t<picture>
-\t\t\t<source media="(prefers-color-scheme: dark)" srcset="media/okapi-logo-dark.svg">
-\t\t\t<img src="media/okapi-logo-light.svg" width="180" alt="Okapi">
-\t\t</picture>
-\t</a>
-</p>
+${sponsorsSection()}
 
 <hr>`;
 
