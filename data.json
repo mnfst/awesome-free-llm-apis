@@ -246,6 +246,26 @@
       ]
     },
     {
+      "name": "Merkium",
+      "category": "provider_api",
+      "country": "NL",
+      "flag": "🇳🇱",
+      "url": "https://chat.merkium.nl",
+      "baseUrl": "https://chat.merkium.nl/api/v1",
+      "description": "Permanent free tier, no credit card required. Free API key from the Console at chat.merkium.nl. 30 RPM per API key (1 request every 2 seconds). Ganymede 1.1 is a general reasoning model with text and image input and tool calling; reasoning is always on.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "ganymede-1.1",
+          "name": "ganymede-1.1",
+          "context": "1M",
+          "maxOutput": "16K",
+          "modality": "Text + Image (reasoning)",
+          "rateLimit": "30 RPM"
+        }
+      ]
+    },
+    {
       "name": "Mistral AI",
       "category": "provider_api",
       "country": "FR",
