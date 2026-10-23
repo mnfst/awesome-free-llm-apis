@@ -1,0 +1,14 @@
+{
+  "name": "awesome-free-llm-apis",
+  "private": true,
+  "description": "LLM APIs with permanent free tiers for text inference.",
+  "license": "CC0-1.0",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "generate": "node scripts/generate-readme.js && node scripts/generate-skill.js",
+    "generate:readme": "node scripts/generate-readme.js",
+    "generate:skill": "node scripts/generate-skill.js",
+    "verify": "node scripts/verify-providers.js --out .verify/report-$(date +%F).json",
+    "verify:self-test": "node scripts/verify-providers.js --self-test"
+  }
+}

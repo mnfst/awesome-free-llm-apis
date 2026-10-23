@@ -13,23 +13,25 @@ Ask the user what matters most, then recommend accordingly:
 
 | Priority | Best picks |
 |---|---|
-| Highest rate limits | Groq (30 RPM, 14.4K RPD), Cerebras (30 RPM, 14.4K RPD) |
-| Largest model selection | Cloudflare Workers AI (49+ models), OpenRouter (32+ models) |
-| Strongest proprietary models | Google Gemini (Gemini 2.5 Pro), GitHub Models (GPT-4o) |
-| Fastest inference | Groq, Cerebras (both optimized for speed) |
-| Highest token budget | Mistral AI (1B tokens/month) |
-| European provider | Mistral AI (EU), LLM7.io (UK) |
-| No signup required | LLM7.io (basic tier works without token) |
+| Fastest inference | Groq (LPU hardware; ~1,000 RPD on chat models) |
+| Largest model selection | NVIDIA NIM (100+ models), Cloudflare Workers AI (60+), Hugging Face (thousands, small credit) |
+| Strongest proprietary models | Google Gemini, Mistral AI, Cohere (non-commercial only) |
+| Free frontier open-weight models | OpenRouter (`:free` models), Kilo Code, Ollama Cloud, NVIDIA NIM |
+| European provider / EU hosting | Mistral AI (FR), OVHcloud AI Endpoints (FR, EU data centers), LLM7.io (UK) |
+| No signup or key required | OVHcloud AI Endpoints (2 RPM/IP), Kilo Code (200 req/hr/IP), LLM7.io (anonymous tier) |
+| Privacy-sensitive prompts | Avoid Gemini free tier, Mistral free mode (unless opted out), OpenRouter/Kilo free routes, NVIDIA trial endpoints |
 
 ### Provider categories
 
+<!-- providers:start -->
 **Provider APIs** -- run by the companies that train the models:
-- Google Gemini, Cohere, Mistral AI, Zhipu AI
+- Aion Labs, Cohere, Google Gemini, Mistral AI, Z AI (Zhipu AI)
 - See [references/provider-apis.md](references/provider-apis.md) for setup instructions.
 
 **Inference providers** -- third-party platforms hosting open-weight models:
-- GitHub Models, NVIDIA NIM, Groq, Cerebras, Cloudflare Workers AI, LLM7.io, Kluster AI, OpenRouter, Hugging Face
+- Cloudflare Workers AI, Groq, Hugging Face, Kilo Code (no key needed), LLM7.io (no key needed), ModelScope, NVIDIA NIM, Ollama Cloud, OpenRouter, OVHcloud AI Endpoints (no key needed), SiliconFlow
 - See [references/inference-providers.md](references/inference-providers.md) for setup instructions.
+<!-- providers:end -->
 
 ## Workflow
 
@@ -61,6 +63,7 @@ Replace KEY, BASE_URL, and MODEL_NAME with values from the provider's setup guid
 
 - All endpoints work with the OpenAI SDK unless noted.
 - RPM = requests per minute. RPD = requests per day.
-- Google Gemini's free tier is blocked in the EEA, UK, and Switzerland.
+- Google Gemini's free tier works in the EEA, UK, and Switzerland, but its terms require paid services if you ship an app to users there.
+- Free tiers, model lists, and limits change often. The reference files are generated from `data.json`; check the provider's own docs before relying on a limit.
 - "Limits undocumented" = the provider doesn't publish rate limits.
 - Don't hardcode API keys. Use environment variables or a secrets manager.

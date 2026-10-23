@@ -4,7 +4,15 @@ Thanks for wanting to add to this list!
 
 ## How the repo works
 
-`README.md` is generated automatically from `data.json` by CI. Do not edit `README.md` directly; pull requests that only change `README.md` will be asked to move the change to `data.json`.
+`README.md` and the Claude skill's reference files (`free-llm-apis/references/*.md`, plus the provider list in `free-llm-apis/SKILL.md`) are generated from `data.json` by CI. Do not edit them directly; pull requests that only change generated files will be asked to move the change to `data.json`.
+
+To preview locally (Node 20+, no dependencies):
+
+```bash
+npm run generate
+```
+
+If you add a new provider, also add its env var name (and OpenAI-compatible base URL, if it differs from `baseUrl`) to the `SETUP` map in `scripts/generate-skill.js`.
 
 ## Adding a provider
 
