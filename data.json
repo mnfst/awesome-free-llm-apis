@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-05",
+  "lastUpdated": "2026-10-18",
   "providers": [
     {
       "name": "Aion Labs",
@@ -518,6 +518,26 @@
           "maxOutput": "Varies",
           "modality": "Text, Image, Audio, Embeddings",
           "rateLimit": "Credit-metered"
+        }
+      ]
+    },
+    {
+      "name": "IteraCompute",
+      "category": "inference_provider",
+      "country": "CN",
+      "flag": "🇨🇳",
+      "url": "https://platform.iteracompute.com/api-keys",
+      "baseUrl": "https://api.iteracompute.com/v1",
+      "description": "Recurring free tier for self-hosted Qwen3.8-27B: 30M tokens/month per account, no credit card or top-up required. Email verification or Google sign-in required.",
+      "footnoteRef": 14,
+      "models": [
+        {
+          "id": "qwen/qwen3.8-27b",
+          "name": "qwen/qwen3.8-27b",
+          "context": "131K",
+          "maxOutput": "8K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "160,000 TPM, 30M tokens/month"
         }
       ]
     },
@@ -1226,6 +1246,10 @@
     {
       "id": 13,
       "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) is what carries the $10/month in API credits figure quoted in the description. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
+    },
+    {
+      "id": 14,
+      "text": "IteraCompute free-tier limits were verified on 2026-10-17 against its [free API page](https://iteracompute.com/free/), [pricing](https://iteracompute.com/pricing/) and [live model catalog](https://api.iteracompute.com/v1/models). The allowance counts input, cached input and output (including reasoning) across all keys on an account; it resets on the first of each month at 00:00 UTC, without rollover or automatic paid overage. Free context is 131,072 tokens including input and requested output; maximum output is 8,192 tokens. There is no daily quota. Shared free capacity may queue, has no SLA, and returns 429 when limits are reached. Only `qwen/qwen3.8-27b` is included; other models and higher recharge tiers are outside this free entry. [Free-tier terms](https://iteracompute.com/free-tier-terms/) apply. Country source: [Terms of Service, section 1](https://iteracompute.com/terms.html) identifies the operator as a company registered in Chongqing, China."
     }
   ],
   "glossary": [
