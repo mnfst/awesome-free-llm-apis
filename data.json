@@ -1248,26 +1248,6 @@
           "rateLimit": "2 RPM (anonymous)"
         }
       ]
-    },
-    {
-      "name": "SiliconFlow",
-      "category": "inference_provider",
-      "country": "CN",
-      "flag": "🇨🇳",
-      "url": "https://cloud.siliconflow.cn/account/ak",
-      "baseUrl": "https://api.siliconflow.cn/v1",
-      "description": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
-      "footnoteRef": 9,
-      "models": [
-        {
-          "id": "Qwen/Qwen3-8B",
-          "name": "Qwen/Qwen3-8B",
-          "context": "128K",
-          "maxOutput": "—",
-          "modality": "Text",
-          "rateLimit": "1,000 RPM, 50,000 TPM"
-        }
-      ]
     }
   ],
   "footnotes": [
@@ -1298,10 +1278,6 @@
     {
       "id": 7,
       "text": "OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers."
-    },
-    {
-      "id": 9,
-      "text": "SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support."
     },
     {
       "id": 10,
