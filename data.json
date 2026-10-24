@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-23",
+  "lastUpdated": "2026-10-24",
   "providers": [
     {
       "name": "Aion Labs",
@@ -512,7 +512,7 @@
       "flag": "🇺🇸",
       "url": "https://huggingface.co/settings/tokens",
       "baseUrl": "https://router.huggingface.co/v1",
-      "description": "$0.10/month in Inference Provider credits for free users (subject to change). Routes to Fireworks, Together, Hyperbolic, Nebius, Novita, DeepInfra and others. Thousands of models.",
+      "description": "No monthly Inference Provider credits for free users (purchase required); PRO users get $2.00/month. Routes to Cerebras, Groq, Together, Fireworks, Novita, DeepInfra and others. Hundreds of models.",
       "footnoteRef": null,
       "models": [
         {
@@ -668,14 +668,6 @@
           "name": "inclusionai/ling-3.1-flash",
           "context": "262K",
           "maxOutput": "32K",
-          "modality": "Text",
-          "rateLimit": "200 req/hr"
-        },
-        {
-          "id": "apodex/apodex-1.1-mini:free",
-          "name": "apodex/apodex-1.1-mini:free",
-          "context": "262K",
-          "maxOutput": "235K",
           "modality": "Text",
           "rateLimit": "200 req/hr"
         },
@@ -884,7 +876,7 @@
       "flag": "🇺🇸",
       "url": "https://ollama.com/settings/keys",
       "baseUrl": "https://ollama.com/api",
-      "description": "Free tier with usage limits. 16 cloud model families from the Ollama library. OpenAI SDK-compatible via https://ollama.com/v1.",
+      "description": "Free plan with starter usage credits for a smaller set of starter models, reset monthly; 1 concurrent request. Prompts and responses are not logged or used for training. OpenAI SDK-compatible via https://ollama.com/v1.",
       "footnoteRef": 3,
       "models": [
         {
@@ -893,31 +885,23 @@
           "context": "1M",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
-        },
-        {
-          "id": "deepseek-v4-flash",
-          "name": "deepseek-v4-flash",
-          "context": "1M",
-          "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": "minimax-m3",
           "name": "minimax-m3",
           "context": "512K",
           "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "modality": "Text + Image",
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": "kimi-k3",
           "name": "kimi-k3",
           "context": "1M",
           "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "modality": "Text + Image",
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": "gpt-oss:120b",
@@ -925,31 +909,31 @@
           "context": "128K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": "gpt-oss:20b",
           "name": "gpt-oss:20b",
-          "context": "131K",
+          "context": "128K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": "nemotron-3-ultra",
           "name": "nemotron-3-ultra",
-          "context": "262K",
+          "context": "256K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": "mistral-large-3:675b",
           "name": "mistral-large-3:675b",
           "context": "256K",
           "maxOutput": "Model-dependent",
-          "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "modality": "Text + Image",
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": "qwen3.5:397b",
@@ -957,15 +941,15 @@
           "context": "256K",
           "maxOutput": "Model-dependent",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         },
         {
           "id": null,
-          "name": "+ 7 more cloud models",
+          "name": "+ 15 more cloud models",
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text",
-          "rateLimit": "Session/weekly limits (unpublished)"
+          "rateLimit": "1 concurrent request, monthly usage limit (unpublished)"
         }
       ]
     },
@@ -1057,14 +1041,6 @@
           "context": "262K",
           "maxOutput": "32K",
           "modality": "Text",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "qwen/qwen3.8-27b:free",
-          "name": "qwen/qwen3.8-27b:free",
-          "context": "262K",
-          "maxOutput": "235K",
-          "modality": "Text + Image + Video",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
@@ -1289,11 +1265,11 @@
     },
     {
       "id": 3,
-      "text": "Ollama Cloud measures usage by input, cached input, and output tokens weighted per model ([FAQ](https://docs.ollama.com/cloud)). Free tier has session limits resetting every 5 hours and weekly limits resetting every 7 days. Cloud models are also served through Ollama's OpenAI-compatible endpoint at ollama.com/v1."
+      "text": "Ollama Cloud's Free plan includes a starter amount of usage for a smaller set of starter models; buying credits unlocks all models ([pricing](https://ollama.com/pricing)). Free usage resets monthly from the sign-up date. Free allows 1 concurrent request; extra requests are queued. Cloud models are also served through Ollama's OpenAI-compatible endpoint at ollama.com/v1."
     },
     {
       "id": 4,
-      "text": "Free models default to 50 RPD per model. A one-time purchase of $10+ in credits unlocks 1,000 RPD for free models. OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-models-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training."
+      "text": "Free models default to 50 RPD per model. A one-time purchase of $10+ in credits unlocks 1,000 RPD for free models. OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training."
     },
     {
       "id": 5,
