@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-10-26T12:21:00.128Z",
+  "generatedAt": "2026-10-27T12:20:37.828Z",
   "summary": {
     "facts": 546,
     "sourced": 254,
     "unsourced": 292,
-    "ok": 254,
-    "quoteMissing": 0,
-    "pageError": 0,
+    "ok": 247,
+    "quoteMissing": 4,
+    "pageError": 3,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 0,
-    "modelsGone": 0,
+    "signals": 4,
+    "modelsGone": 1,
     "modelsNew": 0,
     "links": 50,
     "linksBroken": 0,
@@ -2182,8 +2182,8 @@
       "current": "Free plan with a starter amount of usage credits for a smaller set of starter models, reset monthly from the sign-up date. 1 concurrent request. OpenAI SDK-compatible via https://ollama.com/v1.",
       "url": "https://ollama.com/pricing",
       "quote": "Free accounts include a starter amount of usage for a smaller set of starter models.",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Ollama Cloud",
@@ -2193,8 +2193,8 @@
       "current": "1 concurrent request, monthly starter credits",
       "url": "https://ollama.com/pricing",
       "quote": "Free includes 1 concurrent request",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Ollama Cloud",
@@ -2204,8 +2204,8 @@
       "current": "1 concurrent request, monthly starter credits",
       "url": "https://ollama.com/pricing",
       "quote": "Free includes 1 concurrent request",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Ollama Cloud",
@@ -2215,8 +2215,8 @@
       "current": "1 concurrent request, monthly starter credits",
       "url": "https://ollama.com/pricing",
       "quote": "Free includes 1 concurrent request",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Ollama Cloud",
@@ -2633,7 +2633,7 @@
       "current": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2644,7 +2644,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2655,7 +2655,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Xing4.0-29B XingChenAGI/Xing4.0-29B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2819,8 +2819,10 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 467,
-      "gone": [],
+      "size": 463,
+      "gone": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
       "new": []
     },
     {
@@ -2974,8 +2976,8 @@
       "where": [
         "SiliconFlow url"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 0,
+      "state": "UNCHECKED",
       "signal": false
     },
     {
@@ -3118,8 +3120,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 0,
+      "state": "UNCHECKED",
       "signal": false
     },
     {
@@ -3324,7 +3326,7 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 62483,
+      "chars": 62650,
       "state": "OK",
       "error": null
     },
@@ -3604,7 +3606,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 542757,
+      "chars": 541340,
       "state": "OK",
       "error": null
     },
@@ -3625,7 +3627,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 69742,
+      "chars": 68968,
       "state": "OK",
       "error": null
     },
@@ -3674,14 +3676,14 @@
     {
       "url": "https://ollama.com/pricing",
       "httpStatus": 200,
-      "chars": 6560,
+      "chars": 6355,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ollama.com/library/gpt-oss",
       "httpStatus": 200,
-      "chars": 7053,
+      "chars": 7051,
       "state": "OK",
       "error": null
     },
@@ -3708,15 +3710,15 @@
     },
     {
       "url": "https://siliconflow.cn/pricing",
-      "httpStatus": 200,
-      "chars": 4665,
-      "state": "OK",
+      "httpStatus": 0,
+      "chars": 0,
+      "state": "PAGE_ERROR",
       "error": null
     },
     {
       "url": "https://ollama.com/library/nemotron-3-ultra",
       "httpStatus": 200,
-      "chars": 4510,
+      "chars": 4508,
       "state": "OK",
       "error": null
     },

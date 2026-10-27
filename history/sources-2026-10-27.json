@@ -1,0 +1,5195 @@
+{
+  "generatedAt": "2026-10-27T12:20:37.828Z",
+  "summary": {
+    "facts": 546,
+    "sourced": 254,
+    "unsourced": 292,
+    "ok": 247,
+    "quoteMissing": 4,
+    "pageError": 3,
+    "unverifiable": 0,
+    "valueDrift": 0,
+    "rowGone": 0,
+    "signals": 4,
+    "modelsGone": 1,
+    "modelsNew": 0,
+    "links": 50,
+    "linksBroken": 0,
+    "linkSignals": 0
+  },
+  "facts": [
+    {
+      "provider": "Aion Labs",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
+      "current": "Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
+      "url": "https://www.aionlabs.ai/docs/rate-limits/",
+      "quote": "Tokens per minute Daily token limit Free 20,000 20,000",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-2.0",
+      "fact": "rateLimit",
+      "value": "15 RPM, 20K TPD",
+      "current": "15 RPM, 20K TPD",
+      "url": "https://www.aionlabs.ai/docs/rate-limits/",
+      "quote": "Requests per minute Free 15 1 50 2 100 3 200 4 500 5 1000 Token limits Tier Tokens per minute Daily token limit Free 20,000 20,000",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-2.0",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "AionLabs: Aion 2.0 aion-labs/aion-2.0 128K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-2.0",
+      "fact": "maxOutput",
+      "value": "32K",
+      "current": "32K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "Max output: 32K Reasoning Released: 2025-12-21",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-rp-llama-3.1-8b",
+      "fact": "rateLimit",
+      "value": "15 RPM, 20K TPD",
+      "current": "15 RPM, 20K TPD",
+      "url": "https://www.aionlabs.ai/docs/rate-limits/",
+      "quote": "Requests per minute Free 15 1 50 2 100 3 200 4 500 5 1000 Token limits Tier Tokens per minute Daily token limit Free 20,000 20,000",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-rp-llama-3.1-8b",
+      "fact": "context",
+      "value": "32K",
+      "current": "32K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "AionLabs: Aion-RP 1.0 (8B) aion-labs/aion-rp-llama-3.1-8b 32K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-rp-llama-3.1-8b",
+      "fact": "maxOutput",
+      "value": "32K",
+      "current": "32K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "Max output: 32K Released: 2024-11-30",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0",
+      "fact": "rateLimit",
+      "value": "15 RPM, 20K TPD",
+      "current": "15 RPM, 20K TPD",
+      "url": "https://www.aionlabs.ai/docs/rate-limits/",
+      "quote": "Requests per minute Free 15 1 50 2 100 3 200 4 500 5 1000 Token limits Tier Tokens per minute Daily token limit Free 20,000 20,000",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "AionLabs: Aion 3.0 aion-labs/aion-3.0 128K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0",
+      "fact": "maxOutput",
+      "value": "32K",
+      "current": "32K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "Max output: 32K Reasoning Released: 2026-05-05",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0-mini",
+      "fact": "rateLimit",
+      "value": "15 RPM, 20K TPD",
+      "current": "15 RPM, 20K TPD",
+      "url": "https://www.aionlabs.ai/docs/rate-limits/",
+      "quote": "Requests per minute Free 15 1 50 2 100 3 200 4 500 5 1000 Token limits Tier Tokens per minute Daily token limit Free 20,000 20,000",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0-mini",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "AionLabs: Aion 3.0 Mini aion-labs/aion-3.0-mini 128K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0-mini",
+      "fact": "maxOutput",
+      "value": "32K",
+      "current": "32K",
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "quote": "Max output: 32K Reasoning Released: 2026-05-14",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free \"Trial\" API key, no credit card. 1,000 API calls/month. Non-commercial use only.",
+      "current": "Free \"Trial\" API key, no credit card. 1,000 API calls/month. Non-commercial use only.",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Trial keys (and prod keys on newer Chat model variants) are limited to 1,000 API calls a month.",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-plus-05-2026",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A+ | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-plus-05-2026",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A+ | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-03-2025",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-03-2025",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-plus-08-2024",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command R+ | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-plus-08-2024",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command R+ | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-08-2024",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command R | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-08-2024",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command R | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-12-2024",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command R7B | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-12-2024",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command R7B | 20 req / min | 500 req / min",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-reasoning-08-2025",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A Reasoning | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-reasoning-08-2025",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A Reasoning | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-translate-08-2025",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A Translate | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-translate-08-2025",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A Translate | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-vision-07-2025",
+      "fact": "rateLimit",
+      "value": "20 RPM",
+      "current": "20 RPM",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A Vision | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-vision-07-2025",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "quote": "Command A Vision | 20 req / min | Contact",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-plus-05-2026",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "an ideal model for any enterprise to deploy at scale. | Text, Images | 128k | 64k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-plus-05-2026",
+      "fact": "maxOutput",
+      "value": "64K",
+      "current": "64K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "an ideal model for any enterprise to deploy at scale. | Text, Images | 128k | 64k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-plus-05-2026",
+      "fact": "modality",
+      "value": "Text + Image",
+      "current": "Text + Image",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "an ideal model for any enterprise to deploy at scale. | Text, Images | 128k | 64k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-03-2025",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "has 150% higher throughput compared to Command R+ 08-2024. | Text | 256k | 8k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-03-2025",
+      "fact": "maxOutput",
+      "value": "8K",
+      "current": "8K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "has 150% higher throughput compared to Command R+ 08-2024. | Text | 256k | 8k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-03-2025",
+      "fact": "modality",
+      "value": "Text",
+      "current": "Text",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "has 150% higher throughput compared to Command R+ 08-2024. | Text | 256k | 8k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-12-2024",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "similar tasks requiring complex reasoning and multiple steps. | Text | 128k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-12-2024",
+      "fact": "maxOutput",
+      "value": "4K",
+      "current": "4K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "similar tasks requiring complex reasoning and multiple steps. | Text | 128k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-12-2024",
+      "fact": "modality",
+      "value": "Text",
+      "current": "Text",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "similar tasks requiring complex reasoning and multiple steps. | Text | 128k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-reasoning-08-2025",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "nuanced problem-solving and agent-based tasks in 23 languages. | Text | 256k | 32k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-reasoning-08-2025",
+      "fact": "maxOutput",
+      "value": "32K",
+      "current": "32K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "nuanced problem-solving and agent-based tasks in 23 languages. | Text | 256k | 32k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-translate-08-2025",
+      "fact": "context",
+      "value": "8K",
+      "current": "8K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "ukrainian, romanian, greek, hindi, hebrew, persian. | Text | 8K | 8k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-translate-08-2025",
+      "fact": "maxOutput",
+      "value": "8K",
+      "current": "8K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "ukrainian, romanian, greek, hindi, hebrew, persian. | Text | 8K | 8k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-translate-08-2025",
+      "fact": "modality",
+      "value": "Text",
+      "current": "Text",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "ukrainian, romanian, greek, hindi, hebrew, persian. | Text | 8K | 8k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-vision-07-2025",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "English, Portuguese, Italian, French, German, and Spanish. | Text, Images | 128K | 8K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-vision-07-2025",
+      "fact": "maxOutput",
+      "value": "8K",
+      "current": "8K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "English, Portuguese, Italian, French, German, and Spanish. | Text, Images | 128K | 8K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-vision-07-2025",
+      "fact": "modality",
+      "value": "Text + Image",
+      "current": "Text + Image",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "English, Portuguese, Italian, French, German, and Spanish. | Text, Images | 128K | 8K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-expanse-32b",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "preference training, and model merging. Serves 23 languages. | Text | 128k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-expanse-32b",
+      "fact": "maxOutput",
+      "value": "4K",
+      "current": "4K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "preference training, and model merging. Serves 23 languages. | Text | 128k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-expanse-32b",
+      "fact": "modality",
+      "value": "Text",
+      "current": "Text",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "preference training, and model merging. Serves 23 languages. | Text | 128k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-vision-32b",
+      "fact": "context",
+      "value": "16K",
+      "current": "16K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "focused on state-of-art multilingual performance. | Text, Images | 16k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-vision-32b",
+      "fact": "maxOutput",
+      "value": "4K",
+      "current": "4K",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "focused on state-of-art multilingual performance. | Text, Images | 16k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-vision-32b",
+      "fact": "modality",
+      "value": "Text + Image",
+      "current": "Text + Image",
+      "url": "https://docs.cohere.com/docs/models.md",
+      "quote": "focused on state-of-art multilingual performance. | Text, Images | 16k | 4k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free tier, no credit card. Free-tier prompts may be used by Google to improve products.",
+      "current": "Free tier, no credit card. Free-tier prompts may be used by Google to improve products.",
+      "url": "https://ai.google.dev/gemini-api/docs/billing",
+      "quote": "New accounts begin on the free tier, which allows access to certain models in the Gemini API and AI Studio",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.8-flash",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "complex enterprise workflows. Standard Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.8-flash",
+      "fact": "context",
+      "value": "1M",
+      "current": "1M",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+      "quote": "Input token limit 1,048,576",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.8-flash",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+      "quote": "Output token limit 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.8-flash",
+      "fact": "modality",
+      "value": "Text + Image + Audio + Video",
+      "current": "Text + Image + Audio + Video",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+      "quote": "Inputs Text, Image, Video, Audio, and PDF",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.6-flash",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "general agentic and everyday tasks. Standard Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.6-flash",
+      "fact": "context",
+      "value": "1M",
+      "current": "1M",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
+      "quote": "Input token limit 1,048,576",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.6-flash",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
+      "quote": "Output token limit 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.6-flash",
+      "fact": "modality",
+      "value": "Text + Image + Audio + Video",
+      "current": "Text + Image + Audio + Video",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
+      "quote": "Inputs Text, Image, Video, Audio, and PDF",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.5-flash-lite",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "Input price Free of charge $0.30 (text / image / video / audio)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.5-flash-lite",
+      "fact": "context",
+      "value": "1M",
+      "current": "1M",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
+      "quote": "Input token limit 1,048,576",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.5-flash-lite",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
+      "quote": "Output token limit 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.5-flash-lite",
+      "fact": "modality",
+      "value": "Text + Image + Audio + Video",
+      "current": "Text + Image + Audio + Video",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
+      "quote": "Inputs Text, Image, Video, Audio, and PDF",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.1-flash-lite",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "Input price Free of charge $0.25 (text / image / video) $0.50 (audio)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.1-flash-lite",
+      "fact": "context",
+      "value": "1M",
+      "current": "1M",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite",
+      "quote": "Input token limit 1,048,576",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.1-flash-lite",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite",
+      "quote": "Output token limit 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.1-flash-lite",
+      "fact": "modality",
+      "value": "Text + Image + Audio + Video",
+      "current": "Text + Image + Audio + Video",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite",
+      "quote": "Inputs Text, Image, Video, Audio, and PDF",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "Input price Free of charge $0.30 (text / image / video) $1.00 (audio)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash",
+      "fact": "context",
+      "value": "1M",
+      "current": "1M",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash",
+      "quote": "Input token limit 1,048,576",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash",
+      "quote": "Output token limit 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash",
+      "fact": "modality",
+      "value": "Text + Image + Audio + Video",
+      "current": "Text + Image + Audio + Video",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash",
+      "quote": "Inputs Text, Images, Video, Audio",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash-lite",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "Input price (text, image, video) Free of charge $0.10 (text / image / video) $0.30 (audio)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash-lite",
+      "fact": "context",
+      "value": "1M",
+      "current": "1M",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite",
+      "quote": "Input token limit 1,048,576",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash-lite",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite",
+      "quote": "Output token limit 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash-lite",
+      "fact": "modality",
+      "value": "Text + Image + Audio + Video",
+      "current": "Text + Image + Audio + Video",
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite",
+      "quote": "Inputs Text, Image, Video, Audio, PDF",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-31b-it",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-31b-it",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://ai.google.dev/gemma/docs/core",
+      "quote": "small models feature a 128K context window, while the medium models support 256K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-26b-a4b-it",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-26b-a4b-it",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://ai.google.dev/gemma/docs/core",
+      "quote": "small models feature a 128K context window, while the medium models support 256K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free mode, enabled by default, no credit card required. Free-mode prompts may be used to train Mistral models unless you opt out.",
+      "current": "Free mode, enabled by default, no credit card required. Free-mode prompts may be used to train Mistral models unless you opt out.",
+      "url": "https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key",
+      "quote": "API access is enabled by default with no credit card required.",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-medium-3-5",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04.md",
+      "quote": "Context length: 256k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-small-2603",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.mistral.ai/models/mistral-small-4-0-26-03.md",
+      "quote": "Context length: 256k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-large-2512",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.mistral.ai/models/mistral-large-3-25-12.md",
+      "quote": "Context length: 256k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-large-2512",
+      "fact": "modality",
+      "value": "Multimodal",
+      "current": "Multimodal",
+      "url": "https://docs.mistral.ai/models/mistral-large-3-25-12.md",
+      "quote": "Input: text, image - Output: text",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-8b-2512",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.mistral.ai/models/ministral-3-8b-25-12.md",
+      "quote": "Context length: 256k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-8b-2512",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://docs.mistral.ai/models/ministral-3-8b-25-12.md",
+      "quote": "Input: text, image - Output: text",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "codestral-2508",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.mistral.ai/models/codestral-25-08.md",
+      "quote": "Context length: 128k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-3b-2512",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.mistral.ai/models/ministral-3-3b-25-12.md",
+      "quote": "Context length: 256k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-3b-2512",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://docs.mistral.ai/models/ministral-3-3b-25-12.md",
+      "quote": "Input: text, image - Output: text",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-14b-2512",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://docs.mistral.ai/models/ministral-3-14b-25-12.md",
+      "quote": "Context length: 256k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-14b-2512",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://docs.mistral.ai/models/ministral-3-14b-25-12.md",
+      "quote": "Input: text, image - Output: text",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Permanent free models, no credit card required.",
+      "current": "Permanent free models, no credit card required.",
+      "url": "https://docs.z.ai/guides/overview/pricing.md",
+      "quote": "glm-4.7-flash free free free free",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.7-flash",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.z.ai/guides/llm/glm-4.7.md",
+      "quote": "glm-4.7-flash positioning lightweight, completely free",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.5-flash",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.z.ai/guides/overview/pricing.md",
+      "quote": "glm-4.5-flash free free free free",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.6v-flash",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://docs.z.ai/guides/overview/pricing.md",
+      "quote": "glm-4.6v-flash free free free free",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.7-flash",
+      "fact": "context",
+      "value": "200K",
+      "current": "200K",
+      "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
+      "quote": "上下文窗口 200k 最大输出 tokens 128k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.7-flash",
+      "fact": "maxOutput",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
+      "quote": "上下文窗口 200k 最大输出 tokens 128k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.5-flash",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
+      "quote": "上下文窗口 128k 最大输出 tokens 96k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.5-flash",
+      "fact": "maxOutput",
+      "value": "96K",
+      "current": "96K",
+      "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
+      "quote": "上下文窗口 128k 最大输出 tokens 96k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.6v-flash",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
+      "quote": "glm-4.6v-flash positioning lightweight, completely free input modality video / image / text / file output modality text context length 128k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.6v-flash",
+      "fact": "modality",
+      "value": "Multimodal",
+      "current": "Multimodal",
+      "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
+      "quote": "glm-4.6v-flash positioning lightweight, completely free input modality video / image / text / file",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": null,
+      "fact": "freeTier",
+      "value": "10,000 Neurons/day free, no credit card required. 60+ models available on the free tier.",
+      "current": "10,000 Neurons/day free, no credit card required. 60+ models available on the free tier.",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "our free allocation allows anyone to use a total of 10,000 neurons per day at no charge",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "fact": "context",
+      "value": "24K",
+      "current": "24K",
+      "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/index.md",
+      "quote": "24,000 tokens terms and license",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "fact": "rateLimit",
+      "value": "10K neurons/day (shared)",
+      "current": "10K neurons/day (shared)",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/index.md",
+      "quote": "131,000 tokens terms and license",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "fact": "rateLimit",
+      "value": "10K neurons/day (shared)",
+      "current": "10K neurons/day (shared)",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/openai/gpt-oss-120b",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/index.md",
+      "quote": "128,000 tokens function calling",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/openai/gpt-oss-120b",
+      "fact": "rateLimit",
+      "value": "10K neurons/day (shared)",
+      "current": "10K neurons/day (shared)",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/index.md",
+      "quote": "256,000 tokens terms and license",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "fact": "rateLimit",
+      "value": "10K neurons/day (shared)",
+      "current": "10K neurons/day (shared)",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/zai-org/glm-4.7-flash",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
+      "quote": "multilingual text generation model with a 131,072 token context window",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/zai-org/glm-4.7-flash",
+      "fact": "rateLimit",
+      "value": "10K neurons/day (shared)",
+      "current": "10K neurons/day (shared)",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
+      "quote": "128,000 tokens function calling",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "fact": "rateLimit",
+      "value": "10K neurons/day (shared)",
+      "current": "10K neurons/day (shared)",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+      "fact": "context",
+      "value": "80K",
+      "current": "80K",
+      "url": "https://developers.cloudflare.com/workers-ai/models/deepseek-r1-distill-qwen-32b/index.md",
+      "quote": "80,000 tokens terms and license",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+      "fact": "rateLimit",
+      "value": "10K neurons/day (shared)",
+      "current": "10K neurons/day (shared)",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "fact": "modality",
+      "value": "Multimodal",
+      "current": "Multimodal",
+      "url": "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/index.md",
+      "quote": "industry-leading performance in text and image understanding",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
+      "quote": "this model achieves top-tier capabilities in both text and vision tasks",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Permanent free tier, no credit card required; phone verification required. ~1M tokens/month (shared, varies by model), resets monthly. Model lineup rotates with network governance — live list at /v1/models.",
+      "current": "Permanent free tier, no credit card required; phone verification required. ~1M tokens/month (shared, varies by model), resets monthly. Model lineup rotates with network governance — live list at /v1/models.",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "every gonka broker account includes a monthly free tier: at least 1m tokens of any model in the catalog",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "MiniMaxAI/MiniMax-M2.7",
+      "fact": "rateLimit",
+      "value": "~1M tokens/month (shared, varies by model)",
+      "current": "~1M tokens/month (shared, varies by model)",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "the tier is sized as 1m tokens of the most expensive model we serve, so 1m is the floor, and cheaper models yield more",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "deepseek v4 flash ~1.2m $0.10",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "fact": "rateLimit",
+      "value": "~1M tokens/month (shared, varies by model)",
+      "current": "~1M tokens/month (shared, varies by model)",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "the tier is sized as 1m tokens of the most expensive model we serve, so 1m is the floor, and cheaper models yield more",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "zai-org/GLM-5.3-Flash",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "glm-5.3-flash ~1.2m $0.10",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "zai-org/GLM-5.3-Flash",
+      "fact": "rateLimit",
+      "value": "~1M tokens/month (shared, varies by model)",
+      "current": "~1M tokens/month (shared, varies by model)",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "the tier is sized as 1m tokens of the most expensive model we serve, so 1m is the floor, and cheaper models yield more",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "BAAI/bge-m3",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "bge-m3 ~6m $0.02",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "BAAI/bge-m3",
+      "fact": "rateLimit",
+      "value": "~1M tokens/month (shared, varies by model)",
+      "current": "~1M tokens/month (shared, varies by model)",
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "quote": "the tier is sized as 1m tokens of the most expensive model we serve, so 1m is the floor, and cheaper models yield more",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "MiniMaxAI/MiniMax-M2.7",
+      "fact": "maxOutput",
+      "value": "16K",
+      "current": "16K",
+      "url": "https://gonkabroker.com/models/minimax-m2-on-gonka/",
+      "quote": "it supports a 200k-token context and a larger 16,384-token maximum output",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "fact": "context",
+      "value": "400K",
+      "current": "400K",
+      "url": "https://gonkabroker.com/models/deepseek-v4-flash-on-gonka/",
+      "quote": "key specs context window 400k tokens max output 16k tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "fact": "maxOutput",
+      "value": "16K",
+      "current": "16K",
+      "url": "https://gonkabroker.com/models/deepseek-v4-flash-on-gonka/",
+      "quote": "key specs context window 400k tokens max output 16k tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "zai-org/GLM-5.3-Flash",
+      "fact": "context",
+      "value": "400K",
+      "current": "400K",
+      "url": "https://gonkabroker.com/models/glm-5-3-flash-on-gonka/",
+      "quote": "key specs context window 400k tokens max output 16k tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "zai-org/GLM-5.3-Flash",
+      "fact": "maxOutput",
+      "value": "16K",
+      "current": "16K",
+      "url": "https://gonkabroker.com/models/glm-5-3-flash-on-gonka/",
+      "quote": "key specs context window 400k tokens max output 16k tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "BAAI/bge-m3",
+      "fact": "context",
+      "value": "8K",
+      "current": "8K",
+      "url": "https://gonkabroker.com/models/bge-m3-on-gonka/",
+      "quote": "key specs max input 8k tokens dimensions 1024",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "BAAI/bge-m3",
+      "fact": "modality",
+      "value": "Embeddings",
+      "current": "Embeddings",
+      "url": "https://gonkabroker.com/models/bge-m3-on-gonka/",
+      "quote": "multilingual text embeddings for search and rag",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free tier, no credit card. Ultra-fast LPU inference.",
+      "current": "Free tier, no credit card. Ultra-fast LPU inference.",
+      "url": "https://console.groq.com/docs/billing-faqs.md",
+      "quote": "to upgrade from the free tier to the developer tier, you'll need to provide a valid payment method",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-120b",
+      "fact": "rateLimit",
+      "value": "30 RPM, 1,000 RPD",
+      "current": "30 RPM, 1,000 RPD",
+      "url": "https://console.groq.com/docs/rate-limits",
+      "quote": "openai/gpt-oss-120b 30 1k 8k 200k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-120b",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://console.groq.com/docs/rate-limits",
+      "quote": "openai/gpt-oss-120b 30 1k 8k 200k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-120b",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://console.groq.com/docs/model/openai/gpt-oss-120b.md",
+      "quote": "limits context window 131,072",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-120b",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://console.groq.com/docs/model/openai/gpt-oss-120b.md",
+      "quote": "max output tokens 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-20b",
+      "fact": "rateLimit",
+      "value": "30 RPM, 1,000 RPD",
+      "current": "30 RPM, 1,000 RPD",
+      "url": "https://console.groq.com/docs/rate-limits",
+      "quote": "openai/gpt-oss-20b 30 1k 8k 200k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-20b",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://console.groq.com/docs/rate-limits",
+      "quote": "openai/gpt-oss-20b 30 1k 8k 200k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-20b",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://console.groq.com/docs/model/openai/gpt-oss-20b.md",
+      "quote": "limits context window 131,072",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-20b",
+      "fact": "maxOutput",
+      "value": "65K",
+      "current": "65K",
+      "url": "https://console.groq.com/docs/model/openai/gpt-oss-20b.md",
+      "quote": "max output tokens 65,536",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "qwen/qwen3.8-27b",
+      "fact": "rateLimit",
+      "value": "30 RPM, 1,000 RPD",
+      "current": "30 RPM, 1,000 RPD",
+      "url": "https://console.groq.com/docs/rate-limits",
+      "quote": "qwen/qwen3.8-27b 30 1k 8k 200k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "qwen/qwen3.8-27b",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://console.groq.com/docs/rate-limits",
+      "quote": "qwen/qwen3.8-27b 30 1k 8k 200k",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "qwen/qwen3.8-27b",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://console.groq.com/docs/model/qwen/qwen3.8-27b.md",
+      "quote": "limits context window 131,072",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "qwen/qwen3.8-27b",
+      "fact": "maxOutput",
+      "value": "16K",
+      "current": "16K",
+      "url": "https://console.groq.com/docs/model/qwen/qwen3.8-27b.md",
+      "quote": "max output tokens 16,384",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Groq",
+      "model": "qwen/qwen3.8-27b",
+      "fact": "modality",
+      "value": "Text + Image",
+      "current": "Text + Image",
+      "url": "https://console.groq.com/docs/model/qwen/qwen3.8-27b.md",
+      "quote": "a compact 27b multimodal (vision + text) model with thinking and instruct modes",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free models with no credit card and no API key required. `kilo-auto/free` auto-router dynamically routes to models in the free pool.",
+      "current": "Free models with no credit card and no API key required. `kilo-auto/free` auto-router dynamically routes to models in the free pool.",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "the gateway allows unauthenticated access for free models only.",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"nvidia/nemotron-3-ultra-550b-a55b:free\",\"name\":\"NVIDIA: Nemotron 3 Ultra (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free\",\"name\":\"NVIDIA: Nemotron 3 Nano Omni (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"poolside/laguna-s-2.1:free\",\"name\":\"Poolside: Laguna S 2.1 (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"poolside/laguna-xs-2.1:free\",\"name\":\"Poolside: Laguna XS 2.1 (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "cohere/north-mini-code:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "cohere/north-mini-code:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"cohere/north-mini-code:free\",\"name\":\"Cohere: North Mini Code (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "openrouter/free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "openrouter/free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"openrouter/free\",\"name\":\"OpenRouter Free Models Router\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"nvidia/nemotron-3.5-lightning:free\",\"name\":\"NVIDIA: Nemotron 3.5 Lightning (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"liquid/lfm-2.5-2.6b:free\",\"name\":\"LiquidAI: LFM2.5-2.6B (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "kilo-auto/free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "kilo-auto/free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"kilo-auto/free\",\"name\":\"Auto Free\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"dots-studio/dots-3-note-preview:free\",\"name\":\"Dots Studio: Dots3-Note Preview (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"recursive/flint-v1.0:free\",\"name\":\"Recursive: Flint (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"xingchen-agi/xing4.0-29b-a4b:free\",\"name\":\"XingChen: Xing4.0 29B A4B (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"id\":\"nvidia/nemotron-3.5-super-vl:free\",\"name\":\"NVIDIA: Nemotron 3.5 Super VL (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "reflection/beam-free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "subject to rate limiting (200 requests per hour per ip)",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "reflection/beam-free",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "quote": "\"name\":\"Reflection: Beam 1.0 (free)\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": null,
+      "fact": "freeTier",
+      "value": "API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.",
+      "current": "API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.",
+      "url": "https://docs.llm7.io/guides/models-api",
+      "quote": "turbo models are fast models available with free api tokens, subject to the free-tier rate and token limits.",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "gpt-oss:20b",
+      "fact": "rateLimit",
+      "value": "60 RPM, 250 req/hr (free token)",
+      "current": "60 RPM, 250 req/hr (free token)",
+      "url": "https://docs.llm7.io/limits",
+      "quote": "free token 1 60 250",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "gpt-oss:20b",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://api.llm7.io/v1/models",
+      "quote": "{\"id\":\"gpt-oss:20b\",\"object\":\"model\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "mistral-Nemo-Instruct-2407",
+      "fact": "rateLimit",
+      "value": "60 RPM, 250 req/hr (free token)",
+      "current": "60 RPM, 250 req/hr (free token)",
+      "url": "https://docs.llm7.io/limits",
+      "quote": "free token 1 60 250",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "mistral-Nemo-Instruct-2407",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://api.llm7.io/v1/models",
+      "quote": "{\"id\":\"mistral-Nemo-Instruct-2407\",\"object\":\"model\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "minimax-m2.7",
+      "fact": "rateLimit",
+      "value": "60 RPM, 250 req/hr (free token)",
+      "current": "60 RPM, 250 req/hr (free token)",
+      "url": "https://docs.llm7.io/limits",
+      "quote": "free token 1 60 250",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "minimax-m2.7",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://api.llm7.io/v1/models",
+      "quote": "{\"id\":\"minimax-m2.7\",\"object\":\"model\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "nemotron-3-nano:30b",
+      "fact": "rateLimit",
+      "value": "60 RPM, 250 req/hr (free token)",
+      "current": "60 RPM, 250 req/hr (free token)",
+      "url": "https://docs.llm7.io/limits",
+      "quote": "free token 1 60 250",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "nemotron-3-nano:30b",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://api.llm7.io/v1/models",
+      "quote": "{\"id\":\"nemotron-3-nano:30b\",\"object\":\"model\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "codestral-latest",
+      "fact": "rateLimit",
+      "value": "60 RPM, 250 req/hr (free token)",
+      "current": "60 RPM, 250 req/hr (free token)",
+      "url": "https://docs.llm7.io/limits",
+      "quote": "free token 1 60 250",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "codestral-latest",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://api.llm7.io/v1/models",
+      "quote": "{\"id\":\"codestral-latest\",\"object\":\"model\"",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://www.modelscope.cn/models/Qwen/Qwen3.5-35B-A3B.md",
+      "quote": "the model has a default context length of 262,144 tokens.",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-27B",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://www.modelscope.cn/models/Qwen/Qwen3.5-27B.md",
+      "quote": "the model has a default context length of 262,144 tokens.",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per model.",
+      "current": "Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per model.",
+      "url": "https://docs.api.nvidia.com/nim/docs/product",
+      "quote": "members of the nvidia developer program have free access to nim api endpoints for prototyping",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "google/gemma-4-31b-it",
+      "fact": "context",
+      "value": "262K",
+      "current": "262K",
+      "url": "https://build.nvidia.com/google/gemma-4-31b-it.md",
+      "quote": "context length: 262,144 tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "fact": "context",
+      "value": "1M",
+      "current": "1M",
+      "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b.md",
+      "quote": "context length: 1,048,576 tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "openai/gpt-oss-20b",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://build.nvidia.com/openai/gpt-oss-20b.md",
+      "quote": "context length: 131,072 tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free plan with a starter amount of usage credits for a smaller set of starter models, reset monthly from the sign-up date. 1 concurrent request. OpenAI SDK-compatible via https://ollama.com/v1.",
+      "current": "Free plan with a starter amount of usage credits for a smaller set of starter models, reset monthly from the sign-up date. 1 concurrent request. OpenAI SDK-compatible via https://ollama.com/v1.",
+      "url": "https://ollama.com/pricing",
+      "quote": "Free accounts include a starter amount of usage for a smaller set of starter models.",
+      "state": "QUOTE_MISSING",
+      "signal": true
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:120b",
+      "fact": "rateLimit",
+      "value": "1 concurrent request, monthly starter credits",
+      "current": "1 concurrent request, monthly starter credits",
+      "url": "https://ollama.com/pricing",
+      "quote": "Free includes 1 concurrent request",
+      "state": "QUOTE_MISSING",
+      "signal": true
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:20b",
+      "fact": "rateLimit",
+      "value": "1 concurrent request, monthly starter credits",
+      "current": "1 concurrent request, monthly starter credits",
+      "url": "https://ollama.com/pricing",
+      "quote": "Free includes 1 concurrent request",
+      "state": "QUOTE_MISSING",
+      "signal": true
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "nemotron-3-ultra",
+      "fact": "rateLimit",
+      "value": "1 concurrent request, monthly starter credits",
+      "current": "1 concurrent request, monthly starter credits",
+      "url": "https://ollama.com/pricing",
+      "quote": "Free includes 1 concurrent request",
+      "state": "QUOTE_MISSING",
+      "signal": true
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:120b",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://ollama.com/library/gpt-oss",
+      "quote": "gpt-oss:120b-cloud - 128K Text",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": null,
+      "fact": "freeTier",
+      "value": "17 free models (marked with `:free` suffix). OpenAI SDK-compatible.",
+      "current": "17 free models (marked with `:free` suffix). OpenAI SDK-compatible.",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "If you're using a free model variant (with an ID ending in `:free`), the following limits apply",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "cohere/north-mini-code:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-26b-a4b-it:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-31b-it:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Free anonymous tier (no API key, no signup): 2 RPM per IP per model. 20+ open-weight models hosted in EU. OpenAI SDK-compatible.",
+      "current": "Free anonymous tier (no API key, no signup): 2 RPM per IP per model. 20+ open-weight models hosted in EU. OpenAI SDK-compatible.",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-397B-A17B",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-120b",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-20b",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Meta-Llama-3_3-70B-Instruct",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.8-27B",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.6-27B",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-9B",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen2.5-VL-72B-Instruct",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Small-3.2-24B-Instruct-2506",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Nemo-Instruct-2407",
+      "fact": "rateLimit",
+      "value": "2 RPM (anonymous)",
+      "current": "2 RPM (anonymous)",
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "quote": "2 requests per minute, per IP and per model",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-397B-A17B",
+      "fact": "context",
+      "value": "262K",
+      "current": "262K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Parameters : 397B Quantization : fp8 Max. context : 262K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Meta-Llama-3_3-70B-Instruct",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Parameters : 70B Quantization : fp8 Max. context : 131K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-9B",
+      "fact": "context",
+      "value": "262K",
+      "current": "262K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Parameters : 9.7B Quantization : bf16 Max. context : 262K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen2.5-VL-72B-Instruct",
+      "fact": "context",
+      "value": "32K",
+      "current": "32K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Parameters : 72B Quantization : fp8 Max. context : 32K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Small-3.2-24B-Instruct-2506",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Parameters : 24B Quantization : bf16 Max. context : 128K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-397B-A17B",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Qwen3.5-397B-A17B Function calling Reasoning Streaming Structured output Vision",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.8-27B",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Qwen3.8-27B Function calling Reasoning Streaming Structured output Vision",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.6-27B",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Qwen3.6-27B Function calling Reasoning Streaming Structured output Vision",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-9B",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Qwen3.5-9B Function calling Reasoning Streaming Structured output Vision",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen2.5-VL-72B-Instruct",
+      "fact": "modality",
+      "value": "Text + Vision",
+      "current": "Text + Vision",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Qwen2.5-VL-72B-Instruct Streaming Structured output Vision",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": null,
+      "fact": "freeTier",
+      "value": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
+      "current": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
+      "url": "https://siliconflow.cn/pricing",
+      "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
+      "state": "PAGE_ERROR",
+      "signal": false
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "tencent/Hunyuan-MT-7B",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://siliconflow.cn/pricing",
+      "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
+      "state": "PAGE_ERROR",
+      "signal": false
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "XingChenAGI/Xing4.0-29B",
+      "fact": "listed",
+      "value": "yes",
+      "current": "yes",
+      "url": "https://siliconflow.cn/pricing",
+      "quote": "Xing4.0-29B XingChenAGI/Xing4.0-29B 免费 免费",
+      "state": "PAGE_ERROR",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-120b",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Parameters : 117B Quantization : fp4 Max. context : 131K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-20b",
+      "fact": "context",
+      "value": "131K",
+      "current": "131K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Parameters : 21B Quantization : fp4 Max. context : 131K",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Nemo-Instruct-2407",
+      "fact": "context",
+      "value": "118K",
+      "current": "118K",
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "quote": "Max. context : 118K End of life on Nov 4, 2026",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:20b",
+      "fact": "context",
+      "value": "128K",
+      "current": "128K",
+      "url": "https://ollama.com/library/gpt-oss",
+      "quote": "gpt-oss:20b-cloud - 128K Text",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "nemotron-3-ultra",
+      "fact": "context",
+      "value": "256K",
+      "current": "256K",
+      "url": "https://ollama.com/library/nemotron-3-ultra",
+      "quote": "nemotron-3-ultra:cloud - 256K Text",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-31b-it",
+      "fact": "modality",
+      "value": "Text + Image",
+      "current": "Text + Image",
+      "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+      "quote": "Supported Modalities Text, Image",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-26b-a4b-it",
+      "fact": "modality",
+      "value": "Text + Image",
+      "current": "Text + Image",
+      "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+      "quote": "Supported Modalities Text, Image",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "MiniMaxAI/MiniMax-M2.7",
+      "fact": "context",
+      "value": "200K",
+      "current": "200K",
+      "url": "https://gonkabroker.com/models/minimax-m2-on-gonka/",
+      "quote": "Context window 200K tokens",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling-small:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "rateLimit",
+      "value": "20 RPM, 50 RPD",
+      "current": "20 RPM, 50 RPD",
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "quote": "Less than 10 | 20 | 50",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "200 requests per hour per IP",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "stealth/glyph-cluster",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "200 requests per hour per IP",
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "rateLimit",
+      "value": "200 req/hr",
+      "current": "200 req/hr",
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "quote": "200 requests per hour per IP",
+      "state": "OK",
+      "signal": false
+    }
+  ],
+  "catalogs": [
+    {
+      "provider": "OpenRouter",
+      "url": "https://openrouter.ai/api/v1/models",
+      "httpStatus": 200,
+      "state": "OK",
+      "size": 463,
+      "gone": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "new": []
+    },
+    {
+      "provider": "Ollama Cloud",
+      "url": "https://ollama.com/api/tags",
+      "httpStatus": 200,
+      "state": "OK",
+      "size": 23,
+      "gone": [],
+      "new": []
+    }
+  ],
+  "links": [
+    {
+      "url": "https://www.aionlabs.ai/app/api-keys/",
+      "where": [
+        "Aion Labs url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://dashboard.cohere.com/api-keys",
+      "where": [
+        "Cohere url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://aistudio.google.com/app/apikey",
+      "where": [
+        "Google Gemini url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://console.mistral.ai/api-keys",
+      "where": [
+        "Mistral AI url"
+      ],
+      "httpStatus": 303,
+      "state": "UNCHECKED",
+      "signal": false
+    },
+    {
+      "url": "https://open.bigmodel.cn/usercenter/apikeys",
+      "where": [
+        "Z AI (Zhipu AI) url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://dash.cloudflare.com/profile/api-tokens",
+      "where": [
+        "Cloudflare Workers AI url"
+      ],
+      "httpStatus": 403,
+      "state": "UNCHECKED",
+      "signal": false
+    },
+    {
+      "url": "https://app.gonkabroker.com/signup",
+      "where": [
+        "Gonka Broker url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://console.groq.com/keys",
+      "where": [
+        "Groq url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://app.kilo.ai/profile",
+      "where": [
+        "Kilo Code url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://token.llm7.io",
+      "where": [
+        "LLM7.io url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://modelscope.cn/my/myaccesstoken",
+      "where": [
+        "ModelScope url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://build.nvidia.com/explore/discover",
+      "where": [
+        "NVIDIA NIM url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://ollama.com/settings/keys",
+      "where": [
+        "Ollama Cloud url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://openrouter.ai/keys",
+      "where": [
+        "OpenRouter url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "where": [
+        "OVHcloud AI Endpoints url"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://cloud.siliconflow.cn/account/ak",
+      "where": [
+        "SiliconFlow url"
+      ],
+      "httpStatus": 0,
+      "state": "UNCHECKED",
+      "signal": false
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/available-regions",
+      "where": [
+        "footnote 1"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/terms",
+      "where": [
+        "footnote 1"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://aistudio.google.com/",
+      "where": [
+        "footnote 1"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/deprecations",
+      "where": [
+        "footnote 1"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://console.groq.com/docs/deprecations",
+      "where": [
+        "footnote 2"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://console.groq.com/docs/rate-limits",
+      "where": [
+        "footnote 2"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://ollama.com/pricing",
+      "where": [
+        "footnote 3"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://openrouter.ai/docs/api-reference/limits",
+      "where": [
+        "footnote 4"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/routing/routers/free-router",
+      "where": [
+        "footnote 4"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/routing/model-fallbacks",
+      "where": [
+        "footnote 4"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "where": [
+        "footnote 5"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://kilo.ai/docs/gateway/models-and-providers",
+      "where": [
+        "footnote 5"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://modelscope.cn/docs/model-service/API-Inference/limits",
+      "where": [
+        "footnote 6"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://modelscope.cn/docs/model-service/API-Inference/intro",
+      "where": [
+        "footnote 6"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://api-docs.siliconflow.cn/docs/release-notes/overview",
+      "where": [
+        "footnote 9"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://siliconflow.cn/pricing",
+      "where": [
+        "footnote 9"
+      ],
+      "httpStatus": 0,
+      "state": "UNCHECKED",
+      "signal": false
+    },
+    {
+      "url": "https://docs.llm7.io/guides/models-api",
+      "where": [
+        "footnote 10"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.llm7.io/limits",
+      "where": [
+        "footnote 10"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+      "where": [
+        "footnote 11"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.bigmodel.cn/cn/faq/registration-login.md",
+      "where": [
+        "footnote 12"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.bigmodel.cn/cn/faq/authentication-issues.md",
+      "where": [
+        "footnote 12"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.bigmodel.cn/cn/faq/batch-api-issues.md",
+      "where": [
+        "footnote 12"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://api.z.ai/api/paas/v4",
+      "where": [
+        "footnote 12"
+      ],
+      "httpStatus": 401,
+      "state": "UNCHECKED",
+      "signal": false
+    },
+    {
+      "url": "https://docs.z.ai/guides/develop/http/introduction",
+      "where": [
+        "footnote 12"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.z.ai/guides/overview/pricing.md",
+      "where": [
+        "footnote 12"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
+      "where": [
+        "footnote 12"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.mistral.ai/admin/billing-usage/subscriptions",
+      "where": [
+        "footnote 13"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key",
+      "where": [
+        "footnote 13"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://mistral.ai/pricing",
+      "where": [
+        "footnote 13"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models",
+      "where": [
+        "footnote 13"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them",
+      "where": [
+        "footnote 13"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.gonkabroker.com/guides/billing-and-deposits/",
+      "where": [
+        "footnote 14"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "where": [
+        "footnote 14"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    },
+    {
+      "url": "https://docs.gonkabroker.com/reference/limits-and-quotas/",
+      "where": [
+        "footnote 14"
+      ],
+      "httpStatus": 200,
+      "state": "OK",
+      "signal": false
+    }
+  ],
+  "pages": [
+    {
+      "url": "https://www.aionlabs.ai/docs/rate-limits/",
+      "httpStatus": 200,
+      "chars": 946,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://www.aionlabs.ai/docs/models/",
+      "httpStatus": 200,
+      "chars": 2914,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.cohere.com/docs/rate-limits.md",
+      "httpStatus": 200,
+      "chars": 2858,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.cohere.com/docs/models.md",
+      "httpStatus": 200,
+      "chars": 25227,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/billing",
+      "httpStatus": 200,
+      "chars": 34255,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "httpStatus": 200,
+      "chars": 62650,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+      "httpStatus": 200,
+      "chars": 5054,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
+      "httpStatus": 200,
+      "chars": 5305,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
+      "httpStatus": 200,
+      "chars": 5188,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite",
+      "httpStatus": 200,
+      "chars": 10796,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash",
+      "httpStatus": 200,
+      "chars": 5299,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite",
+      "httpStatus": 200,
+      "chars": 5419,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemma/docs/core",
+      "httpStatus": 200,
+      "chars": 12628,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key",
+      "httpStatus": 200,
+      "chars": 3060,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04.md",
+      "httpStatus": 200,
+      "chars": 775,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/models/mistral-small-4-0-26-03.md",
+      "httpStatus": 200,
+      "chars": 757,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/models/mistral-large-3-25-12.md",
+      "httpStatus": 200,
+      "chars": 800,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/models/ministral-3-8b-25-12.md",
+      "httpStatus": 200,
+      "chars": 1006,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/models/codestral-25-08.md",
+      "httpStatus": 200,
+      "chars": 609,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/models/ministral-3-3b-25-12.md",
+      "httpStatus": 200,
+      "chars": 1032,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.mistral.ai/models/ministral-3-14b-25-12.md",
+      "httpStatus": 200,
+      "chars": 1068,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.z.ai/guides/overview/pricing.md",
+      "httpStatus": 200,
+      "chars": 2349,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.z.ai/guides/llm/glm-4.7.md",
+      "httpStatus": 200,
+      "chars": 17771,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
+      "httpStatus": 200,
+      "chars": 9666,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
+      "httpStatus": 200,
+      "chars": 7991,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
+      "httpStatus": 200,
+      "chars": 32558,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
+      "httpStatus": 200,
+      "chars": 15425,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/index.md",
+      "httpStatus": 200,
+      "chars": 10386,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/index.md",
+      "httpStatus": 200,
+      "chars": 10837,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/index.md",
+      "httpStatus": 200,
+      "chars": 9932,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/index.md",
+      "httpStatus": 200,
+      "chars": 12594,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
+      "httpStatus": 200,
+      "chars": 9060,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
+      "httpStatus": 200,
+      "chars": 8669,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/deepseek-r1-distill-qwen-32b/index.md",
+      "httpStatus": 200,
+      "chars": 8343,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://gonkabroker.com/free-llm-api/",
+      "httpStatus": 200,
+      "chars": 5425,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://gonkabroker.com/models/minimax-m2-on-gonka/",
+      "httpStatus": 200,
+      "chars": 4261,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://gonkabroker.com/models/deepseek-v4-flash-on-gonka/",
+      "httpStatus": 200,
+      "chars": 4691,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://gonkabroker.com/models/glm-5-3-flash-on-gonka/",
+      "httpStatus": 200,
+      "chars": 4407,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://gonkabroker.com/models/bge-m3-on-gonka/",
+      "httpStatus": 200,
+      "chars": 3767,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://console.groq.com/docs/billing-faqs.md",
+      "httpStatus": 200,
+      "chars": 9841,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://console.groq.com/docs/rate-limits",
+      "httpStatus": 200,
+      "chars": 5799,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://console.groq.com/docs/model/openai/gpt-oss-120b.md",
+      "httpStatus": 200,
+      "chars": 4178,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://console.groq.com/docs/model/openai/gpt-oss-20b.md",
+      "httpStatus": 200,
+      "chars": 4045,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://console.groq.com/docs/model/qwen/qwen3.8-27b.md",
+      "httpStatus": 200,
+      "chars": 5313,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://kilo.ai/docs/gateway/authentication",
+      "httpStatus": 200,
+      "chars": 4120,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai-gateway.kilo.ai/api/v1/models",
+      "httpStatus": 200,
+      "chars": 541340,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.llm7.io/guides/models-api",
+      "httpStatus": 200,
+      "chars": 9773,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.llm7.io/limits",
+      "httpStatus": 200,
+      "chars": 3318,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://api.llm7.io/v1/models",
+      "httpStatus": 200,
+      "chars": 68968,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://www.modelscope.cn/models/Qwen/Qwen3.5-35B-A3B.md",
+      "httpStatus": 200,
+      "chars": 27831,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://www.modelscope.cn/models/Qwen/Qwen3.5-27B.md",
+      "httpStatus": 200,
+      "chars": 26972,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://docs.api.nvidia.com/nim/docs/product",
+      "httpStatus": 200,
+      "chars": 7987,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://build.nvidia.com/google/gemma-4-31b-it.md",
+      "httpStatus": 200,
+      "chars": 13173,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b.md",
+      "httpStatus": 200,
+      "chars": 86628,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://build.nvidia.com/openai/gpt-oss-20b.md",
+      "httpStatus": 200,
+      "chars": 11222,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ollama.com/pricing",
+      "httpStatus": 200,
+      "chars": 6355,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ollama.com/library/gpt-oss",
+      "httpStatus": 200,
+      "chars": 7051,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://openrouter.ai/docs/api-reference/limits.md",
+      "httpStatus": 200,
+      "chars": 16009,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
+      "httpStatus": 200,
+      "chars": 124101,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
+      "httpStatus": 200,
+      "chars": 38181,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://siliconflow.cn/pricing",
+      "httpStatus": 0,
+      "chars": 0,
+      "state": "PAGE_ERROR",
+      "error": null
+    },
+    {
+      "url": "https://ollama.com/library/nemotron-3-ultra",
+      "httpStatus": 200,
+      "chars": 4508,
+      "state": "OK",
+      "error": null
+    },
+    {
+      "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+      "httpStatus": 200,
+      "chars": 23528,
+      "state": "OK",
+      "error": null
+    }
+  ],
+  "unsourced": [
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-2.0",
+      "fact": "listed"
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-2.0",
+      "fact": "modality"
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-rp-llama-3.1-8b",
+      "fact": "listed"
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-rp-llama-3.1-8b",
+      "fact": "modality"
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0",
+      "fact": "listed"
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0",
+      "fact": "modality"
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0-mini",
+      "fact": "listed"
+    },
+    {
+      "provider": "Aion Labs",
+      "model": "aion-labs/aion-3.0-mini",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-plus-08-2024",
+      "fact": "context"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-plus-08-2024",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-plus-08-2024",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-08-2024",
+      "fact": "context"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-08-2024",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r-08-2024",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-a-reasoning-08-2025",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-arabic-02-2025",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-arabic-02-2025",
+      "fact": "context"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-arabic-02-2025",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-arabic-02-2025",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cohere",
+      "model": "command-r7b-arabic-02-2025",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-expanse-32b",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-expanse-32b",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-vision-32b",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cohere",
+      "model": "c4ai-aya-vision-32b",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.8-flash",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.6-flash",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.5-flash-lite",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-3.1-flash-lite",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemini-2.5-flash-lite",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-31b-it",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-31b-it",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-26b-a4b-it",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Google Gemini",
+      "model": "gemma-4-26b-a4b-it",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-medium-3-5",
+      "fact": "listed"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-medium-3-5",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-medium-3-5",
+      "fact": "modality"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-medium-3-5",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-small-2603",
+      "fact": "listed"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-small-2603",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-small-2603",
+      "fact": "modality"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-small-2603",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-large-2512",
+      "fact": "listed"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-large-2512",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "mistral-large-2512",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-8b-2512",
+      "fact": "listed"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-8b-2512",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-8b-2512",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "codestral-2508",
+      "fact": "listed"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "codestral-2508",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "codestral-2508",
+      "fact": "modality"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "codestral-2508",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-3b-2512",
+      "fact": "listed"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-3b-2512",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-3b-2512",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-14b-2512",
+      "fact": "listed"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-14b-2512",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Mistral AI",
+      "model": "ministral-14b-2512",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.7-flash",
+      "fact": "modality"
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.7-flash",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.5-flash",
+      "fact": "modality"
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.5-flash",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.6v-flash",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "model": "glm-4.6v-flash",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/openai/gpt-oss-120b",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/openai/gpt-oss-120b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/openai/gpt-oss-120b",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/zai-org/glm-4.7-flash",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/zai-org/glm-4.7-flash",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/zai-org/glm-4.7-flash",
+      "fact": "modality"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+      "fact": "listed"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+      "fact": "modality"
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "MiniMaxAI/MiniMax-M2.7",
+      "fact": "listed"
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "MiniMaxAI/MiniMax-M2.7",
+      "fact": "modality"
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "fact": "modality"
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "zai-org/GLM-5.3-Flash",
+      "fact": "modality"
+    },
+    {
+      "provider": "Gonka Broker",
+      "model": "BAAI/bge-m3",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-120b",
+      "fact": "modality"
+    },
+    {
+      "provider": "Groq",
+      "model": "openai/gpt-oss-20b",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "cohere/north-mini-code:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "cohere/north-mini-code:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "cohere/north-mini-code:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "openrouter/free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "openrouter/free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "openrouter/free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "kilo-auto/free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "kilo-auto/free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "kilo-auto/free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "reflection/beam-free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "reflection/beam-free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "reflection/beam-free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "stealth/glyph-cluster",
+      "fact": "listed"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "stealth/glyph-cluster",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "stealth/glyph-cluster",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "stealth/glyph-cluster",
+      "fact": "modality"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "context"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Kilo Code",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "gpt-oss:20b",
+      "fact": "context"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "gpt-oss:20b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "gpt-oss:20b",
+      "fact": "modality"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "mistral-Nemo-Instruct-2407",
+      "fact": "context"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "mistral-Nemo-Instruct-2407",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "mistral-Nemo-Instruct-2407",
+      "fact": "modality"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "minimax-m2.7",
+      "fact": "context"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "minimax-m2.7",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "minimax-m2.7",
+      "fact": "modality"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "nemotron-3-nano:30b",
+      "fact": "context"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "nemotron-3-nano:30b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "nemotron-3-nano:30b",
+      "fact": "modality"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "codestral-latest",
+      "fact": "context"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "codestral-latest",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "codestral-latest",
+      "fact": "modality"
+    },
+    {
+      "provider": "ModelScope",
+      "model": null,
+      "fact": "freeTier"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "fact": "listed"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "fact": "modality"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-27B",
+      "fact": "listed"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-27B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-27B",
+      "fact": "modality"
+    },
+    {
+      "provider": "ModelScope",
+      "model": "Qwen/Qwen3.5-27B",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "google/gemma-4-31b-it",
+      "fact": "listed"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "google/gemma-4-31b-it",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "google/gemma-4-31b-it",
+      "fact": "modality"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "google/gemma-4-31b-it",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "fact": "listed"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "fact": "modality"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "openai/gpt-oss-20b",
+      "fact": "listed"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "openai/gpt-oss-20b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "openai/gpt-oss-20b",
+      "fact": "modality"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "model": "openai/gpt-oss-20b",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:120b",
+      "fact": "listed"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:120b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:120b",
+      "fact": "modality"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:20b",
+      "fact": "listed"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:20b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "gpt-oss:20b",
+      "fact": "modality"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "nemotron-3-ultra",
+      "fact": "listed"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "nemotron-3-ultra",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "Ollama Cloud",
+      "model": "nemotron-3-ultra",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "cohere/north-mini-code:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "cohere/north-mini-code:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "cohere/north-mini-code:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "cohere/north-mini-code:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-26b-a4b-it:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-26b-a4b-it:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-26b-a4b-it:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-26b-a4b-it:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-31b-it:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-31b-it:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-31b-it:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-31b-it:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-s-2.1:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "poolside/laguna-xs-2.1:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "dots-studio/dots-3-note-preview:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "liquid/lfm-2.5-2.6b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "recursive/flint-v1.0:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "xingchen-agi/xing4.0-29b-a4b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling-small:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling-small:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling-small:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "thinkingmachines/inkling-small:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "listed"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "context"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OpenRouter",
+      "model": "nvidia/nemotron-3.5-content-safety:free",
+      "fact": "modality"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-397B-A17B",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-397B-A17B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-120b",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-120b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-120b",
+      "fact": "modality"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-20b",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-20b",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "gpt-oss-20b",
+      "fact": "modality"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Meta-Llama-3_3-70B-Instruct",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Meta-Llama-3_3-70B-Instruct",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Meta-Llama-3_3-70B-Instruct",
+      "fact": "modality"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.8-27B",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.8-27B",
+      "fact": "context"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.8-27B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.6-27B",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.6-27B",
+      "fact": "context"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.6-27B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-9B",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen3.5-9B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen2.5-VL-72B-Instruct",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Qwen2.5-VL-72B-Instruct",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Small-3.2-24B-Instruct-2506",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Small-3.2-24B-Instruct-2506",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Small-3.2-24B-Instruct-2506",
+      "fact": "modality"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Nemo-Instruct-2407",
+      "fact": "listed"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Nemo-Instruct-2407",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "model": "Mistral-Nemo-Instruct-2407",
+      "fact": "modality"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "tencent/Hunyuan-MT-7B",
+      "fact": "context"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "tencent/Hunyuan-MT-7B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "tencent/Hunyuan-MT-7B",
+      "fact": "modality"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "tencent/Hunyuan-MT-7B",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "XingChenAGI/Xing4.0-29B",
+      "fact": "context"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "XingChenAGI/Xing4.0-29B",
+      "fact": "maxOutput"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "XingChenAGI/Xing4.0-29B",
+      "fact": "modality"
+    },
+    {
+      "provider": "SiliconFlow",
+      "model": "XingChenAGI/Xing4.0-29B",
+      "fact": "rateLimit"
+    }
+  ]
+}
