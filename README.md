@@ -18,16 +18,31 @@
 
 <hr>
 
+<h3 align="center">Gold sponsors</h3>
+
+<p align="center">
+	<a href="https://github.com/sponsors/mnfst">
+		<picture>
+			<source media="(prefers-color-scheme: dark)" srcset="media/sponsor-slot-dark.svg">
+			<img src="media/sponsor-slot-light.svg" width="280" alt="Your logo here">
+		</picture>
+	</a>
+</p>
+
 <h3 align="center">Sponsors</h3>
 
 <p align="center">
 	<a href="https://okapi.bot/go/awesome-free-llm-apis">
 		<picture>
 			<source media="(prefers-color-scheme: dark)" srcset="media/okapi-logo-dark.svg">
-			<img src="media/okapi-logo-light.svg" width="180" alt="Okapi">
+			<img src="media/okapi-logo-light.svg" width="140" alt="Okapi">
 		</picture>
 	</a>
+	<br>
+	<sub>Free API watcher. No more breaking changes.</sub>
 </p>
+
+<p align="center"><sub>About 145,000 views a month from developers · <a href="https://github.com/sponsors/mnfst">Become a sponsor</a></sub></p>
 
 <hr>
 
