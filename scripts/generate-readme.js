@@ -12,7 +12,7 @@ const SPONSORS_PAGE = 'https://github.com/sponsors/mnfst';
 const MONTHLY_VIEWS = '145,000';
 
 const SPONSORS = [
-	{name: 'Okapi', url: 'https://okapi.bot', tier: 'sponsor', tagline: 'Free API watcher. No more breaking changes.', logoLight: 'media/okapi-logo-light.svg', logoDark: 'media/okapi-logo-dark.svg'},
+	{name: 'Okapi', url: 'https://okapi.bot/go/awesome-free-llm-apis', tier: 'sponsor', tagline: 'Free API watcher. No more breaking changes.', logoLight: 'media/okapi-logo-light.svg', logoDark: 'media/okapi-logo-dark.svg'},
 ];
 
 const LOGO_WIDTH = {gold: 280, sponsor: 140};

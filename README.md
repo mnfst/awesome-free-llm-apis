@@ -32,7 +32,7 @@
 <h3 align="center">Sponsors</h3>
 
 <p align="center">
-	<a href="https://okapi.bot">
+	<a href="https://okapi.bot/go/awesome-free-llm-apis">
 		<picture>
 			<source media="(prefers-color-scheme: dark)" srcset="media/okapi-logo-dark.svg">
 			<img src="media/okapi-logo-light.svg" width="140" alt="Okapi">
