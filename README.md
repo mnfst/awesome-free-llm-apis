@@ -38,6 +38,8 @@
 			<img src="media/okapi-logo-light.svg" width="140" alt="Okapi">
 		</picture>
 	</a>
+	<br>
+	<sub>Free API watcher. No more breaking changes.</sub>
 </p>
 
 <p align="center"><sub>About 145,000 views a month from developers · <a href="https://github.com/sponsors/mnfst">Become a sponsor</a></sub></p>
