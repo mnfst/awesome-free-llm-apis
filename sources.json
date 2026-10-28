@@ -250,8 +250,6 @@
     {"provider":"Gonka Broker","model":"MiniMaxAI/MiniMax-M2.7","fact":"context","value":"200K","url":"https://gonkabroker.com/models/minimax-m2-on-gonka/","quote":"Context window 200K tokens"},
     {"provider":"OpenRouter","model":"nvidia/nemotron-3.5-content-safety:free","fact":"rateLimit","value":"20 RPM, 50 RPD","url":"https://openrouter.ai/docs/api-reference/limits.md","quote":"Less than 10 | 20 | 50"},
     {"provider":"OpenRouter","model":"thinkingmachines/inkling-small:free","fact":"rateLimit","value":"20 RPM, 50 RPD","url":"https://openrouter.ai/docs/api-reference/limits.md","quote":"Less than 10 | 20 | 50"},
-    {"provider":"OpenRouter","model":"nvidia/nemotron-3-super-120b-a12b:free","fact":"rateLimit","value":"20 RPM, 50 RPD","url":"https://openrouter.ai/docs/api-reference/limits.md","quote":"Less than 10 | 20 | 50"},
-    {"provider":"Kilo Code","model":"nvidia/nemotron-3-super-120b-a12b:free","fact":"rateLimit","value":"200 req/hr","url":"https://kilo.ai/docs/gateway/authentication","quote":"200 requests per hour per IP"},
     {"provider":"Kilo Code","model":"stealth/glyph-cluster","fact":"rateLimit","value":"200 req/hr","url":"https://kilo.ai/docs/gateway/authentication","quote":"200 requests per hour per IP"},
     {"provider":"Kilo Code","model":"nvidia/nemotron-3.5-content-safety:free","fact":"rateLimit","value":"200 req/hr","url":"https://kilo.ai/docs/gateway/authentication","quote":"200 requests per hour per IP"}
   ],

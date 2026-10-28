@@ -604,14 +604,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "nvidia/nemotron-3-super-120b-a12b:free",
-          "name": "nvidia/nemotron-3-super-120b-a12b:free",
-          "context": "262K",
-          "maxOutput": "235K",
-          "modality": "Text",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "stealth/glyph-cluster",
           "name": "stealth/glyph-cluster",
           "context": "256K",
@@ -933,14 +925,6 @@
           "context": "1M",
           "maxOutput": "262K",
           "modality": "Text + Image + Audio",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "nvidia/nemotron-3-super-120b-a12b:free",
-          "name": "nvidia/nemotron-3-super-120b-a12b:free",
-          "context": "262K",
-          "maxOutput": "235K",
-          "modality": "Text",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
