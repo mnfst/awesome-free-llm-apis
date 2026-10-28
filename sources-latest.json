@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-10-27T12:20:37.828Z",
+  "generatedAt": "2026-10-28T12:16:58.952Z",
   "summary": {
     "facts": 546,
     "sourced": 254,
     "unsourced": 292,
-    "ok": 247,
+    "ok": 250,
     "quoteMissing": 4,
-    "pageError": 3,
+    "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
@@ -2633,7 +2633,7 @@
       "current": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2644,7 +2644,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2655,7 +2655,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Xing4.0-29B XingChenAGI/Xing4.0-29B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2819,7 +2819,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 463,
+      "size": 464,
       "gone": [
         "nvidia/nemotron-3-super-120b-a12b:free"
       ],
@@ -3120,8 +3120,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 0,
-      "state": "UNCHECKED",
+      "httpStatus": 200,
+      "state": "OK",
       "signal": false
     },
     {
@@ -3312,63 +3312,63 @@
     {
       "url": "https://docs.cohere.com/docs/models.md",
       "httpStatus": 200,
-      "chars": 25227,
+      "chars": 25219,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/billing",
       "httpStatus": 200,
-      "chars": 34255,
+      "chars": 34263,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 62650,
+      "chars": 62658,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
       "httpStatus": 200,
-      "chars": 5054,
+      "chars": 5062,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
       "httpStatus": 200,
-      "chars": 5305,
+      "chars": 5313,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
       "httpStatus": 200,
-      "chars": 5188,
+      "chars": 5196,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite",
       "httpStatus": 200,
-      "chars": 10796,
+      "chars": 10804,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash",
       "httpStatus": 200,
-      "chars": 5299,
+      "chars": 5307,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite",
       "httpStatus": 200,
-      "chars": 5419,
+      "chars": 5427,
       "state": "OK",
       "error": null
     },
@@ -3382,7 +3382,7 @@
     {
       "url": "https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key",
       "httpStatus": 200,
-      "chars": 3060,
+      "chars": 3145,
       "state": "OK",
       "error": null
     },
@@ -3508,7 +3508,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 9060,
+      "chars": 9056,
       "state": "OK",
       "error": null
     },
@@ -3606,7 +3606,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 541340,
+      "chars": 542720,
       "state": "OK",
       "error": null
     },
@@ -3627,7 +3627,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 68968,
+      "chars": 68970,
       "state": "OK",
       "error": null
     },
@@ -3676,7 +3676,7 @@
     {
       "url": "https://ollama.com/pricing",
       "httpStatus": 200,
-      "chars": 6355,
+      "chars": 6357,
       "state": "OK",
       "error": null
     },
@@ -3697,28 +3697,28 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 124101,
+      "chars": 124135,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38181,
+      "chars": 38203,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://siliconflow.cn/pricing",
-      "httpStatus": 0,
-      "chars": 0,
-      "state": "PAGE_ERROR",
+      "httpStatus": 200,
+      "chars": 4665,
+      "state": "OK",
       "error": null
     },
     {
       "url": "https://ollama.com/library/nemotron-3-ultra",
       "httpStatus": 200,
-      "chars": 4508,
+      "chars": 4510,
       "state": "OK",
       "error": null
     },
