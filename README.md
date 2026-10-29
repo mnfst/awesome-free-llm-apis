@@ -21,7 +21,7 @@
 <h3 align="center">Sponsors</h3>
 
 <p align="center">
-	<a href="https://okapi.bot/go/awesome-free-llm-apis">
+	<a href="https://okapi.bot">
 		<picture>
 			<source media="(prefers-color-scheme: dark)" srcset="media/okapi-logo-dark.svg">
 			<img src="media/okapi-logo-light.svg" width="180" alt="Okapi">
@@ -301,6 +301,22 @@ Base URL: `https://api.siliconflow.cn/v1`
 | `tencent/Hunyuan-MT-7B`   | —       | —          | Text     | —          |
 | `XingChenAGI/Xing4.0-29B` | —       | —          | Text     | —          |
 
+### [Synap (Linkrra)](https://linkrra.com/login.html) 🇮🇱
+
+Free tier after signing up with Google, no credit card required. `synap-v1` auto-routes across self-hosted open models (cheapest that can do the job); `synap-v1-pro` adds external frontier models, strongest per job class. [^15]
+
+Base URL: `https://pool.linkrra.com/v1`
+
+| Model Name                       | Context              | Max Output | Modality      | Rate Limit                          |
+| -------------------------------- | -------------------- | ---------- | ------------- | ----------------------------------- |
+| synap-v1                         | Varies (auto-router) | Varies     | Text + Vision | 100K tokens/day (free tier, shared) |
+| synap-v1-pro                     | Varies (auto-router) | Varies     | Text + Vision | 100K tokens/day (free tier, shared) |
+| gpt-oss-20b                      | 32K                  | 32K        | Text          | 100K tokens/day (free tier, shared) |
+| `qwen/qwen3-30b-a3b`             | 64K                  | 64K        | Text          | 100K tokens/day (free tier, shared) |
+| qwen3-coder-30b                  | 32K                  | 32K        | Text (code)   | 100K tokens/day (free tier, shared) |
+| `qwen/qwen3-vl-30b-a3b-instruct` | 32K                  | 32K        | Text + Vision | 100K tokens/day (free tier, shared) |
+| gemma-4-26b-a4b-it               | 131K                 | 131K       | Text          | 100K tokens/day (free tier, shared) |
+
 ## Glossary
 
 | Abbreviation | Meaning             |
@@ -328,3 +344,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^12]: Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time.
 [^13]: Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) lists no API credit amount. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values.
 [^14]: The free grant is issued only after SMS verification with a real (non-VoIP) phone number, one grant per number ([billing docs](https://docs.gonkabroker.com/guides/billing-and-deposits/)). Unused free tokens do not carry over to the next month. The grant is sized as at least 1M tokens of the most expensive model; cheaper models stretch further (e.g. ~6M tokens for BGE-M3) ([free tier page](https://gonkabroker.com/free-llm-api/)). While running on free-tier funds only, requests are capped at a lower rate; the current cap is returned as `maxRpm` by `/test-auth` ([limits](https://docs.gonkabroker.com/reference/limits-and-quotas/)).
+[^15]: Synap is Linkrra's inference gateway. The free tier (sign in with Google) grants a daily token allowance per account; exceeding it returns HTTP 402 `free_tier_daily_limit` with a `Retry-After` header until the next UTC day. `synap-v1` and `synap-v1-pro` are auto-routers with no single fixed context window — the rows above list the directly-nameable backing models and specs, confirmed live via `GET https://pool.linkrra.com/v1/models` on 2026-10-27.
