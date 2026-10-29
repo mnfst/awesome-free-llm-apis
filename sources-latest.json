@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T12:16:58.952Z",
+  "generatedAt": "2026-10-29T12:19:16.907Z",
   "summary": {
     "facts": 546,
     "sourced": 254,
@@ -2819,7 +2819,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 464,
+      "size": 457,
       "gone": [
         "nvidia/nemotron-3-super-120b-a12b:free"
       ],
@@ -2976,8 +2976,8 @@
       "where": [
         "SiliconFlow url"
       ],
-      "httpStatus": 0,
-      "state": "UNCHECKED",
+      "httpStatus": 200,
+      "state": "OK",
       "signal": false
     },
     {
@@ -3326,49 +3326,49 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 62658,
+      "chars": 65190,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
       "httpStatus": 200,
-      "chars": 5062,
+      "chars": 5083,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
       "httpStatus": 200,
-      "chars": 5313,
+      "chars": 5334,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
       "httpStatus": 200,
-      "chars": 5196,
+      "chars": 5217,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite",
       "httpStatus": 200,
-      "chars": 10804,
+      "chars": 10825,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash",
       "httpStatus": 200,
-      "chars": 5307,
+      "chars": 5328,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite",
       "httpStatus": 200,
-      "chars": 5427,
+      "chars": 5448,
       "state": "OK",
       "error": null
     },
@@ -3508,7 +3508,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 9056,
+      "chars": 9060,
       "state": "OK",
       "error": null
     },
@@ -3606,7 +3606,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 542720,
+      "chars": 523702,
       "state": "OK",
       "error": null
     },
@@ -3683,7 +3683,7 @@
     {
       "url": "https://ollama.com/library/gpt-oss",
       "httpStatus": 200,
-      "chars": 7051,
+      "chars": 7053,
       "state": "OK",
       "error": null
     },
@@ -3697,14 +3697,14 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 124135,
+      "chars": 124322,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38203,
+      "chars": 38199,
       "state": "OK",
       "error": null
     },
