@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-10-29T12:19:16.907Z",
+  "generatedAt": "2026-10-30T12:19:42.527Z",
   "summary": {
-    "facts": 546,
-    "sourced": 254,
-    "unsourced": 292,
-    "ok": 250,
-    "quoteMissing": 4,
+    "facts": 520,
+    "sourced": 245,
+    "unsourced": 275,
+    "ok": 245,
+    "quoteMissing": 0,
     "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 4,
-    "modelsGone": 1,
+    "signals": 0,
+    "modelsGone": 0,
     "modelsNew": 0,
-    "links": 50,
+    "links": 48,
     "linksBroken": 0,
     "linkSignals": 0
   },
@@ -2175,61 +2175,6 @@
       "signal": false
     },
     {
-      "provider": "Ollama Cloud",
-      "model": null,
-      "fact": "freeTier",
-      "value": "Free plan with a starter amount of usage credits for a smaller set of starter models, reset monthly from the sign-up date. 1 concurrent request. OpenAI SDK-compatible via https://ollama.com/v1.",
-      "current": "Free plan with a starter amount of usage credits for a smaller set of starter models, reset monthly from the sign-up date. 1 concurrent request. OpenAI SDK-compatible via https://ollama.com/v1.",
-      "url": "https://ollama.com/pricing",
-      "quote": "Free accounts include a starter amount of usage for a smaller set of starter models.",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:120b",
-      "fact": "rateLimit",
-      "value": "1 concurrent request, monthly starter credits",
-      "current": "1 concurrent request, monthly starter credits",
-      "url": "https://ollama.com/pricing",
-      "quote": "Free includes 1 concurrent request",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:20b",
-      "fact": "rateLimit",
-      "value": "1 concurrent request, monthly starter credits",
-      "current": "1 concurrent request, monthly starter credits",
-      "url": "https://ollama.com/pricing",
-      "quote": "Free includes 1 concurrent request",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "nemotron-3-ultra",
-      "fact": "rateLimit",
-      "value": "1 concurrent request, monthly starter credits",
-      "current": "1 concurrent request, monthly starter credits",
-      "url": "https://ollama.com/pricing",
-      "quote": "Free includes 1 concurrent request",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:120b",
-      "fact": "context",
-      "value": "128K",
-      "current": "128K",
-      "url": "https://ollama.com/library/gpt-oss",
-      "quote": "gpt-oss:120b-cloud - 128K Text",
-      "state": "OK",
-      "signal": false
-    },
-    {
       "provider": "OpenRouter",
       "model": null,
       "fact": "freeTier",
@@ -2692,28 +2637,6 @@
       "signal": false
     },
     {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:20b",
-      "fact": "context",
-      "value": "128K",
-      "current": "128K",
-      "url": "https://ollama.com/library/gpt-oss",
-      "quote": "gpt-oss:20b-cloud - 128K Text",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "nemotron-3-ultra",
-      "fact": "context",
-      "value": "256K",
-      "current": "256K",
-      "url": "https://ollama.com/library/nemotron-3-ultra",
-      "quote": "nemotron-3-ultra:cloud - 256K Text",
-      "state": "OK",
-      "signal": false
-    },
-    {
       "provider": "Google Gemini",
       "model": "gemma-4-31b-it",
       "fact": "modality",
@@ -2769,28 +2692,6 @@
       "signal": false
     },
     {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "200 requests per hour per IP",
-      "state": "OK",
-      "signal": false
-    },
-    {
       "provider": "Kilo Code",
       "model": "stealth/glyph-cluster",
       "fact": "rateLimit",
@@ -2819,18 +2720,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 457,
-      "gone": [
-        "nvidia/nemotron-3-super-120b-a12b:free"
-      ],
-      "new": []
-    },
-    {
-      "provider": "Ollama Cloud",
-      "url": "https://ollama.com/api/tags",
-      "httpStatus": 200,
-      "state": "OK",
-      "size": 23,
+      "size": 456,
       "gone": [],
       "new": []
     }
@@ -2945,15 +2835,6 @@
       "signal": false
     },
     {
-      "url": "https://ollama.com/settings/keys",
-      "where": [
-        "Ollama Cloud url"
-      ],
-      "httpStatus": 200,
-      "state": "OK",
-      "signal": false
-    },
-    {
       "url": "https://openrouter.ai/keys",
       "where": [
         "OpenRouter url"
@@ -3029,15 +2910,6 @@
       "url": "https://console.groq.com/docs/rate-limits",
       "where": [
         "footnote 2"
-      ],
-      "httpStatus": 200,
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "url": "https://ollama.com/pricing",
-      "where": [
-        "footnote 3"
       ],
       "httpStatus": 200,
       "state": "OK",
@@ -3333,21 +3205,21 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
       "httpStatus": 200,
-      "chars": 5083,
+      "chars": 5073,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
       "httpStatus": 200,
-      "chars": 5334,
+      "chars": 5324,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
       "httpStatus": 200,
-      "chars": 5217,
+      "chars": 5207,
       "state": "OK",
       "error": null
     },
@@ -3606,7 +3478,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 523702,
+      "chars": 522383,
       "state": "OK",
       "error": null
     },
@@ -3627,7 +3499,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 68970,
+      "chars": 68971,
       "state": "OK",
       "error": null
     },
@@ -3674,20 +3546,6 @@
       "error": null
     },
     {
-      "url": "https://ollama.com/pricing",
-      "httpStatus": 200,
-      "chars": 6357,
-      "state": "OK",
-      "error": null
-    },
-    {
-      "url": "https://ollama.com/library/gpt-oss",
-      "httpStatus": 200,
-      "chars": 7053,
-      "state": "OK",
-      "error": null
-    },
-    {
       "url": "https://openrouter.ai/docs/api-reference/limits.md",
       "httpStatus": 200,
       "chars": 16009,
@@ -3697,7 +3555,7 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 124322,
+      "chars": 124375,
       "state": "OK",
       "error": null
     },
@@ -3712,13 +3570,6 @@
       "url": "https://siliconflow.cn/pricing",
       "httpStatus": 200,
       "chars": 4665,
-      "state": "OK",
-      "error": null
-    },
-    {
-      "url": "https://ollama.com/library/nemotron-3-ultra",
-      "httpStatus": 200,
-      "chars": 4510,
       "state": "OK",
       "error": null
     },
@@ -4393,26 +4244,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
       "model": "stealth/glyph-cluster",
       "fact": "listed"
     },
@@ -4632,51 +4463,6 @@
       "fact": "rateLimit"
     },
     {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:120b",
-      "fact": "listed"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:120b",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:120b",
-      "fact": "modality"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:20b",
-      "fact": "listed"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:20b",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "gpt-oss:20b",
-      "fact": "modality"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "nemotron-3-ultra",
-      "fact": "listed"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "nemotron-3-ultra",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Ollama Cloud",
-      "model": "nemotron-3-ultra",
-      "fact": "modality"
-    },
-    {
       "provider": "OpenRouter",
       "model": "cohere/north-mini-code:free",
       "fact": "listed"
@@ -4974,26 +4760,6 @@
     {
       "provider": "OpenRouter",
       "model": "thinkingmachines/inkling-small:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3-super-120b-a12b:free",
       "fact": "modality"
     },
     {
