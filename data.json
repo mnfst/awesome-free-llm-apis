@@ -610,14 +610,6 @@
           "maxOutput": "256K",
           "modality": "Text (code)",
           "rateLimit": "200 req/hr"
-        },
-        {
-          "id": "nvidia/nemotron-3.5-content-safety:free",
-          "name": "nvidia/nemotron-3.5-content-safety:free",
-          "context": "128K",
-          "maxOutput": "8K",
-          "modality": "Text + Vision (moderation)",
-          "rateLimit": "200 req/hr"
         }
       ]
     },
@@ -881,14 +873,6 @@
           "context": "1M",
           "maxOutput": "262K",
           "modality": "Text + Image + Audio",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "nvidia/nemotron-3.5-content-safety:free",
-          "name": "nvidia/nemotron-3.5-content-safety:free",
-          "context": "128K",
-          "maxOutput": "8K",
-          "modality": "Text + Image (moderation)",
           "rateLimit": "20 RPM, 50 RPD"
         }
       ]
