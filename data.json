@@ -508,22 +508,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "poolside/laguna-s-2.1:free",
-          "name": "poolside/laguna-s-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
-          "rateLimit": "200 req/hr"
-        },
-        {
-          "id": "poolside/laguna-xs-2.1:free",
-          "name": "poolside/laguna-xs-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "cohere/north-mini-code:free",
           "name": "cohere/north-mini-code:free",
           "context": "256K",
@@ -637,14 +621,6 @@
           "context": "128K",
           "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "60 RPM, 250 req/hr (free token)"
-        },
-        {
-          "id": "minimax-m2.7",
-          "name": "minimax-m2.7",
-          "context": "180K",
-          "maxOutput": "—",
-          "modality": "Text (reasoning)",
           "rateLimit": "60 RPM, 250 req/hr (free token)"
         },
         {
@@ -777,22 +753,6 @@
           "context": "262K",
           "maxOutput": "32K",
           "modality": "Text + Image + Video",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "poolside/laguna-s-2.1:free",
-          "name": "poolside/laguna-s-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "poolside/laguna-xs-2.1:free",
-          "name": "poolside/laguna-xs-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
