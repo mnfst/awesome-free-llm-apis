@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-10-30T12:19:42.527Z",
+  "generatedAt": "2026-10-31T12:18:48.366Z",
   "summary": {
     "facts": 520,
     "sourced": 245,
     "unsourced": 275,
-    "ok": 245,
-    "quoteMissing": 0,
+    "ok": 237,
+    "quoteMissing": 8,
     "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 0,
+    "signals": 8,
     "modelsGone": 0,
     "modelsNew": 0,
     "links": 48,
@@ -1071,8 +1071,8 @@
       "current": "yes",
       "url": "https://docs.z.ai/guides/llm/glm-4.7.md",
       "quote": "glm-4.7-flash positioning lightweight, completely free",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1104,8 +1104,8 @@
       "current": "200K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
       "quote": "上下文窗口 200k 最大输出 tokens 128k",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1115,8 +1115,8 @@
       "current": "128K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
       "quote": "上下文窗口 200k 最大输出 tokens 128k",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1126,8 +1126,8 @@
       "current": "128K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
       "quote": "上下文窗口 128k 最大输出 tokens 96k",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1137,8 +1137,8 @@
       "current": "96K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
       "quote": "上下文窗口 128k 最大输出 tokens 96k",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1148,8 +1148,8 @@
       "current": "128K",
       "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
       "quote": "glm-4.6v-flash positioning lightweight, completely free input modality video / image / text / file output modality text context length 128k",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1159,8 +1159,8 @@
       "current": "Multimodal",
       "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
       "quote": "glm-4.6v-flash positioning lightweight, completely free input modality video / image / text / file",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Cloudflare Workers AI",
@@ -2061,8 +2061,8 @@
       "current": "yes",
       "url": "https://api.llm7.io/v1/models",
       "quote": "{\"id\":\"minimax-m2.7\",\"object\":\"model\"",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "LLM7.io",
@@ -2983,8 +2983,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 502,
+      "state": "UNCHECKED",
       "signal": false
     },
     {
@@ -3198,7 +3198,7 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 65190,
+      "chars": 66522,
       "state": "OK",
       "error": null
     },
@@ -3261,7 +3261,7 @@
     {
       "url": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04.md",
       "httpStatus": 200,
-      "chars": 775,
+      "chars": 904,
       "state": "OK",
       "error": null
     },
@@ -3275,7 +3275,7 @@
     {
       "url": "https://docs.mistral.ai/models/mistral-large-3-25-12.md",
       "httpStatus": 200,
-      "chars": 800,
+      "chars": 929,
       "state": "OK",
       "error": null
     },
@@ -3310,35 +3310,35 @@
     {
       "url": "https://docs.z.ai/guides/overview/pricing.md",
       "httpStatus": 200,
-      "chars": 2349,
+      "chars": 2361,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://docs.z.ai/guides/llm/glm-4.7.md",
       "httpStatus": 200,
-      "chars": 17771,
+      "chars": 18054,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
       "httpStatus": 200,
-      "chars": 9666,
+      "chars": 9858,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
       "httpStatus": 200,
-      "chars": 7991,
+      "chars": 8135,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
       "httpStatus": 200,
-      "chars": 32558,
+      "chars": 32782,
       "state": "OK",
       "error": null
     },
@@ -3478,7 +3478,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 522383,
+      "chars": 523753,
       "state": "OK",
       "error": null
     },
@@ -3499,7 +3499,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 68971,
+      "chars": 69022,
       "state": "OK",
       "error": null
     },
