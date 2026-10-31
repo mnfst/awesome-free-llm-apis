@@ -508,22 +508,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "poolside/laguna-s-2.1:free",
-          "name": "poolside/laguna-s-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
-          "rateLimit": "200 req/hr"
-        },
-        {
-          "id": "poolside/laguna-xs-2.1:free",
-          "name": "poolside/laguna-xs-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "cohere/north-mini-code:free",
           "name": "cohere/north-mini-code:free",
           "context": "256K",
@@ -610,14 +594,6 @@
           "maxOutput": "256K",
           "modality": "Text (code)",
           "rateLimit": "200 req/hr"
-        },
-        {
-          "id": "nvidia/nemotron-3.5-content-safety:free",
-          "name": "nvidia/nemotron-3.5-content-safety:free",
-          "context": "128K",
-          "maxOutput": "8K",
-          "modality": "Text + Vision (moderation)",
-          "rateLimit": "200 req/hr"
         }
       ]
     },
@@ -645,14 +621,6 @@
           "context": "128K",
           "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "60 RPM, 250 req/hr (free token)"
-        },
-        {
-          "id": "minimax-m2.7",
-          "name": "minimax-m2.7",
-          "context": "180K",
-          "maxOutput": "—",
-          "modality": "Text (reasoning)",
           "rateLimit": "60 RPM, 250 req/hr (free token)"
         },
         {
@@ -788,22 +756,6 @@
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
-          "id": "poolside/laguna-s-2.1:free",
-          "name": "poolside/laguna-s-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "poolside/laguna-xs-2.1:free",
-          "name": "poolside/laguna-xs-2.1:free",
-          "context": "262K",
-          "maxOutput": "32K",
-          "modality": "Text (code)",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
           "id": "dots-studio/dots-3-note-preview:free",
           "name": "dots-studio/dots-3-note-preview:free",
           "context": "512K",
@@ -881,14 +833,6 @@
           "context": "1M",
           "maxOutput": "262K",
           "modality": "Text + Image + Audio",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "nvidia/nemotron-3.5-content-safety:free",
-          "name": "nvidia/nemotron-3.5-content-safety:free",
-          "context": "128K",
-          "maxOutput": "8K",
-          "modality": "Text + Image (moderation)",
           "rateLimit": "20 RPM, 50 RPD"
         }
       ]

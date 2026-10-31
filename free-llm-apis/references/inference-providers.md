@@ -187,8 +187,6 @@ Free models with no credit card and no API key required. `kilo-auto/free` auto-r
 | --- | --- | --- | --- |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | 1M | Text | 200 req/hr |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K | Multimodal | 200 req/hr |
-| `poolside/laguna-s-2.1:free` | 262K | Text (code) | 200 req/hr |
-| `poolside/laguna-xs-2.1:free` | 262K | Text (code) | 200 req/hr |
 | `cohere/north-mini-code:free` | 256K | Text (code) | 200 req/hr |
 | `openrouter/free` | Varies | Text | 200 req/hr |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 200 req/hr |
@@ -200,7 +198,6 @@ Free models with no credit card and no API key required. `kilo-auto/free` auto-r
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Multimodal | 200 req/hr |
 | `reflection/beam-free` | 1M | Text | 200 req/hr |
 | `stealth/glyph-cluster` | 256K | Text (code) | 200 req/hr |
-| `nvidia/nemotron-3.5-content-safety:free` | 128K | Text + Vision (moderation) | 200 req/hr |
 
 ### Environment variable
 
@@ -253,7 +250,6 @@ API gateway with a free tier. Anonymous access needs no key and reaches the `tur
 | --- | --- | --- | --- |
 | `gpt-oss:20b` | 128K | Text | 60 RPM, 250 req/hr (free token) |
 | `mistral-Nemo-Instruct-2407` | 128K | Text | 60 RPM, 250 req/hr (free token) |
-| `minimax-m2.7` | 180K | Text (reasoning) | 60 RPM, 250 req/hr (free token) |
 | `nemotron-3-nano:30b` | 1M | Text (reasoning) | 60 RPM, 250 req/hr (free token) |
 | `codestral-latest` | 32K | Text | 60 RPM, 250 req/hr (free token) |
 
@@ -413,8 +409,6 @@ curl -s https://integrate.api.nvidia.com/v1/chat/completions \
 | `cohere/north-mini-code:free` | 256K | Text (code) | 20 RPM, 50 RPD |
 | `google/gemma-4-26b-a4b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
 | `google/gemma-4-31b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
-| `poolside/laguna-s-2.1:free` | 262K | Text (code) | 20 RPM, 50 RPD |
-| `poolside/laguna-xs-2.1:free` | 262K | Text (code) | 20 RPM, 50 RPD |
 | `dots-studio/dots-3-note-preview:free` | 512K | Text + Image | 20 RPM, 50 RPD |
 | `liquid/lfm-2.5-2.6b:free` | 64K | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 20 RPM, 50 RPD |
@@ -425,7 +419,6 @@ curl -s https://integrate.api.nvidia.com/v1/chat/completions \
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Text + Image + Video | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K | Text + Image + Audio + Video | 20 RPM, 50 RPD |
 | `thinkingmachines/inkling-small:free` | 1M | Text + Image + Audio | 20 RPM, 50 RPD |
-| `nvidia/nemotron-3.5-content-safety:free` | 128K | Text + Image (moderation) | 20 RPM, 50 RPD |
 
 ### Environment variable
 
