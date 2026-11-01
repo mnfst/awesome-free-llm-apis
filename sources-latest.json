@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-10-31T12:18:48.366Z",
+  "generatedAt": "2026-11-01T12:18:11.563Z",
   "summary": {
-    "facts": 520,
-    "sourced": 245,
-    "unsourced": 275,
-    "ok": 237,
-    "quoteMissing": 8,
-    "pageError": 0,
+    "facts": 485,
+    "sourced": 235,
+    "unsourced": 250,
+    "ok": 234,
+    "quoteMissing": 0,
+    "pageError": 1,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 8,
+    "signals": 0,
     "modelsGone": 0,
-    "modelsNew": 0,
+    "modelsNew": 1,
     "links": 48,
     "linksBroken": 0,
     "linkSignals": 0
@@ -1070,9 +1070,9 @@
       "value": "yes",
       "current": "yes",
       "url": "https://docs.z.ai/guides/llm/glm-4.7.md",
-      "quote": "glm-4.7-flash positioning lightweight, completely free",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "Lightweight, Completely Free",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1103,9 +1103,9 @@
       "value": "200K",
       "current": "200K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
-      "quote": "上下文窗口 200k 最大输出 tokens 128k",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "上下文窗口 200K",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1114,9 +1114,9 @@
       "value": "128K",
       "current": "128K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.7-flash.md",
-      "quote": "上下文窗口 200k 最大输出 tokens 128k",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "最大输出 Tokens 128K",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1125,9 +1125,9 @@
       "value": "128K",
       "current": "128K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
-      "quote": "上下文窗口 128k 最大输出 tokens 96k",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "上下文窗口 128K",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1136,9 +1136,9 @@
       "value": "96K",
       "current": "96K",
       "url": "https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md",
-      "quote": "上下文窗口 128k 最大输出 tokens 96k",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "最大输出 Tokens 96K",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1147,9 +1147,9 @@
       "value": "128K",
       "current": "128K",
       "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
-      "quote": "glm-4.6v-flash positioning lightweight, completely free input modality video / image / text / file output modality text context length 128k",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "GLM-4.6V aligns its visual encoder with a 128K context length",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Z AI (Zhipu AI)",
@@ -1158,9 +1158,9 @@
       "value": "Multimodal",
       "current": "Multimodal",
       "url": "https://docs.z.ai/guides/vlm/glm-4.6v.md",
-      "quote": "glm-4.6v-flash positioning lightweight, completely free input modality video / image / text / file",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "Video / Image / Text / File",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Cloudflare Workers AI",
@@ -1725,50 +1725,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "subject to rate limiting (200 requests per hour per ip)",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://ai-gateway.kilo.ai/api/v1/models",
-      "quote": "\"id\":\"poolside/laguna-s-2.1:free\",\"name\":\"Poolside: Laguna S 2.1 (free)\"",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "subject to rate limiting (200 requests per hour per ip)",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://ai-gateway.kilo.ai/api/v1/models",
-      "quote": "\"id\":\"poolside/laguna-xs-2.1:free\",\"name\":\"Poolside: Laguna XS 2.1 (free)\"",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
       "model": "cohere/north-mini-code:free",
       "fact": "rateLimit",
       "value": "200 req/hr",
@@ -2044,28 +2000,6 @@
     },
     {
       "provider": "LLM7.io",
-      "model": "minimax-m2.7",
-      "fact": "rateLimit",
-      "value": "60 RPM, 250 req/hr (free token)",
-      "current": "60 RPM, 250 req/hr (free token)",
-      "url": "https://docs.llm7.io/limits",
-      "quote": "free token 1 60 250",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "minimax-m2.7",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://api.llm7.io/v1/models",
-      "quote": "{\"id\":\"minimax-m2.7\",\"object\":\"model\"",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "LLM7.io",
       "model": "nemotron-3-nano:30b",
       "fact": "rateLimit",
       "value": "60 RPM, 250 req/hr (free token)",
@@ -2116,7 +2050,7 @@
       "current": "256K",
       "url": "https://www.modelscope.cn/models/Qwen/Qwen3.5-35B-A3B.md",
       "quote": "the model has a default context length of 262,144 tokens.",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2210,28 +2144,6 @@
     {
       "provider": "OpenRouter",
       "model": "google/gemma-4-31b-it:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-xs-2.1:free",
       "fact": "rateLimit",
       "value": "20 RPM, 50 RPD",
       "current": "20 RPM, 50 RPD",
@@ -2671,17 +2583,6 @@
     },
     {
       "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
       "model": "thinkingmachines/inkling-small:free",
       "fact": "rateLimit",
       "value": "20 RPM, 50 RPD",
@@ -2701,17 +2602,6 @@
       "quote": "200 requests per hour per IP",
       "state": "OK",
       "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "200 requests per hour per IP",
-      "state": "OK",
-      "signal": false
     }
   ],
   "catalogs": [
@@ -2720,9 +2610,11 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 456,
+      "size": 452,
       "gone": [],
-      "new": []
+      "new": [
+        "nvidia/nemotron-3.5-content-safety:free"
+      ]
     }
   ],
   "links": [
@@ -2983,8 +2875,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 502,
-      "state": "UNCHECKED",
+      "httpStatus": 200,
+      "state": "OK",
       "signal": false
     },
     {
@@ -3478,7 +3370,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 523753,
+      "chars": 518336,
       "state": "OK",
       "error": null
     },
@@ -3499,15 +3391,15 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 69022,
+      "chars": 69020,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.modelscope.cn/models/Qwen/Qwen3.5-35B-A3B.md",
-      "httpStatus": 200,
-      "chars": 27831,
-      "state": "OK",
+      "httpStatus": 404,
+      "chars": 0,
+      "state": "PAGE_ERROR",
       "error": null
     },
     {
@@ -4064,36 +3956,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
       "model": "cohere/north-mini-code:free",
       "fact": "context"
     },
@@ -4263,26 +4125,6 @@
       "fact": "modality"
     },
     {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "modality"
-    },
-    {
       "provider": "LLM7.io",
       "model": "gpt-oss:20b",
       "fact": "context"
@@ -4310,21 +4152,6 @@
     {
       "provider": "LLM7.io",
       "model": "mistral-Nemo-Instruct-2407",
-      "fact": "modality"
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "minimax-m2.7",
-      "fact": "context"
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "minimax-m2.7",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "minimax-m2.7",
       "fact": "modality"
     },
     {
@@ -4524,46 +4351,6 @@
     },
     {
       "provider": "OpenRouter",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-s-2.1:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "poolside/laguna-xs-2.1:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
       "model": "dots-studio/dots-3-note-preview:free",
       "fact": "listed"
     },
@@ -4760,26 +4547,6 @@
     {
       "provider": "OpenRouter",
       "model": "thinkingmachines/inkling-small:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "nvidia/nemotron-3.5-content-safety:free",
       "fact": "modality"
     },
     {
