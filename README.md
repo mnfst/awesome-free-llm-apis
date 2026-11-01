@@ -12,7 +12,7 @@
 
 <p align="center">LLM APIs with permanent free tiers for text inference.</p>
 
-<p align="center"><sub>All endpoints are OpenAI SDK-compatible unless noted. Each link points to the provider's API key page.</sub></p>
+<p align="center"><sub>Most providers offer an OpenAI-compatible endpoint. Native and compatible base URLs can differ. Each link points to the provider's API key page.</sub></p>
 
 <p align="center"><sub>All of those free LLM APIs are available at <a href="https://manifest.build">manifest.build</a> - make reliable agents.</sub></p>
 
@@ -60,7 +60,9 @@ Base URL: `https://api.aionlabs.ai/v1`
 
 Free "Trial" API key, no credit card. 1,000 API calls/month. Non-commercial use only.
 
-Base URL: `https://api.cohere.com/v2`
+Native API base URL: `https://api.cohere.com/v2`
+
+OpenAI-compatible base URL: `https://api.cohere.ai/compatibility/v1`
 
 | Model Name          | Context | Max Output | Modality         | Rate Limit |
 | ------------------- | ------- | ---------- | ---------------- | ---------- |
@@ -80,7 +82,9 @@ Base URL: `https://api.cohere.com/v2`
 
 Free tier, no credit card. Free-tier prompts may be used by Google to improve products. [^1]
 
-Base URL: `https://generativelanguage.googleapis.com/v1beta`
+Native API base URL: `https://generativelanguage.googleapis.com/v1beta`
+
+OpenAI-compatible base URL: `https://generativelanguage.googleapis.com/v1beta/openai/`
 
 | Model Name            | Context | Max Output | Modality                     | Rate Limit |
 | --------------------- | ------- | ---------- | ---------------------------- | ---------- |
@@ -129,7 +133,9 @@ Third-party platforms that host open-weight models from various sources.
 
 10,000 Neurons/day free, no credit card required. 60+ models available on the free tier. [^11]
 
-Base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
+Native API base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run`
+
+OpenAI-compatible base URL: `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1`
 
 | Model Name                                     | Context | Max Output        | Modality                       | Rate Limit               |
 | ---------------------------------------------- | ------- | ----------------- | ------------------------------ | ------------------------ |
