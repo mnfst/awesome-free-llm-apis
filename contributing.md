@@ -12,7 +12,7 @@ To preview locally (Node 20+, no dependencies):
 npm run generate
 ```
 
-If you add a new provider, also add its env var name (and OpenAI-compatible base URL, if it differs from `baseUrl`) to the `SETUP` map in `scripts/generate-skill.js`.
+If you add a new provider, also add its env var name (and OpenAI-compatible base URL, if it differs from `baseUrl`) to the `SETUP` map in `scripts/provider-setup.js`.
 
 ## Adding a provider
 

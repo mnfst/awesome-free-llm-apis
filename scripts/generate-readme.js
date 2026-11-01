@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const SETUP = require('./provider-setup');
 
 const ROOT = path.join(__dirname, '..');
 const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data.json'), 'utf8'));
@@ -23,7 +24,7 @@ const HEADER = `<h1 align="center">
 
 <p align="center">LLM APIs with permanent free tiers for text inference.</p>
 
-<p align="center"><sub>All endpoints are OpenAI SDK-compatible unless noted. Each link points to the provider's API key page.</sub></p>
+<p align="center"><sub>Most providers offer an OpenAI-compatible endpoint. Native and compatible base URLs can differ. Each link points to the provider's API key page.</sub></p>
 
 <p align="center"><sub>All of those free LLM APIs are available at <a href="https://manifest.build">manifest.build</a> - make reliable agents.</sub></p>
 
@@ -75,7 +76,13 @@ function buildProviderSection(provider) {
 		desc,
 	];
 	if (provider.baseUrl != null) {
-		parts.push('', `Base URL: \`${provider.baseUrl}\``);
+		const setup = SETUP[provider.name.toLowerCase()];
+		const compatible = setup && setup.openaiBaseUrl;
+		if (compatible && compatible.replace(/\/$/, '') !== provider.baseUrl.replace(/\/$/, '')) {
+			parts.push('', `Native API base URL: \`${provider.baseUrl}\``, '', `OpenAI-compatible base URL: \`${compatible}\``);
+		} else {
+			parts.push('', `Base URL: \`${provider.baseUrl}\``);
+		}
 	}
 	parts.push('', buildTable(provider.models));
 	return parts.join('\n');

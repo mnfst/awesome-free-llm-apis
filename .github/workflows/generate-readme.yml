@@ -3,7 +3,7 @@ name: Generate README and skill
 on:
   push:
     branches: [main]
-    paths: ['data.json', 'scripts/generate-readme.js', 'scripts/generate-skill.js', 'free-llm-apis/SKILL.md']
+    paths: ['data.json', 'scripts/generate-readme.js', 'scripts/generate-skill.js', 'scripts/provider-setup.js', 'free-llm-apis/SKILL.md']
 
 jobs:
   generate:

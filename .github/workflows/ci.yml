@@ -18,6 +18,8 @@ jobs:
         run: node scripts/validate-data.js
       - name: README generates from data.json
         run: node scripts/generate-readme.js
+      - name: Verify generated endpoint labels
+        run: node --test scripts/test-generated-endpoints.js
       - name: Sources and links still match data.json
         run: |
           git fetch -q origin main
