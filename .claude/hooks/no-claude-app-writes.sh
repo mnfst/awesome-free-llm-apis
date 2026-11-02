@@ -14,3 +14,4 @@ if [ "$tool" = "Bash" ]; then
 fi
 echo "BLOCKED: do not close or open issues and pull requests yourself. To close, end your comment with <!-- close -->. To open a pull request, push a data/** branch: the commit subject is the title and the commit body is the description." >&2
 exit 2
+else (branch)
