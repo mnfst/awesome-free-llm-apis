@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-11-02T12:17:26.768Z",
+  "generatedAt": "2026-11-03T12:21:04.242Z",
   "summary": {
     "facts": 485,
     "sourced": 235,
     "unsourced": 250,
-    "ok": 230,
-    "quoteMissing": 5,
-    "pageError": 0,
+    "ok": 228,
+    "quoteMissing": 4,
+    "pageError": 3,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 5,
+    "signals": 4,
     "modelsGone": 0,
     "modelsNew": 1,
     "links": 48,
@@ -608,9 +608,9 @@
       "value": "Free tier, no credit card. Free-tier prompts may be used by Google to improve products.",
       "current": "Free tier, no credit card. Free-tier prompts may be used by Google to improve products.",
       "url": "https://ai.google.dev/gemini-api/docs/billing",
-      "quote": "New accounts begin on the free tier, which allows access to certain models in the Gemini API and AI Studio",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "New accounts begin on the Free Tier, which allows access to",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Google Gemini",
@@ -619,7 +619,7 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "complex enterprise workflows. Standard Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "quote": "complex enterprise workflows. Standard Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
       "state": "QUOTE_MISSING",
       "signal": true
     },
@@ -663,7 +663,7 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "general agentic and everyday tasks. Standard Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "quote": "general agentic and everyday tasks. Standard Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
       "state": "QUOTE_MISSING",
       "signal": true
     },
@@ -883,7 +883,7 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
       "state": "QUOTE_MISSING",
       "signal": true
     },
@@ -905,7 +905,7 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD Input price Free of charge",
+      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
       "state": "QUOTE_MISSING",
       "signal": true
     },
@@ -2490,7 +2490,7 @@
       "current": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2501,7 +2501,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2512,7 +2512,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Xing4.0-29B XingChenAGI/Xing4.0-29B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2610,7 +2610,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 452,
+      "size": 451,
       "gone": [],
       "new": [
         "nvidia/nemotron-3.5-content-safety:free"
@@ -2884,8 +2884,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 0,
+      "state": "UNCHECKED",
       "signal": false
     },
     {
@@ -3083,56 +3083,56 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/billing",
       "httpStatus": 200,
-      "chars": 38766,
+      "chars": 39291,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 80677,
+      "chars": 89443,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
       "httpStatus": 200,
-      "chars": 2487,
+      "chars": 3358,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
       "httpStatus": 200,
-      "chars": 2808,
+      "chars": 3660,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite",
       "httpStatus": 200,
-      "chars": 2624,
+      "chars": 3491,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite",
       "httpStatus": 200,
-      "chars": 8011,
+      "chars": 8751,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash",
       "httpStatus": 200,
-      "chars": 2632,
+      "chars": 3908,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite",
       "httpStatus": 200,
-      "chars": 2757,
+      "chars": 3639,
       "state": "OK",
       "error": null
     },
@@ -3244,49 +3244,49 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/index.md",
       "httpStatus": 200,
-      "chars": 10386,
+      "chars": 10432,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/index.md",
       "httpStatus": 200,
-      "chars": 10837,
+      "chars": 10883,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/index.md",
       "httpStatus": 200,
-      "chars": 9932,
+      "chars": 9978,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/index.md",
       "httpStatus": 200,
-      "chars": 12594,
+      "chars": 12640,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 9060,
+      "chars": 9106,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
       "httpStatus": 200,
-      "chars": 8669,
+      "chars": 8715,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/deepseek-r1-distill-qwen-32b/index.md",
       "httpStatus": 200,
-      "chars": 8343,
+      "chars": 8389,
       "state": "OK",
       "error": null
     },
@@ -3370,7 +3370,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 518527,
+      "chars": 520511,
       "state": "OK",
       "error": null
     },
@@ -3391,7 +3391,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 71284,
+      "chars": 71282,
       "state": "OK",
       "error": null
     },
@@ -3447,22 +3447,22 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 124447,
+      "chars": 124851,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38408,
+      "chars": 38521,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://siliconflow.cn/pricing",
-      "httpStatus": 200,
-      "chars": 4665,
-      "state": "OK",
+      "httpStatus": 0,
+      "chars": 0,
+      "state": "PAGE_ERROR",
       "error": null
     },
     {
