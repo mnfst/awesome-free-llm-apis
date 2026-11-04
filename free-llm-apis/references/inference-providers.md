@@ -190,11 +190,8 @@ Free models with no credit card and no API key required. `kilo-auto/free` auto-r
 | `cohere/north-mini-code:free` | 256K | Text (code) | 200 req/hr |
 | `openrouter/free` | Varies | Text | 200 req/hr |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 200 req/hr |
-| `liquid/lfm-2.5-2.6b:free` | 64K | Text | 200 req/hr |
 | `kilo-auto/free` | 256K | Text | 200 req/hr |
 | `dots-studio/dots-3-note-preview:free` | 512K | Text + Vision | 200 req/hr |
-| `recursive/flint-v1.0:free` | 262K | Text (code) | 200 req/hr |
-| `xingchen-agi/xing4.0-29b-a4b:free` | 262K | Text | 200 req/hr |
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Multimodal | 200 req/hr |
 | `reflection/beam-free` | 1M | Text | 200 req/hr |
 | `stealth/glyph-cluster` | 256K | Text (code) | 200 req/hr |
@@ -412,13 +409,11 @@ curl -s https://integrate.api.nvidia.com/v1/chat/completions \
 | `dots-studio/dots-3-note-preview:free` | 512K | Text + Image | 20 RPM, 50 RPD |
 | `liquid/lfm-2.5-2.6b:free` | 64K | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 20 RPM, 50 RPD |
-| `thinkingmachines/inkling:free` | 1M | Text + Image + Audio | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | 1M | Text | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free` | 262K | Text | 20 RPM, 50 RPD |
 | `xingchen-agi/xing4.0-29b-a4b:free` | 262K | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Text + Image + Video | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K | Text + Image + Audio + Video | 20 RPM, 50 RPD |
-| `thinkingmachines/inkling-small:free` | 1M | Text + Image + Audio | 20 RPM, 50 RPD |
 
 ### Environment variable
 
@@ -478,7 +473,6 @@ Free anonymous tier (no API key, no signup): 2 RPM per IP per model. 20+ open-we
 | `Qwen3.5-9B` | 262K | Text + Vision | 2 RPM (anonymous) |
 | `Qwen2.5-VL-72B-Instruct` | 32K | Text + Vision | 2 RPM (anonymous) |
 | `Mistral-Small-3.2-24B-Instruct-2506` | 128K | Text + Vision | 2 RPM (anonymous) |
-| `Mistral-Nemo-Instruct-2407` | 118K | Text | 2 RPM (anonymous) |
 
 ### Environment variable
 
