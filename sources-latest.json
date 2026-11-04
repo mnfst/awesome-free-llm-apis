@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-11-03T12:21:04.242Z",
+  "generatedAt": "2026-11-04T12:16:04.051Z",
   "summary": {
     "facts": 485,
     "sourced": 235,
     "unsourced": 250,
-    "ok": 228,
-    "quoteMissing": 4,
-    "pageError": 3,
+    "ok": 227,
+    "quoteMissing": 8,
+    "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 4,
+    "signals": 8,
     "modelsGone": 0,
     "modelsNew": 1,
     "links": 48,
@@ -1808,8 +1808,8 @@
       "current": "yes",
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "quote": "\"id\":\"liquid/lfm-2.5-2.6b:free\",\"name\":\"LiquidAI: LFM2.5-2.6B (free)\"",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Kilo Code",
@@ -1874,8 +1874,8 @@
       "current": "yes",
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "quote": "\"id\":\"recursive/flint-v1.0:free\",\"name\":\"Recursive: Flint (free)\"",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Kilo Code",
@@ -1896,8 +1896,8 @@
       "current": "yes",
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "quote": "\"id\":\"xingchen-agi/xing4.0-29b-a4b:free\",\"name\":\"XingChen: Xing4.0 29B A4B (free)\"",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Kilo Code",
@@ -2490,7 +2490,7 @@
       "current": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2501,7 +2501,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2512,7 +2512,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Xing4.0-29B XingChenAGI/Xing4.0-29B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2545,8 +2545,8 @@
       "current": "118K",
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "quote": "Max. context : 118K End of life on Nov 4, 2026",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Google Gemini",
@@ -2610,7 +2610,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 451,
+      "size": 455,
       "gone": [],
       "new": [
         "nvidia/nemotron-3.5-content-safety:free"
@@ -2884,8 +2884,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 0,
-      "state": "UNCHECKED",
+      "httpStatus": 200,
+      "state": "OK",
       "signal": false
     },
     {
@@ -3076,7 +3076,7 @@
     {
       "url": "https://docs.cohere.com/docs/models.md",
       "httpStatus": 200,
-      "chars": 25219,
+      "chars": 25428,
       "state": "OK",
       "error": null
     },
@@ -3244,49 +3244,49 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/index.md",
       "httpStatus": 200,
-      "chars": 10432,
+      "chars": 10446,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/index.md",
       "httpStatus": 200,
-      "chars": 10883,
+      "chars": 10897,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/index.md",
       "httpStatus": 200,
-      "chars": 9978,
+      "chars": 9992,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/index.md",
       "httpStatus": 200,
-      "chars": 12640,
+      "chars": 12654,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 9106,
+      "chars": 9120,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
       "httpStatus": 200,
-      "chars": 8715,
+      "chars": 8729,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/deepseek-r1-distill-qwen-32b/index.md",
       "httpStatus": 200,
-      "chars": 8389,
+      "chars": 8403,
       "state": "OK",
       "error": null
     },
@@ -3370,7 +3370,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 520511,
+      "chars": 514315,
       "state": "OK",
       "error": null
     },
@@ -3391,7 +3391,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 71282,
+      "chars": 71279,
       "state": "OK",
       "error": null
     },
@@ -3447,22 +3447,22 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 124851,
+      "chars": 125279,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38521,
+      "chars": 38479,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://siliconflow.cn/pricing",
-      "httpStatus": 0,
-      "chars": 0,
-      "state": "PAGE_ERROR",
+      "httpStatus": 200,
+      "chars": 4726,
+      "state": "OK",
       "error": null
     },
     {
