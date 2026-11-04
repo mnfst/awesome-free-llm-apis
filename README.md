@@ -122,6 +122,22 @@ Base URL: `https://open.bigmodel.cn/api/paas/v4`
 
 Third-party platforms that host open-weight models from various sources.
 
+### [NovAI](https://aiapi-pro.com/signup) 🇭🇰
+
+Permanent free tier, no credit card required. 10 free-model calls/day and 5 requests/minute on un-topped-up accounts. OpenAI-compatible gateway in front of Zhipu's Flash models, including image and video generation.
+
+Base URL: `https://aiapi-pro.com/v1`
+
+| Model Name | Context | Max Output | Modality | Rate Limit |
+| --- | --- | --- | --- | --- |
+| `glm-4.7-flash` | — | — | Text | 10 calls/day, 5 RPM |
+| `glm-4.6v-flash` | — | — | Text + Image input | 10 calls/day, 5 RPM |
+| `glm-4.1v-thinking-flash` | — | — | Text + Image input | 10 calls/day, 5 RPM |
+| `cogview-3-flash` | — | — | Image generation | 10 calls/day, 5 RPM |
+| `cogvideox-flash` | — | — | Video generation | 5 video generations/day |
+
+Context and max-output values are not published per model on our side yet, so they are marked `—` rather than guessed.
+
 ### [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸
 
 10,000 Neurons/day free, no credit card required. 60+ models available on the free tier. [^11]
