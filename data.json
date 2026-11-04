@@ -532,14 +532,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "liquid/lfm-2.5-2.6b:free",
-          "name": "liquid/lfm-2.5-2.6b:free",
-          "context": "64K",
-          "maxOutput": "8K",
-          "modality": "Text",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "kilo-auto/free",
           "name": "kilo-auto/free",
           "context": "256K",
@@ -553,22 +545,6 @@
           "context": "512K",
           "maxOutput": "460K",
           "modality": "Text + Vision",
-          "rateLimit": "200 req/hr"
-        },
-        {
-          "id": "recursive/flint-v1.0:free",
-          "name": "recursive/flint-v1.0:free",
-          "context": "262K",
-          "maxOutput": "235K",
-          "modality": "Text (code)",
-          "rateLimit": "200 req/hr"
-        },
-        {
-          "id": "xingchen-agi/xing4.0-29b-a4b:free",
-          "name": "xingchen-agi/xing4.0-29b-a4b:free",
-          "context": "262K",
-          "maxOutput": "235K",
-          "modality": "Text",
           "rateLimit": "200 req/hr"
         },
         {
@@ -780,14 +756,6 @@
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
-          "id": "thinkingmachines/inkling:free",
-          "name": "thinkingmachines/inkling:free",
-          "context": "1M",
-          "maxOutput": "262K",
-          "modality": "Text + Image + Audio",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
           "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
           "name": "nvidia/nemotron-3-ultra-550b-a55b:free",
           "context": "1M",
@@ -825,14 +793,6 @@
           "context": "256K",
           "maxOutput": "65K",
           "modality": "Text + Image + Audio + Video",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "thinkingmachines/inkling-small:free",
-          "name": "thinkingmachines/inkling-small:free",
-          "context": "1M",
-          "maxOutput": "262K",
-          "modality": "Text + Image + Audio",
           "rateLimit": "20 RPM, 50 RPD"
         }
       ]
@@ -917,14 +877,6 @@
           "context": "128K",
           "maxOutput": "~4K",
           "modality": "Text + Vision",
-          "rateLimit": "2 RPM (anonymous)"
-        },
-        {
-          "id": "Mistral-Nemo-Instruct-2407",
-          "name": "Mistral-Nemo-Instruct-2407",
-          "context": "118K",
-          "maxOutput": "~4K",
-          "modality": "Text",
           "rateLimit": "2 RPM (anonymous)"
         }
       ]

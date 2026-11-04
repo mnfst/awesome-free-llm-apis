@@ -186,11 +186,8 @@ Base URL: `https://api.kilo.ai/api/gateway`
 | `cohere/north-mini-code:free`                        | 256K    | 64K        | Text (code)   | 200 req/hr |
 | `openrouter/free`                                    | Varies  | Varies     | Text          | 200 req/hr |
 | `nvidia/nemotron-3.5-lightning:free`                 | 1M      | 65K        | Text          | 200 req/hr |
-| `liquid/lfm-2.5-2.6b:free`                           | 64K     | 8K         | Text          | 200 req/hr |
 | `kilo-auto/free`                                     | 256K    | 32K        | Text          | 200 req/hr |
 | `dots-studio/dots-3-note-preview:free`               | 512K    | 460K       | Text + Vision | 200 req/hr |
-| `recursive/flint-v1.0:free`                          | 262K    | 235K       | Text (code)   | 200 req/hr |
-| `xingchen-agi/xing4.0-29b-a4b:free`                  | 262K    | 235K       | Text          | 200 req/hr |
 | `nvidia/nemotron-3.5-super-vl:free`                  | 1M      | 131K       | Multimodal    | 200 req/hr |
 | `reflection/beam-free`                               | 1M      | 131K       | Text          | 200 req/hr |
 | `stealth/glyph-cluster`                              | 256K    | 256K       | Text (code)   | 200 req/hr |
@@ -247,13 +244,11 @@ Base URL: `https://openrouter.ai/api/v1`
 | `dots-studio/dots-3-note-preview:free`               | 512K    | 460K       | Text + Image                 | 20 RPM, 50 RPD |
 | `liquid/lfm-2.5-2.6b:free`                           | 64K     | 8K         | Text                         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free`                 | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
-| `thinkingmachines/inkling:free`                      | 1M      | 262K       | Text + Image + Audio         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free`             | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free`                          | 262K    | 235K       | Text                         | 20 RPM, 50 RPD |
 | `xingchen-agi/xing4.0-29b-a4b:free`                  | 262K    | 235K       | Text                         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-super-vl:free`                  | 1M      | 131K       | Text + Image + Video         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K    | 65K        | Text + Image + Audio + Video | 20 RPM, 50 RPD |
-| `thinkingmachines/inkling-small:free`                | 1M      | 262K       | Text + Image + Audio         | 20 RPM, 50 RPD |
 
 ### [OVHcloud AI Endpoints](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/) 🇫🇷
 
@@ -272,7 +267,6 @@ Base URL: `https://oai.endpoints.kepler.ai.cloud.ovh.net/v1`
 | Qwen3.5-9B                     | 262K    | ~8K        | Text + Vision | 2 RPM (anonymous) |
 | Qwen2.5-VL-72B-Instruct        | 32K     | ~8K        | Text + Vision | 2 RPM (anonymous) |
 | Mistral-Small-3.2-24B-Instruct | 128K    | ~4K        | Text + Vision | 2 RPM (anonymous) |
-| Mistral-Nemo-Instruct-2407     | 118K    | ~4K        | Text          | 2 RPM (anonymous) |
 
 ### [SiliconFlow](https://cloud.siliconflow.cn/account/ak) 🇨🇳
 
