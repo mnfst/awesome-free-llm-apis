@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-11-04T12:16:04.051Z",
+  "generatedAt": "2026-11-05T12:15:28.921Z",
   "summary": {
-    "facts": 485,
-    "sourced": 235,
-    "unsourced": 250,
-    "ok": 227,
-    "quoteMissing": 8,
+    "facts": 455,
+    "sourced": 225,
+    "unsourced": 230,
+    "ok": 224,
+    "quoteMissing": 1,
     "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 8,
+    "signals": 1,
     "modelsGone": 0,
     "modelsNew": 1,
     "links": 48,
@@ -619,9 +619,9 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "complex enterprise workflows. Standard Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "Input price * Free of charge * $0.75 through December 31, 2026",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Google Gemini",
@@ -663,9 +663,9 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "general agentic and everyday tasks. Standard Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "Input price * Free of charge * $0.75 through December 31, 2026",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Google Gemini",
@@ -883,9 +883,9 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "Input price * Free of charge * Not available",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Google Gemini",
@@ -905,9 +905,9 @@
       "value": "yes",
       "current": "yes",
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "quote": "powers our Gemini models. Free Tier Paid Tier, per 1M tokens in USD --- --- --- Input price Free of charge",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "Input price * Free of charge * Not available",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "Google Gemini",
@@ -928,8 +928,8 @@
       "current": "Free mode, enabled by default, no credit card required. Free-mode prompts may be used to train Mistral models unless you opt out.",
       "url": "https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key",
       "quote": "API access is enabled by default with no credit card required.",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Mistral AI",
@@ -1791,28 +1791,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "subject to rate limiting (200 requests per hour per ip)",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://ai-gateway.kilo.ai/api/v1/models",
-      "quote": "\"id\":\"liquid/lfm-2.5-2.6b:free\",\"name\":\"LiquidAI: LFM2.5-2.6B (free)\"",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Kilo Code",
       "model": "kilo-auto/free",
       "fact": "rateLimit",
       "value": "200 req/hr",
@@ -1854,50 +1832,6 @@
       "quote": "\"id\":\"dots-studio/dots-3-note-preview:free\",\"name\":\"Dots Studio: Dots3-Note Preview (free)\"",
       "state": "OK",
       "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "recursive/flint-v1.0:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "subject to rate limiting (200 requests per hour per ip)",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "recursive/flint-v1.0:free",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://ai-gateway.kilo.ai/api/v1/models",
-      "quote": "\"id\":\"recursive/flint-v1.0:free\",\"name\":\"Recursive: Flint (free)\"",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "subject to rate limiting (200 requests per hour per ip)",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://ai-gateway.kilo.ai/api/v1/models",
-      "quote": "\"id\":\"xingchen-agi/xing4.0-29b-a4b:free\",\"name\":\"XingChen: Xing4.0 29B A4B (free)\"",
-      "state": "QUOTE_MISSING",
-      "signal": true
     },
     {
       "provider": "Kilo Code",
@@ -2187,17 +2121,6 @@
     },
     {
       "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
       "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "fact": "rateLimit",
       "value": "20 RPM, 50 RPD",
@@ -2353,17 +2276,6 @@
     {
       "provider": "OVHcloud AI Endpoints",
       "model": "Mistral-Small-3.2-24B-Instruct-2506",
-      "fact": "rateLimit",
-      "value": "2 RPM (anonymous)",
-      "current": "2 RPM (anonymous)",
-      "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
-      "quote": "2 requests per minute, per IP and per model",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OVHcloud AI Endpoints",
-      "model": "Mistral-Nemo-Instruct-2407",
       "fact": "rateLimit",
       "value": "2 RPM (anonymous)",
       "current": "2 RPM (anonymous)",
@@ -2538,17 +2450,6 @@
       "signal": false
     },
     {
-      "provider": "OVHcloud AI Endpoints",
-      "model": "Mistral-Nemo-Instruct-2407",
-      "fact": "context",
-      "value": "118K",
-      "current": "118K",
-      "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
-      "quote": "Max. context : 118K End of life on Nov 4, 2026",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
       "provider": "Google Gemini",
       "model": "gemma-4-31b-it",
       "fact": "modality",
@@ -2578,17 +2479,6 @@
       "current": "200K",
       "url": "https://gonkabroker.com/models/minimax-m2-on-gonka/",
       "quote": "Context window 200K tokens",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling-small:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
       "state": "OK",
       "signal": false
     },
@@ -3076,14 +2966,14 @@
     {
       "url": "https://docs.cohere.com/docs/models.md",
       "httpStatus": 200,
-      "chars": 25428,
+      "chars": 26385,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/billing",
       "httpStatus": 200,
-      "chars": 39291,
+      "chars": 39447,
       "state": "OK",
       "error": null
     },
@@ -3146,7 +3036,7 @@
     {
       "url": "https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key",
       "httpStatus": 200,
-      "chars": 3145,
+      "chars": 4777,
       "state": "OK",
       "error": null
     },
@@ -3370,7 +3260,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 514315,
+      "chars": 516864,
       "state": "OK",
       "error": null
     },
@@ -3391,7 +3281,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 71279,
+      "chars": 71282,
       "state": "OK",
       "error": null
     },
@@ -3447,14 +3337,14 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 125279,
+      "chars": 125373,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38479,
+      "chars": 38229,
       "state": "OK",
       "error": null
     },
@@ -4001,21 +3891,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
       "model": "kilo-auto/free",
       "fact": "context"
     },
@@ -4042,36 +3917,6 @@
     {
       "provider": "Kilo Code",
       "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "recursive/flint-v1.0:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "recursive/flint-v1.0:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "recursive/flint-v1.0:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
       "fact": "modality"
     },
     {
@@ -4411,26 +4256,6 @@
     },
     {
       "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
       "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "fact": "listed"
     },
@@ -4527,26 +4352,6 @@
     {
       "provider": "OpenRouter",
       "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling-small:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling-small:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling-small:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "thinkingmachines/inkling-small:free",
       "fact": "modality"
     },
     {
@@ -4667,21 +4472,6 @@
     {
       "provider": "OVHcloud AI Endpoints",
       "model": "Mistral-Small-3.2-24B-Instruct-2506",
-      "fact": "modality"
-    },
-    {
-      "provider": "OVHcloud AI Endpoints",
-      "model": "Mistral-Nemo-Instruct-2407",
-      "fact": "listed"
-    },
-    {
-      "provider": "OVHcloud AI Endpoints",
-      "model": "Mistral-Nemo-Instruct-2407",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OVHcloud AI Endpoints",
-      "model": "Mistral-Nemo-Instruct-2407",
       "fact": "modality"
     },
     {
