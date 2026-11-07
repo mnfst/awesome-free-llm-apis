@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-25",
+  "lastUpdated": "2026-11-08",
   "providers": [
     {
       "name": "Aion Labs",
@@ -694,6 +694,58 @@
           "maxOutput": "Varies",
           "modality": "Text, Image, Video, Speech, Embeddings",
           "rateLimit": "40 RPM, 10,000 RPD"
+        }
+      ]
+    },
+    {
+      "name": "NovAI",
+      "category": "inference_provider",
+      "country": "CN",
+      "flag": "🇨🇳",
+      "url": "https://aiapi-pro.com/register",
+      "baseUrl": "https://aiapi-pro.com/v1",
+      "description": "OpenAI-compatible aggregator for 111 Chinese models (DeepSeek, Qwen, GLM, Kimi, MiniMax, Doubao, Hunyuan) plus image and video models. Five models are permanently free with no credit card: 10 free-model calls per day and 5 requests per minute on accounts that have never topped up. The signup credit is a trial and is not counted here.",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "glm-4.7-flash",
+          "name": "glm-4.7-flash",
+          "context": 200000,
+          "maxOutput": null,
+          "modality": "Text (reasoning)",
+          "rateLimit": "10/day, 5 RPM"
+        },
+        {
+          "id": "glm-4.6v-flash",
+          "name": "glm-4.6v-flash",
+          "context": null,
+          "maxOutput": null,
+          "modality": "Text + vision",
+          "rateLimit": "10/day, 5 RPM"
+        },
+        {
+          "id": "glm-4.1v-thinking-flash",
+          "name": "glm-4.1v-thinking-flash",
+          "context": null,
+          "maxOutput": null,
+          "modality": "Text + vision",
+          "rateLimit": "10/day, 5 RPM"
+        },
+        {
+          "id": "cogview-3-flash",
+          "name": "cogview-3-flash",
+          "context": null,
+          "maxOutput": null,
+          "modality": "Image",
+          "rateLimit": "10/day, 5 RPM"
+        },
+        {
+          "id": "cogvideox-flash",
+          "name": "cogvideox-flash",
+          "context": null,
+          "maxOutput": null,
+          "modality": "Video",
+          "rateLimit": "10/day, 5 RPM"
         }
       ]
     },
