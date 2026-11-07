@@ -704,7 +704,7 @@
       "flag": "🇨🇳",
       "url": "https://aiapi-pro.com/register",
       "baseUrl": "https://aiapi-pro.com/v1",
-      "description": "OpenAI-compatible aggregator for 111 Chinese models (DeepSeek, Qwen, GLM, Kimi, MiniMax, Doubao, Hunyuan) plus image and video models. Five models are permanently free with no credit card: 10 free-model calls per day and 5 requests per minute on accounts that have never topped up. The signup credit is a trial and is not counted here.",
+      "description": "OpenAI-compatible aggregator for 109 Chinese models (DeepSeek, Qwen, GLM, Kimi, MiniMax, Doubao, Hunyuan) plus image and video models. Five models are permanently free with no credit card: 10 free-model calls per day and 5 requests per minute on accounts that have never topped up. The signup credit is a trial and is not counted here.",
       "footnoteRef": null,
       "models": [
         {
