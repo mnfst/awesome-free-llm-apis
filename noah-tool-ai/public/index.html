@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#101318">
+	<title>Noah Tool AI</title>
+	<link rel="stylesheet" href="/styles.css">
+	<script src="/app.js" defer></script>
+</head>
+<body>
+	<div id="app-toast" class="app-toast" role="status" aria-live="polite" hidden></div>
+	<div class="app-shell">
+		<aside class="sidebar" aria-label="Workspace">
+			<a class="brand" href="/" aria-label="Noah Tool AI home">
+				<span class="brand-mark">N</span>
+				<span class="brand-name">Noah Tool AI</span>
+			</a>
+			<button class="button button-primary new-chat" id="new-chat" type="button">＋ <span>New chat</span></button>
+
+			<section class="sidebar-section">
+				<div class="section-heading">
+					<h2>Projects</h2>
+					<button class="icon-button" id="new-project" type="button" aria-label="Create project" title="Create project">＋</button>
+				</div>
+				<div id="project-list" class="project-list"></div>
+			</section>
+
+			<section class="sidebar-section chats-section">
+				<div class="section-heading"><h2>Recent chats</h2></div>
+				<div id="chat-list" class="chat-list"></div>
+			</section>
+
+			<div class="sidebar-bottom">
+				<button class="nav-button" id="hosting-button" type="button"><span aria-hidden="true">↗</span> Host a website on Vercel</button>
+				<button class="nav-button" id="settings-button" type="button"><span aria-hidden="true">⚙</span> Settings &amp; providers</button>
+				<p class="workspace-status" id="workspace-status" role="status" hidden></p>
+				<p class="local-note">LOCAL SESSION · Chats stay in this browser</p>
+			</div>
+		</aside>
+
+		<main class="main-panel">
+			<section id="conversation-view" class="conversation-view">
+				<header class="topbar">
+					<div class="conversation-heading">
+						<p class="eyebrow" id="active-project-label">PERSONAL WORKSPACE</p>
+						<h1 id="chat-title">New chat</h1>
+					</div>
+					<div class="controls">
+						<label class="control">
+							<span>Model</span>
+							<select id="model-select" aria-label="Choose model">
+								<option value="auto">Auto — choose for my task</option>
+							</select>
+						</label>
+						<label class="control">
+							<span>Mode</span>
+							<select id="mode-select" aria-label="Choose response mode">
+								<optgroup label="General">
+									<option value="auto">Auto route · build websites</option>
+									<option value="selected">Use selected model</option>
+									<option value="compare">Compare &amp; combine</option>
+								</optgroup>
+								<optgroup label="Design &amp; build">
+									<option value="website">Create a website</option>
+									<option value="design">Design · OpenDesign</option>
+									<option value="cad">3D CAD · Moorph GUI Clean</option>
+									<option value="dify">AI workflows · Dify</option>
+									<option value="browser">Browser automation · OpenCLI</option>
+								</optgroup>
+								<optgroup label="Media">
+									<option value="comfyui">Visual generation · ComfyUI</option>
+									<option value="explainability">Vision explainability · Grad-CAM</option>
+									<option value="objectron">3D vision data · Objectron</option>
+									<option value="animation">Animation · GSAP</option>
+									<option value="video">Video · HyperFrames</option>
+									<option value="presentation">Slides · PowerPoint</option>
+									<option value="voice">Voice · audio</option>
+								</optgroup>
+								<optgroup label="Research">
+									<option value="investigation">Evidence &amp; analysis · AI Investigator</option>
+								</optgroup>
+							</select>
+						</label>
+					</div>
+				</header>
+
+				<div id="messages" class="messages" aria-live="polite">
+					<div class="welcome-card" id="welcome-card">
+						<div class="welcome-icon">✳</div>
+						<p class="eyebrow">YOUR AI WORKSPACE</p>
+						<h2>What would you like to make?</h2>
+						<p>Ask a question, build a website, explore an idea, or compare answers from multiple providers.</p>
+						<div class="suggestions">
+							<button type="button" data-prompt="What is the capital of France?">Get a quick answer <span>↗</span></button>
+							<button type="button" data-prompt="Help me plan and build a small website for my project.">Build a website <span>↗</span></button>
+							<button type="button" data-prompt="Compare a few approaches to organizing a new project.">Compare ideas <span>↗</span></button>
+						</div>
+					</div>
+				</div>
+
+				<form id="composer" class="composer">
+					<label class="sr-only" for="prompt">Message Noah Tool AI</label>
+					<textarea id="prompt" rows="1" placeholder="Message Noah Tool AI…" maxlength="20000"></textarea>
+					<div id="pending-attachments" class="pending-attachments" aria-live="polite"></div>
+					<div class="composer-footer">
+						<div class="composer-tools">
+							<button class="attach-button" id="attach-button" type="button" aria-label="Attach photos, videos, audio, or files" title="Attach photos, videos, audio, or files">＋ <span>Attach</span></button>
+							<input class="sr-only" id="file-input" type="file" multiple accept="image/*,video/*,audio/mpeg,audio/wav,.mp3,.wav,.txt,.md,.csv,.json,.html,.css,.js,.ts,.tsx,.jsx,.py,.java,.c,.cpp,.h,.go,.rs,.sql,.xml,.yaml,.yml,.toml,.log">
+							<span class="composer-hint" id="composer-hint">Auto routes by task · substantial answers get a second-model review when available</span>
+						</div>
+						<button class="send-button" id="send-button" type="submit" aria-label="Send message" title="Send message">↑</button>
+					</div>
+				</form>
+				<p class="disclaimer">Attach up to 5 photos, videos, audio clips, or text/code files · video is shared as sampled frames. Models can make mistakes.</p>
+			</section>
+
+			<section id="settings-view" class="settings-view" hidden>
+				<header class="settings-header">
+					<div>
+						<p class="eyebrow">LOCAL CONFIGURATION</p>
+						<h1>Settings &amp; providers</h1>
+						<p>Free no-key providers are ready automatically. Add your own provider keys only if you want access to more models.</p>
+					</div>
+					<button class="button button-secondary" id="back-to-chat" type="button">Back to chat</button>
+				</header>
+				<div class="settings-grid">
+					<div class="provider-list-panel">
+						<div class="section-heading"><h2>Available providers</h2><span id="provider-count" class="muted"></span></div>
+						<div id="settings-provider-list" class="settings-provider-list"></div>
+					</div>
+					<form id="provider-form" class="provider-form">
+						<p class="eyebrow">PROVIDER CONNECTION</p>
+						<h2 id="provider-form-title">Choose a provider</h2>
+						<p class="form-description" id="provider-description">Select a provider to add its API key and choose an API endpoint.</p>
+						<div class="field">
+							<label for="base-url">API base URL</label>
+							<input id="base-url" type="url" autocomplete="url" required placeholder="https://api.example.com/v1">
+							<span class="field-help">HTTPS endpoint. Some providers need an account-specific URL.</span>
+						</div>
+						<div class="field">
+							<label for="api-keys">API key(s)</label>
+							<textarea id="api-keys" rows="4" autocomplete="off" spellcheck="false" placeholder="Paste one or more keys, one per line"></textarea>
+							<span class="field-help" id="key-help">Keyless free providers work without entering anything here. For other providers, enter one or more provider-specific keys, one per line.</span>
+						</div>
+						<div class="connection-status" id="connection-status" aria-live="polite"></div>
+						<div class="form-actions">
+							<button class="button button-primary" id="save-provider" type="submit">Save provider</button>
+							<button class="button button-danger" id="remove-provider" type="button" hidden>Remove keys</button>
+						</div>
+						<p class="storage-warning">Local app only: optional credentials are stored in a gitignored file on this computer. Do not expose this app to the public internet.</p>
+					</form>
+				</div>
+				<p class="settings-footnote">Auto routing uses free anonymous providers first and can fall back across providers. Compare &amp; combine needs at least two available routes. Free tiers have rate limits and provider-specific privacy terms; no-key access is not unlimited.</p>
+			</section>
+
+			<section id="website-review-view" class="website-review-view" hidden>
+				<header class="settings-header">
+					<div>
+						<p class="eyebrow">REVIEW BEFORE PUBLISHING</p>
+						<h1>Review your website</h1>
+						<p>This preview is private on your computer. Publishing creates a public GitHub repository and public website. Only this site's files are uploaded—not your chats or provider keys.</p>
+					</div>
+					<button class="button button-secondary" id="cancel-website" type="button">Back to chat</button>
+				</header>
+				<div class="website-review-controls">
+					<div class="field">
+						<label for="website-title">Website name</label>
+						<input id="website-title" maxlength="80" placeholder="My website">
+					</div>
+					<div class="website-actions">
+						<button class="button button-secondary" id="update-preview" type="button">Update preview</button>
+						<button class="button button-primary" id="publish-website" type="button">Publish public website</button>
+					</div>
+				</div>
+				<p class="github-status" id="github-status">Checking GitHub connection…</p>
+				<p class="review-status" id="website-review-status" role="status"></p>
+				<p class="publish-warning">Before publishing, check the page for personal details, private information, or anything you don't want public. GitHub Pages sites are public.</p>
+				<div class="website-preview">
+					<iframe id="website-preview-frame" title="Website preview" sandbox="allow-scripts"></iframe>
+				</div>
+				<details class="website-source">
+					<summary>Review or edit website code</summary>
+					<textarea id="website-html" aria-label="Website HTML source" spellcheck="false"></textarea>
+				</details>
+				<div id="publish-status" class="publish-status" aria-live="polite"></div>
+			</section>
+
+			<section id="hosting-view" class="settings-view hosting-view" hidden>
+				<header class="settings-header">
+					<div>
+						<p class="eyebrow">VERCEL HOSTING</p>
+						<h1>Host a website or project</h1>
+						<p>Deploy your generated website or a local HTML, React, Vite, or Next.js project folder to a production Vercel URL with SSL.</p>
+					</div>
+					<button class="button button-secondary" id="hosting-back" type="button">Back to chat</button>
+				</header>
+				<div class="hosting-grid">
+					<section class="hosting-card">
+						<p class="eyebrow">ACCOUNT CONNECTION</p>
+						<h2>Connect Vercel</h2>
+						<p>Create an access token in your Vercel account settings. Noah stores it locally and sends it only to Vercel.</p>
+						<div class="field">
+							<label for="vercel-token">Vercel access token</label>
+							<input id="vercel-token" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your Vercel token">
+						</div>
+						<button class="button button-secondary" id="save-vercel-token" type="button">Connect / update token</button>
+						<p class="hosting-status" id="vercel-status" role="status">Checking Vercel connection…</p>
+					</section>
+					<section class="hosting-card">
+						<p class="eyebrow">DEPLOY YOUR PROJECT</p>
+						<h2>Choose what to host</h2>
+						<div class="field">
+							<label for="vercel-project-name">Website / project name</label>
+							<input id="vercel-project-name" maxlength="120" placeholder="my-awesome-site">
+							<span class="field-help">Used for your production address, such as my-awesome-site.vercel.app. It must be available in your Vercel account.</span>
+						</div>
+						<div class="field">
+							<label for="vercel-domain">Custom domain (optional)</label>
+							<input id="vercel-domain" inputmode="url" placeholder="www.example.com">
+							<span class="field-help">Use a domain you own. Vercel will show DNS verification steps if needed.</span>
+						</div>
+						<button class="button button-secondary" id="choose-project-folder" type="button">Choose project folder</button>
+						<input class="sr-only" id="project-folder-input" type="file" webkitdirectory directory multiple>
+						<p class="hosting-status" id="project-folder-status" role="status">Or deploy the generated website currently open in Review website.</p>
+						<button class="button button-primary" id="deploy-vercel" type="button">Deploy to Vercel</button>
+						<p class="hosting-status" id="vercel-deploy-status" aria-live="polite"></p>
+					</section>
+				</div>
+				<p class="publish-warning">Deploying creates a publicly reachable site and sends your project source to Vercel, where its build may execute project scripts. Remove secrets and private files first. Noah excludes common credential files and asks for confirmation before starting a deployment. Hosting plan limits and custom-domain/DNS requirements are set by Vercel.</p>
+			</section>
+		</main>
+	</div>
+</body>
+</html>

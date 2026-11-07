@@ -20,6 +20,8 @@ jobs:
         run: node scripts/generate-readme.js
       - name: Verify generated endpoint labels
         run: node --test scripts/test-generated-endpoints.js
+      - name: Test Noah Tool AI
+        run: npm run test:app
       - name: Sources and links still match data.json
         run: |
           git fetch -q origin main

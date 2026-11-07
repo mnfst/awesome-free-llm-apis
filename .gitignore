@@ -4,5 +4,6 @@
 .env
 .env.*
 !.env.verify.example
+noah-tool-ai/.local-credentials.json
 node_modules/
 .DS_Store

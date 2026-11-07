@@ -8,6 +8,8 @@
     "generate": "node scripts/generate-readme.js && node scripts/generate-skill.js",
     "generate:readme": "node scripts/generate-readme.js",
     "generate:skill": "node scripts/generate-skill.js",
+    "start": "node noah-tool-ai/server.js",
+    "test:app": "node --test noah-tool-ai/test/app.test.js",
     "verify": "node scripts/verify-providers.js --out .verify/report-$(date +%F).json",
     "verify:self-test": "node scripts/verify-providers.js --self-test"
   }
