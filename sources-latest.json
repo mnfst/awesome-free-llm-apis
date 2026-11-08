@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T12:16:42.010Z",
+  "generatedAt": "2026-11-08T12:14:56.466Z",
   "summary": {
     "facts": 455,
     "sourced": 225,
@@ -2500,7 +2500,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 460,
+      "size": 461,
       "gone": [],
       "new": [
         "liquid/lfm-3-1.7b:free"
@@ -3260,7 +3260,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 518399,
+      "chars": 514534,
       "state": "OK",
       "error": null
     },
@@ -3281,7 +3281,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 73648,
+      "chars": 69827,
       "state": "OK",
       "error": null
     },
