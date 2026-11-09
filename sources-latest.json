@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-11-08T12:14:56.466Z",
+  "generatedAt": "2026-11-09T12:18:51.507Z",
   "summary": {
     "facts": 455,
     "sourced": 225,
     "unsourced": 230,
-    "ok": 224,
-    "quoteMissing": 1,
+    "ok": 222,
+    "quoteMissing": 3,
     "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 1,
+    "signals": 3,
     "modelsGone": 0,
     "modelsNew": 1,
     "links": 48,
@@ -1874,8 +1874,8 @@
       "current": "yes",
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "quote": "\"name\":\"Reflection: Beam 1.0 (free)\"",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "LLM7.io",
@@ -1951,8 +1951,8 @@
       "current": "yes",
       "url": "https://api.llm7.io/v1/models",
       "quote": "{\"id\":\"nemotron-3-nano:30b\",\"object\":\"model\"",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "LLM7.io",
@@ -3162,7 +3162,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 9120,
+      "chars": 9116,
       "state": "OK",
       "error": null
     },
@@ -3260,7 +3260,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 514534,
+      "chars": 512754,
       "state": "OK",
       "error": null
     },
@@ -3281,7 +3281,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 69827,
+      "chars": 69074,
       "state": "OK",
       "error": null
     },
@@ -3344,7 +3344,7 @@
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38229,
+      "chars": 38665,
       "state": "OK",
       "error": null
     },
