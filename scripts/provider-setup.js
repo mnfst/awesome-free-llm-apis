@@ -3,6 +3,7 @@
 // Shared by the README and Skill generators.
 const SETUP = {
   'aion labs':             { env: 'AION_API_KEY' },
+  'cheapllm.shop':         { env: 'CHEAPLLM_API_KEY' },
   'cohere':                { env: 'COHERE_API_KEY', openaiBaseUrl: 'https://api.cohere.ai/compatibility/v1' },
   'google gemini':         { env: 'GEMINI_API_KEY', openaiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/' },
   'mistral ai':            { env: 'MISTRAL_API_KEY' },
