@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-09T12:18:51.507Z",
+  "generatedAt": "2026-11-10T12:16:51.113Z",
   "summary": {
     "facts": 455,
     "sourced": 225,
@@ -12,7 +12,7 @@
     "rowGone": 0,
     "signals": 3,
     "modelsGone": 0,
-    "modelsNew": 1,
+    "modelsNew": 2,
     "links": 48,
     "linksBroken": 0,
     "linkSignals": 0
@@ -2500,9 +2500,10 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 461,
+      "size": 465,
       "gone": [],
       "new": [
+        "thinkingmachines/inkling-2-small:free",
         "liquid/lfm-3-1.7b:free"
       ]
     }
@@ -2973,7 +2974,7 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/billing",
       "httpStatus": 200,
-      "chars": 39447,
+      "chars": 39437,
       "state": "OK",
       "error": null
     },
@@ -3162,7 +3163,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 9116,
+      "chars": 9120,
       "state": "OK",
       "error": null
     },
@@ -3260,7 +3261,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 512754,
+      "chars": 515848,
       "state": "OK",
       "error": null
     },
@@ -3281,7 +3282,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 69074,
+      "chars": 69877,
       "state": "OK",
       "error": null
     },
@@ -3337,21 +3338,21 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 125660,
+      "chars": 126300,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38665,
+      "chars": 38659,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://siliconflow.cn/pricing",
       "httpStatus": 200,
-      "chars": 4726,
+      "chars": 4508,
       "state": "OK",
       "error": null
     },
