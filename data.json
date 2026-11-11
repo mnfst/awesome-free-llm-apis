@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-25",
+  "lastUpdated": "2026-11-11",
   "providers": [
     {
       "name": "Aion Labs",
@@ -222,74 +222,6 @@
       ]
     },
     {
-      "name": "Mistral AI",
-      "category": "provider_api",
-      "country": "FR",
-      "flag": "🇫🇷",
-      "url": "https://console.mistral.ai/api-keys",
-      "baseUrl": "https://api.mistral.ai/v1",
-      "description": "Free mode, enabled by default, no credit card required. Free-mode prompts may be used to train Mistral models unless you opt out.",
-      "footnoteRef": 13,
-      "models": [
-        {
-          "id": "mistral-medium-3-5",
-          "name": "Mistral Medium 3.5 (128B)",
-          "context": "256K",
-          "maxOutput": "—",
-          "modality": "Text + Image + Code",
-          "rateLimit": "~1 RPS, 500K TPM"
-        },
-        {
-          "id": "mistral-small-2603",
-          "name": "Mistral Small 4",
-          "context": "256K",
-          "maxOutput": "—",
-          "modality": "Text + Image + Code",
-          "rateLimit": "~1 RPS, 500K TPM"
-        },
-        {
-          "id": "mistral-large-2512",
-          "name": "Mistral Large 3",
-          "context": "256K",
-          "maxOutput": "—",
-          "modality": "Multimodal",
-          "rateLimit": "~1 RPS, 500K TPM"
-        },
-        {
-          "id": "ministral-8b-2512",
-          "name": "Ministral 3 8B",
-          "context": "256K",
-          "maxOutput": "—",
-          "modality": "Text + Vision",
-          "rateLimit": "~1 RPS, 500K TPM"
-        },
-        {
-          "id": "codestral-2508",
-          "name": "Codestral",
-          "context": "128K",
-          "maxOutput": "—",
-          "modality": "Code",
-          "rateLimit": "~1 RPS, 500K TPM"
-        },
-        {
-          "id": "ministral-3b-2512",
-          "name": "Ministral 3 3B",
-          "context": "256K",
-          "maxOutput": "—",
-          "modality": "Text + Vision",
-          "rateLimit": "~1 RPS, 500K TPM"
-        },
-        {
-          "id": "ministral-14b-2512",
-          "name": "Ministral 3 14B",
-          "context": "256K",
-          "maxOutput": "—",
-          "modality": "Text + Vision",
-          "rateLimit": "~1 RPS, 500K TPM"
-        }
-      ]
-    },
-    {
       "name": "Z AI (Zhipu AI)",
       "category": "provider_api",
       "country": "CN",
@@ -461,7 +393,7 @@
           "context": "131K",
           "maxOutput": "65K",
           "modality": "Text",
-          "rateLimit": "30 RPM, 1,000 RPD"
+          "rateLimit": "30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD"
         },
         {
           "id": "openai/gpt-oss-20b",
@@ -469,7 +401,7 @@
           "context": "131K",
           "maxOutput": "65K",
           "modality": "Text",
-          "rateLimit": "30 RPM, 1,000 RPD"
+          "rateLimit": "30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD"
         },
         {
           "id": "qwen/qwen3.8-27b",
@@ -477,7 +409,7 @@
           "context": "131K",
           "maxOutput": "16K",
           "modality": "Text + Image",
-          "rateLimit": "30 RPM, 1,000 RPD"
+          "rateLimit": "30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD"
         }
       ]
     },
@@ -556,14 +488,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "reflection/beam-free",
-          "name": "reflection/beam-free",
-          "context": "1M",
-          "maxOutput": "131K",
-          "modality": "Text",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "stealth/glyph-cluster",
           "name": "stealth/glyph-cluster",
           "context": "256K",
@@ -597,14 +521,6 @@
           "context": "128K",
           "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "60 RPM, 250 req/hr (free token)"
-        },
-        {
-          "id": "nemotron-3-nano:30b",
-          "name": "nemotron-3-nano:30b",
-          "context": "1M",
-          "maxOutput": "—",
-          "modality": "Text (reasoning)",
           "rateLimit": "60 RPM, 250 req/hr (free token)"
         },
         {
@@ -661,7 +577,7 @@
       "url": "https://build.nvidia.com/explore/discover",
       "baseUrl": "https://integrate.api.nvidia.com/v1",
       "description": "Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per model.",
-      "footnoteRef": null,
+      "footnoteRef": 15,
       "models": [
         {
           "id": "google/gemma-4-31b-it",
@@ -669,7 +585,7 @@
           "context": "262K",
           "maxOutput": "8K",
           "modality": "Text + Image + Video",
-          "rateLimit": "40 RPM, 10,000 RPD"
+          "rateLimit": "—"
         },
         {
           "id": "nvidia/nemotron-3-ultra-550b-a55b",
@@ -677,7 +593,7 @@
           "context": "1M",
           "maxOutput": "262K",
           "modality": "Text",
-          "rateLimit": "40 RPM, 10,000 RPD"
+          "rateLimit": "—"
         },
         {
           "id": "openai/gpt-oss-20b",
@@ -685,7 +601,7 @@
           "context": "131K",
           "maxOutput": "131K",
           "modality": "Text",
-          "rateLimit": "40 RPM, 10,000 RPD"
+          "rateLimit": "—"
         },
         {
           "id": null,
@@ -693,7 +609,7 @@
           "context": "Varies",
           "maxOutput": "Varies",
           "modality": "Text, Image, Video, Speech, Embeddings",
-          "rateLimit": "40 RPM, 10,000 RPD"
+          "rateLimit": "—"
         }
       ]
     },
@@ -917,7 +833,7 @@
     },
     {
       "id": 2,
-      "text": "Groq shut down qwen/qwen3.6-27b on September 14, 2026 (replaced by qwen/qwen3.8-27b) and groq/compound and groq/compound-mini on September 21, 2026 ([deprecations](https://console.groq.com/docs/deprecations)). Free-plan limits vary by model; the chat models listed get 1,000 RPD ([rate limits](https://console.groq.com/docs/rate-limits))."
+      "text": "Groq shut down qwen/qwen3.6-27b on September 14, 2026 (replaced by qwen/qwen3.8-27b) and groq/compound and groq/compound-mini on September 21, 2026 ([deprecations](https://console.groq.com/docs/deprecations)). Free-plan limits vary by model; the chat models listed get 30 RPM, 1,000 RPD, 8,000 TPM, and 200,000 TPD on the official [Free Plan Limits](https://console.groq.com/docs/rate-limits) table. Exact organization limits are on the account limits page."
     },
     {
       "id": 4,
@@ -925,7 +841,7 @@
     },
     {
       "id": 5,
-      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (through dots-studio/dots-3-note-preview:free), 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. The catalog describes reflection/beam-free as served through Vercel AI Gateway and notes that prompts may be retained for training. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): \"Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services.\""
+      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (through dots-studio/dots-3-note-preview:free), 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): \"Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services.\""
     },
     {
       "id": 6,
@@ -952,12 +868,12 @@
       "text": "Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time."
     },
     {
-      "id": 13,
-      "text": "Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) lists no API credit amount. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values."
-    },
-    {
       "id": 14,
       "text": "The free grant is issued only after SMS verification with a real (non-VoIP) phone number, one grant per number ([billing docs](https://docs.gonkabroker.com/guides/billing-and-deposits/)). Unused free tokens do not carry over to the next month. The grant is sized as at least 1M tokens of the most expensive model; cheaper models stretch further (e.g. ~6M tokens for BGE-M3) ([free tier page](https://gonkabroker.com/free-llm-api/)). While running on free-tier funds only, requests are capped at a lower rate; the current cap is returned as `maxRpm` by `/test-auth` ([limits](https://docs.gonkabroker.com/reference/limits-and-quotas/))."
+    },
+    {
+      "id": 15,
+      "text": "NVIDIA does not publish a public RPM/RPD table for hosted NIM endpoints. The official FAQ says the rate of requests varies per model and may vary with the number of concurrent users, and that you should check your account at build.nvidia.com ([NIM FAQ](https://forums.developer.nvidia.com/t/nvidia-nim-faq/300317)). Hosted endpoints are for prototyping, research, development, and testing; production use requires an NVIDIA AI Enterprise license."
     }
   ],
   "glossary": [
