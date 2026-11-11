@@ -23,6 +23,7 @@ const SETUP = {
   // so the keyless example is a plain HTTP call without an Authorization header.
   'ovhcloud ai endpoints': { env: 'OVH_API_KEY', keyless: true, noBearer: true },
   'siliconflow':           { env: 'SILICONFLOW_API_KEY' },
+  'synap':                 { env: 'SYNAP_API_KEY' },
 };
 
 module.exports = SETUP;
