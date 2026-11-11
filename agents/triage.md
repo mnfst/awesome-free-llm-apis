@@ -24,11 +24,30 @@ These rules have no exception. If an action conflicts with a red line, do not do
    token, deletes yours, and closes the item. Anything you close or open directly shows a
    Claude badge on Seb's avatar.
 
+## Every item ends
+
+Every external item ends in one of three ways. No other state is allowed.
+
+1. Closed, with a comment that gives the reason.
+2. Fixed by a merged pull request. For an issue, the data PR carries "Fixes #N" and the
+   merge closes the issue.
+3. Waiting for one named action, with a deadline:
+   - Waiting for the author (case D): 7 days after your comment. Past that, with no push
+     and no reply from the author, close the item: comment "Closing this since there has
+     been no update for a week. Open a new PR from current main when you are ready." and
+     end the comment with `<!-- close -->`.
+   - Waiting for a key from Seb (cases E and H): no deadline. List the item in the 🔑
+     section of the Slack report every Monday until it lands, even if nothing changed.
+
+Never leave an item open because you are unsure. When no source settles a claim, close
+the item and say which page would reopen it.
+
 ## What "handled" means
 
 An item is handled when it has a 👀 reaction.
 
-- Item has 👀 and no activity after your last comment on it: skip it.
+- Item has 👀 and no activity after your last comment on it: skip it, unless its deadline
+  under "Every item ends" has passed.
 - Item has 👀 and new activity (a comment or a push) after your last comment: process it again.
 - Item has no 👀: process it.
 
@@ -133,10 +152,19 @@ Example: a PR that fixes a provider's base URL, with the provider's docs page as
 ### G. Issue that reports an error in our data
 Test: the issue claims that an entry of data.json is wrong (dead model, dead tier,
 wrong limit).
-Actions: check the claim against the provider's pages. If the claim is right or
-plausible: comment "Thanks, checking this." → leave open → 👀 → Slack "For you" line
-with your verdict. If the provider's pages contradict the claim: comment the source and
-the quote → end the comment with `<!-- close -->` → 👀 → Slack "Closed" line.
+Actions: check the claim against the provider's pages and the provider's public model
+catalog. Exactly one of these three applies:
+- A provider page or the catalog confirms the claim: comment "Thanks, confirmed against
+  <url>: "<quote>". The fix lands in the next data update." → leave open → 👀 → Slack
+  🛠 line. The provider sync reads this comment, fixes data.json, and its PR carries
+  "Fixes #N".
+- A provider page contradicts the claim: comment "Thanks for the report. <url> still
+  says: "<quote>". Reopen this with a link to a <provider> page that shows the change."
+  → end the comment with `<!-- close -->` → 👀 → Slack "Closed" line.
+- No page settles it either way: comment "Thanks for the report. I could not find a
+  <provider> page that confirms it. Reopen this with a link to such a page and I will fix
+  the entry." → end the comment with `<!-- close -->` → 👀 → Slack "Closed" line.
+Never comment "Thanks, checking this." and leave the issue open.
 Example: issue "Groq removed model X", and Groq's deprecations page confirms it.
 
 ### H. Issue that proposes an addition
@@ -175,10 +203,10 @@ Sort every item you report into exactly one section:
 
 - 🟢 To merge: case F.
 - 🔑 API key to create: case E, and case H when no test fails.
-- ❓ To decide: cases I and J, and case G when the claim needs Seb's judgment.
+- ❓ To decide: cases I and J. Never an issue of case G.
 - 🛠 Error in our data: case G when the provider's pages confirm the error.
 - 🔴 Closed: cases A, B, C, and every item you closed.
-- 💬 Commented: case D, and case G when you only commented.
+- 💬 Commented: case D.
 
 Rules for the message:
 
@@ -190,7 +218,8 @@ Rules for the message:
 5. Omit a section with zero items. Exception: 🟢 To merge always shows, with "Nothing this run."
    when empty.
 6. Report an item only when you acted on it in this run. Do not repeat items that were in
-   an earlier report and did not change.
+   an earlier report and did not change. Exception: on Mondays, the 🔑 section lists every
+   item still waiting for a key.
 7. Do not write a global count of items for Seb. Do not use the words "For you".
 
 Template:
