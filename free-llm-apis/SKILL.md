@@ -1,6 +1,6 @@
 ---
 name: free-llm-apis
-description: Guide users through obtaining and configuring free API keys for LLM providers. Use when the user wants to set up a free LLM API, get a free API key, connect to a free model provider, configure an OpenAI-compatible endpoint at no cost, or asks about free tiers for AI models. Triggers on "free API key", "free LLM", "set up Gemini/Groq/Mistral/etc.", "which free provider", "how to get an API key", "free model access", "configure LLM for free".
+description: Guide users through obtaining and configuring free API keys for LLM providers. Use when the user wants to set up a free LLM API, get a free API key, connect to a free model provider, configure an OpenAI-compatible endpoint at no cost, or asks about free tiers for AI models. Triggers on "free API key", "free LLM", "set up Gemini/Groq/etc.", "which free provider", "how to get an API key", "free model access", "configure LLM for free".
 ---
 
 # Free LLM API Setup
@@ -15,11 +15,11 @@ Ask the user what matters most, then recommend accordingly:
 |---|---|
 | Fastest inference | Groq (LPU hardware; ~1,000 RPD on chat models) |
 | Largest model selection | NVIDIA NIM (100+ models), Cloudflare Workers AI (60+), Hugging Face (thousands, small credit) |
-| Strongest proprietary models | Google Gemini, Mistral AI, Cohere (non-commercial only) |
+| Strongest proprietary models | Google Gemini, Cohere (non-commercial only) |
 | Free frontier open-weight models | OpenRouter (`:free` models), Kilo Code, NVIDIA NIM |
-| European provider / EU hosting | Mistral AI (FR), OVHcloud AI Endpoints (FR, EU data centers), LLM7.io (UK) |
+| European provider / EU hosting | OVHcloud AI Endpoints (FR, EU data centers), LLM7.io (UK) |
 | No signup or key required | OVHcloud AI Endpoints (2 RPM/IP), Kilo Code (200 req/hr/IP), LLM7.io (anonymous tier) |
-| Privacy-sensitive prompts | Avoid Gemini free tier outside the EEA, Switzerland and the UK, Mistral free mode (unless opted out), OpenRouter/Kilo free routes, NVIDIA trial endpoints |
+| Privacy-sensitive prompts | Avoid Gemini free tier outside the EEA, Switzerland and the UK, OpenRouter/Kilo free routes, NVIDIA trial endpoints |
 
 ### Provider categories
 
