@@ -556,14 +556,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "reflection/beam-free",
-          "name": "reflection/beam-free",
-          "context": "1M",
-          "maxOutput": "131K",
-          "modality": "Text",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "stealth/glyph-cluster",
           "name": "stealth/glyph-cluster",
           "context": "256K",
