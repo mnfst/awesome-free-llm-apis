@@ -6,7 +6,8 @@ name: Post as Seb
 #   - A comment written by the app is posted again by Seb and the original is deleted.
 #     A comment that ends with <!-- close --> also closes its issue or pull request.
 #   - A push to a data/** branch opens its pull request as Seb. The commit subject is the
-#     title and the commit body is the description.
+#     title and the commit body is the description. A new data/sync-* pull request closes
+#     the older ones, so only one stays open.
 #   - Any comment, issue or pull request description by Seb that carries an attribution
 #     footer is edited to remove it.
 
@@ -78,7 +79,17 @@ jobs:
           if [ "$open" != "0" ]; then echo "A pull request is already open for $BRANCH."; exit 0; fi
           title="$(printf '%s\n' "$MESSAGE" | head -n 1)"
           body="$(printf '%s\n' "$MESSAGE" | tail -n +2 | sed -e '/./,$!d' | grep -viE 'Generated (by|with) \[?Claude|claude\.ai/code|Co-Authored-By: *Claude' || true)"
-          gh api "repos/$REPO/pulls" -f title="$title" -f head="$BRANCH" -f base=main -f body="$body" --jq '.html_url'
+          number="$(gh api "repos/$REPO/pulls" -f title="$title" -f head="$BRANCH" -f base=main -f body="$body" --jq '.number')"
+          echo "Opened #$number"
+          # Only one data PR stays open: the new branch carries the changes of the older ones.
+          case "$BRANCH" in data/sync-*)
+            for old in $(gh api "repos/$REPO/pulls?state=open&per_page=100" \
+                --jq ".[] | select(.head.ref | startswith(\"data/sync-\")) | select(.number != $number) | .number"); do
+              gh api "repos/$REPO/issues/$old/comments" -f body="Superseded by #$number." --silent
+              gh api -X PATCH "repos/$REPO/pulls/$old" -f state=closed --silent
+              echo "Closed #$old"
+            done;;
+          esac
 
   strip-footer:
     if: >-

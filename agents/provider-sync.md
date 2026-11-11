@@ -75,14 +75,19 @@ The result is `sources-latest.json` on the branch `probe-results` (one copy per 
 3. Read `sources-latest.json`. If it is missing or older than 26 hours, say so in the Slack
    report ("⚠️ Doc report is stale") and skip rules R6 and R7.
 4. Apply rules R1 to R8 below. Collect every change.
-5. Read the open issues that report an error in our data (they have a 👀 reaction and a
-   comment from Seb "Thanks, checking this."). Apply rule R3 to each.
+5. Read the open issues that report an error in our data. They have a comment from Seb
+   that starts with "Thanks, confirmed against". Apply rule R3 to each.
 6. If you collected zero changes: do not open a PR.
-7. Else: create the branch `data/sync-YYYY-MM-DD` from main, edit data.json and sources.json,
-   run `node scripts/validate-data.js` and
-   `node scripts/check-sources.js --out /tmp/sources.json --consistent`. Both must pass.
-   Then open /tmp/sources.json: every entry and link that your PR changed must have
-   `state: "OK"`. Entries you did not touch do not block the PR. Commit with the PR title as
+7. Else: list the open pull requests whose branch starts with `data/sync-`. If one is open,
+   start from its branch and merge main into it, so its changes carry over. Otherwise start
+   from main. Create the branch `data/sync-YYYY-MM-DD` from there, edit data.json and
+   sources.json, run `node scripts/validate-data.js` and
+   `node scripts/check-sources.js --out /tmp/sources.json --strict`. This is the check CI
+   runs on the PR. Every fact with QUOTE_MISSING or VALUE_DRIFT goes through rule R6 now,
+   in this run, then run the check again. PAGE_ERROR does not count: some providers block
+   the sandbox but not CI. The PR must leave CI green. If a fact still fails after R6, say
+   so in the ❓ section. When the new PR opens, the workflow closes the older data/sync-*
+   PRs as superseded, so only one data PR is open at a time. Commit with the PR title as
    the commit subject and the PR body as the commit body (format below), then push. Do not
    open the PR yourself: the workflow "Post as Seb" opens it in Seb's name when the branch
    lands. Find its number with the GitHub tools (list open PRs for the branch, retry for up
@@ -101,6 +106,19 @@ the problem, not the model. Rule R2 handles that case.
 Example: Kilo Code `tencent/hy3:free` returns 404 on 2026-10-23 and 2026-10-24, and
 other Kilo Code models return 200. Remove the row.
 
+### R1b. Remove a model gone from its provider's catalog
+Test: the doc report's `catalogs` lists the model under `gone`, or the catalog URL of the
+model's `listed` entry in sources.json no longer contains the model when you fetch it.
+Action, the same day, without waiting for two days of probes:
+- The latest probe of the model is not 200: remove the row from data.json and its entries
+  from sources.json.
+- The latest probe of the model is 200: keep the row. Remove only its `listed` entry from
+  sources.json, and say in the PR that the model still answers.
+Why: CI checks every PR against the live catalogs. A row whose catalog quote is gone fails
+CI on the day the model leaves the catalog, so waiting two days blocks every PR.
+Example: Kilo Code drops `recursive/flint-v1.0:free` from ai-gateway.kilo.ai/api/v1/models,
+and the probe gets 404. Remove the row the same day.
+
 ### R2. Every model of a provider fails
 Test: every probed model of the provider has httpStatus 402, 404, or 410 in both of the
 last two daily files.
@@ -110,9 +128,12 @@ with the status codes. Seb decides.
 ### R3. Fix a value reported in an issue
 Test: an open issue says a value in data.json is wrong, and a page that the provider
 controls confirms the correct value, or the probe report confirms it (for "model gone").
-Action: change the value. Add "Fixes #N" to the PR body. Comment on the issue:
-"Confirmed against <source>. Fixed in #PR. Thanks for the report."
-If no provider page confirms the claim: change nothing. Put the issue in the ❓ section.
+Action: change the value, or remove the row or the provider when the issue says it is no
+longer free. Add "Fixes #N" to the PR body: the merge closes the issue. Comment on the
+issue: "Fixed in #PR."
+If no provider page confirms the claim anymore: comment on the issue "<url> no longer
+shows this change, so I am leaving the entry as it is. Reopen this with a current link."
+and end the comment with `<!-- close -->`. Never leave the issue open without a PR.
 
 ### R4. Keep the description true
 Test: rule R1 removed a model that the provider description names.
@@ -139,15 +160,16 @@ Action: open the page of the record. Find what the page says now about that fact
 - The page states the same value in new words: update only the entry's `quote`.
 - The page moved: find the new page on the provider's own domain (follow the redirect, the
   docs navigation, `llms.txt` or `sitemap.xml`). Update the entry's `url` and `quote`.
-- The page says the free tier no longer exists: change nothing. Put the provider in the ❓
-  section: "<provider> has no free tier anymore (<url>: "<quote>"). Remove it? My take: yes."
+- The page says the free tier no longer exists, or that the API needs a payment method:
+  remove the provider from data.json and its entries from sources.json. Cite the page and
+  the quote in the PR.
 - ROW_GONE: remove the entry from sources.json.
 - VALUE_DRIFT after a merged PR changed data.json: update the entry's `value` and `quote`
   from the page, or remove the entry if the page does not support the new value.
 - You cannot find the information: change nothing. Put the fact in the ❓ section.
 Example: Hugging Face's description says "$0.10/month in Inference Provider credits for free
 users". The quote "$0.10" left the pricing page, which now says "None" for free users. The
-free tier is gone: the provider goes to the ❓ section.
+free tier is gone: remove the provider.
 
 ### R7. Fix a broken link
 Test: a record of `links` in the doc report has `signal: true`.
