@@ -25,7 +25,7 @@ Ask the user what matters most, then recommend accordingly:
 
 <!-- providers:start -->
 **Provider APIs** -- run by the companies that train the models:
-- Aion Labs, Cohere, Google Gemini, Mistral AI, Z AI (Zhipu AI)
+- Aion Labs, Cohere, Google Gemini, Z AI (Zhipu AI)
 - See [references/provider-apis.md](references/provider-apis.md) for setup instructions.
 
 **Inference providers** -- third-party platforms hosting open-weight models:

@@ -2,7 +2,7 @@
 
 APIs run by the companies that train or fine-tune the models themselves.
 
-<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-10-25). Do not edit by hand. -->
+<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-11). Do not edit by hand. -->
 
 ## Aion Labs 🇮🇱
 
@@ -171,63 +171,6 @@ curl -s https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
   -H "Authorization: Bearer $GEMINI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model": "gemini-3.8-flash", "messages": [{"role": "user", "content": "Say hello"}]}'
-```
-
----
-
-## Mistral AI 🇫🇷
-
-Free mode, enabled by default, no credit card required. Free-mode prompts may be used to train Mistral models unless you opt out.
-
-**Notes:** Mistral plans are global: the monthly allowance is shared across Studio, the API, and Vibe Code, so CLI usage eats the same budget ([subscriptions](https://docs.mistral.ai/admin/billing-usage/subscriptions)). Free mode is the default for new accounts and needs no credit card ([quickstart](https://docs.mistral.ai/getting-started/quickstarts/studio/activate-and-generate-api-key)), and the Free plan card on the [pricing page](https://mistral.ai/pricing) lists no API credit amount. Free-mode inputs and outputs may be used to train Mistral models, and you can opt out at any time ([data usage](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Mistral no longer publishes numeric free-tier rate limits and points you at the Limits page of the admin panel instead ([rate limits](https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them)); the rate limit column is kept from the last published values.
-
-**Get a key:** https://console.mistral.ai/api-keys
-
-**OpenAI-compatible base URL:** `https://api.mistral.ai/v1`
-
-### Models
-
-| Model ID | Context | Modality | Rate limit |
-| --- | --- | --- | --- |
-| `mistral-medium-3-5` | 256K | Text + Image + Code | ~1 RPS, 500K TPM |
-| `mistral-small-2603` | 256K | Text + Image + Code | ~1 RPS, 500K TPM |
-| `mistral-large-2512` | 256K | Multimodal | ~1 RPS, 500K TPM |
-| `ministral-8b-2512` | 256K | Text + Vision | ~1 RPS, 500K TPM |
-| `codestral-2508` | 128K | Code | ~1 RPS, 500K TPM |
-| `ministral-3b-2512` | 256K | Text + Vision | ~1 RPS, 500K TPM |
-| `ministral-14b-2512` | 256K | Text + Vision | ~1 RPS, 500K TPM |
-
-### Environment variable
-
-```bash
-export MISTRAL_API_KEY="your-key-here"
-```
-
-### Usage example
-
-```python
-import os
-from openai import OpenAI
-
-client = OpenAI(
-    api_key=os.environ["MISTRAL_API_KEY"],
-    base_url="https://api.mistral.ai/v1",
-)
-
-response = client.chat.completions.create(
-    model="mistral-medium-3-5",
-    messages=[{"role": "user", "content": "Say hello in one sentence."}],
-)
-print(response.choices[0].message.content)
-```
-
-### Quick test
-
-```bash
-curl -s https://api.mistral.ai/v1/chat/completions \
-  -H "Authorization: Bearer $MISTRAL_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model": "mistral-medium-3-5", "messages": [{"role": "user", "content": "Say hello"}]}'
 ```
 
 ---

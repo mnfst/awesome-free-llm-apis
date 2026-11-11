@@ -2,7 +2,7 @@
 
 Third-party platforms that host open-weight models from various sources.
 
-<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-10-25). Do not edit by hand. -->
+<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-11). Do not edit by hand. -->
 
 ## Cloudflare Workers AI 🇺🇸
 
@@ -122,7 +122,7 @@ curl -s https://proxy.gonkabroker.com/v1/chat/completions \
 
 Free tier, no credit card. Ultra-fast LPU inference.
 
-**Notes:** Groq shut down qwen/qwen3.6-27b on September 14, 2026 (replaced by qwen/qwen3.8-27b) and groq/compound and groq/compound-mini on September 21, 2026 ([deprecations](https://console.groq.com/docs/deprecations)). Free-plan limits vary by model; the chat models listed get 1,000 RPD ([rate limits](https://console.groq.com/docs/rate-limits)).
+**Notes:** Groq shut down qwen/qwen3.6-27b on September 14, 2026 (replaced by qwen/qwen3.8-27b) and groq/compound and groq/compound-mini on September 21, 2026 ([deprecations](https://console.groq.com/docs/deprecations)). Free-plan limits vary by model; the chat models listed get 30 RPM, 1,000 RPD, 8,000 TPM, and 200,000 TPD on the official [Free Plan Limits](https://console.groq.com/docs/rate-limits) table. Exact organization limits are on the account limits page.
 
 **Get a key:** https://console.groq.com/keys
 
@@ -132,9 +132,9 @@ Free tier, no credit card. Ultra-fast LPU inference.
 
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
-| `openai/gpt-oss-120b` | 131K | Text | 30 RPM, 1,000 RPD |
-| `openai/gpt-oss-20b` | 131K | Text | 30 RPM, 1,000 RPD |
-| `qwen/qwen3.8-27b` | 131K | Text + Image | 30 RPM, 1,000 RPD |
+| `openai/gpt-oss-120b` | 131K | Text | 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD |
+| `openai/gpt-oss-20b` | 131K | Text | 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD |
+| `qwen/qwen3.8-27b` | 131K | Text + Image | 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD |
 
 ### Environment variable
 
@@ -175,7 +175,7 @@ curl -s https://api.groq.com/openai/v1/chat/completions \
 
 Free models with no credit card and no API key required. `kilo-auto/free` auto-router dynamically routes to models in the free pool.
 
-**Notes:** Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (through dots-studio/dots-3-note-preview:free), 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. The catalog describes reflection/beam-free as served through Vercel AI Gateway and notes that prompts may be retained for training. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): "Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services."
+**Notes:** Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (through dots-studio/dots-3-note-preview:free), 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): "Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services."
 
 **Get a key:** https://app.kilo.ai/profile (optional: free models work without a key)
 
@@ -193,7 +193,6 @@ Free models with no credit card and no API key required. `kilo-auto/free` auto-r
 | `kilo-auto/free` | 256K | Text | 200 req/hr |
 | `dots-studio/dots-3-note-preview:free` | 512K | Text + Vision | 200 req/hr |
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Multimodal | 200 req/hr |
-| `reflection/beam-free` | 1M | Text | 200 req/hr |
 | `stealth/glyph-cluster` | 256K | Text (code) | 200 req/hr |
 
 ### Environment variable
@@ -247,7 +246,6 @@ API gateway with a free tier. Anonymous access needs no key and reaches the `tur
 | --- | --- | --- | --- |
 | `gpt-oss:20b` | 128K | Text | 60 RPM, 250 req/hr (free token) |
 | `mistral-Nemo-Instruct-2407` | 128K | Text | 60 RPM, 250 req/hr (free token) |
-| `nemotron-3-nano:30b` | 1M | Text (reasoning) | 60 RPM, 250 req/hr (free token) |
 | `codestral-latest` | 32K | Text | 60 RPM, 250 req/hr (free token) |
 
 ### Environment variable
@@ -341,6 +339,8 @@ curl -s https://api-inference.modelscope.cn/v1/chat/completions \
 
 Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per model.
 
+**Notes:** NVIDIA does not publish a public RPM/RPD table for hosted NIM endpoints. The official FAQ says the rate of requests varies per model and may vary with the number of concurrent users, and that you should check your account at build.nvidia.com ([NIM FAQ](https://forums.developer.nvidia.com/t/nvidia-nim-faq/300317)). Hosted endpoints are for prototyping, research, development, and testing; production use requires an NVIDIA AI Enterprise license.
+
 **Get a key:** https://build.nvidia.com/explore/discover
 
 **OpenAI-compatible base URL:** `https://integrate.api.nvidia.com/v1`
@@ -349,10 +349,10 @@ Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per mod
 
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
-| `google/gemma-4-31b-it` | 262K | Text + Image + Video | 40 RPM, 10,000 RPD |
-| `nvidia/nemotron-3-ultra-550b-a55b` | 1M | Text | 40 RPM, 10,000 RPD |
-| `openai/gpt-oss-20b` | 131K | Text | 40 RPM, 10,000 RPD |
-| + 92 more models | Varies | Text, Image, Video, Speech, Embeddings | 40 RPM, 10,000 RPD |
+| `google/gemma-4-31b-it` | 262K | Text + Image + Video | — |
+| `nvidia/nemotron-3-ultra-550b-a55b` | 1M | Text | — |
+| `openai/gpt-oss-20b` | 131K | Text | — |
+| + 92 more models | Varies | Text, Image, Video, Speech, Embeddings | — |
 
 ### Environment variable
 
