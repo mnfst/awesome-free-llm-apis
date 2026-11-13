@@ -8,7 +8,7 @@ const SETUP = require('./provider-setup');
 const ROOT = path.join(__dirname, '..');
 const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data.json'), 'utf8'));
 
-const SPONSORS_PAGE = 'https://opencollective.com/mnfst';
+const SPONSORS_PAGE = 'https://opencollective.com/awesome-free-llm-apis';
 // GitHub traffic stats only cover 14 days: refresh this figure once a month.
 const MONTHLY_VIEWS = '145,000';
 

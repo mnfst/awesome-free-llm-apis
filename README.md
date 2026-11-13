@@ -21,7 +21,7 @@
 <h3 align="center">Gold sponsors</h3>
 
 <p align="center">
-	<a href="https://opencollective.com/mnfst">
+	<a href="https://opencollective.com/awesome-free-llm-apis">
 		<picture>
 			<source media="(prefers-color-scheme: dark)" srcset="media/sponsor-slot-dark.svg">
 			<img src="media/sponsor-slot-light.svg" width="280" alt="Your logo here">
@@ -42,7 +42,7 @@
 	<sub>Free API watcher. No more breaking changes.</sub>
 </p>
 
-<p align="center"><sub>About 145,000 views a month from developers · <a href="https://opencollective.com/mnfst">Become a sponsor</a></sub></p>
+<p align="center"><sub>About 145,000 views a month from developers · <a href="https://opencollective.com/awesome-free-llm-apis">Become a sponsor</a></sub></p>
 
 <hr>
 
