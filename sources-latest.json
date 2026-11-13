@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T12:13:34.089Z",
+  "generatedAt": "2026-11-13T12:12:38.021Z",
   "summary": {
     "facts": 409,
     "sourced": 209,
@@ -12,7 +12,7 @@
     "rowGone": 0,
     "signals": 0,
     "modelsGone": 1,
-    "modelsNew": 3,
+    "modelsNew": 4,
     "links": 43,
     "linksBroken": 0,
     "linkSignals": 0
@@ -2324,14 +2324,15 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 468,
+      "size": 472,
       "gone": [
         "xingchen-agi/xing4.0-29b-a4b:free"
       ],
       "new": [
         "baidu/ernie-5.5-flash-preview:free",
         "thinkingmachines/inkling-2-small:free",
-        "liquid/lfm-3-1.7b:free"
+        "liquid/lfm-3-1.7b:free",
+        "particle-ai/particle-1:free"
       ]
     }
   ],
@@ -2377,8 +2378,8 @@
       "where": [
         "Cloudflare Workers AI url"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 403,
+      "state": "UNCHECKED",
       "signal": false
     },
     {
@@ -2763,7 +2764,7 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 96382,
+      "chars": 100827,
       "state": "OK",
       "error": null
     },
@@ -2854,7 +2855,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
       "httpStatus": 200,
-      "chars": 15425,
+      "chars": 15779,
       "state": "OK",
       "error": null
     },
@@ -2980,14 +2981,14 @@
     {
       "url": "https://kilo.ai/docs/gateway/authentication",
       "httpStatus": 200,
-      "chars": 4120,
+      "chars": 4283,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 517117,
+      "chars": 624134,
       "state": "OK",
       "error": null
     },
@@ -3008,7 +3009,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 70644,
+      "chars": 72141,
       "state": "OK",
       "error": null
     },
@@ -3071,7 +3072,7 @@
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 38679,
+      "chars": 38829,
       "state": "OK",
       "error": null
     },
