@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-11",
+  "lastUpdated": "2026-11-12",
   "providers": [
     {
       "name": "Aion Labs",
@@ -580,14 +580,6 @@
       "footnoteRef": 15,
       "models": [
         {
-          "id": "google/gemma-4-31b-it",
-          "name": "google/gemma-4-31b-it",
-          "context": "262K",
-          "maxOutput": "8K",
-          "modality": "Text + Image + Video",
-          "rateLimit": "—"
-        },
-        {
           "id": "nvidia/nemotron-3-ultra-550b-a55b",
           "name": "nvidia/nemotron-3-ultra-550b-a55b",
           "context": "1M",
@@ -682,14 +674,6 @@
         {
           "id": "recursive/flint-v1.0:free",
           "name": "recursive/flint-v1.0:free",
-          "context": "262K",
-          "maxOutput": "235K",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "xingchen-agi/xing4.0-29b-a4b:free",
-          "name": "xingchen-agi/xing4.0-29b-a4b:free",
           "context": "262K",
           "maxOutput": "235K",
           "modality": "Text",
