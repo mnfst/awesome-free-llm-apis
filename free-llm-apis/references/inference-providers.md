@@ -2,7 +2,7 @@
 
 Third-party platforms that host open-weight models from various sources.
 
-<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-11). Do not edit by hand. -->
+<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-12). Do not edit by hand. -->
 
 ## Cloudflare Workers AI 🇺🇸
 
@@ -349,7 +349,6 @@ Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per mod
 
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
-| `google/gemma-4-31b-it` | 262K | Text + Image + Video | — |
 | `nvidia/nemotron-3-ultra-550b-a55b` | 1M | Text | — |
 | `openai/gpt-oss-20b` | 131K | Text | — |
 | + 92 more models | Varies | Text, Image, Video, Speech, Embeddings | — |
@@ -372,7 +371,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="google/gemma-4-31b-it",
+    model="nvidia/nemotron-3-ultra-550b-a55b",
     messages=[{"role": "user", "content": "Say hello in one sentence."}],
 )
 print(response.choices[0].message.content)
@@ -384,7 +383,7 @@ print(response.choices[0].message.content)
 curl -s https://integrate.api.nvidia.com/v1/chat/completions \
   -H "Authorization: Bearer $NVIDIA_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model": "google/gemma-4-31b-it", "messages": [{"role": "user", "content": "Say hello"}]}'
+  -d '{"model": "nvidia/nemotron-3-ultra-550b-a55b", "messages": [{"role": "user", "content": "Say hello"}]}'
 ```
 
 ---
@@ -411,7 +410,6 @@ curl -s https://integrate.api.nvidia.com/v1/chat/completions \
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | 1M | Text | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free` | 262K | Text | 20 RPM, 50 RPD |
-| `xingchen-agi/xing4.0-29b-a4b:free` | 262K | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Text + Image + Video | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K | Text + Image + Audio + Video | 20 RPM, 50 RPD |
 

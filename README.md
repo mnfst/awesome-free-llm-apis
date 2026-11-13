@@ -207,7 +207,6 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 
 | Model Name                          | Context | Max Output | Modality                               | Rate Limit |
 | ----------------------------------- | ------- | ---------- | -------------------------------------- | ---------- |
-| `google/gemma-4-31b-it`             | 262K    | 8K         | Text + Image + Video                   | —          |
 | `nvidia/nemotron-3-ultra-550b-a55b` | 1M      | 262K       | Text                                   | —          |
 | `openai/gpt-oss-20b`                | 131K    | 131K       | Text                                   | —          |
 | + 92 more models                    | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | —          |
@@ -228,7 +227,6 @@ Base URL: `https://openrouter.ai/api/v1`
 | `nvidia/nemotron-3.5-lightning:free`                 | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free`             | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free`                          | 262K    | 235K       | Text                         | 20 RPM, 50 RPD |
-| `xingchen-agi/xing4.0-29b-a4b:free`                  | 262K    | 235K       | Text                         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-super-vl:free`                  | 1M      | 131K       | Text + Image + Video         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K    | 65K        | Text + Image + Audio + Video | 20 RPM, 50 RPD |
 

@@ -2,7 +2,7 @@
 
 APIs run by the companies that train or fine-tune the models themselves.
 
-<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-11). Do not edit by hand. -->
+<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-12). Do not edit by hand. -->
 
 ## Aion Labs 🇮🇱
 
