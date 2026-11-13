@@ -10,7 +10,7 @@ const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data.json'), 'utf8'));
 
 const SPONSORS_PAGE = 'https://opencollective.com/awesome-free-llm-apis';
 // GitHub traffic stats only cover 14 days: refresh this figure once a month.
-const MONTHLY_VIEWS = '145,000';
+const MONTHLY_VIEWS = '200,000+';
 
 const SPONSORS = [
 	{name: 'Okapi', url: 'https://okapi.bot/go/awesome-free-llm-apis', tier: 'sponsor', tagline: 'Free API watcher. No more breaking changes.', logoLight: 'media/okapi-logo-light.svg', logoDark: 'media/okapi-logo-dark.svg'},
@@ -50,7 +50,7 @@ function sponsorsSection() {
 		sections.push(`<h3 align="center">Sponsors</h3>\n\n${sponsors.map(s => sponsorBlock(s, LOGO_WIDTH.sponsor)).join('\n\n')}`);
 	}
 
-	sections.push(`<p align="center"><sub>About ${MONTHLY_VIEWS} views a month from developers · <a href="${SPONSORS_PAGE}">Become a sponsor</a></sub></p>`);
+	sections.push(`<p align="center"><sub>${MONTHLY_VIEWS} views a month from developers · <a href="${SPONSORS_PAGE}">Become a sponsor</a></sub></p>`);
 
 	return sections.join('\n\n');
 }

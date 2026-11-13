@@ -42,7 +42,7 @@
 	<sub>Free API watcher. No more breaking changes.</sub>
 </p>
 
-<p align="center"><sub>About 145,000 views a month from developers · <a href="https://opencollective.com/awesome-free-llm-apis">Become a sponsor</a></sub></p>
+<p align="center"><sub>200,000+ views a month from developers · <a href="https://opencollective.com/awesome-free-llm-apis">Become a sponsor</a></sub></p>
 
 <hr>
 
