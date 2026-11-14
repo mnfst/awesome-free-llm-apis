@@ -648,14 +648,6 @@
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
-          "id": "liquid/lfm-2.5-2.6b:free",
-          "name": "liquid/lfm-2.5-2.6b:free",
-          "context": "64K",
-          "maxOutput": "8K",
-          "modality": "Text",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
           "id": "nvidia/nemotron-3.5-lightning:free",
           "name": "nvidia/nemotron-3.5-lightning:free",
           "context": "1M",
