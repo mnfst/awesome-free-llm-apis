@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-11-13T12:12:38.021Z",
+  "generatedAt": "2026-11-14T12:13:57.441Z",
   "summary": {
-    "facts": 409,
-    "sourced": 209,
-    "unsourced": 200,
-    "ok": 209,
+    "facts": 399,
+    "sourced": 207,
+    "unsourced": 192,
+    "ok": 207,
     "quoteMissing": 0,
     "pageError": 0,
     "unverifiable": 0,
@@ -12,7 +12,7 @@
     "rowGone": 0,
     "signals": 0,
     "modelsGone": 1,
-    "modelsNew": 4,
+    "modelsNew": 5,
     "links": 43,
     "linksBroken": 0,
     "linkSignals": 0
@@ -1835,17 +1835,6 @@
     },
     {
       "provider": "NVIDIA NIM",
-      "model": "google/gemma-4-31b-it",
-      "fact": "context",
-      "value": "262K",
-      "current": "262K",
-      "url": "https://build.nvidia.com/google/gemma-4-31b-it.md",
-      "quote": "context length: 262,144 tokens",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "NVIDIA NIM",
       "model": "nvidia/nemotron-3-ultra-550b-a55b",
       "fact": "context",
       "value": "1M",
@@ -1957,17 +1946,6 @@
     {
       "provider": "OpenRouter",
       "model": "recursive/flint-v1.0:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
       "fact": "rateLimit",
       "value": "20 RPM, 50 RPD",
       "current": "20 RPM, 50 RPD",
@@ -2324,11 +2302,12 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 472,
+      "size": 471,
       "gone": [
-        "xingchen-agi/xing4.0-29b-a4b:free"
+        "liquid/lfm-2.5-2.6b:free"
       ],
       "new": [
+        "inclusionai/ling-3.2-flash:free",
         "baidu/ernie-5.5-flash-preview:free",
         "thinkingmachines/inkling-2-small:free",
         "liquid/lfm-3-1.7b:free",
@@ -2764,7 +2743,7 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 100827,
+      "chars": 98349,
       "state": "OK",
       "error": null
     },
@@ -2988,7 +2967,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 624134,
+      "chars": 624100,
       "state": "OK",
       "error": null
     },
@@ -3009,7 +2988,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 72141,
+      "chars": 72159,
       "state": "OK",
       "error": null
     },
@@ -3031,13 +3010,6 @@
       "url": "https://docs.api.nvidia.com/nim/docs/product",
       "httpStatus": 200,
       "chars": 7987,
-      "state": "OK",
-      "error": null
-    },
-    {
-      "url": "https://build.nvidia.com/google/gemma-4-31b-it.md",
-      "httpStatus": 200,
-      "chars": 13173,
       "state": "OK",
       "error": null
     },
@@ -3065,7 +3037,7 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 126657,
+      "chars": 126686,
       "state": "OK",
       "error": null
     },
@@ -3654,26 +3626,6 @@
     },
     {
       "provider": "NVIDIA NIM",
-      "model": "google/gemma-4-31b-it",
-      "fact": "listed"
-    },
-    {
-      "provider": "NVIDIA NIM",
-      "model": "google/gemma-4-31b-it",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "NVIDIA NIM",
-      "model": "google/gemma-4-31b-it",
-      "fact": "modality"
-    },
-    {
-      "provider": "NVIDIA NIM",
-      "model": "google/gemma-4-31b-it",
-      "fact": "rateLimit"
-    },
-    {
-      "provider": "NVIDIA NIM",
       "model": "nvidia/nemotron-3-ultra-550b-a55b",
       "fact": "listed"
     },
@@ -3870,26 +3822,6 @@
     {
       "provider": "OpenRouter",
       "model": "recursive/flint-v1.0:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "xingchen-agi/xing4.0-29b-a4b:free",
       "fact": "modality"
     },
     {
