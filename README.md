@@ -282,6 +282,10 @@ Base URL: `https://api.siliconflow.cn/v1`
 | **TPD**      | Tokens per day      |
 | **RPS**      | Requests per second |
 
+## MCP Servers & Ecosystem
+
+- [No Stairs Please MCP](https://nostairsplease.com/mcp) - Hosted MCP server for querying 25,000+ live music venues and touring data.
+
 ## Contributing
 
 Know a free tier that's missing? [Open a PR](contributing.md). Include the provider, endpoint, rate limits (link to their docs), and a few notable models. Trial credits and time-limited promos don't count.
