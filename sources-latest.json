@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-11-14T12:13:57.441Z",
+  "generatedAt": "2026-11-15T12:12:20.004Z",
   "summary": {
     "facts": 399,
     "sourced": 207,
     "unsourced": 192,
-    "ok": 207,
+    "ok": 204,
     "quoteMissing": 0,
-    "pageError": 0,
+    "pageError": 3,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
@@ -2204,7 +2204,7 @@
       "current": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2215,7 +2215,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2226,7 +2226,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Xing4.0-29B XingChenAGI/Xing4.0-29B 免费 免费",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2302,7 +2302,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 471,
+      "size": 470,
       "gone": [
         "liquid/lfm-2.5-2.6b:free"
       ],
@@ -2573,8 +2573,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 0,
+      "state": "UNCHECKED",
       "signal": false
     },
     {
@@ -2699,8 +2699,8 @@
       "where": [
         "footnote 15"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 403,
+      "state": "UNCHECKED",
       "signal": false
     }
   ],
@@ -2967,7 +2967,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 624100,
+      "chars": 621170,
       "state": "OK",
       "error": null
     },
@@ -2988,7 +2988,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 72159,
+      "chars": 72955,
       "state": "OK",
       "error": null
     },
@@ -3050,9 +3050,9 @@
     },
     {
       "url": "https://siliconflow.cn/pricing",
-      "httpStatus": 200,
-      "chars": 4684,
-      "state": "OK",
+      "httpStatus": 0,
+      "chars": 0,
+      "state": "PAGE_ERROR",
       "error": null
     },
     {
