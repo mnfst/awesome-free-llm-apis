@@ -2,7 +2,7 @@
 
 Third-party platforms that host open-weight models from various sources.
 
-<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-12). Do not edit by hand. -->
+<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-15). Do not edit by hand. -->
 
 ## Cloudflare Workers AI 🇺🇸
 
@@ -406,7 +406,6 @@ curl -s https://integrate.api.nvidia.com/v1/chat/completions \
 | `google/gemma-4-26b-a4b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
 | `google/gemma-4-31b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
 | `dots-studio/dots-3-note-preview:free` | 512K | Text + Image | 20 RPM, 50 RPD |
-| `liquid/lfm-2.5-2.6b:free` | 64K | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | 1M | Text | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free` | 262K | Text | 20 RPM, 50 RPD |

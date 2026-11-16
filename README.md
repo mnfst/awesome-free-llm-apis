@@ -236,7 +236,6 @@ Base URL: `https://openrouter.ai/api/v1`
 | `google/gemma-4-26b-a4b-it:free`                     | 262K    | 32K        | Text + Image + Video         | 20 RPM, 50 RPD |
 | `google/gemma-4-31b-it:free`                         | 262K    | 32K        | Text + Image + Video         | 20 RPM, 50 RPD |
 | `dots-studio/dots-3-note-preview:free`               | 512K    | 460K       | Text + Image                 | 20 RPM, 50 RPD |
-| `liquid/lfm-2.5-2.6b:free`                           | 64K     | 8K         | Text                         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free`                 | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free`             | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free`                          | 262K    | 235K       | Text                         | 20 RPM, 50 RPD |
