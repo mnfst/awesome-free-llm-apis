@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-11-15T12:12:20.004Z",
+  "generatedAt": "2026-11-16T12:15:33.330Z",
   "summary": {
-    "facts": 399,
-    "sourced": 207,
-    "unsourced": 192,
-    "ok": 204,
+    "facts": 394,
+    "sourced": 206,
+    "unsourced": 188,
+    "ok": 206,
     "quoteMissing": 0,
-    "pageError": 3,
+    "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
     "signals": 0,
-    "modelsGone": 1,
+    "modelsGone": 0,
     "modelsNew": 5,
     "links": 43,
     "linksBroken": 0,
@@ -1912,17 +1912,6 @@
     },
     {
       "provider": "OpenRouter",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
       "model": "nvidia/nemotron-3.5-lightning:free",
       "fact": "rateLimit",
       "value": "20 RPM, 50 RPD",
@@ -2204,7 +2193,7 @@
       "current": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2215,7 +2204,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Hunyuan-MT-7B tencent/Hunyuan-MT-7B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2226,7 +2215,7 @@
       "current": "yes",
       "url": "https://siliconflow.cn/pricing",
       "quote": "Xing4.0-29B XingChenAGI/Xing4.0-29B 免费 免费",
-      "state": "PAGE_ERROR",
+      "state": "OK",
       "signal": false
     },
     {
@@ -2302,10 +2291,8 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 470,
-      "gone": [
-        "liquid/lfm-2.5-2.6b:free"
-      ],
+      "size": 468,
+      "gone": [],
       "new": [
         "inclusionai/ling-3.2-flash:free",
         "baidu/ernie-5.5-flash-preview:free",
@@ -2573,8 +2560,8 @@
       "where": [
         "footnote 9"
       ],
-      "httpStatus": 0,
-      "state": "UNCHECKED",
+      "httpStatus": 200,
+      "state": "OK",
       "signal": false
     },
     {
@@ -2699,8 +2686,8 @@
       "where": [
         "footnote 15"
       ],
-      "httpStatus": 403,
-      "state": "UNCHECKED",
+      "httpStatus": 200,
+      "state": "OK",
       "signal": false
     }
   ],
@@ -2967,7 +2954,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 621170,
+      "chars": 619882,
       "state": "OK",
       "error": null
     },
@@ -3016,14 +3003,14 @@
     {
       "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b.md",
       "httpStatus": 200,
-      "chars": 86628,
+      "chars": 86640,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://build.nvidia.com/openai/gpt-oss-20b.md",
       "httpStatus": 200,
-      "chars": 11222,
+      "chars": 11037,
       "state": "OK",
       "error": null
     },
@@ -3050,9 +3037,9 @@
     },
     {
       "url": "https://siliconflow.cn/pricing",
-      "httpStatus": 0,
-      "chars": 0,
-      "state": "PAGE_ERROR",
+      "httpStatus": 200,
+      "chars": 4379,
+      "state": "OK",
       "error": null
     },
     {
@@ -3742,26 +3729,6 @@
     {
       "provider": "OpenRouter",
       "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "liquid/lfm-2.5-2.6b:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "liquid/lfm-2.5-2.6b:free",
       "fact": "modality"
     },
     {
