@@ -296,7 +296,7 @@
           "name": "mimo-v2.6-flash",
           "context": "262K",
           "maxOutput": "64K",
-          "modality": "Text (reasoning)",
+          "modality": "Text + Vision",
           "rateLimit": "3M tokens/30 days (shared)"
         }
       ]
@@ -897,7 +897,7 @@
     },
     {
       "id": 16,
-      "text": "AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. `mimo-v2.6-flash` takes text only. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training."
+      "text": "AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training."
     }
   ],
   "glossary": [
