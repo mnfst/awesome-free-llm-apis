@@ -4,6 +4,60 @@ Third-party platforms that host open-weight models from various sources.
 
 <!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-15). Do not edit by hand. -->
 
+## AxForge 🇮🇪
+
+Permanent free tier, no credit card required: 3M tokens every 30 days, shared across models. Open models hosted in the EU (Stockholm, Sweden). OpenAI SDK-compatible.
+
+**Notes:** AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. `glm-5.3-flash` and `mimo-v2.6-flash` take text only. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training.
+
+**Get a key:** https://console.axforge.ai/
+
+**OpenAI-compatible base URL:** `https://api.axforge.ai/v1`
+
+### Models
+
+| Model ID | Context | Modality | Rate limit |
+| --- | --- | --- | --- |
+| `qwen3.8-27b` | 262K | Text + Vision | 3M tokens/30 days (shared) |
+| `qwen3.8-flash-next` | 500K | Text + Vision | 3M tokens/30 days (shared) |
+| `glm-5.3-flash` | 500K | Text (reasoning) | 3M tokens/30 days (shared) |
+| `mimo-v2.6-flash` | 262K | Text (reasoning) | 3M tokens/30 days (shared) |
+
+### Environment variable
+
+```bash
+export AXFORGE_API_KEY="your-key-here"
+```
+
+### Usage example
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["AXFORGE_API_KEY"],
+    base_url="https://api.axforge.ai/v1",
+)
+
+response = client.chat.completions.create(
+    model="qwen3.8-27b",
+    messages=[{"role": "user", "content": "Say hello in one sentence."}],
+)
+print(response.choices[0].message.content)
+```
+
+### Quick test
+
+```bash
+curl -s https://api.axforge.ai/v1/chat/completions \
+  -H "Authorization: Bearer $AXFORGE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "qwen3.8-27b", "messages": [{"role": "user", "content": "Say hello"}]}'
+```
+
+---
+
 ## Cloudflare Workers AI 🇺🇸
 
 10,000 Neurons/day free, no credit card required. 60+ models available on the free tier.
