@@ -132,12 +132,12 @@ Permanent free tier, no credit card required: 3M tokens every 30 days, shared ac
 
 Base URL: `https://api.axforge.ai/v1`
 
-| Model Name         | Context | Max Output | Modality         | Rate Limit                 |
-| ------------------ | ------- | ---------- | ---------------- | -------------------------- |
-| qwen3.8-27b        | 262K    | 64K        | Text + Vision    | 3M tokens/30 days (shared) |
-| qwen3.8-flash-next | 500K    | 64K        | Text + Vision    | 3M tokens/30 days (shared) |
-| glm-5.3-flash      | 500K    | 64K        | Text + Vision    | 3M tokens/30 days (shared) |
-| mimo-v2.6-flash    | 262K    | 64K        | Text (reasoning) | 3M tokens/30 days (shared) |
+| Model Name         | Context | Max Output | Modality      | Rate Limit                 |
+| ------------------ | ------- | ---------- | ------------- | -------------------------- |
+| qwen3.8-27b        | 262K    | 64K        | Text + Vision | 3M tokens/30 days (shared) |
+| qwen3.8-flash-next | 500K    | 64K        | Text + Vision | 3M tokens/30 days (shared) |
+| glm-5.3-flash      | 500K    | 64K        | Text + Vision | 3M tokens/30 days (shared) |
+| mimo-v2.6-flash    | 262K    | 64K        | Text + Vision | 3M tokens/30 days (shared) |
 
 ### [Cloudflare Workers AI](https://dash.cloudflare.com/profile/api-tokens) 🇺🇸
 
@@ -310,4 +310,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^12]: Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time.
 [^14]: The free grant is issued only after SMS verification with a real (non-VoIP) phone number, one grant per number ([billing docs](https://docs.gonkabroker.com/guides/billing-and-deposits/)). Unused free tokens do not carry over to the next month. The grant is sized as at least 1M tokens of the most expensive model; cheaper models stretch further (e.g. ~6M tokens for BGE-M3) ([free tier page](https://gonkabroker.com/free-llm-api/)). While running on free-tier funds only, requests are capped at a lower rate; the current cap is returned as `maxRpm` by `/test-auth` ([limits](https://docs.gonkabroker.com/reference/limits-and-quotas/)).
 [^15]: NVIDIA does not publish a public RPM/RPD table for hosted NIM endpoints. The official FAQ says the rate of requests varies per model and may vary with the number of concurrent users, and that you should check your account at build.nvidia.com ([NIM FAQ](https://forums.developer.nvidia.com/t/nvidia-nim-faq/300317)). Hosted endpoints are for prototyping, research, development, and testing; production use requires an NVIDIA AI Enterprise license.
-[^16]: AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. `mimo-v2.6-flash` takes text only. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training.
+[^16]: AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training.
