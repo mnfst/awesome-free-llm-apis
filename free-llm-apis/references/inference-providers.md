@@ -8,7 +8,7 @@ Third-party platforms that host open-weight models from various sources.
 
 Permanent free tier, no credit card required: 3M tokens every 30 days, shared across models. Open models hosted in the EU (Stockholm, Sweden). OpenAI SDK-compatible.
 
-**Notes:** AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. `glm-5.3-flash` and `mimo-v2.6-flash` take text only. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training.
+**Notes:** AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. `mimo-v2.6-flash` takes text only. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training.
 
 **Get a key:** https://console.axforge.ai/
 
@@ -20,7 +20,7 @@ Permanent free tier, no credit card required: 3M tokens every 30 days, shared ac
 | --- | --- | --- | --- |
 | `qwen3.8-27b` | 262K | Text + Vision | 3M tokens/30 days (shared) |
 | `qwen3.8-flash-next` | 500K | Text + Vision | 3M tokens/30 days (shared) |
-| `glm-5.3-flash` | 500K | Text (reasoning) | 3M tokens/30 days (shared) |
+| `glm-5.3-flash` | 500K | Text + Vision | 3M tokens/30 days (shared) |
 | `mimo-v2.6-flash` | 262K | Text (reasoning) | 3M tokens/30 days (shared) |
 
 ### Environment variable
