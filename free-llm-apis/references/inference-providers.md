@@ -2,7 +2,61 @@
 
 Third-party platforms that host open-weight models from various sources.
 
-<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-11). Do not edit by hand. -->
+<!-- Generated from data.json by scripts/generate-skill.js (data last updated 2026-11-15). Do not edit by hand. -->
+
+## AxForge 🇮🇪
+
+Permanent free tier, no credit card required: 3M tokens every 30 days, shared across models. Open models hosted in the EU (Stockholm, Sweden). OpenAI SDK-compatible.
+
+**Notes:** AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training.
+
+**Get a key:** https://console.axforge.ai/
+
+**OpenAI-compatible base URL:** `https://api.axforge.ai/v1`
+
+### Models
+
+| Model ID | Context | Modality | Rate limit |
+| --- | --- | --- | --- |
+| `qwen3.8-27b` | 262K | Text + Vision | 3M tokens/30 days (shared) |
+| `qwen3.8-flash-next` | 500K | Text + Vision | 3M tokens/30 days (shared) |
+| `glm-5.3-flash` | 500K | Text + Vision | 3M tokens/30 days (shared) |
+| `mimo-v2.6-flash` | 262K | Text + Vision | 3M tokens/30 days (shared) |
+
+### Environment variable
+
+```bash
+export AXFORGE_API_KEY="your-key-here"
+```
+
+### Usage example
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["AXFORGE_API_KEY"],
+    base_url="https://api.axforge.ai/v1",
+)
+
+response = client.chat.completions.create(
+    model="qwen3.8-27b",
+    messages=[{"role": "user", "content": "Say hello in one sentence."}],
+)
+print(response.choices[0].message.content)
+```
+
+### Quick test
+
+```bash
+curl -s https://api.axforge.ai/v1/chat/completions \
+  -H "Authorization: Bearer $AXFORGE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "qwen3.8-27b", "messages": [{"role": "user", "content": "Say hello"}]}'
+```
+
+---
 
 ## Cloudflare Workers AI 🇺🇸
 
@@ -349,7 +403,6 @@ Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per mod
 
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
-| `google/gemma-4-31b-it` | 262K | Text + Image + Video | — |
 | `nvidia/nemotron-3-ultra-550b-a55b` | 1M | Text | — |
 | `openai/gpt-oss-20b` | 131K | Text | — |
 | + 92 more models | Varies | Text, Image, Video, Speech, Embeddings | — |
@@ -372,7 +425,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="google/gemma-4-31b-it",
+    model="nvidia/nemotron-3-ultra-550b-a55b",
     messages=[{"role": "user", "content": "Say hello in one sentence."}],
 )
 print(response.choices[0].message.content)
@@ -384,7 +437,7 @@ print(response.choices[0].message.content)
 curl -s https://integrate.api.nvidia.com/v1/chat/completions \
   -H "Authorization: Bearer $NVIDIA_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model": "google/gemma-4-31b-it", "messages": [{"role": "user", "content": "Say hello"}]}'
+  -d '{"model": "nvidia/nemotron-3-ultra-550b-a55b", "messages": [{"role": "user", "content": "Say hello"}]}'
 ```
 
 ---
@@ -407,11 +460,9 @@ curl -s https://integrate.api.nvidia.com/v1/chat/completions \
 | `google/gemma-4-26b-a4b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
 | `google/gemma-4-31b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
 | `dots-studio/dots-3-note-preview:free` | 512K | Text + Image | 20 RPM, 50 RPD |
-| `liquid/lfm-2.5-2.6b:free` | 64K | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | 1M | Text | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free` | 262K | Text | 20 RPM, 50 RPD |
-| `xingchen-agi/xing4.0-29b-a4b:free` | 262K | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Text + Image + Video | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K | Text + Image + Audio + Video | 20 RPM, 50 RPD |
 
