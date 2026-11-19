@@ -548,7 +548,7 @@
       "flag": "🇬🇧",
       "url": "https://token.llm7.io",
       "baseUrl": "https://api.llm7.io/v1",
-      "description": "API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.",
+      "description": "API gateway whose `turbo` models answer with no key and no account. LLM7 no longer documents this free access or its limits, so it can end without notice.",
       "footnoteRef": 10,
       "models": [
         {
@@ -557,7 +557,7 @@
           "context": "128K",
           "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "60 RPM, 250 req/hr (free token)"
+          "rateLimit": "Not published"
         },
         {
           "id": "mistral-Nemo-Instruct-2407",
@@ -565,7 +565,7 @@
           "context": "128K",
           "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "60 RPM, 250 req/hr (free token)"
+          "rateLimit": "Not published"
         },
         {
           "id": "codestral-latest",
@@ -573,7 +573,7 @@
           "context": "32K",
           "maxOutput": "—",
           "modality": "Text",
-          "rateLimit": "60 RPM, 250 req/hr (free token)"
+          "rateLimit": "Not published"
         }
       ]
     },
@@ -869,7 +869,7 @@
     },
     {
       "id": 10,
-      "text": "LLM7.io rotates its catalog frequently, so the model list changes between checks. Access is tier-based, not token-based: `turbo` models are reachable anonymously or with a free token, `pro` models need the paid plan ([models API](https://docs.llm7.io/guides/models-api)). A free token is capped at 1 RPS, 60 RPM, 250 requests per hour and 100,000 tokens per 24 hours, and the free quota may be reduced without notice ([limits](https://docs.llm7.io/limits)). A paid Pro plan is available at $12/month. The docs no longer list anonymous (no-key) limits; anonymous access was last confirmed by live request on 2026-08-21."
+      "text": "LLM7.io rotates its catalog frequently, so the model list changes between checks. Its docs no longer describe a free tier or publish rate limits, and the [model catalog](https://api.llm7.io/v1/models) lists per-token prices for `turbo` models, which apply to keys from dash.llm7.io. Requests with no key still answer on the `turbo` models: confirmed by live request on 2026-11-19 and checked daily since."
     },
     {
       "id": 11,
