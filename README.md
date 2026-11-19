@@ -14,8 +14,6 @@
 
 <p align="center"><sub>Most providers offer an OpenAI-compatible endpoint. Native and compatible base URLs can differ. Each link points to the provider's API key page.</sub></p>
 
-<p align="center"><sub>All of those free LLM APIs are available at <a href="https://manifest.build">manifest.build</a> - make reliable agents.</sub></p>
-
 <hr>
 
 <h3 align="center">Gold sponsors</h3>
