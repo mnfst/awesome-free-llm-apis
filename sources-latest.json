@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-11-18T12:15:15.773Z",
+  "generatedAt": "2026-11-19T12:16:46.933Z",
   "summary": {
     "facts": 415,
     "sourced": 206,
     "unsourced": 209,
-    "ok": 206,
-    "quoteMissing": 0,
-    "pageError": 0,
+    "ok": 201,
+    "quoteMissing": 2,
+    "pageError": 3,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 0,
+    "signals": 2,
     "modelsGone": 0,
     "modelsNew": 5,
     "links": 45,
-    "linksBroken": 0,
+    "linksBroken": 1,
     "linkSignals": 0
   },
   "facts": [
@@ -1731,8 +1731,8 @@
       "current": "API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.",
       "url": "https://docs.llm7.io/guides/models-api",
       "quote": "turbo models are fast models available with free api tokens, subject to the free-tier rate and token limits.",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "LLM7.io",
@@ -1742,7 +1742,7 @@
       "current": "60 RPM, 250 req/hr (free token)",
       "url": "https://docs.llm7.io/limits",
       "quote": "free token 1 60 250",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -1764,7 +1764,7 @@
       "current": "60 RPM, 250 req/hr (free token)",
       "url": "https://docs.llm7.io/limits",
       "quote": "free token 1 60 250",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -1786,7 +1786,7 @@
       "current": "60 RPM, 250 req/hr (free token)",
       "url": "https://docs.llm7.io/limits",
       "quote": "free token 1 60 250",
-      "state": "OK",
+      "state": "PAGE_ERROR",
       "signal": false
     },
     {
@@ -2105,8 +2105,8 @@
       "current": "262K",
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "quote": "Parameters : 9.7B Quantization : bf16 Max. context : 262K",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "OVHcloud AI Endpoints",
@@ -2291,7 +2291,7 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 478,
+      "size": 480,
       "gone": [],
       "new": [
         "inclusionai/ling-3.2-flash:free",
@@ -2587,8 +2587,8 @@
       "where": [
         "footnote 10"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 404,
+      "state": "BROKEN",
       "signal": false
     },
     {
@@ -2748,7 +2748,7 @@
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "httpStatus": 200,
-      "chars": 98481,
+      "chars": 102150,
       "state": "OK",
       "error": null
     },
@@ -2797,7 +2797,7 @@
     {
       "url": "https://ai.google.dev/gemma/docs/core",
       "httpStatus": 200,
-      "chars": 11508,
+      "chars": 11923,
       "state": "OK",
       "error": null
     },
@@ -2839,56 +2839,56 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
       "httpStatus": 200,
-      "chars": 15779,
+      "chars": 15986,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/index.md",
       "httpStatus": 200,
-      "chars": 10446,
+      "chars": 10254,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/index.md",
       "httpStatus": 200,
-      "chars": 10897,
+      "chars": 10706,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/index.md",
       "httpStatus": 200,
-      "chars": 9992,
+      "chars": 9819,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/index.md",
       "httpStatus": 200,
-      "chars": 12654,
+      "chars": 12475,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 9120,
+      "chars": 8942,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
       "httpStatus": 200,
-      "chars": 8729,
+      "chars": 8538,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/deepseek-r1-distill-qwen-32b/index.md",
       "httpStatus": 200,
-      "chars": 8456,
+      "chars": 8267,
       "state": "OK",
       "error": null
     },
@@ -2972,28 +2972,28 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 629987,
+      "chars": 633604,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://docs.llm7.io/guides/models-api",
       "httpStatus": 200,
-      "chars": 9773,
+      "chars": 8360,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://docs.llm7.io/limits",
-      "httpStatus": 200,
-      "chars": 3318,
-      "state": "OK",
+      "httpStatus": 404,
+      "chars": 0,
+      "state": "PAGE_ERROR",
       "error": null
     },
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 84796,
+      "chars": 81726,
       "state": "OK",
       "error": null
     },
@@ -3028,7 +3028,7 @@
     {
       "url": "https://build.nvidia.com/openai/gpt-oss-20b.md",
       "httpStatus": 200,
-      "chars": 11151,
+      "chars": 11037,
       "state": "OK",
       "error": null
     },
@@ -3042,28 +3042,28 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 127121,
+      "chars": 127211,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 41792,
+      "chars": 43216,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://siliconflow.cn/pricing",
       "httpStatus": 200,
-      "chars": 4379,
+      "chars": 4467,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
       "httpStatus": 200,
-      "chars": 23092,
+      "chars": 23507,
       "state": "OK",
       "error": null
     }
