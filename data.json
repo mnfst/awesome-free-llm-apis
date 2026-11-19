@@ -632,14 +632,6 @@
           "rateLimit": "—"
         },
         {
-          "id": "openai/gpt-oss-20b",
-          "name": "openai/gpt-oss-20b",
-          "context": "131K",
-          "maxOutput": "131K",
-          "modality": "Text",
-          "rateLimit": "—"
-        },
-        {
           "id": null,
           "name": "+ 92 more models",
           "context": "Varies",
