@@ -484,14 +484,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "cohere/north-mini-code:free",
-          "name": "cohere/north-mini-code:free",
-          "context": "256K",
-          "maxOutput": "64K",
-          "modality": "Text (code)",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "openrouter/free",
           "name": "openrouter/free",
           "context": "Varies",
@@ -651,14 +643,6 @@
       "description": "17 free models (marked with `:free` suffix). OpenAI SDK-compatible.",
       "footnoteRef": 4,
       "models": [
-        {
-          "id": "cohere/north-mini-code:free",
-          "name": "cohere/north-mini-code:free",
-          "context": "256K",
-          "maxOutput": "64K",
-          "modality": "Text (code)",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
         {
           "id": "google/gemma-4-26b-a4b-it:free",
           "name": "google/gemma-4-26b-a4b-it:free",
