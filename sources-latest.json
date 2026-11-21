@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-11-20T12:18:17.102Z",
+  "generatedAt": "2026-11-21T12:14:26.322Z",
   "summary": {
     "facts": 415,
     "sourced": 206,
     "unsourced": 209,
-    "ok": 200,
-    "quoteMissing": 3,
+    "ok": 199,
+    "quoteMissing": 4,
     "pageError": 3,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 6,
-    "modelsGone": 1,
+    "signals": 7,
+    "modelsGone": 2,
     "modelsNew": 4,
     "links": 45,
     "linksBroken": 1,
@@ -1698,8 +1698,8 @@
       "current": "yes",
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "quote": "\"id\":\"dots-studio/dots-3-note-preview:free\",\"name\":\"Dots Studio: Dots3-Note Preview (free)\"",
-      "state": "OK",
-      "signal": false
+      "state": "QUOTE_MISSING",
+      "signal": true
     },
     {
       "provider": "Kilo Code",
@@ -2291,9 +2291,10 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 477,
+      "size": 476,
       "gone": [
-        "cohere/north-mini-code:free"
+        "cohere/north-mini-code:free",
+        "dots-studio/dots-3-note-preview:free"
       ],
       "new": [
         "inclusionai/ling-3.2-flash:free",
@@ -2696,8 +2697,8 @@
       "where": [
         "footnote 15"
       ],
-      "httpStatus": 200,
-      "state": "OK",
+      "httpStatus": 403,
+      "state": "UNCHECKED",
       "signal": false
     },
     {
@@ -2875,7 +2876,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 8942,
+      "chars": 8946,
       "state": "OK",
       "error": null
     },
@@ -2973,7 +2974,7 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 630140,
+      "chars": 628671,
       "state": "OK",
       "error": null
     },
@@ -2994,7 +2995,7 @@
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 84039,
+      "chars": 87202,
       "state": "OK",
       "error": null
     },
@@ -3043,14 +3044,14 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 127231,
+      "chars": 127717,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
       "httpStatus": 200,
-      "chars": 43216,
+      "chars": 43224,
       "state": "OK",
       "error": null
     },
