@@ -508,14 +508,6 @@
           "rateLimit": "200 req/hr"
         },
         {
-          "id": "dots-studio/dots-3-note-preview:free",
-          "name": "dots-studio/dots-3-note-preview:free",
-          "context": "512K",
-          "maxOutput": "460K",
-          "modality": "Text + Vision",
-          "rateLimit": "200 req/hr"
-        },
-        {
           "id": "nvidia/nemotron-3.5-super-vl:free",
           "name": "nvidia/nemotron-3.5-super-vl:free",
           "context": "1M",
@@ -657,14 +649,6 @@
           "context": "262K",
           "maxOutput": "32K",
           "modality": "Text + Image + Video",
-          "rateLimit": "20 RPM, 50 RPD"
-        },
-        {
-          "id": "dots-studio/dots-3-note-preview:free",
-          "name": "dots-studio/dots-3-note-preview:free",
-          "context": "512K",
-          "maxOutput": "460K",
-          "modality": "Text + Image",
           "rateLimit": "20 RPM, 50 RPD"
         },
         {
@@ -837,7 +821,7 @@
     },
     {
       "id": 5,
-      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (through dots-studio/dots-3-note-preview:free), 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): \"Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services.\""
+      "text": "Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05, 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it \"may route your requests to providers that log prompts and outputs\". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): \"Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services.\""
     },
     {
       "id": 6,
