@@ -360,14 +360,6 @@
           "rateLimit": "10K neurons/day (shared)"
         },
         {
-          "id": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-          "name": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-          "context": "80K",
-          "maxOutput": "Shared w/ context",
-          "modality": "Text (reasoning)",
-          "rateLimit": "10K neurons/day (shared)"
-        },
-        {
           "id": null,
           "name": "+ 55 more models",
           "context": "Varies",
