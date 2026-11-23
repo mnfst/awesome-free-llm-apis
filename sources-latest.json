@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-11-22T12:21:44.311Z",
+  "generatedAt": "2026-11-23T12:18:37.493Z",
   "summary": {
-    "facts": 415,
-    "sourced": 206,
-    "unsourced": 209,
-    "ok": 199,
-    "quoteMissing": 4,
-    "pageError": 3,
+    "facts": 385,
+    "sourced": 193,
+    "unsourced": 192,
+    "ok": 193,
+    "quoteMissing": 0,
+    "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 7,
-    "modelsGone": 2,
-    "modelsNew": 4,
-    "links": 45,
-    "linksBroken": 1,
-    "linkSignals": 1
+    "signals": 0,
+    "modelsGone": 0,
+    "modelsNew": 5,
+    "links": 44,
+    "linksBroken": 0,
+    "linkSignals": 0
   },
   "facts": [
     {
@@ -1175,28 +1175,6 @@
     },
     {
       "provider": "Cloudflare Workers AI",
-      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-      "fact": "context",
-      "value": "80K",
-      "current": "80K",
-      "url": "https://developers.cloudflare.com/workers-ai/models/deepseek-r1-distill-qwen-32b/index.md",
-      "quote": "80,000 tokens terms and license",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Cloudflare Workers AI",
-      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-      "fact": "rateLimit",
-      "value": "10K neurons/day (shared)",
-      "current": "10K neurons/day (shared)",
-      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
-      "quote": "workers free 10,000 neurons per day n/a - upgrade to workers paid",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Cloudflare Workers AI",
       "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
       "fact": "modality",
       "value": "Multimodal",
@@ -1593,28 +1571,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "cohere/north-mini-code:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "subject to rate limiting (200 requests per hour per ip)",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "cohere/north-mini-code:free",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://ai-gateway.kilo.ai/api/v1/models",
-      "quote": "\"id\":\"cohere/north-mini-code:free\",\"name\":\"Cohere: North Mini Code (free)\"",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Kilo Code",
       "model": "openrouter/free",
       "fact": "rateLimit",
       "value": "200 req/hr",
@@ -1681,28 +1637,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "rateLimit",
-      "value": "200 req/hr",
-      "current": "200 req/hr",
-      "url": "https://kilo.ai/docs/gateway/authentication",
-      "quote": "subject to rate limiting (200 requests per hour per ip)",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://ai-gateway.kilo.ai/api/v1/models",
-      "quote": "\"id\":\"dots-studio/dots-3-note-preview:free\",\"name\":\"Dots Studio: Dots3-Note Preview (free)\"",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "Kilo Code",
       "model": "nvidia/nemotron-3.5-super-vl:free",
       "fact": "rateLimit",
       "value": "200 req/hr",
@@ -1725,28 +1659,6 @@
     },
     {
       "provider": "LLM7.io",
-      "model": null,
-      "fact": "freeTier",
-      "value": "API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.",
-      "current": "API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.",
-      "url": "https://docs.llm7.io/guides/models-api",
-      "quote": "turbo models are fast models available with free api tokens, subject to the free-tier rate and token limits.",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "gpt-oss:20b",
-      "fact": "rateLimit",
-      "value": "60 RPM, 250 req/hr (free token)",
-      "current": "60 RPM, 250 req/hr (free token)",
-      "url": "https://docs.llm7.io/limits",
-      "quote": "free token 1 60 250",
-      "state": "PAGE_ERROR",
-      "signal": true
-    },
-    {
-      "provider": "LLM7.io",
       "model": "gpt-oss:20b",
       "fact": "listed",
       "value": "yes",
@@ -1759,17 +1671,6 @@
     {
       "provider": "LLM7.io",
       "model": "mistral-Nemo-Instruct-2407",
-      "fact": "rateLimit",
-      "value": "60 RPM, 250 req/hr (free token)",
-      "current": "60 RPM, 250 req/hr (free token)",
-      "url": "https://docs.llm7.io/limits",
-      "quote": "free token 1 60 250",
-      "state": "PAGE_ERROR",
-      "signal": true
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "mistral-Nemo-Instruct-2407",
       "fact": "listed",
       "value": "yes",
       "current": "yes",
@@ -1777,17 +1678,6 @@
       "quote": "{\"id\":\"mistral-Nemo-Instruct-2407\",\"object\":\"model\"",
       "state": "OK",
       "signal": false
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "codestral-latest",
-      "fact": "rateLimit",
-      "value": "60 RPM, 250 req/hr (free token)",
-      "current": "60 RPM, 250 req/hr (free token)",
-      "url": "https://docs.llm7.io/limits",
-      "quote": "free token 1 60 250",
-      "state": "PAGE_ERROR",
-      "signal": true
     },
     {
       "provider": "LLM7.io",
@@ -1845,17 +1735,6 @@
       "signal": false
     },
     {
-      "provider": "NVIDIA NIM",
-      "model": "openai/gpt-oss-20b",
-      "fact": "context",
-      "value": "131K",
-      "current": "131K",
-      "url": "https://build.nvidia.com/openai/gpt-oss-20b.md",
-      "quote": "context length: 131,072 tokens",
-      "state": "OK",
-      "signal": false
-    },
-    {
       "provider": "OpenRouter",
       "model": null,
       "fact": "freeTier",
@@ -1863,17 +1742,6 @@
       "current": "17 free models (marked with `:free` suffix). OpenAI SDK-compatible.",
       "url": "https://openrouter.ai/docs/api-reference/limits.md",
       "quote": "If you're using a free model variant (with an ID ending in `:free`), the following limits apply",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "cohere/north-mini-code:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
       "state": "OK",
       "signal": false
     },
@@ -1891,17 +1759,6 @@
     {
       "provider": "OpenRouter",
       "model": "google/gemma-4-31b-it:free",
-      "fact": "rateLimit",
-      "value": "20 RPM, 50 RPD",
-      "current": "20 RPM, 50 RPD",
-      "url": "https://openrouter.ai/docs/api-reference/limits.md",
-      "quote": "Less than 10 | 20 | 50",
-      "state": "OK",
-      "signal": false
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "dots-studio/dots-3-note-preview:free",
       "fact": "rateLimit",
       "value": "20 RPM, 50 RPD",
       "current": "20 RPM, 50 RPD",
@@ -2104,9 +1961,9 @@
       "value": "262K",
       "current": "262K",
       "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/",
-      "quote": "Parameters : 9.7B Quantization : bf16 Max. context : 262K",
-      "state": "QUOTE_MISSING",
-      "signal": true
+      "quote": "Parameters : 9.7B Quantization : int4 Max. context : 262K",
+      "state": "OK",
+      "signal": false
     },
     {
       "provider": "OVHcloud AI Endpoints",
@@ -2291,16 +2148,14 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 476,
-      "gone": [
-        "cohere/north-mini-code:free",
-        "dots-studio/dots-3-note-preview:free"
-      ],
+      "size": 477,
+      "gone": [],
       "new": [
         "inclusionai/ling-3.2-flash:free",
         "baidu/ernie-5.5-flash-preview:free",
         "liquid/lfm-3-1.7b:free",
-        "particle-ai/particle-1:free"
+        "particle-ai/particle-1:free",
+        "dots-studio/dots-3-note-preview:free"
       ]
     }
   ],
@@ -2576,22 +2431,13 @@
       "signal": false
     },
     {
-      "url": "https://docs.llm7.io/guides/models-api",
+      "url": "https://api.llm7.io/v1/models",
       "where": [
         "footnote 10"
       ],
       "httpStatus": 200,
       "state": "OK",
       "signal": false
-    },
-    {
-      "url": "https://docs.llm7.io/limits",
-      "where": [
-        "footnote 10"
-      ],
-      "httpStatus": 404,
-      "state": "BROKEN",
-      "signal": true
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
@@ -2715,7 +2561,7 @@
     {
       "url": "https://www.aionlabs.ai/docs/rate-limits/",
       "httpStatus": 200,
-      "chars": 946,
+      "chars": 1333,
       "state": "OK",
       "error": null
     },
@@ -2841,56 +2687,49 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/index.md",
       "httpStatus": 200,
-      "chars": 15986,
+      "chars": 16248,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/index.md",
       "httpStatus": 200,
-      "chars": 10254,
+      "chars": 10516,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/index.md",
       "httpStatus": 200,
-      "chars": 10706,
+      "chars": 10968,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/index.md",
       "httpStatus": 200,
-      "chars": 9819,
+      "chars": 10081,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/index.md",
       "httpStatus": 200,
-      "chars": 12475,
+      "chars": 12737,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/index.md",
       "httpStatus": 200,
-      "chars": 8946,
+      "chars": 9208,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
       "httpStatus": 200,
-      "chars": 8538,
-      "state": "OK",
-      "error": null
-    },
-    {
-      "url": "https://developers.cloudflare.com/workers-ai/models/deepseek-r1-distill-qwen-32b/index.md",
-      "httpStatus": 200,
-      "chars": 8249,
+      "chars": 8800,
       "state": "OK",
       "error": null
     },
@@ -2974,28 +2813,14 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 628660,
+      "chars": 629748,
       "state": "OK",
-      "error": null
-    },
-    {
-      "url": "https://docs.llm7.io/guides/models-api",
-      "httpStatus": 200,
-      "chars": 8360,
-      "state": "OK",
-      "error": null
-    },
-    {
-      "url": "https://docs.llm7.io/limits",
-      "httpStatus": 404,
-      "chars": 0,
-      "state": "PAGE_ERROR",
       "error": null
     },
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 86410,
+      "chars": 86339,
       "state": "OK",
       "error": null
     },
@@ -3028,16 +2853,9 @@
       "error": null
     },
     {
-      "url": "https://build.nvidia.com/openai/gpt-oss-20b.md",
-      "httpStatus": 200,
-      "chars": 11037,
-      "state": "OK",
-      "error": null
-    },
-    {
       "url": "https://openrouter.ai/docs/api-reference/limits.md",
       "httpStatus": 200,
-      "chars": 25148,
+      "chars": 25285,
       "state": "OK",
       "error": null
     },
@@ -3058,7 +2876,7 @@
     {
       "url": "https://siliconflow.cn/pricing",
       "httpStatus": 200,
-      "chars": 4467,
+      "chars": 4472,
       "state": "OK",
       "error": null
     },
@@ -3457,21 +3275,6 @@
       "fact": "maxOutput"
     },
     {
-      "provider": "Cloudflare Workers AI",
-      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-      "fact": "listed"
-    },
-    {
-      "provider": "Cloudflare Workers AI",
-      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Cloudflare Workers AI",
-      "model": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-      "fact": "modality"
-    },
-    {
       "provider": "Gonka Broker",
       "model": "MiniMaxAI/MiniMax-M2.7",
       "fact": "listed"
@@ -3538,21 +3341,6 @@
     },
     {
       "provider": "Kilo Code",
-      "model": "cohere/north-mini-code:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "cohere/north-mini-code:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "cohere/north-mini-code:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
       "model": "openrouter/free",
       "fact": "context"
     },
@@ -3594,21 +3382,6 @@
     {
       "provider": "Kilo Code",
       "model": "kilo-auto/free",
-      "fact": "modality"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "context"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "Kilo Code",
-      "model": "dots-studio/dots-3-note-preview:free",
       "fact": "modality"
     },
     {
@@ -3648,6 +3421,11 @@
     },
     {
       "provider": "LLM7.io",
+      "model": null,
+      "fact": "freeTier"
+    },
+    {
+      "provider": "LLM7.io",
       "model": "gpt-oss:20b",
       "fact": "context"
     },
@@ -3660,6 +3438,11 @@
       "provider": "LLM7.io",
       "model": "gpt-oss:20b",
       "fact": "modality"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "gpt-oss:20b",
+      "fact": "rateLimit"
     },
     {
       "provider": "LLM7.io",
@@ -3678,6 +3461,11 @@
     },
     {
       "provider": "LLM7.io",
+      "model": "mistral-Nemo-Instruct-2407",
+      "fact": "rateLimit"
+    },
+    {
+      "provider": "LLM7.io",
       "model": "codestral-latest",
       "fact": "context"
     },
@@ -3690,6 +3478,11 @@
       "provider": "LLM7.io",
       "model": "codestral-latest",
       "fact": "modality"
+    },
+    {
+      "provider": "LLM7.io",
+      "model": "codestral-latest",
+      "fact": "rateLimit"
     },
     {
       "provider": "ModelScope",
@@ -3757,46 +3550,6 @@
       "fact": "rateLimit"
     },
     {
-      "provider": "NVIDIA NIM",
-      "model": "openai/gpt-oss-20b",
-      "fact": "listed"
-    },
-    {
-      "provider": "NVIDIA NIM",
-      "model": "openai/gpt-oss-20b",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "NVIDIA NIM",
-      "model": "openai/gpt-oss-20b",
-      "fact": "modality"
-    },
-    {
-      "provider": "NVIDIA NIM",
-      "model": "openai/gpt-oss-20b",
-      "fact": "rateLimit"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "cohere/north-mini-code:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "cohere/north-mini-code:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "cohere/north-mini-code:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "cohere/north-mini-code:free",
-      "fact": "modality"
-    },
-    {
       "provider": "OpenRouter",
       "model": "google/gemma-4-26b-a4b-it:free",
       "fact": "listed"
@@ -3834,26 +3587,6 @@
     {
       "provider": "OpenRouter",
       "model": "google/gemma-4-31b-it:free",
-      "fact": "modality"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "listed"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "context"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "dots-studio/dots-3-note-preview:free",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "OpenRouter",
-      "model": "dots-studio/dots-3-note-preview:free",
       "fact": "modality"
     },
     {
