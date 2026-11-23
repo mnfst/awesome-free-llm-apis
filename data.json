@@ -770,6 +770,58 @@
       ]
     },
     {
+      "name": "Runcrate",
+      "category": "inference_provider",
+      "country": "US",
+      "flag": "🇺🇸",
+      "url": "https://www.runcrate.ai/dashboard/api-keys",
+      "baseUrl": "https://api.runcrate.ai/v1",
+      "description": "Free usage on five open models with a GitHub sign-in, no credit card required (the no-card free usage applies to GitHub sign-ins only; a Google sign-up needs a card on file). One allowance per GitHub account at least 30 days old, limited per week (resets every Monday).",
+      "footnoteRef": 17,
+      "models": [
+        {
+          "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+          "name": "deepseek-ai/DeepSeek-V4.1-Flash",
+          "context": "1M",
+          "maxOutput": "1M",
+          "modality": "Text + Image",
+          "rateLimit": "Weekly allowance (shared)"
+        },
+        {
+          "id": "zai-org/GLM-5.3-Flash",
+          "name": "zai-org/GLM-5.3-Flash",
+          "context": "1M",
+          "maxOutput": "1M",
+          "modality": "Text + Image",
+          "rateLimit": "Weekly allowance (shared)"
+        },
+        {
+          "id": "zai-org/GLM-5.3",
+          "name": "zai-org/GLM-5.3",
+          "context": "1M",
+          "maxOutput": "1M",
+          "modality": "Text (reasoning)",
+          "rateLimit": "Weekly allowance (shared)"
+        },
+        {
+          "id": "Qwen/Qwen3.8-Flash",
+          "name": "Qwen/Qwen3.8-Flash",
+          "context": "1M",
+          "maxOutput": "1M",
+          "modality": "Text (reasoning)",
+          "rateLimit": "Weekly allowance (shared)"
+        },
+        {
+          "id": "openai/gpt-oss-120b",
+          "name": "openai/gpt-oss-120b",
+          "context": "131K",
+          "maxOutput": "~118K",
+          "modality": "Text (reasoning)",
+          "rateLimit": "Weekly allowance (shared)"
+        }
+      ]
+    },
+    {
       "name": "SiliconFlow",
       "category": "inference_provider",
       "country": "CN",
@@ -850,6 +902,10 @@
     {
       "id": 16,
       "text": "AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training."
+    },
+    {
+      "id": 17,
+      "text": "Runcrate's free usage is the workspace's: every key and member of the workspace shares it. It is counted by the week, which resets every Monday, and free requests stop until it resets when it runs out. The API keys page shows how much is used and when it resets. The no-card free usage applies to GitHub sign-ins only; with a Google sign-up a card on file is needed to use free models. Past the free usage, requests stop unless the workspace has added credit. Details on the [free inference page](https://www.runcrate.ai/inference/free)."
     }
   ],
   "glossary": [
