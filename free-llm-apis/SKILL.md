@@ -29,7 +29,7 @@ Ask the user what matters most, then recommend accordingly:
 - See [references/provider-apis.md](references/provider-apis.md) for setup instructions.
 
 **Inference providers** -- third-party platforms hosting open-weight models:
-- AxForge, Cloudflare Workers AI, Gonka Broker, Groq, Kilo Code (no key needed), LLM7.io (no key needed), ModelScope, NVIDIA NIM, OpenRouter, OVHcloud AI Endpoints (no key needed), SiliconFlow
+- AxForge, Cloudflare Workers AI, Gonka Broker, Groq, Kilo Code (no key needed), LLM7.io (no key needed), ModelScope, NVIDIA NIM, OpenRouter, OVHcloud AI Endpoints (no key needed), Runcrate, SiliconFlow
 - See [references/inference-providers.md](references/inference-providers.md) for setup instructions.
 <!-- providers:end -->
 

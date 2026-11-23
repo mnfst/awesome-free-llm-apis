@@ -267,6 +267,20 @@ Base URL: `https://oai.endpoints.kepler.ai.cloud.ovh.net/v1`
 | Qwen2.5-VL-72B-Instruct        | 32K     | ~8K        | Text + Vision | 2 RPM (anonymous) |
 | Mistral-Small-3.2-24B-Instruct | 128K    | ~4K        | Text + Vision | 2 RPM (anonymous) |
 
+### [Runcrate](https://www.runcrate.ai/dashboard/api-keys) 🇺🇸
+
+Free usage on five open models with a GitHub sign-in, no credit card required (the no-card free usage applies to GitHub sign-ins only; a Google sign-up needs a card on file). One allowance per GitHub account at least 30 days old, limited per week (resets every Monday). [^17]
+
+Base URL: `https://api.runcrate.ai/v1`
+
+| Model Name                        | Context | Max Output | Modality         | Rate Limit                |
+| --------------------------------- | ------- | ---------- | ---------------- | ------------------------- |
+| `deepseek-ai/DeepSeek-V4.1-Flash` | 1M      | 1M         | Text + Image     | Weekly allowance (shared) |
+| `zai-org/GLM-5.3-Flash`           | 1M      | 1M         | Text + Image     | Weekly allowance (shared) |
+| `zai-org/GLM-5.3`                 | 1M      | 1M         | Text (reasoning) | Weekly allowance (shared) |
+| `Qwen/Qwen3.8-Flash`              | 1M      | 1M         | Text (reasoning) | Weekly allowance (shared) |
+| `openai/gpt-oss-120b`             | 131K    | ~118K      | Text (reasoning) | Weekly allowance (shared) |
+
 ### [SiliconFlow](https://cloud.siliconflow.cn/account/ak) 🇨🇳
 
 Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid. [^9]
@@ -305,3 +319,4 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^14]: The free grant is issued only after SMS verification with a real (non-VoIP) phone number, one grant per number ([billing docs](https://docs.gonkabroker.com/guides/billing-and-deposits/)). Unused free tokens do not carry over to the next month. The grant is sized as at least 1M tokens of the most expensive model; cheaper models stretch further (e.g. ~6M tokens for BGE-M3) ([free tier page](https://gonkabroker.com/free-llm-api/)). While running on free-tier funds only, requests are capped at a lower rate; the current cap is returned as `maxRpm` by `/test-auth` ([limits](https://docs.gonkabroker.com/reference/limits-and-quotas/)).
 [^15]: NVIDIA does not publish a public RPM/RPD table for hosted NIM endpoints. The official FAQ says the rate of requests varies per model and may vary with the number of concurrent users, and that you should check your account at build.nvidia.com ([NIM FAQ](https://forums.developer.nvidia.com/t/nvidia-nim-faq/300317)). Hosted endpoints are for prototyping, research, development, and testing; production use requires an NVIDIA AI Enterprise license.
 [^16]: AxForge's free tier: every account gets 3M tokens every 30 days, counted across all its serverless models, with no credit card ([pricing](https://axforge.ai/pricing/)). After that, calls are paid from a prepaid balance. `qwen3.8-27b` serves up to 16 concurrent sequences, then requests queue. Hosted on AxForge's own hardware in Stockholm, Sweden; prompts and completions are not stored, not logged and never used for training.
+[^17]: Runcrate's free usage is the workspace's: every key and member of the workspace shares it. It is counted by the week, which resets every Monday, and free requests stop until it resets when it runs out. The API keys page shows how much is used and when it resets. The no-card free usage applies to GitHub sign-ins only; with a Google sign-up a card on file is needed to use free models. Past the free usage, requests stop unless the workspace has added credit. Details on the [free inference page](https://www.runcrate.ai/inference/free).

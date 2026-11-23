@@ -555,6 +555,61 @@ curl -s https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions \
 
 ---
 
+## Runcrate 🇺🇸
+
+Free usage on five open models with a GitHub sign-in, no credit card required (the no-card free usage applies to GitHub sign-ins only; a Google sign-up needs a card on file). One allowance per GitHub account at least 30 days old, limited per week (resets every Monday).
+
+**Notes:** Runcrate's free usage is the workspace's: every key and member of the workspace shares it. It is counted by the week, which resets every Monday, and free requests stop until it resets when it runs out. The API keys page shows how much is used and when it resets. The no-card free usage applies to GitHub sign-ins only; with a Google sign-up a card on file is needed to use free models. Past the free usage, requests stop unless the workspace has added credit. Details on the [free inference page](https://www.runcrate.ai/inference/free).
+
+**Get a key:** https://www.runcrate.ai/dashboard/api-keys
+
+**OpenAI-compatible base URL:** `https://api.runcrate.ai/v1`
+
+### Models
+
+| Model ID | Context | Modality | Rate limit |
+| --- | --- | --- | --- |
+| `deepseek-ai/DeepSeek-V4.1-Flash` | 1M | Text + Image | Weekly allowance (shared) |
+| `zai-org/GLM-5.3-Flash` | 1M | Text + Image | Weekly allowance (shared) |
+| `zai-org/GLM-5.3` | 1M | Text (reasoning) | Weekly allowance (shared) |
+| `Qwen/Qwen3.8-Flash` | 1M | Text (reasoning) | Weekly allowance (shared) |
+| `openai/gpt-oss-120b` | 131K | Text (reasoning) | Weekly allowance (shared) |
+
+### Environment variable
+
+```bash
+export RUNCRATE_API_KEY="your-key-here"
+```
+
+### Usage example
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["RUNCRATE_API_KEY"],
+    base_url="https://api.runcrate.ai/v1",
+)
+
+response = client.chat.completions.create(
+    model="deepseek-ai/DeepSeek-V4.1-Flash",
+    messages=[{"role": "user", "content": "Say hello in one sentence."}],
+)
+print(response.choices[0].message.content)
+```
+
+### Quick test
+
+```bash
+curl -s https://api.runcrate.ai/v1/chat/completions \
+  -H "Authorization: Bearer $RUNCRATE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "deepseek-ai/DeepSeek-V4.1-Flash", "messages": [{"role": "user", "content": "Say hello"}]}'
+```
+
+---
+
 ## SiliconFlow 🇨🇳
 
 Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.
