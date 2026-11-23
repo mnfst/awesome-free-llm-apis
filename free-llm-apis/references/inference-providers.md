@@ -79,7 +79,6 @@ curl -s https://api.axforge.ai/v1/chat/completions \
 | `@cf/google/gemma-4-26b-a4b-it` | 256K | Text + Vision | 10K neurons/day (shared) |
 | `@cf/zai-org/glm-4.7-flash` | 131K | Text | 10K neurons/day (shared) |
 | `@cf/mistralai/mistral-small-3.1-24b-instruct` | 128K | Text + Vision | 10K neurons/day (shared) |
-| `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 80K | Text (reasoning) | 10K neurons/day (shared) |
 | + 55 more models | Varies | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
 
 ### Environment variable
@@ -229,7 +228,7 @@ curl -s https://api.groq.com/openai/v1/chat/completions \
 
 Free models with no credit card and no API key required. `kilo-auto/free` auto-router dynamically routes to models in the free pool.
 
-**Notes:** Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (through dots-studio/dots-3-note-preview:free), 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): "Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services."
+**Notes:** Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05, 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): "Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services."
 
 **Get a key:** https://app.kilo.ai/profile (optional: free models work without a key)
 
@@ -241,11 +240,9 @@ Free models with no credit card and no API key required. `kilo-auto/free` auto-r
 | --- | --- | --- | --- |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | 1M | Text | 200 req/hr |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K | Multimodal | 200 req/hr |
-| `cohere/north-mini-code:free` | 256K | Text (code) | 200 req/hr |
 | `openrouter/free` | Varies | Text | 200 req/hr |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 200 req/hr |
 | `kilo-auto/free` | 256K | Text | 200 req/hr |
-| `dots-studio/dots-3-note-preview:free` | 512K | Text + Vision | 200 req/hr |
 | `nvidia/nemotron-3.5-super-vl:free` | 1M | Multimodal | 200 req/hr |
 | `stealth/glyph-cluster` | 256K | Text (code) | 200 req/hr |
 
@@ -286,9 +283,9 @@ curl -s https://api.kilo.ai/api/gateway/chat/completions \
 
 ## LLM7.io 🇬🇧
 
-API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models.
+API gateway whose `turbo` models answer with no key and no account. LLM7 no longer documents this free access or its limits, so it can end without notice.
 
-**Notes:** LLM7.io rotates its catalog frequently, so the model list changes between checks. Access is tier-based, not token-based: `turbo` models are reachable anonymously or with a free token, `pro` models need the paid plan ([models API](https://docs.llm7.io/guides/models-api)). A free token is capped at 1 RPS, 60 RPM, 250 requests per hour and 100,000 tokens per 24 hours, and the free quota may be reduced without notice ([limits](https://docs.llm7.io/limits)). A paid Pro plan is available at $12/month. The docs no longer list anonymous (no-key) limits; anonymous access was last confirmed by live request on 2026-08-21.
+**Notes:** LLM7.io rotates its catalog frequently, so the model list changes between checks. Its docs no longer describe a free tier or publish rate limits, and the [model catalog](https://api.llm7.io/v1/models) lists per-token prices for `turbo` models, which apply to keys from dash.llm7.io. Requests with no key still answer on the `turbo` models: confirmed by live request on 2026-11-19 and checked daily since.
 
 **Get a key:** https://token.llm7.io (optional: free models work without a key)
 
@@ -298,9 +295,9 @@ API gateway with a free tier. Anonymous access needs no key and reaches the `tur
 
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
-| `gpt-oss:20b` | 128K | Text | 60 RPM, 250 req/hr (free token) |
-| `mistral-Nemo-Instruct-2407` | 128K | Text | 60 RPM, 250 req/hr (free token) |
-| `codestral-latest` | 32K | Text | 60 RPM, 250 req/hr (free token) |
+| `gpt-oss:20b` | 128K | Text | Not published |
+| `mistral-Nemo-Instruct-2407` | 128K | Text | Not published |
+| `codestral-latest` | 32K | Text | Not published |
 
 ### Environment variable
 
@@ -404,7 +401,6 @@ Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per mod
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
 | `nvidia/nemotron-3-ultra-550b-a55b` | 1M | Text | — |
-| `openai/gpt-oss-20b` | 131K | Text | — |
 | + 92 more models | Varies | Text, Image, Video, Speech, Embeddings | — |
 
 ### Environment variable
@@ -456,10 +452,8 @@ curl -s https://integrate.api.nvidia.com/v1/chat/completions \
 
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
-| `cohere/north-mini-code:free` | 256K | Text (code) | 20 RPM, 50 RPD |
 | `google/gemma-4-26b-a4b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
 | `google/gemma-4-31b-it:free` | 262K | Text + Image + Video | 20 RPM, 50 RPD |
-| `dots-studio/dots-3-note-preview:free` | 512K | Text + Image | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free` | 1M | Text | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | 1M | Text | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free` | 262K | Text | 20 RPM, 50 RPD |
@@ -484,7 +478,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="cohere/north-mini-code:free",
+    model="google/gemma-4-26b-a4b-it:free",
     messages=[{"role": "user", "content": "Say hello in one sentence."}],
 )
 print(response.choices[0].message.content)
@@ -496,7 +490,7 @@ print(response.choices[0].message.content)
 curl -s https://openrouter.ai/api/v1/chat/completions \
   -H "Authorization: Bearer $OPENROUTER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model": "cohere/north-mini-code:free", "messages": [{"role": "user", "content": "Say hello"}]}'
+  -d '{"model": "google/gemma-4-26b-a4b-it:free", "messages": [{"role": "user", "content": "Say hello"}]}'
 ```
 
 ---

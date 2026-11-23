@@ -14,6 +14,8 @@
 
 <p align="center"><sub>Most providers offer an OpenAI-compatible endpoint. Native and compatible base URLs can differ. Each link points to the provider's API key page.</sub></p>
 
+<p align="center"><sub>All of those free LLM APIs are available at <a href="https://manifest.build">manifest.build</a> - make reliable agents.</sub></p>
+
 <hr>
 
 <h3 align="center">Gold sponsors</h3>
@@ -153,7 +155,6 @@ OpenAI-compatible base URL: `https://api.cloudflare.com/client/v4/accounts/{acco
 | `@cf/google/gemma-4-26b-a4b-it`                | 256K    | Shared w/ context | Text + Vision                  | 10K neurons/day (shared) |
 | `@cf/zai-org/glm-4.7-flash`                    | 131K    | Shared w/ context | Text                           | 10K neurons/day (shared) |
 | `@cf/mistralai/mistral-small-3.1-24b-instruct` | 128K    | Shared w/ context | Text + Vision                  | 10K neurons/day (shared) |
-| `@cf/deepseek-ai/deepseek-r1-distill-qwen-32b` | 80K     | Shared w/ context | Text (reasoning)               | 10K neurons/day (shared) |
 | + 55 more models                               | Varies  | Varies            | Text, Image, Audio, Embeddings | 10K neurons/day (shared) |
 
 ### [Gonka Broker](https://app.gonkabroker.com/signup) 🇺🇸
@@ -187,29 +188,27 @@ Free models with no credit card and no API key required. `kilo-auto/free` auto-r
 
 Base URL: `https://api.kilo.ai/api/gateway`
 
-| Model Name                                           | Context | Max Output | Modality      | Rate Limit |
-| ---------------------------------------------------- | ------- | ---------- | ------------- | ---------- |
-| `nvidia/nemotron-3-ultra-550b-a55b:free`             | 1M      | 65K        | Text          | 200 req/hr |
-| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K    | 65K        | Multimodal    | 200 req/hr |
-| `cohere/north-mini-code:free`                        | 256K    | 64K        | Text (code)   | 200 req/hr |
-| `openrouter/free`                                    | Varies  | Varies     | Text          | 200 req/hr |
-| `nvidia/nemotron-3.5-lightning:free`                 | 1M      | 65K        | Text          | 200 req/hr |
-| `kilo-auto/free`                                     | 256K    | 32K        | Text          | 200 req/hr |
-| `dots-studio/dots-3-note-preview:free`               | 512K    | 460K       | Text + Vision | 200 req/hr |
-| `nvidia/nemotron-3.5-super-vl:free`                  | 1M      | 131K       | Multimodal    | 200 req/hr |
-| `stealth/glyph-cluster`                              | 256K    | 256K       | Text (code)   | 200 req/hr |
+| Model Name                                           | Context | Max Output | Modality    | Rate Limit |
+| ---------------------------------------------------- | ------- | ---------- | ----------- | ---------- |
+| `nvidia/nemotron-3-ultra-550b-a55b:free`             | 1M      | 65K        | Text        | 200 req/hr |
+| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | 256K    | 65K        | Multimodal  | 200 req/hr |
+| `openrouter/free`                                    | Varies  | Varies     | Text        | 200 req/hr |
+| `nvidia/nemotron-3.5-lightning:free`                 | 1M      | 65K        | Text        | 200 req/hr |
+| `kilo-auto/free`                                     | 256K    | 32K        | Text        | 200 req/hr |
+| `nvidia/nemotron-3.5-super-vl:free`                  | 1M      | 131K       | Multimodal  | 200 req/hr |
+| `stealth/glyph-cluster`                              | 256K    | 256K       | Text (code) | 200 req/hr |
 
 ### [LLM7.io](https://token.llm7.io) 🇬🇧
 
-API gateway with a free tier. Anonymous access needs no key and reaches the `turbo` models; a free token from token.llm7.io raises the rate and token limits but reaches the same models. [^10]
+API gateway whose `turbo` models answer with no key and no account. LLM7 no longer documents this free access or its limits, so it can end without notice. [^10]
 
 Base URL: `https://api.llm7.io/v1`
 
-| Model Name                 | Context | Max Output | Modality | Rate Limit                      |
-| -------------------------- | ------- | ---------- | -------- | ------------------------------- |
-| `gpt-oss:20b`              | 128K    | —          | Text     | 60 RPM, 250 req/hr (free token) |
-| mistral-Nemo-Instruct-2407 | 128K    | —          | Text     | 60 RPM, 250 req/hr (free token) |
-| codestral-latest           | 32K     | —          | Text     | 60 RPM, 250 req/hr (free token) |
+| Model Name                 | Context | Max Output | Modality | Rate Limit    |
+| -------------------------- | ------- | ---------- | -------- | ------------- |
+| `gpt-oss:20b`              | 128K    | —          | Text     | Not published |
+| mistral-Nemo-Instruct-2407 | 128K    | —          | Text     | Not published |
+| codestral-latest           | 32K     | —          | Text     | Not published |
 
 ### [ModelScope](https://modelscope.cn/my/myaccesstoken) 🇨🇳
 
@@ -232,7 +231,6 @@ Base URL: `https://integrate.api.nvidia.com/v1`
 | Model Name                          | Context | Max Output | Modality                               | Rate Limit |
 | ----------------------------------- | ------- | ---------- | -------------------------------------- | ---------- |
 | `nvidia/nemotron-3-ultra-550b-a55b` | 1M      | 262K       | Text                                   | —          |
-| `openai/gpt-oss-20b`                | 131K    | 131K       | Text                                   | —          |
 | + 92 more models                    | Varies  | Varies     | Text, Image, Video, Speech, Embeddings | —          |
 
 ### [OpenRouter](https://openrouter.ai/keys) 🇺🇸
@@ -243,10 +241,8 @@ Base URL: `https://openrouter.ai/api/v1`
 
 | Model Name                                           | Context | Max Output | Modality                     | Rate Limit     |
 | ---------------------------------------------------- | ------- | ---------- | ---------------------------- | -------------- |
-| `cohere/north-mini-code:free`                        | 256K    | 64K        | Text (code)                  | 20 RPM, 50 RPD |
 | `google/gemma-4-26b-a4b-it:free`                     | 262K    | 32K        | Text + Image + Video         | 20 RPM, 50 RPD |
 | `google/gemma-4-31b-it:free`                         | 262K    | 32K        | Text + Image + Video         | 20 RPM, 50 RPD |
-| `dots-studio/dots-3-note-preview:free`               | 512K    | 460K       | Text + Image                 | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3.5-lightning:free`                 | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
 | `nvidia/nemotron-3-ultra-550b-a55b:free`             | 1M      | 65K        | Text                         | 20 RPM, 50 RPD |
 | `recursive/flint-v1.0:free`                          | 262K    | 235K       | Text                         | 20 RPM, 50 RPD |
@@ -299,11 +295,11 @@ Know a free tier that's missing? [Open a PR](contributing.md). Include the provi
 [^1]: The Gemini API free tier is available to developers in the EU, UK, and Switzerland; the [available regions](https://ai.google.dev/gemini-api/docs/available-regions) page lists these regions. The [terms](https://ai.google.dev/gemini-api/terms) still require you to use only Paid Services when you make an API Client available to users in the European Economic Area, Switzerland, or the UK. Google no longer publishes per-model free-tier rate limits; check your quotas in [AI Studio](https://aistudio.google.com/). Free-tier prompts may be used by Google to improve products, except for users in the EEA, Switzerland and the UK, where the paid-services data terms also govern the unpaid quota, so those prompts are not used to improve Google products. `gemini-3.1-flash-lite` is on the [deprecation schedule](https://ai.google.dev/gemini-api/docs/deprecations), with a shutdown date of May 7, 2027 and `gemini-3.5-flash-lite` as its replacement; the row stays because the model is live and free today.
 [^2]: Groq shut down qwen/qwen3.6-27b on September 14, 2026 (replaced by qwen/qwen3.8-27b) and groq/compound and groq/compound-mini on September 21, 2026 ([deprecations](https://console.groq.com/docs/deprecations)). Free-plan limits vary by model; the chat models listed get 30 RPM, 1,000 RPD, 8,000 TPM, and 200,000 TPD on the official [Free Plan Limits](https://console.groq.com/docs/rate-limits) table. Exact organization limits are on the account limits page.
 [^4]: Free models allow 20 requests per minute and 50 requests per day, counted across all free models. Accounts that bought at least 10 credits get 1,000 requests per day ([limits](https://openrouter.ai/docs/api-reference/limits)). OpenRouter also offers a [Free Models Router](https://openrouter.ai/docs/guides/routing/routers/free-router) (`openrouter/free`) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) for chaining models in priority order. Free providers may log prompts for training.
-[^5]: Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05 (through dots-studio/dots-3-note-preview:free), 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): "Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services."
+[^5]: Kilo Code's free pool changes frequently, and the /api/gateway/models catalog can lag what is actually served: probe results have confirmed models absent from the catalog still answering. Rows through liquid/lfm-2.5-2.6b:free answered a live request between 2026-08-19 and 2026-08-21; the rows after it were added on 2026-10-05, 2026-10-23 and 2026-10-25 from the catalog, where they are priced at $0, and have not been probed. Free models are reachable with no API key, at 200 requests per hour per IP ([authentication](https://kilo.ai/docs/gateway/authentication)). The kilo-auto/free router picks a model from the free pool, and Kilo's docs warn it "may route your requests to providers that log prompts and outputs". The NVIDIA free endpoints carry NVIDIA's own condition, quoted on Kilo's [models page](https://kilo.ai/docs/gateway/models-and-providers): "Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services."
 [^6]: API-Inference is free for registered users. Current published limits are 2,000 requests/day per user (total across models), with per-model daily quotas dynamically adjusted and capped at 500; concurrency is also dynamically rate-limited. Requires Alibaba Cloud account binding and real-name verification ([limits](https://modelscope.cn/docs/model-service/API-Inference/limits), [intro](https://modelscope.cn/docs/model-service/API-Inference/intro)). This entry is based on ModelScope's documentation. It cannot be tested from outside mainland China.
 [^7]: OVHcloud AI Endpoints offers a permanent free anonymous tier (2 requests per minute per IP, per model) with no signup or API key required. Higher rate limits (400 RPM per Public Cloud project per model) require an API key and are billed pay-as-you-go per token; new Public Cloud accounts get up to $200 in free trial credits. Models are hosted in EU data centers. The catalog lists an end of life on November 4, 2026 for Mistral-Small-3.2-24B-Instruct-2506 and Mistral-Nemo-Instruct-2407.
 [^9]: SiliconFlow requires real-name identity verification to use free models (effective May 15, 2026, per the [release notes](https://api-docs.siliconflow.cn/docs/release-notes/overview)). Verification supports mainland-Chinese documents; international users must contact support. This entry is based on SiliconFlow's [pricing page](https://siliconflow.cn/pricing), which marks these models free. It cannot be tested from outside mainland China.
-[^10]: LLM7.io rotates its catalog frequently, so the model list changes between checks. Access is tier-based, not token-based: `turbo` models are reachable anonymously or with a free token, `pro` models need the paid plan ([models API](https://docs.llm7.io/guides/models-api)). A free token is capped at 1 RPS, 60 RPM, 250 requests per hour and 100,000 tokens per 24 hours, and the free quota may be reduced without notice ([limits](https://docs.llm7.io/limits)). A paid Pro plan is available at $12/month. The docs no longer list anonymous (no-key) limits; anonymous access was last confirmed by live request on 2026-08-21.
+[^10]: LLM7.io rotates its catalog frequently, so the model list changes between checks. Its docs no longer describe a free tier or publish rate limits, and the [model catalog](https://api.llm7.io/v1/models) lists per-token prices for `turbo` models, which apply to keys from dash.llm7.io. Requests with no key still answer on the `turbo` models: confirmed by live request on 2026-11-19 and checked daily since.
 [^11]: The 10,000 free Neurons are shared across all Workers AI usage, not per model, and all limits reset daily at 00:00 UTC. Going over does not bill you, the request fails. Seven models are excluded from Workers Free billing and need the Workers Paid plan or prepaid AI Gateway credits: `@cf/moonshotai/kimi-k2.6`, `@cf/moonshotai/kimi-k2.7-code`, `@cf/zai-org/glm-5.2`, `@cf/zai-org/glm-5.3`, `@cf/zai-org/glm-5.3-flash`, `@cf/deepseek-ai/deepseek-v4-flash-0731`, `@cf/deepseek-ai/deepseek-v4-pro-0813` ([pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
 [^12]: Registration accepts overseas phone numbers ([registration FAQ](https://docs.bigmodel.cn/cn/faq/registration-login.md)) and the chat API does not require real-name verification: 目前调用 API 并不强制要求实名认证 ([authentication FAQ](https://docs.bigmodel.cn/cn/faq/authentication-issues.md)). The Batch API does require it ([batch FAQ](https://docs.bigmodel.cn/cn/faq/batch-api-issues.md)). The same free models are served from the international platform at `https://api.z.ai/api/paas/v4` ([endpoint](https://docs.z.ai/guides/develop/http/introduction)), where GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash are all priced Free ([pricing](https://docs.z.ai/guides/overview/pricing.md)). Z AI has announced that GLM-4.5-Flash will be retired and its requests auto-routed to GLM-4.7-Flash ([model page](https://docs.bigmodel.cn/cn/guide/models/free/glm-4.5-flash.md)); the announced date has already passed while the model is still catalogued and still priced Free, so treat that row as living on borrowed time.
 [^14]: The free grant is issued only after SMS verification with a real (non-VoIP) phone number, one grant per number ([billing docs](https://docs.gonkabroker.com/guides/billing-and-deposits/)). Unused free tokens do not carry over to the next month. The grant is sized as at least 1M tokens of the most expensive model; cheaper models stretch further (e.g. ~6M tokens for BGE-M3) ([free tier page](https://gonkabroker.com/free-llm-api/)). While running on free-tier funds only, requests are capped at a lower rate; the current cap is returned as `maxRpm` by `/test-auth` ([limits](https://docs.gonkabroker.com/reference/limits-and-quotas/)).
