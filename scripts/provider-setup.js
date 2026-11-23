@@ -6,6 +6,7 @@ const SETUP = {
   'axforge':               { env: 'AXFORGE_API_KEY' },
   'cohere':                { env: 'COHERE_API_KEY', openaiBaseUrl: 'https://api.cohere.ai/compatibility/v1' },
   'google gemini':         { env: 'GEMINI_API_KEY', openaiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/' },
+  'runcrate':              { env: 'RUNCRATE_API_KEY' },
   'mistral ai':            { env: 'MISTRAL_API_KEY' },
   'z ai (zhipu ai)':       { env: 'ZAI_API_KEY' },
   'cloudflare workers ai': { env: 'CF_API_TOKEN', extraEnv: { CF_ACCOUNT_ID: 'your-account-id' },

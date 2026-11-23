@@ -58,6 +58,7 @@ const KEY = {
   OLLAMA:      env.OLLAMA_API_KEY      || process.env.OLLAMA_API_KEY,
   AION:        env.AION_API_KEY        || process.env.AION_API_KEY,
   AXFORGE:     env.AXFORGE_API_KEY     || process.env.AXFORGE_API_KEY,
+  RUNCRATE:    env.RUNCRATE_API_KEY    || process.env.RUNCRATE_API_KEY,
   ZAI:         env.ZAI_API_KEY         || process.env.ZAI_API_KEY,
   MODELSCOPE:  env.MODELSCOPE_API_KEY  || process.env.MODELSCOPE_API_KEY,
   KILO:        env.KILO_API_KEY        || process.env.KILO_API_KEY,
@@ -294,6 +295,7 @@ function getProviderConfig(providerName, baseUrl) {
   if (name.includes('ollama')) return { key: KEY.OLLAMA, type: 'ollama' };
   if (name.includes('aion')) return { key: KEY.AION, type: 'standard' };
   if (name.includes('axforge')) return { key: KEY.AXFORGE, type: 'standard' };
+  if (name.includes('runcrate')) return { key: KEY.RUNCRATE, type: 'standard' };
   if (name.includes('z ai') || name.includes('zhipu')) return { key: KEY.ZAI, type: 'standard' };
   if (name.includes('modelscope')) return { key: KEY.MODELSCOPE, type: 'standard' };
   if (name.includes('kilo')) return { key: KEY.KILO, type: 'standard' };
