@@ -21,6 +21,7 @@ const SETUP = {
   'nvidia nim':            { env: 'NVIDIA_API_KEY' },
   'ollama cloud':          { env: 'OLLAMA_API_KEY', openaiBaseUrl: 'https://ollama.com/v1' },
   'openrouter':            { env: 'OPENROUTER_API_KEY' },
+  'plugsky':               { env: 'PLUGSKY_API_KEY' },
   // OVHcloud rejects every Bearer value on its anonymous tier, and the OpenAI SDK always sends one,
   // so the keyless example is a plain HTTP call without an Authorization header.
   'ovhcloud ai endpoints': { env: 'OVH_API_KEY', keyless: true, noBearer: true },

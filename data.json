@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-15",
+  "lastUpdated": "2026-11-24",
   "providers": [
     {
       "name": "Aion Labs",
@@ -766,6 +766,34 @@
           "maxOutput": "~4K",
           "modality": "Text + Vision",
           "rateLimit": "2 RPM (anonymous)"
+        }
+      ]
+    },
+    {
+      "name": "Plugsky",
+      "category": "provider_api",
+      "country": "US",
+      "flag": "🇺🇸",
+      "url": "https://plugsky.com/",
+      "baseUrl": "https://api.plugsky.com/v1",
+      "description": "Permanent free tier, no credit card required. 30 RPM, 100 requests/day, 50K tokens/day. The free plan includes two model IDs (Micro and Lite).",
+      "footnoteRef": null,
+      "models": [
+        {
+          "id": "plugsky-micro",
+          "name": "plugsky-micro",
+          "context": "32K",
+          "maxOutput": "2K",
+          "modality": "Text",
+          "rateLimit": "30 RPM, 100 RPD, 50K TPD"
+        },
+        {
+          "id": "plugsky-lite",
+          "name": "plugsky-lite",
+          "context": "32K",
+          "maxOutput": "2K",
+          "modality": "Text",
+          "rateLimit": "30 RPM, 100 RPD, 50K TPD"
         }
       ]
     },
