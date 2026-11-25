@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-24T12:20:02.102Z",
+  "generatedAt": "2026-11-25T12:22:29.492Z",
   "summary": {
     "facts": 411,
     "sourced": 193,
@@ -12,7 +12,7 @@
     "rowGone": 0,
     "signals": 0,
     "modelsGone": 0,
-    "modelsNew": 5,
+    "modelsNew": 4,
     "links": 46,
     "linksBroken": 0,
     "linkSignals": 0
@@ -2148,14 +2148,13 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 473,
+      "size": 472,
       "gone": [],
       "new": [
         "inclusionai/ling-3.2-flash:free",
         "baidu/ernie-5.5-flash-preview:free",
         "liquid/lfm-3-1.7b:free",
-        "particle-ai/particle-1:free",
-        "dots-studio/dots-3-note-preview:free"
+        "particle-ai/particle-1:free"
       ]
     }
   ],
@@ -2747,7 +2746,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/models/mistral-small-3.1-24b-instruct/index.md",
       "httpStatus": 200,
-      "chars": 8800,
+      "chars": 8913,
       "state": "OK",
       "error": null
     },
@@ -2831,14 +2830,14 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 623915,
+      "chars": 625203,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 88003,
+      "chars": 69590,
       "state": "OK",
       "error": null
     },
@@ -2880,7 +2879,7 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 127734,
+      "chars": 128331,
       "state": "OK",
       "error": null
     },
@@ -2894,7 +2893,7 @@
     {
       "url": "https://siliconflow.cn/pricing",
       "httpStatus": 200,
-      "chars": 4472,
+      "chars": 4482,
       "state": "OK",
       "error": null
     },
