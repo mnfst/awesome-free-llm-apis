@@ -44,7 +44,7 @@
 			<sub>Free API watcher. No more breaking changes.</sub>
 		</td>
 		<td align="center" width="300">
-			<a href="https://weflayr.com/?utm_source=github&utm_medium=listing&utm_campaign=listings&utm_content=awesome-free-llm-apis">
+			<a href="https://weflayr.com/?utm_source=github&utm_medium=awesome-free-llm-apis&utm_campaign=listing">
 				<picture>
 					<source media="(prefers-color-scheme: dark)" srcset="media/weflayr-logo-dark.svg">
 					<img src="media/weflayr-logo-light.svg" width="180" alt="Weflayr">
