@@ -1,6 +1,6 @@
 {
   "sources": [
-    {"provider":"Aion Labs","fact":"freeTier","value":"Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.","url":"https://www.aionlabs.ai/docs/rate-limits/","quote":"Tokens per minute Daily token limit Free 20,000 20,000"},
+    {"provider":"Aion Labs","fact":"freeTier","value":"Permanent free tier. API access requires verifying a payment card, which is never charged. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.","url":"https://www.aionlabs.ai/docs/rate-limits/","quote":"Tokens per minute Daily token limit Free 20,000 20,000"},
     {"provider":"Aion Labs","model":"aion-labs/aion-2.0","fact":"rateLimit","value":"15 RPM, 20K TPD","url":"https://www.aionlabs.ai/docs/rate-limits/","quote":"Requests per minute Free 15 1 50 2 100 3 200 4 500 5 1000 Token limits Tier Tokens per minute Daily token limit Free 20,000 20,000"},
     {"provider":"Aion Labs","model":"aion-labs/aion-2.0","fact":"context","value":"128K","url":"https://www.aionlabs.ai/docs/models/","quote":"AionLabs: Aion 2.0 aion-labs/aion-2.0 128K"},
     {"provider":"Aion Labs","model":"aion-labs/aion-2.0","fact":"maxOutput","value":"32K","url":"https://www.aionlabs.ai/docs/models/","quote":"Max output: 32K Reasoning Released: 2025-12-21"},
