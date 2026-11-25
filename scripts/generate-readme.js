@@ -14,7 +14,7 @@ const MONTHLY_VIEWS = '250,000+';
 
 const SPONSORS = [
 	{name: 'Okapi', url: 'https://okapi.bot/go/awesome-free-llm-apis', tier: 'sponsor', tagline: 'Free API watcher. No more breaking changes.', logoLight: 'media/okapi-logo-light.svg', logoDark: 'media/okapi-logo-dark.svg'},
-	{name: 'Weflayr', url: 'https://weflayr.com/?utm_source=github&utm_medium=listing&utm_campaign=listings&utm_content=awesome-free-llm-apis', tier: 'sponsor', tagline: 'The next-generation AI Gateway.', logoLight: 'media/weflayr-logo-light.svg', logoDark: 'media/weflayr-logo-dark.svg'},
+	{name: 'Weflayr', url: 'https://weflayr.com/?utm_source=github&utm_medium=listing&utm_campaign=listings&utm_content=awesome-free-llm-apis', tier: 'sponsor', tagline: 'The next-generation AI Gateway.', logoLight: 'media/weflayr-logo-light.svg', logoDark: 'media/weflayr-logo-dark.svg', width: 180},
 ];
 
 const LOGO_WIDTH = {gold: 280, sponsor: 140};
@@ -48,7 +48,9 @@ function sponsorsSection() {
 
 	const sections = [`<h3 align="center">Gold sponsors</h3>\n\n${goldBlocks.join('\n\n')}`];
 	if (sponsors.length > 0) {
-		sections.push(`<h3 align="center">Sponsors</h3>\n\n${sponsors.map(s => sponsorBlock(s, LOGO_WIDTH.sponsor)).join('\n\n')}`);
+		const logos = sponsors.map(s => sponsorLogo(s, s.width || LOGO_WIDTH.sponsor)).join('\n\t&nbsp;&nbsp;&nbsp;&nbsp;\n');
+		const taglines = sponsors.filter(s => s.tagline).map(s => `<b>${s.name}</b>: ${s.tagline}`).join(' · ');
+		sections.push(`<h3 align="center">Sponsors</h3>\n\n<p align="center">\n${logos}\n\t<br>\n\t<sub>${taglines}</sub>\n</p>`);
 	}
 
 	sections.push(`<p align="center"><sub>${MONTHLY_VIEWS} views a month from developers · <a href="${SPONSORS_PAGE}">Become a sponsor</a></sub></p>`);
