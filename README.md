@@ -31,23 +31,30 @@
 
 <h3 align="center">Sponsors</h3>
 
-<p align="center">
-	<a href="https://okapi.bot/go/awesome-free-llm-apis">
-		<picture>
-			<source media="(prefers-color-scheme: dark)" srcset="media/okapi-logo-dark.svg">
-			<img src="media/okapi-logo-light.svg" width="140" alt="Okapi">
-		</picture>
-	</a>
-	&nbsp;&nbsp;&nbsp;&nbsp;
-	<a href="https://weflayr.com/?utm_source=github&utm_medium=listing&utm_campaign=listings&utm_content=awesome-free-llm-apis">
-		<picture>
-			<source media="(prefers-color-scheme: dark)" srcset="media/weflayr-logo-dark.svg">
-			<img src="media/weflayr-logo-light.svg" width="180" alt="Weflayr">
-		</picture>
-	</a>
-	<br>
-	<sub><b>Okapi</b>: Free API watcher. No more breaking changes. · <b>Weflayr</b>: The next-generation AI Gateway.</sub>
-</p>
+<table align="center">
+	<tr>
+		<td align="center" width="300">
+			<a href="https://okapi.bot/go/awesome-free-llm-apis">
+				<picture>
+					<source media="(prefers-color-scheme: dark)" srcset="media/okapi-logo-dark.svg">
+					<img src="media/okapi-logo-light.svg" width="140" alt="Okapi">
+				</picture>
+			</a>
+			<br>
+			<sub>Free API watcher. No more breaking changes.</sub>
+		</td>
+		<td align="center" width="300">
+			<a href="https://weflayr.com/?utm_source=github&utm_medium=listing&utm_campaign=listings&utm_content=awesome-free-llm-apis">
+				<picture>
+					<source media="(prefers-color-scheme: dark)" srcset="media/weflayr-logo-dark.svg">
+					<img src="media/weflayr-logo-light.svg" width="180" alt="Weflayr">
+				</picture>
+			</a>
+			<br>
+			<sub>The next-generation AI Gateway.</sub>
+		</td>
+	</tr>
+</table>
 
 <p align="center"><sub>250,000+ views a month from developers · <a href="https://opencollective.com/awesome-free-llm-apis">Become a sponsor</a></sub></p>
 
