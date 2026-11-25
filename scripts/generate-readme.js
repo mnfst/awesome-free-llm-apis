@@ -14,6 +14,7 @@ const MONTHLY_VIEWS = '250,000+';
 
 const SPONSORS = [
 	{name: 'Okapi', url: 'https://okapi.bot/go/awesome-free-llm-apis', tier: 'sponsor', tagline: 'Free API watcher. No more breaking changes.', logoLight: 'media/okapi-logo-light.svg', logoDark: 'media/okapi-logo-dark.svg'},
+	{name: 'Weflayr', url: 'https://weflayr.com/?utm_source=github&utm_medium=listing&utm_campaign=listings&utm_content=awesome-free-llm-apis', tier: 'sponsor', tagline: 'The next-generation AI Gateway.', logoLight: 'media/weflayr-logo-light.svg', logoDark: 'media/weflayr-logo-dark.svg'},
 ];
 
 const LOGO_WIDTH = {gold: 280, sponsor: 140};
