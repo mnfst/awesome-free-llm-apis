@@ -48,9 +48,12 @@ function sponsorsSection() {
 
 	const sections = [`<h3 align="center">Gold sponsors</h3>\n\n${goldBlocks.join('\n\n')}`];
 	if (sponsors.length > 0) {
-		const logos = sponsors.map(s => sponsorLogo(s, s.width || LOGO_WIDTH.sponsor)).join('\n\t&nbsp;&nbsp;&nbsp;&nbsp;\n');
-		const taglines = sponsors.filter(s => s.tagline).map(s => `<b>${s.name}</b>: ${s.tagline}`).join(' · ');
-		sections.push(`<h3 align="center">Sponsors</h3>\n\n<p align="center">\n${logos}\n\t<br>\n\t<sub>${taglines}</sub>\n</p>`);
+		const cells = sponsors.map(s => {
+			const logo = sponsorLogo(s, s.width || LOGO_WIDTH.sponsor).replace(/^\t/gm, '\t\t\t');
+			const tagline = s.tagline ? `\n\t\t\t<br>\n\t\t\t<sub>${s.tagline}</sub>` : '';
+			return `\t\t<td align="center" width="300">\n${logo}${tagline}\n\t\t</td>`;
+		}).join('\n');
+		sections.push(`<h3 align="center">Sponsors</h3>\n\n<table align="center">\n\t<tr>\n${cells}\n\t</tr>\n</table>`);
 	}
 
 	sections.push(`<p align="center"><sub>${MONTHLY_VIEWS} views a month from developers · <a href="${SPONSORS_PAGE}">Become a sponsor</a></sub></p>`);
