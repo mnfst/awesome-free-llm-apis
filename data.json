@@ -536,14 +536,6 @@
           "rateLimit": "Not published"
         },
         {
-          "id": "mistral-Nemo-Instruct-2407",
-          "name": "mistral-Nemo-Instruct-2407",
-          "context": "128K",
-          "maxOutput": "—",
-          "modality": "Text",
-          "rateLimit": "Not published"
-        },
-        {
           "id": "codestral-latest",
           "name": "codestral-latest",
           "context": "32K",

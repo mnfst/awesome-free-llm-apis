@@ -150,7 +150,6 @@
     {"provider":"Kilo Code","model":"nvidia/nemotron-3.5-super-vl:free","fact":"rateLimit","value":"200 req/hr","url":"https://kilo.ai/docs/gateway/authentication","quote":"subject to rate limiting (200 requests per hour per ip)"},
     {"provider":"Kilo Code","model":"nvidia/nemotron-3.5-super-vl:free","fact":"listed","value":"yes","url":"https://ai-gateway.kilo.ai/api/v1/models","quote":"\"id\":\"nvidia/nemotron-3.5-super-vl:free\",\"name\":\"NVIDIA: Nemotron 3.5 Super VL (free)\""},
     {"provider":"LLM7.io","model":"gpt-oss:20b","fact":"listed","value":"yes","url":"https://api.llm7.io/v1/models","quote":"{\"id\":\"gpt-oss:20b\",\"object\":\"model\""},
-    {"provider":"LLM7.io","model":"mistral-Nemo-Instruct-2407","fact":"listed","value":"yes","url":"https://api.llm7.io/v1/models","quote":"{\"id\":\"mistral-Nemo-Instruct-2407\",\"object\":\"model\""},
     {"provider":"LLM7.io","model":"codestral-latest","fact":"listed","value":"yes","url":"https://api.llm7.io/v1/models","quote":"{\"id\":\"codestral-latest\",\"object\":\"model\""},
     {"provider":"ModelScope","model":"Qwen/Qwen3.5-35B-A3B","fact":"context","value":"256K","url":"https://www.modelscope.cn/models/Qwen/Qwen3.5-35B-A3B.md","quote":"the model has a default context length of 262,144 tokens."},
     {"provider":"ModelScope","model":"Qwen/Qwen3.5-27B","fact":"context","value":"256K","url":"https://www.modelscope.cn/models/Qwen/Qwen3.5-27B.md","quote":"the model has a default context length of 262,144 tokens."},
