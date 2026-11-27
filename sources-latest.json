@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-11-26T12:19:06.468Z",
+  "generatedAt": "2026-11-27T12:23:20.459Z",
   "summary": {
-    "facts": 411,
-    "sourced": 193,
-    "unsourced": 218,
+    "facts": 406,
+    "sourced": 192,
+    "unsourced": 214,
     "ok": 192,
-    "quoteMissing": 1,
+    "quoteMissing": 0,
     "pageError": 0,
     "unverifiable": 0,
     "valueDrift": 0,
     "rowGone": 0,
-    "signals": 1,
+    "signals": 0,
     "modelsGone": 0,
-    "modelsNew": 4,
+    "modelsNew": 3,
     "links": 46,
     "linksBroken": 0,
     "linkSignals": 0
@@ -22,8 +22,8 @@
       "provider": "Aion Labs",
       "model": null,
       "fact": "freeTier",
-      "value": "Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
-      "current": "Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
+      "value": "Permanent free tier. API access requires verifying a payment card, which is never charged. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
+      "current": "Permanent free tier. API access requires verifying a payment card, which is never charged. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
       "url": "https://www.aionlabs.ai/docs/rate-limits/",
       "quote": "Tokens per minute Daily token limit Free 20,000 20,000",
       "state": "OK",
@@ -1670,17 +1670,6 @@
     },
     {
       "provider": "LLM7.io",
-      "model": "mistral-Nemo-Instruct-2407",
-      "fact": "listed",
-      "value": "yes",
-      "current": "yes",
-      "url": "https://api.llm7.io/v1/models",
-      "quote": "{\"id\":\"mistral-Nemo-Instruct-2407\",\"object\":\"model\"",
-      "state": "QUOTE_MISSING",
-      "signal": true
-    },
-    {
-      "provider": "LLM7.io",
       "model": "codestral-latest",
       "fact": "listed",
       "value": "yes",
@@ -2148,10 +2137,9 @@
       "url": "https://openrouter.ai/api/v1/models",
       "httpStatus": 200,
       "state": "OK",
-      "size": 474,
+      "size": 476,
       "gone": [],
       "new": [
-        "inclusionai/ling-3.2-flash:free",
         "baidu/ernie-5.5-flash-preview:free",
         "liquid/lfm-3-1.7b:free",
         "particle-ai/particle-1:free"
@@ -2830,14 +2818,14 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 621965,
+      "chars": 624238,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 70403,
+      "chars": 69631,
       "state": "OK",
       "error": null
     },
@@ -2879,7 +2867,7 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 128299,
+      "chars": 125434,
       "state": "OK",
       "error": null
     },
@@ -2893,7 +2881,7 @@
     {
       "url": "https://siliconflow.cn/pricing",
       "httpStatus": 200,
-      "chars": 4482,
+      "chars": 4468,
       "state": "OK",
       "error": null
     },
@@ -3459,26 +3447,6 @@
     {
       "provider": "LLM7.io",
       "model": "gpt-oss:20b",
-      "fact": "rateLimit"
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "mistral-Nemo-Instruct-2407",
-      "fact": "context"
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "mistral-Nemo-Instruct-2407",
-      "fact": "maxOutput"
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "mistral-Nemo-Instruct-2407",
-      "fact": "modality"
-    },
-    {
-      "provider": "LLM7.io",
-      "model": "mistral-Nemo-Instruct-2407",
       "fact": "rateLimit"
     },
     {
