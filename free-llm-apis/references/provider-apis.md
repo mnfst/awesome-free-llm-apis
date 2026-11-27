@@ -6,7 +6,7 @@ APIs run by the companies that train or fine-tune the models themselves.
 
 ## Aion Labs 🇮🇱
 
-Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.
+Permanent free tier. API access requires verifying a payment card, which is never charged. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.
 
 **Get a key:** https://www.aionlabs.ai/app/api-keys/
 

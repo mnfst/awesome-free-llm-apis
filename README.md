@@ -72,7 +72,7 @@ APIs run by the companies that train or fine-tune the models themselves.
 
 ### [Aion Labs](https://www.aionlabs.ai/app/api-keys/) 🇮🇱
 
-Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.
+Permanent free tier. API access requires verifying a payment card, which is never charged. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.
 
 Base URL: `https://api.aionlabs.ai/v1`
 
@@ -218,11 +218,10 @@ API gateway whose `turbo` models answer with no key and no account. LLM7 no long
 
 Base URL: `https://api.llm7.io/v1`
 
-| Model Name                 | Context | Max Output | Modality | Rate Limit    |
-| -------------------------- | ------- | ---------- | -------- | ------------- |
-| `gpt-oss:20b`              | 128K    | —          | Text     | Not published |
-| mistral-Nemo-Instruct-2407 | 128K    | —          | Text     | Not published |
-| codestral-latest           | 32K     | —          | Text     | Not published |
+| Model Name       | Context | Max Output | Modality | Rate Limit    |
+| ---------------- | ------- | ---------- | -------- | ------------- |
+| `gpt-oss:20b`    | 128K    | —          | Text     | Not published |
+| codestral-latest | 32K     | —          | Text     | Not published |
 
 ### [ModelScope](https://modelscope.cn/my/myaccesstoken) 🇨🇳
 

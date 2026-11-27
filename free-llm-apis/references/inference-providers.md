@@ -296,7 +296,6 @@ API gateway whose `turbo` models answer with no key and no account. LLM7 no long
 | Model ID | Context | Modality | Rate limit |
 | --- | --- | --- | --- |
 | `gpt-oss:20b` | 128K | Text | Not published |
-| `mistral-Nemo-Instruct-2407` | 128K | Text | Not published |
 | `codestral-latest` | 32K | Text | Not published |
 
 ### Environment variable
