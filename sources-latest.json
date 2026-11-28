@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-27T12:23:20.459Z",
+  "generatedAt": "2026-11-28T12:17:50.803Z",
   "summary": {
     "facts": 406,
     "sourced": 192,
@@ -2818,14 +2818,14 @@
     {
       "url": "https://ai-gateway.kilo.ai/api/v1/models",
       "httpStatus": 200,
-      "chars": 624238,
+      "chars": 623222,
       "state": "OK",
       "error": null
     },
     {
       "url": "https://api.llm7.io/v1/models",
       "httpStatus": 200,
-      "chars": 69631,
+      "chars": 70396,
       "state": "OK",
       "error": null
     },
@@ -2867,7 +2867,7 @@
     {
       "url": "https://help.ovhcloud.com/csm/en-public-cloud-ai-endpoints-capabilities?id=kb_article_view",
       "httpStatus": 200,
-      "chars": 125434,
+      "chars": 125144,
       "state": "OK",
       "error": null
     },
